@@ -4912,3 +4912,28 @@ body:not(.logged-in) .auth-restricted {
     cursor: pointer;
     margin-top: 16px;
 }
+/* Strict Coach Image Sizing */
+.coach-image-container {
+    width: 350px;
+    height: 350px;
+    margin: 0 auto;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    overflow: hidden; /* Ensures image respects border radius */
+}
+
+.coach-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.coach-photo-placeholder {
+    width: 100%;
+    height: 100%;
+    background: #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
