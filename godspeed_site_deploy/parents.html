@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parent Portal | Godspeed Basketball</title>
+    <meta name="description" content="Godspeed Basketball Parent Portal - Track your athlete's progress.">
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,800;1,800&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="logo">GODSPEED<span class="accent">BASKETBALL</span></div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="index.html#philosophy">Mission</a></li>
+            <li><a href="index.html#pathway">Pathway</a></li>
+            <li><a href="training.html">Training</a></li>
+            <li><a href="index.html#club">AAU</a></li>
+            <li><a href="calendar-preview.html">Calendar</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="#" class="active">Parents</a></li>
+        </ul>
+        <div class="mobile-menu-btn">☰</div>
+    </nav>
+
+    <!-- Login Section -->
+    <section id="login-section" class="section-dark" style="min-height: 80vh; display: flex; align-items: center;">
+        <div class="container">
+            <div class="login-card">
+                <h2 class="section-title" style="margin-bottom: 1.5rem;">PARENT <span class="accent">LOGIN</span></h2>
+                <p class="text-center text-muted" style="margin-bottom: 2rem;">Access your athlete's performance data.
+                </p>
+                <form id="login-form" class="signup-form" style="max-width: 400px; margin: 0 auto;">
+                    <div class="form-group">
+                        <label for="login-email">Email Address</label>
+                        <input type="email" id="login-email" required placeholder="parent@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" required placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem;">Log In</button>
+                    <p class="text-center text-muted" style="margin-top: 1rem; font-size: 0.8rem;">(Demo: Use any
+                        email/password)</p>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dashboard Section (Hidden by default) -->
+    <section id="dashboard-section" class="section-light hidden-section" style="display: none; min-height: 100vh;">
+        <div class="container">
+            <div class="dashboard-header">
+                <div>
+                    <h1 class="hero-title" style="font-size: 2.5rem; margin-bottom: 0.5rem;">WELCOME, <span
+                            class="accent" id="parent-name-display">PARENT</span></h1>
+                    <p class="text-muted">Athlete: <strong id="athlete-name-display">Loading...</strong> | Team: <span
+                            id="athlete-team-display">Loading...</span></p>
+                </div>
+                <button id="logout-btn" class="btn-secondary" style="font-size: 0.9rem; padding: 0.5rem 1rem;">Log
+                    Out</button>
+            </div>
+
+            <div class="dashboard-grid">
+                <!-- Messages Column -->
+                <div class="dashboard-col">
+                    <h3 class="dashboard-title">COACH MESSAGES</h3>
+                    <div id="messages-container" class="messages-list">
+                        <!-- Messages injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Performance Column -->
+                <div class="dashboard-col">
+                    <h3 class="dashboard-title">PERFORMANCE TRACKER</h3>
+
+                    <div class="performance-card">
+                        <h4 class="card-header-small">GAME GRADES</h4>
+                        <div class="table-responsive">
+                            <table class="grades-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Opponent</th>
+                                        <th>Grade</th>
+                                        <th>Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="game-grades-body">
+                                    <!-- Game grades injected via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="performance-card" style="margin-top: 2rem;">
+                        <h4 class="card-header-small">PRACTICE GRADES</h4>
+                        <div class="table-responsive">
+                            <table class="grades-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Focus</th>
+                                        <th>Effort</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="practice-grades-body">
+                                    <!-- Practice grades injected via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">GODSPEED BASKETBALL</div>
+                <div class="footer-links">
+                    <a href="index.html">Home</a>
+                    <a href="training.html">Training</a>
+                    <a href="calendar-preview.html">Calendar</a>
+                    <a href="card-preview.html">Player Card</a>
+                    <a href="about.html">About</a>
+                    <a href="#">Contact</a>
+                </div>
+                <div class="footer-copyright">
+                    &copy; 2024 Godspeed Basketball. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

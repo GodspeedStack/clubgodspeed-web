@@ -24,10 +24,20 @@
         <ul class="nav-links">
             <li><a href="index.html">Home</a></li>
             <li><a href="training.html">Training</a></li>
-            <li><a href="calendar-preview.html">Calendar</a></li>
+            <li><a href="aau.html">AAU</a></li>
+            <li><a href="calendar-preview.html" class="auth-restricted">Calendar</a></li>
             <li><span class="nav-item-disabled">Academy <span class="coming-soon-badge">Coming</span></span></li>
             <li><span class="nav-item-disabled">Shop <span class="coming-soon-badge">Coming</span></span></li>
             <li><a href="#" class="active">About</a></li>
+            <li>
+                <a href="#" id="cart-btn" class="nav-cart-btn" aria-label="Cart">
+                    <svg class="cart-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    <span class="cart-badge">0</span>
+                </a>
+            </li>
             <li><a href="training.html#signup" class="btn-primary">Train With Us</a></li>
         </ul>
         <div class="mobile-menu-btn">☰</div>
@@ -164,24 +174,93 @@
 
     <footer class="site-footer">
         <div class="container">
-            <div class="footer-content">
-                <div class="footer-brand">GODSPEED BASKETBALL</div>
-                <div class="footer-links">
-                    <a href="index.html">Home</a>
-                    <a href="training.html">Training</a>
-                    <a href="index.html#club">AAU</a>
-                    <a href="calendar-preview.html">Calendar</a>
-                    <a href="card-preview.html">Player Card</a>
-                    <a href="training.html#signup">Registration</a>
-                    <a href="#">Contact</a>
-                    <a href="#" class="accent">Godspeed Apparel</a>
+            <div class="footer-top">
+                <div class="footer-brand-section">
+                    <span class="footer-logo">GODSPEED BASKETBALL</span>
+                    <p class="footer-tagline">Building the future of Denver basketball. Character. Discipline.
+                        Excellence.</p>
                 </div>
-                <p class="mt-4">&copy; 2024 Godspeed Basketball. All Rights Reserved.</p>
+                <div class="footer-columns">
+                    <div class="footer-column">
+                        <h4>Programs</h4>
+                        <ul>
+                            <li><a href="training.html">Training</a></li>
+                            <li><a href="aau.html">AAU Club</a></li>
+                            <li><span class="nav-item-disabled">Academy </span></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Athletes</h4>
+                        <ul>
+                            <li><a href="skill-audit.html">Skill Assessment</a></li>
+                            <li><a href="card-preview.html" class="auth-restricted">Player Card</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Shop</h4>
+                        <ul>
+                            <li><span class="nav-item-disabled">Apparel </span></li>
+                            <li><span class="nav-item-disabled">Footwear </span></li>
+                            <li><span class="nav-item-disabled">Accessories </span></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Parents</h4>
+                        <ul>
+                            <li><a href="calendar-preview.html" class="auth-restricted">Calendar</a></li>
+                            <li><a href="parent-audit.html" class="auth-restricted">Parent Assessment</a></li>
+                            <li><a href="parent-portal.html">Parent Portal</a></li>
+                            <li><span class="nav-item-disabled auth-restricted">Manage Account </span></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Company</h4>
+                        <ul>
+                            <li><a href="about.html">About Us</a></li>
+                            <li><a href="#" onclick="openContactModal()">Contact</a></li>
+                            <li><a href="coach-portal.html">Coach Portal</a></li>
+                            <li><span class="nav-item-disabled">Careers </span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-copyright">Copyright © 2025 Godspeed Basketball. All rights reserved.</div>
+                <div class="footer-legal-links">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Use</a>
+                    <a href="#">Sales Policy</a>
+                    <a href="#">Legal</a>
+                    <a href="#">Site Map</a>
+                </div>
             </div>
         </div>
     </footer>
 
+    <!-- Cart Overlay -->
+    <div id="cart-overlay" class="cart-overlay">
+        <div class="cart-sidebar">
+            <div class="cart-header">
+                <h2>Your Cart</h2>
+                <button id="close-cart" class="close-cart-btn">×</button>
+            </div>
+            <div id="cart-items" class="cart-items">
+                <!-- Cart items will be injected here -->
+                <p class="empty-cart-msg">Your cart is empty.</p>
+            </div>
+            <div class="cart-footer">
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <span id="cart-total-price">$0.00</span>
+                </div>
+                <button class="btn-primary checkout-btn"
+                    onclick="alert('Checkout integration coming soon!')">Checkout</button>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
+    <script src="auth.js"></script>
 </body>
 
 </html>

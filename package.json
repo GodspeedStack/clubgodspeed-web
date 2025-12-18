@@ -1,0 +1,25 @@
+{
+    "name": "godspeed-seeder",
+    "version": "1.0.0",
+    "description": "Scripts to seed Firestore data",
+    "main": "seed_firestore.js",
+    "scripts": {
+        "seed": "node seed_firestore.js",
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview"
+    },
+    "dependencies": {
+        "firebase-admin": "^11.5.0",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "lucide-react": "^0.263.1",
+        "recharts": "^2.7.2"
+    },
+    "devDependencies": {
+        "@types/react": "^18.2.15",
+        "@types/react-dom": "^18.2.7",
+        "@vitejs/plugin-react": "^4.0.3",
+        "vite": "^4.4.5"
+    }
+}

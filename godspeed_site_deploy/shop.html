@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop | Godspeed Apparel</title>
+    <meta name="description" content="Official Godspeed Basketball merchandise. Look Good. Play Good.">
+    <meta property="og:title" content="Shop | Godspeed Apparel">
+    <meta property="og:description" content="Official Godspeed Basketball merchandise. Look Good. Play Good.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/hero-collage.png">
+
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,800;1,800&display=swap"
+        rel="stylesheet">
+
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="logo">GODSPEED<span class="accent">BASKETBALL</span></div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="training.html">Training</a></li>
+            <li><a href="calendar-preview.html">Calendar</a></li>
+            <li><span class="nav-item-disabled">Academy <span class="coming-soon-badge">Coming</span></span></li>
+            <li><span class="nav-item-disabled">Shop <span class="coming-soon-badge">Coming</span></span></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="training.html#signup" class="btn-primary">Train With Us</a></li>
+        </ul>
+        <div class="mobile-menu-btn">☰</div>
+    </nav>
+
+    <header class="hero-section hero-pattern" style="height: 50vh;">
+        <div class="hero-content">
+            <h1 class="hero-title">GODSPEED <span class="highlight">APPAREL.</span></h1>
+            <p class="hero-subtitle">Look Good. Play Good.</p>
+        </div>
+    </header>
+
+    <section class="section-light">
+        <div class="container">
+            <div class="shop-grid">
+                <!-- Godspeed Apparel -->
+                <div class="product-card" onclick="window.location.href='product.html?id=hoodie-built-different'">
+                    <div class="product-image-container">
+                        <div class="product-placeholder" style="background: #111;"></div>
+                        <div class="product-tag">Best Seller</div>
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-title">"Built Different" Hoodie</h3>
+                        <p class="product-price">$65.00</p>
+                        <button class="btn-primary" style="background-color: #111; width: 100%;"
+                            onclick="event.stopPropagation(); alert('Added to cart!')">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="product-card" onclick="window.location.href='product.html?id=tee-performance'">
+                    <div class="product-image-container">
+                        <div class="product-placeholder" style="background: #333;"></div>
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-title">Godspeed Performance Tee</h3>
+                        <p class="product-price">$35.00</p>
+                        <button class="btn-primary" style="background-color: #111; width: 100%;"
+                            onclick="event.stopPropagation(); alert('Added to cart!')">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="product-card" onclick="window.location.href='product.html?id=shorts-essential'">
+                    <div class="product-image-container">
+                        <div class="product-placeholder" style="background: #555;"></div>
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-title">Essential Practice Shorts</h3>
+                        <p class="product-price">$45.00</p>
+                        <button class="btn-primary" style="background-color: #111; width: 100%;"
+                            onclick="event.stopPropagation(); alert('Added to cart!')">Add to Cart</button>
+                    </div>
+                </div>
+
+                <!-- Third-Party Footwear -->
+                <div class="product-card" onclick="window.location.href='product.html?id=nike-ja-3'">
+                    <div class="product-image-container">
+                        <img src="assets/nike-ja-3.png" alt="Nike Ja 3"
+                            style="width: 100%; height: 100%; object-fit: cover;">
+                        <div class="product-tag" style="background: #ff4d4d;">Limited</div>
+                        <!-- <div class="product-badge sold-out">Sold Out</div> -->
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-title">Nike Ja 3 "Day One"</h3>
+                        <p class="product-price">$120.00</p>
+                        <button class="btn-primary" style="background-color: #111; width: 100%;"
+                            onclick="addToCart(event, 'nike-ja-3')">Add to Cart</button>
+                    </div>
+                </div>
+
+                <div class="product-card" onclick="window.location.href='product.html?id=anta-kai-1'">
+                    <div class="product-image-container">
+                        <img src="assets/anta-kai-1.png" alt="Anta Kai 1"
+                            style="width: 100%; height: 100%; object-fit: cover;">
+                        <div class="product-tag" style="background: #111;">Import</div>
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-title">Anta Kai 1 "Crown Jewel"</h3>
+                        <p class="product-price">$140.00</p>
+                        <button class="btn-primary" style="background-color: #111; width: 100%;"
+                            onclick="addToCart(event, 'anta-kai-1')">Add to
+                            Cart</button>
+                    </div>
+                </div>
+
+                <div class="product-card" onclick="window.location.href='product.html?id=nb-two-wxy-v5'">
+                    <div class="product-image-container">
+                        <img src="assets/nb-two-wxy.png" alt="New Balance TWO WXY v5"
+                            style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-title">New Balance TWO WXY v5</h3>
+                        <p class="product-price">$120.00</p>
+                        <button class="btn-primary" style="background-color: #111; width: 100%;"
+                            onclick="addToCart(event, 'nb-two-wxy-v5')">Add to
+                            Cart</button>
+                    </div>
+                </div>
+
+                <div class="product-card" onclick="window.location.href='product.html?id=nb-550'">
+                    <div class="product-image-container">
+                        <div class="product-placeholder" style="background: #e5e5e5;"></div>
+                        <div class="product-tag" style="background: #111;">Lifestyle</div>
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-title">New Balance 550</h3>
+                        <p class="product-price">$110.00</p>
+                        <button class="btn-primary" style="background-color: #111; width: 100%;"
+                            onclick="addToCart(event, 'nb-550')">Add to
+                            Cart</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">GODSPEED BASKETBALL</div>
+                <div class="footer-links">
+                    <a href="index.html">Home</a>
+                    <a href="training.html">Training</a>
+                    <a href="academy.html">Academy</a>
+                    <a href="calendar-preview.html">Calendar</a>
+                    <a href="card-preview.html">Player Card</a>
+                    <a href="shop.html">Shop</a>
+                    <a href="about.html">About</a>
+                    <a href="training.html#signup">Registration</a>
+                </div>
+                <p class="mt-4">&copy; 2024 Godspeed Basketball. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

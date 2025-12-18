@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Schedule | Godspeed Basketball</title>
+
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        /* Calendar Specific Styles */
+        .calendar-container {
+            padding: 8rem 5% 5rem 5%;
+            min-height: 100vh;
+            background: #fbfbfd;
+            /* Apple-esque standard background */
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .calendar-header {
+            text-align: center;
+            margin-bottom: 4rem;
+            position: relative;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            /* gap: 1px; Removed for border-based grid */
+            background: rgba(255, 255, 255, 0.85);
+            /* Exact feature-card background */
+            backdrop-filter: blur(24px);
+            /* Exact feature-card fuzz */
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            /* Exact feature-card border */
+            border-radius: 24px;
+            /* Exact feature-card radius */
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            /* Exact feature-card shadow */
+            opacity: 0;
+            animation: fadeIn 0.8s ease-out 0.5s forwards;
+        }
+
+        /* New Integrated Header */
+        .calendar-header-cell {
+            grid-column: 1 / -1;
+            background: transparent;
+            /* Let glass shine through */
+            /* Keep pattern if desired, or remove to strictly match blank cards. User liked pattern previously, but "exactly like cards" might imply no pattern. I'll keep the pattern but make it subtle as it was part of the card look in index? No, index cards don't have patterns. Removing pattern to be "exactly" like cards. */
+            padding: 2rem 2rem 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        /* Re-adding pattern as a separate class if needed, but removing for "exactly like cards" request base */
+
+        .month-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #1d1d1f;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+        }
+
+        .year-subtitle {
+            font-size: 1.2rem;
+            color: #86868b;
+            font-weight: 500;
+            margin-top: 0.2rem;
+        }
+
+        .calendar-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Import Tool in Header */
+        .header-import {
+            margin-top: 1rem;
+        }
+
+        .calendar-day-header {
+            background: transparent;
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+            color: #86868b;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            border-right: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        /* Remove right border from the last header in the row */
+        .calendar-grid .calendar-day-header:nth-child(8) {
+            border-right: none;
+        }
+
+        .calendar-day {
+            background: transparent;
+            min-height: 160px;
+            /* Taller cells */
+            padding: 1rem;
+            position: relative;
+            transition: background 0.2s;
+            border-right: 1px solid rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        /* Remove right border from the last column of days */
+        .calendar-grid .calendar-day:nth-child(7n + 8) {
+            border-right: none;
+        }
+
+        /* Remove bottom border from the last row of days */
+        /* This requires knowing the total number of days, or using a more complex selector */
+        /* For now, we'll leave the bottom border on all days, as the outer grid border will cover it */
+
+        .calendar-day:hover {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .day-number {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            text-align: center;
+            line-height: 28px;
+            border-radius: 50%;
+        }
+
+        .day-number.today {
+            background: #0071e3;
+            color: white;
+        }
+
+        .day-number.muted {
+            color: #ccc;
+        }
+
+        .event-pill {
+            display: block;
+            padding: 6px 10px;
+            border-radius: 8px;
+            /* Softer, more modern radius */
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            /* Subtle lift */
+            line-height: 1.3;
+            letter-spacing: -0.01em;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .event-pill:hover {
+            transform: translateY(-1px);
+        }
+
+        .event-tournament {
+            background: #1d1d1f;
+            /* Slightly softer black */
+            color: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .event-practice {
+            background: #ffffff;
+            color: #1d1d1f;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+        }
+
+        .event-team-practice {
+            background: #0071e3;
+            color: white;
+            box-shadow: 0 4px 10px rgba(0, 113, 227, 0.25);
+            /* Glow shadow */
+        }
+
+        .event-mandatory-skills {
+            background: #ffffff;
+            color: #0071e3;
+            border: 1.5px solid #0071e3;
+            box-shadow: 0 2px 5px rgba(0, 113, 227, 0.1);
+            font-weight: 700;
+            /* Extra weight for mandatory */
+        }
+
+        .event-skills {
+            background: #ffffff;
+            color: #0071e3;
+            border: 1px solid rgba(0, 113, 227, 0.3);
+            box-shadow: 0 2px 5px rgba(0, 113, 227, 0.05);
+        }
+
+        /* Import Section */
+        .import-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 3rem;
+            border: 1px solid #e5e5e5;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+        }
+
+        .import-input {
+            flex-grow: 1;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+        }
+
+        /* Float Card Animation */
+        .float-card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 400px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 2000;
+            overflow: hidden;
+            /* Ensure content clips to border radius */
+        }
+
+        .float-card.active {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            pointer-events: all;
+        }
+
+        .overlay-dim {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 1500;
+        }
+
+        .overlay-dim.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Sync Modal */
+        .sync-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            width: 320px;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.2s ease;
+            z-index: 2000;
+        }
+
+        .sync-modal.active {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            pointer-events: all;
+        }
+
+        .sync-btn-option {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            margin-bottom: 0.8rem;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            background: white;
+            color: #1d1d1f;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sync-btn-option:hover {
+            background: #f5f5f7;
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">#Fun<span style="color: #0071e3;">Again</span></div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="training.html">Training</a></li>
+            <li><a href="aau.html">AAU</a></li>
+            <li><a href="calendar-preview.html" class="active">Calendar</a></li>
+            <li><span class="nav-item-disabled">Academy <span class="coming-soon-badge">Coming</span></span></li>
+            <li><span class="nav-item-disabled">Shop <span class="coming-soon-badge">Coming</span></span></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="training.html#signup" class="btn-primary">Train With Us</a></li>
+        </ul>
+        <div class="mobile-menu-btn">☰</div>
+    </nav>
+    <div class="calendar-container">
+
+        <div class="calendar-grid">
+            <!-- Integrated Header Cell -->
+            <div class="calendar-header-cell">
+                <div>
+                    <div class="month-title" id="monthTitle">DECEMBER</div>
+                    <div class="year-subtitle" id="yearSubtitle">2025 Schedule</div>
+                    <div id="calculated-hours"
+                        style="margin-top: 10px; display: inline-flex; gap: 8px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+                        <!-- Stats injected by JS -->
+                    </div>
+                </div>
+                <div class="calendar-controls">
+                    <button class="btn-secondary" onclick="openSyncModal()"
+                        style="padding: 0.5rem 1rem; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Sync
+                    </button>
+                    <button class="btn-secondary" onclick="prevMonth()"
+                        style="padding: 0.5rem 1rem; font-size: 0.9rem;">&lt;</button>
+                    <button class="btn-secondary" onclick="gotoToday()"
+                        style="padding: 0.5rem 1rem; font-size: 0.9rem;">Today</button>
+                    <button class="btn-secondary" onclick="nextMonth()"
+                        style="padding: 0.5rem 1rem; font-size: 0.9rem;">&gt;</button>
+                </div>
+            </div>
+
+            <!-- Headers -->
+            <div class="calendar-day-header">SUN</div>
+            <div class="calendar-day-header">MON</div>
+            <div class="calendar-day-header">TUE</div>
+            <div class="calendar-day-header">WED</div>
+            <div class="calendar-day-header">THU</div>
+            <div class="calendar-day-header">FRI</div>
+            <div class="calendar-day-header">SAT</div>
+
+            <!-- Dynamic Days Container -->
+            <div id="calendarGridBody" style="display: contents;">
+                <!-- Days injected by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Detail Card (Float) -->
+    <div class="overlay-dim" id="overlay" onclick="closeEvent()"></div>
+    <div class="float-card" id="eventCard">
+        <div style="background: #0071e3; padding: 1.5rem; border-radius: 0; margin: -2rem -2rem 1.5rem -2rem;">
+            <h3 id="eventTitle" style="color: white; margin: 0; font-size: 1.5rem;">Event Title</h3>
+            <p id="eventType" style="color: rgba(255,255,255,0.8); margin: 0.5rem 0 0 0;">Event Type</p>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                <div style="font-weight: 600; width: 80px;">Time</div>
+                <div id="eventTime">Time</div>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                <div style="font-weight: 600; width: 80px;">Location</div>
+                <div id="eventLocation">Location</div>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                <div style="font-weight: 600; width: 80px;">Details</div>
+                <div id="eventDetails">Details</div>
+            </div>
+        </div>
+
+
+    </div>
+
+    <!-- Sync Modal -->
+    <div class="sync-modal" id="syncModal">
+        <h3 style="margin-top: 0; margin-bottom: 0.5rem;">Sync Calendar</h3>
+        <p style="color: #86868b; font-size: 0.9rem; margin-bottom: 1.5rem;">Add the 2025-26 Season to your device.</p>
+
+        <button class="sync-btn-option" onclick="processSync('apple')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                    d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.5 1.55-.03 2.99 1.05 3.95 1.05.97 0 2.8-.82 4.03-1.25s1.8 1.5 2.95 1.76c-1.2 1.95-1.02 5.09.91 5.99-.09.34-.23.68-.41 1.06zm-4.73-13.6c.98-1.18 1.63-2.82 1.45-4.46-1.42.06-3.11.94-4.13 2.14-.92 1.07-1.71 2.76-1.5 4.38 1.58.12 3.2-.84 4.18-2.06z" />
+            </svg>
+            Apple Calendar
+        </button>
+
+        <button class="sync-btn-option" onclick="processSync('google')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                    d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2.03 6.8 2.03 12c0 5.05 4.13 12 12.22 12 9.83 0 12.94-6.29 12.94-11.02 0-1.24-.05-1.77-.15-1.88z" />
+            </svg>
+            Google Calendar
+        </button>
+
+        <button onclick="closeSyncModal()"
+            style="margin-top: 1rem; background: none; border: none; color: #86868b; cursor: pointer; font-size: 0.9rem;">Cancel</button>
+    </div>
+
+    <!-- Global Contact Modal (Copied) -->
+    <div class="modal-overlay" id="contactModal">
+        <div class="contact-modal">
+            <button class="modal-close" onclick="closeContactModal()">✕</button>
+            <div class="modal-info">
+                <div>
+                    <h2 class="modal-title">GET IN<br>TOUCH</h2>
+                    <p style="color: #86868b; font-weight: 500; line-height: 1.6;">Questions about the Academy, AAU
+                        teams, or training? We're locked in.</p>
+                </div>
+                <div>
+                    <div class="contact-detail-item">
+                        <div class="contact-label">HQ Location</div>
+                        <div class="contact-value">Denver Basketball Center</div>
+                        <div style="font-size: 0.9rem; color: #86868b; margin-top: 4px;">Godspeed HQ, Denver, CO
+                        </div>
+                    </div>
+                    <div class="contact-detail-item">
+                        <div class="contact-label">Direct Email</div>
+                        <div class="contact-value">info@godspeed.com</div>
+                    </div>
+                    <div class="contact-detail-item" style="margin-bottom: 0;">
+                        <div class="contact-label">Socials</div>
+                        <div class="contact-value" style="font-size: 0.95rem;">@godspeedbasketball</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-form-section">
+                <form onsubmit="submitContactForm(event)">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                        <div>
+                            <label class="contact-label">First Name</label>
+                            <input type="text" class="modal-input" placeholder="LeBron" required>
+                        </div>
+                        <div>
+                            <label class="contact-label">Last Name</label>
+                            <input type="text" class="modal-input" placeholder="James" required>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label class="contact-label">Email Address</label>
+                        <input type="email" class="modal-input" placeholder="king@lakers.com" required>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label class="contact-label">Topic</label>
+                        <div style="position: relative;">
+                            <select class="modal-input" style="appearance: none; cursor: pointer;">
+                                <option>General Inquiry</option>
+                                <option>AAU Tryouts</option>
+                                <option>Private Training</option>
+                            </select>
+                            <div
+                                style="position: absolute; right: 15px; top: 15px; pointer-events: none; font-size: 0.7rem; color: #888;">
+                                ▼</div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <label class="contact-label">Message</label>
+                        <textarea class="modal-input" rows="4" style="resize: none;"
+                            placeholder="How can we help you build your legacy?"></textarea>
+                    </div>
+                    <button type="submit" class="modal-btn">Send Message_</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer class="site-footer"
+        style="padding: 4rem 0; border-top: 1px solid #e5e5e5; background: white; margin-top: 4rem;">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">GODSPEED BASKETBALL</div>
+                <div class="footer-links">
+                    <a href="index.html">Home</a>
+                    <a href="training.html">Training</a>
+                    <a href="aau.html">AAU</a>
+                    <a href="calendar-preview.html">Calendar</a>
+                    <a href="card-preview.html">Player Card</a>
+                    <a href="training.html#signup">Registration</a>
+                    <a href="javascript:void(0)" onclick="openContactModal()">Contact</a>
+                </div>
+                <p class="mt-4">&copy; 2024 Godspeed Basketball. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script type="module" src="backend.js"></script>
+    <script>
+        // Calendar State
+        let currentDate = new Date(); // Start at current real date
+
+        // Configuration
+        const RECURRING_EVENTS = {
+            1: { // Monday
+                type: 'mandatory-skills',
+                title: 'Mandatory Skills @ Montbello',
+                time: '6:00 PM',
+                loc: 'Montbello Rec Center',
+                desc: 'Mandatory for some players',
+                pillClass: 'event-mandatory-skills',
+                color: '#f0f0f0',
+                textColor: 'dark',
+                duration: 1,
+                startDate: '2025-12-08' // Only active from this date
+            },
+            2: { // Tuesday
+                type: 'team-practice',
+                title: 'TEAM PRACTICE',
+                time: '6:00 PM - 8:00 PM',
+                loc: 'B.F. Elementary School',
+                desc: 'Regular Team Practice',
+                pillClass: 'event-team-practice',
+                color: '#0071e3',
+                textColor: 'light',
+                duration: 2
+            },
+            3: { // Wednesday
+                type: 'skills',
+                title: 'Skills @ Montbello',
+                time: '6:00 PM - 7:00 PM',
+                loc: 'Montbello Rec Center',
+                desc: 'Skills Development Session',
+                pillClass: 'event-skills',
+                color: '#f0f0f0',
+                textColor: 'dark',
+                duration: 1
+            },
+            4: { // Thursday
+                type: 'team-practice',
+                title: 'TEAM PRACTICE',
+                time: '6:00 PM - 8:00 PM',
+                loc: 'B.F. Elementary School',
+                desc: 'Regular Team Practice',
+                pillClass: 'event-team-practice',
+                color: '#0071e3',
+                textColor: 'light',
+                duration: 2
+            }
+        };
+
+        const SPECIFIC_EVENTS = {
+            '2025-10-18': [
+                { type: 'game', title: 'L 22-32 vs RoughRiders', fullTitle: 'Oct 18 vs. 4/5 Green RoughRiders', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (22-32)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
+                { type: 'game', title: 'L 21-26 vs CDA', fullTitle: 'Oct 18 vs. CDA 4th Orange', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (21-26)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
+            ],
+            '2025-10-19': [
+                { type: 'game', title: 'L 26-29 vs CDA', fullTitle: 'Oct 19 vs. CDA 5th Green', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (26-29)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
+                { type: 'game', title: 'W 25-10 vs RoughRiders', fullTitle: 'Oct 19 vs. 4/5 Green RoughRiders', time: 'TBD', loc: 'TBD', desc: 'Result: Win (25-10)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
+            ],
+            '2025-11-01': [
+                { type: 'game', title: 'W 24-10 vs Hardwood', fullTitle: 'Nov 01 vs. Hardwood Boys 5th Elite', time: 'TBD', loc: 'TBD', desc: 'Result: Win (24-10)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
+                { type: 'game', title: 'L 14-25 vs 7070', fullTitle: 'Nov 01 vs. 7070 Elite 12U', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (14-25)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
+                { type: 'game', title: 'L 12-42 vs Hardwood', fullTitle: 'Nov 01 vs. Hardwood Boys 6th Elite', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (12-42)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
+            ],
+            '2025-11-08': [
+                { type: 'game', title: 'L 20-23 vs State 38', fullTitle: 'Nov 08 vs. State 38 11U Boys Black', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (20-23)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
+                { type: 'game', title: 'L 18-26 vs Legend', fullTitle: 'Nov 08 vs. Legend 5th - BLACK', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (18-26)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
+            ],
+            '2025-11-09': [
+                { type: 'game', title: 'W 23-9 vs Titans', fullTitle: 'Nov 09 vs. Colorado Titans U11 Black', time: 'TBD', loc: 'TBD', desc: 'Result: Win (23-9)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
+                { type: 'game', title: 'W 15-8 vs Titans', fullTitle: 'Nov 09 vs. Colorado Titans U11 Black', time: 'TBD', loc: 'TBD', desc: 'Result: Win (15-8)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
+            ],
+            '2025-11-16': [
+                { type: 'game', title: 'L 16-21 vs Titans', fullTitle: 'Nov 16 vs. Colorado Titans U11 Black', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (16-21)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
+                { type: 'game', title: 'W 15-8 vs Coyote', fullTitle: 'Nov 16 vs. Coyote Elite 5th/11U', time: 'TBD', loc: 'TBD', desc: 'Result: Win (15-8)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
+                { type: 'game', title: 'L 6-18 vs Magic', fullTitle: 'Nov 16 vs. Colorado Magic Jr. 3SSB', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (6-18)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
+            ],
+            '2025-11-27': 'SKIP',
+            '2025-12-07': [
+                { type: 'game', title: 'W 20-2 vs Amplify', fullTitle: 'Game vs Amplify Hoops 6 Gray', time: '10:00 AM', loc: 'Legacy High School', desc: 'Pool A - Result: Win (20-2)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
+                { type: 'game', title: 'W 29-5 vs Erie Tigers', fullTitle: 'Game vs Erie Tigers 5th Garcia', time: '11:00 AM', loc: 'Legacy High School', desc: 'Pool A - Result: Win (29-5)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
+                { type: 'game', title: 'L 21-35 vs Sidney', fullTitle: 'Game vs Sidney 6th 6th/12U', time: '1:00 PM', loc: 'Legacy High School', desc: 'Pool A - Result: Loss (21-35)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
+            ],
+            '2025-12-13': [
+                { type: 'game', title: 'Game TBD', fullTitle: 'Game vs TBD', time: 'TBD', loc: 'TBD', desc: 'Details To Be Determined', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
+            ],
+            '2025-12-14': [
+                { type: 'game', title: 'Game TBD', fullTitle: 'Game vs TBD', time: 'TBD', loc: 'TBD', desc: 'Details To Be Determined', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
+            ],
+            '2025-12-24': 'SKIP',
+            '2025-12-25': [
+                { type: 'holiday', title: 'CHRISTMAS', pillClass: 'event-pill', style: 'background: transparent; color: #cc0000; font-weight: 600; padding-left: 0; box-shadow: none;' }
+            ],
+            '2025-12-31': 'SKIP',
+            '2026-01-01': 'SKIP',
+            '2026-01-07': [
+                { type: 'info', title: 'Winter League Begins', pillClass: 'event-pill', style: 'background: #1d1d1f; color: white; text-align:center;' },
+                // Add regular Wednesday practice too? Usually yes.
+                { recurring: true }
+            ],
+            '2026-02-27': [
+                { type: 'info', title: 'Winter League Ends', pillClass: 'event-pill', style: 'background: white; color: #cc0000; border: 1.5px solid #cc0000; text-align:center; font-weight: 700;' },
+                { type: 'info', title: 'Post-Season Starts', pillClass: 'event-pill', style: 'background: #1d1d1f; color: white; text-align:center;' }
+            ],
+            '2026-03-01': [
+                { type: 'info', title: 'Post-Season Ends', pillClass: 'event-pill', style: 'background: white; color: #cc0000; border: 1.5px solid #cc0000; text-align:center; font-weight: 700;' }
+            ]
+        };
+
+        const MONTH_NAMES = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+
+        function getEventsForDate(date) {
+            const dateStr = date.toISOString().split('T')[0];
+            const dayOfWeek = date.getDay(); // 0=Sun, 1=Mon...
+
+            let events = [];
+
+            // Check Specific Overrides first
+            if (SPECIFIC_EVENTS[dateStr] === 'SKIP') return [];
+
+            if (SPECIFIC_EVENTS[dateStr] && Array.isArray(SPECIFIC_EVENTS[dateStr])) {
+                SPECIFIC_EVENTS[dateStr].forEach(ev => {
+                    if (ev.recurring) {
+                        // Include recurring
+                        const recurring = RECURRING_EVENTS[dayOfWeek];
+                        if (recurring) {
+                            if (!recurring.startDate || date >= new Date(recurring.startDate)) {
+                                events.push(recurring);
+                            }
+                        }
+                    } else {
+                        events.push(ev);
+                    }
+                });
+                return events;
+                // Logic above allows mixing specific + recurring if specific array has {recurring:true}
+                if (!SPECIFIC_EVENTS[dateStr].some(e => e.recurring) && events.length > 0) return events;
+            }
+
+            // Fallback to Recurring
+            if (RECURRING_EVENTS[dayOfWeek]) {
+                const recurring = RECURRING_EVENTS[dayOfWeek];
+                // Check if recurring event has a start date requirement
+                if (!recurring.startDate || date >= new Date(recurring.startDate)) {
+                    events.push(recurring);
+                }
+            }
+
+            return events;
+        }
+
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            // Update Header
+            document.getElementById('monthTitle').innerText = MONTH_NAMES[month];
+            document.getElementById('yearSubtitle').innerText = `${year} Schedule`;
+
+            const grid = document.getElementById('calendarGridBody');
+            grid.innerHTML = ''; // Clear
+
+            // Stats Calculation (Season Total)
+            const stats = calculateSeasonStats(year, month);
+            document.getElementById('calculated-hours').innerHTML = `
+                <span style="background: rgba(0,113,227,0.1); color: #0071e3; padding: 4px 10px; border-radius: 99px;">${stats.practice} Practice Hours</span>
+                <span style="background: rgba(0,0,0,0.05); color: #1d1d1f; padding: 4px 10px; border-radius: 99px;">${stats.game} Game Hours</span>
+            `;
+
+            // Days Generation
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+
+            // Pad start
+            let startPadding = firstDay.getDay(); // 0 is Sunday
+            // If we want consistent rows, we just fill empty divs
+            for (let i = 0; i < startPadding; i++) {
+                const pad = document.createElement('div');
+                pad.className = 'calendar-day';
+                grid.appendChild(pad);
+            }
+
+            // Days
+            for (let i = 1; i <= lastDay.getDate(); i++) {
+                const cell = document.createElement('div');
+                cell.className = 'calendar-day';
+
+                const currentDayDate = new Date(year, month, i);
+                const isToday = (currentDayDate.toDateString() === new Date().toDateString());
+
+                // Day Number
+                const numSpan = document.createElement('span');
+                numSpan.className = `day-number ${isToday ? 'today' : ''}`;
+                numSpan.innerText = i;
+                cell.appendChild(numSpan);
+
+                // Events
+                const events = getEventsForDate(currentDayDate);
+                events.forEach(ev => {
+                    const pill = document.createElement('span');
+                    if (ev.style) {
+                        pill.className = ev.pillClass;
+                        pill.style = ev.style;
+                        pill.innerText = ev.title;
+                    } else {
+                        pill.className = `event-pill ${ev.pillClass}`;
+                        pill.innerText = ev.title;
+                        // Onclick
+                        pill.onclick = () => openEvent(
+                            ev.fullTitle || ev.title,
+                            ev.desc ? 'Event' : 'Info',
+                            ev.time || 'All Day',
+                            ev.loc || 'TBD',
+                            ev.desc || '',
+                            ev.color,
+                            ev.textColor
+                        );
+                    }
+                    cell.appendChild(pill);
+                });
+
+                grid.appendChild(cell);
+            }
+        }
+
+        function calculateSeasonStats(targetYear, targetMonth) {
+            // Calculate season stats dynamically from start (Sept 25, 2025)
+            let practice = 0;
+            let game = 0;
+
+            // Iterate from Sept 25, 2025 to End of Target Month
+            let iterDate = new Date(2025, 8, 25);
+            let endDate = new Date(targetYear, targetMonth + 1, 0);
+
+            while (iterDate <= endDate) {
+                const evs = getEventsForDate(iterDate);
+                evs.forEach(e => {
+                    if (e.duration) {
+                        if (e.type === 'game' || e.type === 'tournament') game += e.duration;
+                        else practice += e.duration;
+                    }
+                });
+                iterDate.setDate(iterDate.getDate() + 1);
+            }
+            return { practice, game };
+        }
+
+        function prevMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        }
+
+        function gotoToday() {
+            currentDate = new Date(2025, 11, 1);
+            renderCalendar();
+        }
+
+        // Overlay & Modal Logic
+        function openEvent(title, type, time, loc, details, color, textColor) {
+            document.getElementById('eventTitle').innerText = title;
+            document.getElementById('eventType').innerText = type;
+            document.getElementById('eventTime').innerText = time;
+            document.getElementById('eventLocation').innerHTML = loc;
+            document.getElementById('eventDetails').innerText = details;
+
+            const header = document.querySelector('#eventCard > div:first-child');
+            header.style.background = color || '#0071e3';
+
+            const titleEl = document.getElementById('eventTitle');
+            const typeEl = document.querySelector('#eventType');
+
+            if (textColor === 'dark') {
+                titleEl.style.color = '#1d1d1f';
+                typeEl.style.color = '#86868b';
+            } else {
+                titleEl.style.color = 'white';
+                typeEl.style.color = 'rgba(255,255,255,0.8)';
+            }
+
+            document.getElementById('overlay').classList.add('active');
+            document.getElementById('eventCard').classList.add('active');
+        }
+
+        function closeEvent() {
+            document.getElementById('overlay').classList.remove('active');
+            document.getElementById('eventCard').classList.remove('active');
+        }
+
+        // Sync & Modal Logic
+        function openSyncModal() {
+            document.getElementById('syncModal').classList.add('active');
+            document.getElementById('overlay').classList.add('active');
+
+            // Override overlay click to close sync modal if it's open
+            const overlay = document.getElementById('overlay');
+            overlay.onclick = () => {
+                closeEvent();
+                closeSyncModal();
+            };
+        }
+
+        function closeSyncModal() {
+            document.getElementById('syncModal').classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
+            // Reset overlay click
+            document.getElementById('overlay').onclick = closeEvent;
+        }
+
+        function processSync(platform) {
+            const icsContent = generateSeasonICS();
+            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.setAttribute('download', 'godspeed-season-2025-26.ics');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            closeSyncModal();
+
+            if (platform === 'google') {
+                alert("File downloaded! To finish syncing with Google Calendar:\n1. Open Google Calendar on your computer.\n2. Go to Settings > Import & Export.\n3. Upload the 'godspeed-season.ics' file.");
+            }
+        }
+
+        function generateSeasonICS() {
+            let ics = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Godspeed//NONSGML v1.0//EN\nCALSCALE:GREGORIAN\nMETHOD:PUBLISH\n";
+
+            // Loop from Dec 1, 2025 to April 30, 2026
+            let iterDate = new Date(2025, 11, 1);
+            const endDate = new Date(2026, 3, 30); // April 30
+
+            while (iterDate <= endDate) {
+                const events = getEventsForDate(iterDate);
+                events.forEach(e => {
+                    // Skip INFO pills, only real events
+                    if (e.type === 'info') return;
+
+                    const dateStr = iterDate.toISOString().replace(/-/g, '').split('T')[0];
+                    let startTime = '090000'; // Default
+                    let endTime = '100000';
+
+                    // Parse time helper
+                    if (e.time && e.time.includes(':')) {
+                        // Very basic parser for 6:00 PM
+                        try {
+                            const [timeRange, ampm] = e.time.split('M')[0].split(' '); // simple hack
+                            // Better: use specific data in config if available.
+                            // For simplicity, we'll try to guess start time or default
+                            // 6:00 PM -> 180000
+                            if (e.time.includes('6:00 PM')) { startTime = '180000'; endTime = '190000'; }
+                            if (e.time.includes('6:00 PM - 8:00 PM')) { startTime = '180000'; endTime = '200000'; }
+                            if (e.time.includes('10:00 AM')) { startTime = '100000'; endTime = '110000'; }
+                            if (e.time.includes('11:00 AM')) { startTime = '110000'; endTime = '120000'; }
+                            if (e.time.includes('1:00 PM')) { startTime = '130000'; endTime = '140000'; }
+                        } catch (err) { }
+                    }
+
+                    ics += "BEGIN:VEVENT\n";
+                    ics += `DTSTART;TZID=America/Denver:${dateStr}T${startTime}\n`;
+                    ics += `DTEND;TZID=America/Denver:${dateStr}T${endTime}\n`;
+                    ics += `SUMMARY:${e.fullTitle || e.title}\n`;
+                    ics += `DESCRIPTION:${e.desc || ''}\n`;
+                    ics += `LOCATION:${e.loc || 'TBD'}\n`;
+                    ics += "END:VEVENT\n";
+                });
+                iterDate.setDate(iterDate.getDate() + 1);
+            }
+
+            ics += "END:VCALENDAR";
+            return ics;
+        }
+
+        // Shared Modal Logic
+        function openContactModal() {
+            document.getElementById('contactModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeContactModal() {
+            document.getElementById('contactModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', renderCalendar);
+    </script>
+</body>
+
+</html>

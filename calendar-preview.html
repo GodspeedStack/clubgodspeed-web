@@ -522,18 +522,61 @@
     <footer class="site-footer"
         style="padding: 4rem 0; border-top: 1px solid #e5e5e5; background: white; margin-top: 4rem;">
         <div class="container">
-            <div class="footer-content">
-                <div class="footer-brand">GODSPEED BASKETBALL</div>
-                <div class="footer-links">
-                    <a href="index.html">Home</a>
-                    <a href="training.html">Training</a>
-                    <a href="aau.html">AAU</a>
-                    <a href="calendar-preview.html">Calendar</a>
-                    <a href="card-preview.html">Player Card</a>
-                    <a href="training.html#signup">Registration</a>
-                    <a href="javascript:void(0)" onclick="openContactModal()">Contact</a>
+            <div class="footer-top">
+                <div class="footer-brand-section">
+                    <span class="footer-logo"
+                        style="font-weight: 800; font-size: 1.2rem; display: block; margin-bottom: 0.5rem;">GODSPEED
+                        BASKETBALL</span>
+                    <p class="footer-tagline" style="color: #666; max-width: 300px;">Building the future of Denver
+                        basketball. Character. Discipline. Excellence.</p>
                 </div>
-                <p class="mt-4">&copy; 2024 Godspeed Basketball. All Rights Reserved.</p>
+                <div class="footer-columns">
+                    <div class="footer-column">
+                        <h4>Programs</h4>
+                        <ul>
+                            <li><a href="training.html">Training</a></li>
+                            <li><a href="aau.html">AAU Club</a></li>
+                            <li><span class="nav-item-disabled">Academy </span></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Athletes</h4>
+                        <ul>
+                            <li><a href="skill-audit.html">Skill Assessment</a></li>
+                            <li><a href="card-preview.html" class="auth-restricted">Player Card</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Shop</h4>
+                        <ul>
+                            <li><span class="nav-item-disabled">Apparel </span></li>
+                            <li><span class="nav-item-disabled">Footwear </span></li>
+                            <li><span class="nav-item-disabled">Accessories </span></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Parents</h4>
+                        <ul>
+                            <li><a href="calendar-preview.html" class="auth-restricted">Calendar</a></li>
+                            <li><a href="parent-audit.html" class="auth-restricted">Parent Assessment</a></li>
+                            <li><a href="parent-portal.html">Parent Portal</a></li>
+                            <li><span class="nav-item-disabled auth-restricted">Manage Account </span></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Company</h4>
+                        <ul>
+                            <li><a href="about.html">About Us</a></li>
+                            <li><a href="#" onclick="openContactModal()">Contact</a></li>
+                            <li><a href="coach-portal.html">Coach Portal</a></li>
+                            <li><span class="nav-item-disabled">Careers </span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom"
+                style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #eee; display: flex; justify-content: space-between; color: #888; font-size: 0.9rem;">
+                <div class="footer-copyright">Copyright © 2025 Godspeed Basketball. All rights reserved.</div>
             </div>
         </div>
     </footer>
@@ -627,10 +670,12 @@
                 { type: 'game', title: 'L 21-35 vs Sidney', fullTitle: 'Game vs Sidney 6th 6th/12U', time: '1:00 PM', loc: 'Legacy High School', desc: 'Pool A - Result: Loss (21-35)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
             ],
             '2025-12-13': [
-                { type: 'game', title: 'Game TBD', fullTitle: 'Game vs TBD', time: 'TBD', loc: 'TBD', desc: 'Details To Be Determined', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
+                { type: 'game', title: 'W 23-15 vs Heritage', fullTitle: 'Dec 13 vs. Heritage 5th Grade Silver', time: 'TBD', loc: 'TBD', desc: 'Result: Win (23-15)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
             ],
             '2025-12-14': [
-                { type: 'game', title: 'Game TBD', fullTitle: 'Game vs TBD', time: 'TBD', loc: 'TBD', desc: 'Details To Be Determined', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
+                { type: 'game', title: 'W 13-9 vs B&B', fullTitle: 'Dec 14 vs. B and B 5th White', time: 'TBD', loc: 'TBD', desc: 'Result: Win (13-9)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
+                { type: 'game', title: 'L 20-21 vs Slavens', fullTitle: 'Dec 14 vs. Slavens Storm 5th/11U', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (20-21)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
+                { type: 'game', title: '🏆 W 22-20 (CHAMPIONSHIP)', fullTitle: 'CHAMPIONSHIP vs Slavens Storm', time: 'TBD', loc: 'TBD', desc: 'Result: Win (22-20) - MVP: ASHTON BOWMAN', pillClass: 'event-tournament', color: '#FFD700', textColor: 'dark', duration: 1 }
             ],
             '2025-12-24': 'SKIP',
             '2025-12-25': [
@@ -934,6 +979,7 @@
         // Init
         document.addEventListener('DOMContentLoaded', renderCalendar);
     </script>
+    <script src="auth.js"></script>
 </body>
 
 </html>

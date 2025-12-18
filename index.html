@@ -31,15 +31,68 @@
 
 <body>
     <nav class="navbar">
+        <!-- NAV LOCKED: DO NOT EDIT WITHOUT USER PERMISSION -->
         <div class="logo">GODSPEED<span class="accent">BASKETBALL</span></div>
         <ul class="nav-links">
             <li><a href="index.html" class="active">Home</a></li>
             <li><a href="training.html">Training</a></li>
             <li><a href="aau.html">AAU</a></li>
-            <li><a href="calendar-preview.html">Calendar</a></li>
+            <li><a href="calendar-preview.html" class="auth-restricted">Calendar</a></li>
             <li><span class="nav-item-disabled">Academy <span class="coming-soon-badge">Coming</span></span></li>
             <li><span class="nav-item-disabled">Shop <span class="coming-soon-badge">Coming</span></span></li>
             <li><a href="about.html">About</a></li>
+            <li>
+                <a href="#" id="cart-btn" class="nav-cart-btn" aria-label="Cart">
+                    <svg class="cart-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        <!-- Keeping similar shape but thinner stroke via CSS -->
+                    </svg>
+                    <span class="cart-badge">0</span>
+                </a>
+            </li>
+            <li class="nav-item-dropdown">
+                <div class="nav-login-wrapper">
+                    <a href="#" class="nav-login-btn">
+                        <svg class="nav-login-icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </a>
+                    <div class="login-dropdown">
+                        <div
+                            style="padding: 8px 16px 4px; font-size: 11px; text-transform: uppercase; color: #86868b; font-weight: 600; letter-spacing: 0.05em;">
+                            Sign In</div>
+                        <a href="parent-portal.html" class="login-option">
+                            <span style="display: flex; align-items: center; gap: 10px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    style="color: #0071e3;">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                                Parents
+                            </span>
+                            <span class="login-arrow">›</span>
+                        </a>
+                        <a href="coach-portal.html" class="login-option">
+                            <span style="display: flex; align-items: center; gap: 10px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    style="color: #0071e3;">
+                                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2">
+                                    </path>
+                                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                                </svg>
+                                Coaches
+                            </span>
+                            <span class="login-arrow">›</span>
+                        </a>
+                    </div>
+                </div>
+            </li>
             <li><a href="training.html#signup" class="btn-primary">Train With Us</a></li>
         </ul>
         <div class="mobile-menu-btn">☰</div>
@@ -270,20 +323,16 @@
                             <li>Shooting mechanics</li>
                             <li>Spacing habits</li>
                         </ul>
-
-                        </ul>
-                        <button class="btn-secondary snipcart-add-item" data-item-id="elite-guard-academy"
-                            data-item-price="150.00" data-item-url="/"
-                            data-item-description="Skill, IQ, and movement training for guards."
-                            data-item-image="assets/movement-mastery.png" data-item-name="Elite Guard Academy"
+                        <button class="btn-primary add-to-cart-btn" data-id="elite-guard-academy" data-price="150"
+                            data-name="Elite Guard Academy" data-interest="guard-academy"
                             style="width: 100%; margin-top: auto;">
-                            Join Program ($150)
+                            Select Program
                         </button>
                     </div>
                 </div>
                 <div class="feature-card">
                     <div class="card-content">
-                        <h3>IQ School</h3>
+                        <h3>IQ School (Hydra Principles)</h3>
                         <p>Not plays. Patterns. Players learn to read space, manipulate defenders, and make decisions.
                         </p>
                         <ul class="feature-list" style="margin-top: 1rem; margin-bottom: 1rem;">
@@ -291,16 +340,15 @@
                             <li>Manipulate defenders</li>
                             <li>Understand overloads</li>
                             <li>Create advantages</li>
-                            <li>Make decisions at live speed</li>
-
+                            <li>Attack contours of a defense</li>
                             <li>Make decisions at live speed</li>
                         </ul>
-                        <button class="btn-secondary snipcart-add-item" data-item-id="iq-school"
-                            data-item-price="120.00" data-item-url="/"
-                            data-item-description="Learn to read space and manipulate defenders."
-                            data-item-image="assets/iq-decision.png" data-item-name="IQ School"
+                        <p style="margin-bottom: 1.5rem; color: #888; font-size: 0.9rem;">This is where players become
+                            problem-solvers.</p>
+                        <button class="btn-primary add-to-cart-btn" data-id="iq-school" data-price="120"
+                            data-name="IQ School (Hydra Principles)" data-interest="iq-school"
                             style="width: 100%; margin-top: auto;">
-                            Join Program ($120)
+                            Select Program
                         </button>
                     </div>
                 </div>
@@ -313,16 +361,16 @@
                             <li>Ground reaction force</li>
                             <li>Plyometric sequencing</li>
                             <li>Balance + posture</li>
-                            <li>Low-to-the-ground efficiency</li>
-
+                            <li>Speed mechanics</li>
+                            <li>Joint stability</li>
                             <li>Low-to-the-ground efficiency</li>
                         </ul>
-                        <button class="btn-secondary snipcart-add-item" data-item-id="strength-movement"
-                            data-item-price="100.00" data-item-url="/"
-                            data-item-description="Functional athletic development."
-                            data-item-image="assets/confidence-resilience.jpg" data-item-name="Strength + Movement"
+                        <p style="margin-bottom: 1.5rem; color: #888; font-size: 0.9rem;">Athletes move better, last
+                            longer, and react faster.</p>
+                        <button class="btn-primary add-to-cart-btn" data-id="strength-movement" data-price="100"
+                            data-name="Strength + Movement" data-interest="strength"
                             style="width: 100%; margin-top: auto;">
-                            Join Program ($100)
+                            Select Program
                         </button>
                     </div>
                 </div>
@@ -402,24 +450,72 @@
     </section>
     -->
 
-    <footer id="register" class="site-footer">
+    <footer class="site-footer">
+        <!-- FOOTER LOCKED: DO NOT EDIT WITHOUT USER PERMISSION -->
         <div class="container">
-            <div class="footer-content">
-                <div class="footer-brand">GODSPEED BASKETBALL</div>
-                <div class="footer-links">
-                    <a href="#philosophy">Mission</a>
-                    <a href="training.html">Training</a>
-                    <a href="aau.html">AAU</a>
-                    <a href="calendar-preview.html">Calendar</a>
-                    <a href="card-preview.html">Player Card</a>
-                    <a href="training.html#signup">Registration</a>
-                    <a href="javascript:void(0)" onclick="openContactModal()">Contact</a>
-                    <span class="nav-item-disabled"
-                        style="opacity: 0.5; color: var(--color-text-muted); cursor: default; display: inline-flex; align-items: center; gap: 6px;">
-                        Apparel <span class="coming-soon-badge">Coming</span>
-                    </span>
+            <div class="footer-top">
+                <div class="footer-brand-section">
+                    <span class="footer-logo">GODSPEED BASKETBALL</span>
+                    <p class="footer-tagline">Building the future of Denver basketball. Character. Discipline.
+                        Excellence.</p>
                 </div>
-                <p class="mt-4">&copy; 2024 Godspeed Basketball. All Rights Reserved.</p>
+                <div class="footer-columns">
+                    <div class="footer-column">
+                        <h4>Programs</h4>
+                        <ul>
+                            <li><a href="training.html">Training</a></li>
+                            <li><a href="aau.html">AAU Club</a></li>
+                            <li><span class="nav-item-disabled">Academy </span></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Athletes</h4>
+                        <ul>
+                            <li><a href="skill-audit.html">Skill Assessment</a></li>
+                            <li><a href="card-preview.html">Player Card</a></li>
+                            <li><span class="nav-item-disabled">AAU Camps</span></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Shop</h4>
+                        <ul>
+                            <li><a href="parent-portal.html#gear" class="auth-restricted">Uniforms & Gear</a></li>
+                            <li><span class="nav-item-disabled">Apparel </span></li>
+                            <li><span class="nav-item-disabled">Footwear </span></li>
+                            <li><span class="nav-item-disabled">Accessories </span></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Parents</h4>
+                        <ul>
+                            <li><a href="calendar-preview.html" class="auth-restricted">Calendar</a></li>
+                            <li><a href="parent-audit.html">Parent Assessment</a></li>
+                            <li><a href="parent-portal.html">Parent Portal</a></li>
+                            <li><span class="nav-item-disabled auth-restricted">Manage Account </span></li>
+                            <li><a href="parent-portal.html#tuition" class="auth-restricted">Tuition & Fees</a></li>
+                            <li><a href="parent-portal.html#tuition" class="auth-restricted">Travel Info</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Company</h4>
+                        <ul>
+                            <li><a href="about.html">About Us</a></li>
+                            <li><a href="#" onclick="openContactModal()">Contact</a></li>
+                            <li><a href="coach-portal.html">Coach Portal</a></li>
+                            <li><span class="nav-item-disabled">Careers </span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-copyright">Copyright © 2025 Godspeed Basketball. All rights reserved.</div>
+                <div class="footer-legal-links">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Use</a>
+                    <a href="#">Sales Policy</a>
+                    <a href="#">Legal</a>
+                    <a href="#">Site Map</a>
+                </div>
             </div>
         </div>
     </footer>
@@ -504,9 +600,27 @@
 
     <script src="script.js"></script>
 
-    <!-- Snipcart JS -->
-    <script async src="https://cdn.snipcart.com/themes/v3.0.31/default/snipcart.js"></script>
-    <div hidden id="snipcart" data-api-key="YOUR_PUBLIC_API_KEY" data-config-modal-style="side"></div>
+    <!-- Cart Overlay -->
+    <div id="cart-overlay" class="cart-overlay">
+        <div class="cart-sidebar">
+            <div class="cart-header">
+                <h2>Your Cart</h2>
+                <button id="close-cart" class="close-cart-btn">×</button>
+            </div>
+            <div id="cart-items" class="cart-items">
+                <!-- Cart items will be injected here -->
+                <p class="empty-cart-msg">Your cart is empty.</p>
+            </div>
+            <div class="cart-footer">
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <span id="cart-total-price">$0.00</span>
+                </div>
+                <button class="btn-primary checkout-btn"
+                    onclick="alert('Checkout integration coming soon!')">Checkout</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // Modal Logic
@@ -534,6 +648,52 @@
             }
         });
     </script>
+    <!-- ENROLLMENT MODAL (Strict iOS) -->
+    <div class="ios-sheet-overlay" id="enrollment-modal">
+        <div class="ios-sheet">
+            <div class="sheet-handle"></div>
+
+            <div style="flex: 1; overflow-y: auto;">
+                <h2 class="sheet-title" id="enroll-program-name">Loading...</h2>
+                <div class="sheet-subtitle" style="text-align: center; margin-bottom: 24px;">Secure your spot for the
+                    upcoming season. Limited availability.</div>
+
+                <!-- GUEST FORM (Always visible if Guest) -->
+                <div id="enroll-guest-form" style="display: none; margin-bottom: 24px;">
+                    <div style="margin-bottom: 16px;">
+                        <label class="ios-label-small">YOUR INFORMATION</label>
+                        <input type="text" class="ios-filled-input" id="guest-parent-name" placeholder="Parent Name">
+                        <input type="email" class="ios-filled-input" id="guest-email" placeholder="Email Address">
+                        <input type="text" class="ios-filled-input" id="guest-athlete-name" placeholder="Athlete Name">
+                    </div>
+                </div>
+
+                <!-- ATHLETE SELECT (Logged In) -->
+                <div id="enroll-athlete-select" style="display: none; margin-bottom: 24px;">
+                    <label class="ios-label-small">SELECT ATHLETE</label>
+                    <div id="enroll-athlete-list"></div>
+                </div>
+
+                <!-- SESSIONS -->
+                <div style="margin-bottom: 24px;">
+                    <label class="ios-label-small">SELECT SESSION(S)</label>
+                    <div id="enroll-session-list">
+                        <!-- JS Injected Cards -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA -->
+            <button id="btn-confirm-enroll" class="btn-sheet-primary">
+                Select Session(s)
+            </button>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="portal-data.js"></script>
+    <script src="enrollment.js"></script>
+    <script src="auth.js"></script>
 </body>
 
 </html>

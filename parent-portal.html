@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parent Portal | Godspeed Basketball</title>
+
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="aau-page">
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="logo">GODSPEED<span class="accent">BASKETBALL</span></div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="training.html">Training</a></li>
+            <li><a href="aau.html">AAU</a></li>
+            <li><a href="calendar-preview.html" class="auth-restricted">Calendar</a></li>
+            <li><span class="nav-item-disabled">Academy <span class="coming-soon-badge">Coming</span></span></li>
+            <li><span class="nav-item-disabled">Shop <span class="coming-soon-badge">Coming</span></span></li>
+            <li><a href="about.html">About</a></li>
+            <li>
+                <a href="#" id="cart-btn" class="nav-cart-btn" aria-label="Cart">
+                    <svg class="cart-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    <span class="cart-badge">0</span>
+                </a>
+            </li>
+            <li><a href="training.html#signup" class="btn-primary">Train With Us</a></li>
+        </ul>
+        <div class="mobile-menu-btn">☰</div>
+    </nav>
+
+    <!-- Portal Container -->
+    <div class="portal-container">
+
+        <!-- LOGIN VIEW (Default) -->
+        <div id="portal-login" class="portal-login-view">
+            <div class="login-card">
+                <div class="login-header">
+                    <h2>Welcome, <span id="login-greeting" style="color: #0071e3;">Guest</span></h2>
+                    <p>Access your athlete's profile, waivers, and schedule.</p>
+                </div>
+                <form class="login-form" onsubmit="event.preventDefault(); handleLogin();">
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" placeholder="name@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" placeholder="••••••••" required>
+                        <a href="#" class="forgot-link">Forgot?</a>
+                    </div>
+                    <button type="submit" class="btn-primary full-width">Sign In</button>
+
+                    <div class="divider"><span>OR</span></div>
+
+                    <button type="button" class="btn-secondary full-width google-btn">
+                        <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
+                            <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
+                                <path fill="#4285F4"
+                                    d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 53.749 L -8.284 53.749 C -8.574 55.229 -9.424 56.479 -10.684 57.329 L -10.684 60.329 L -6.824 60.329 C -4.564 58.239 -3.264 55.159 -3.264 51.509 Z" />
+                                <path fill="#34A853"
+                                    d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.824 60.329 L -10.684 57.329 C -11.764 58.049 -13.134 58.489 -14.754 58.489 C -17.884 58.489 -20.534 56.379 -21.484 53.529 L -25.464 53.529 L -25.464 56.619 C -23.494 60.539 -19.444 63.239 -14.754 63.239 Z" />
+                                <path fill="#FBBC05"
+                                    d="M -21.484 53.529 C -21.734 52.769 -21.864 51.959 -21.864 51.119 C -21.864 50.279 -21.734 49.469 -21.484 48.709 L -21.484 45.619 L -25.464 45.619 C -26.284 47.249 -26.754 49.129 -26.754 51.119 C -26.754 53.109 -26.284 54.989 -25.464 56.619 L -21.484 53.529 Z" />
+                                <path fill="#EA4335"
+                                    d="M -14.754 43.739 C -12.984 43.739 -11.424 44.349 -10.174 45.549 L -6.714 42.089 C -8.804 40.139 -11.514 38.989 -14.754 38.989 C -19.444 38.989 -23.494 41.689 -25.464 45.619 L -21.484 48.709 C -20.534 45.859 -17.884 43.739 -14.754 43.739 Z" />
+                            </g>
+                        </svg>
+                        Continue with Google
+                    </button>
+
+                    <p class="login-footer">Don't have an account? <a href="#">Apply to Join</a></p>
+                </form>
+            </div>
+        </div>
+
+        <!-- DASHBOARD VIEW (Hidden initially) -->
+        <div id="portal-dashboard" class="portal-dashboard-v3" style="display: none;">
+
+            <!-- SIDEBAR -->
+            <aside class="portal-sidebar-v3">
+                <div class="sidebar-header">
+                    <span class="logo-text">GODSPEED</span>
+                </div>
+
+                <nav class="sidebar-nav-v3">
+                    <a href="#" class="nav-item active" onclick="switchPortalView('documents', this)">
+                        <span class="icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                        </span>
+                        <span class="label">Documents</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="switchPortalView('calendar', this)">
+                        <span class="icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                        </span>
+                        <span class="label">Schedule</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="switchPortalView('gear', this)">
+                        <span class="icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M20.38 3.4a2 2 0 0 0-2-2h-12.76a2 2 0 0 0-2 2L.4 7.6 2 9.2l1.6-1.6V20a2 2 0 0 0 2 2h12.8a2 2 0 0 0 2-2V7.6l1.6 1.6 1.6-1.6-3.22-4.2z" />
+                                <path d="M8 2v4" />
+                                <path d="M16 2v4" />
+                                <path d="M12 2v4" />
+                            </svg>
+                        </span>
+                        <span class="label">Gear & Uniforms</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="switchPortalView('tuition', this)">
+                        <span class="icon">
+                            <!-- Credit Card Icon -->
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                <line x1="1" y1="10" x2="23" y2="10"></line>
+                            </svg>
+                        </span>
+                        <span class="label">Tuition & Travel</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="switchPortalView('settings', this)">
+                        <span class="icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path
+                                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                </path>
+                            </svg>
+                        </span>
+                        <span class="label">Settings</span>
+                    </a>
+                </nav>
+
+                <div class="sidebar-user">
+                    <div class="user-avatar-small">JP</div>
+                    <div class="user-details">
+                        <span class="user-name">James Parent</span>
+                        <span class="user-role">Premium Member</span>
+                    </div>
+                </div>
+                <button class="logout-btn-v3" onclick="handleLogout()">Sign Out</button>
+            </aside>
+
+            <!-- MAIN CONTENT -->
+            <main class="portal-main-v3">
+                <header class="mobile-header">
+                    <span class="logo-text-mobile">GODSPEED</span>
+                    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                </header>
+
+                <div class="content-container">
+                    <div id="dashboard-welcome" class="welcome-banner">
+                        <h1>Welcome back, <span id="dashboard-user-name">James</span></h1>
+                        <p>Here is what's happening with your athlete today.</p>
+                    </div>
+
+                    <!-- VIEW: DOCUMENTS -->
+                    <div id="view-documents" class="portal-view active">
+                        <div class="section-header">
+                            <h2>Required Documents</h2>
+                        </div>
+                        <div class="documents-grid-v3">
+                            <!-- 1. Athletic Waiver -->
+                            <div class="doc-card-v3" id="card-athletic">
+                                <div class="card-status pending">Pending</div>
+                                <div class="card-icon">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <path d="M5.6 5.6l12.8 12.8"></path>
+                                        <path d="M12 2a14.5 14.5 0 0 0 0 20"></path>
+                                        <path d="M2 12a14.5 14.5 0 0 1 20 0"></path>
+                                    </svg>
+                                </div>
+                                <h3>Athletic Liability Waiver</h3>
+                                <p>Standard release for participation.</p>
+                                <button class="btn-card" onclick="openDocModal('athletic')">Sign Now</button>
+                            </div>
+
+                            <!-- 2. Medical Consent -->
+                            <div class="doc-card-v3" id="card-medical">
+                                <div class="card-status pending">Pending</div>
+                                <div class="card-icon">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M22 12h-6l-2 3h-4l-2-3H2"></path>
+                                        <path
+                                            d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z">
+                                        </path>
+                                        <line x1="12" y1="10" x2="12" y2="16"></line>
+                                        <line x1="9" y1="13" x2="15" y2="13"></line>
+                                    </svg>
+                                </div>
+                                <h3>Medical Consent</h3>
+                                <p>Emergency treatment authorization.</p>
+                                <button class="btn-card" onclick="openDocModal('medical')">Sign Now</button>
+                            </div>
+
+                            <!-- 3. Practice Consent -->
+                            <div class="doc-card-v3" id="card-practice">
+                                <div class="card-status pending">Pending</div>
+                                <div class="card-icon">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"></path>
+                                        <line x1="16" y1="8" x2="2" y2="22"></line>
+                                        <line x1="17.5" y1="15" x2="9" y2="15"></line>
+                                    </svg>
+                                </div>
+                                <h3>Practice Consent</h3>
+                                <p>High-intensity training agreement.</p>
+                                <button class="btn-card" onclick="openDocModal('practice')">Sign Now</button>
+                            </div>
+
+                            <!-- 4. Conduct Policy -->
+                            <div class="doc-card-v3" id="card-conduct">
+                                <div class="card-status pending">Pending</div>
+                                <div class="card-icon">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="9" cy="7" r="4"></circle>
+                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                    </svg>
+                                </div>
+                                <h3>Parental Conduct</h3>
+                                <p>Sideline rules and expectations.</p>
+                                <button class="btn-card" onclick="openDocModal('conduct')">Sign Now</button>
+                            </div>
+
+                            <!-- 5. Media Release -->
+                            <div class="doc-card-v3" id="card-media">
+                                <div class="card-status pending">Pending</div>
+                                <div class="card-icon">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path
+                                            d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z">
+                                        </path>
+                                        <circle cx="12" cy="13" r="4"></circle>
+                                    </svg>
+                                </div>
+                                <h3>Media Release</h3>
+                                <p>Photo and video usage consent.</p>
+                                <button class="btn-card" onclick="openDocModal('media')">Sign Now</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VIEW: CALENDAR -->
+                    <div id="view-calendar" class="portal-view" style="display: none;">
+                        <div class="section-header">
+                            <h2>Team Schedule</h2>
+                        </div>
+                        <div class="calendar-wrapper-v3">
+                            <iframe src="calendar-embed.html" style="width: 100%; height: 100%; border: none;"></iframe>
+                        </div>
+                    </div>
+
+                    <!-- VIEW: GEAR & UNIFORMS -->
+                    <div id="view-gear" class="portal-view"
+                        style="display: none; background-color: #F2F2F7; min-height: 100%; padding: 20px;">
+                        <div class="section-header" style="margin-bottom: 20px;">
+                            <h2 style="font-size: 34px; font-weight: 700; color: #000; letter-spacing: -0.02em;">Team
+                                Gear</h2>
+                        </div>
+
+                        <div style="max-width: 800px; margin: 0 auto;">
+                            <div
+                                style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 24px;">
+                                <h3 style="margin-bottom: 16px; font-size: 18px;">Required Uniform Package</h3>
+                                <p style="color: #666; font-size: 0.9rem; margin-bottom: 24px;">Please select sizes for
+                                    your athlete. All orders will be processed by the team admin.</p>
+
+                                <!-- Jersey -->
+                                <div class="gear-item"
+                                    style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid #eee; margin-bottom: 16px;">
+                                    <div>
+                                        <div style="font-weight: 600;">Game Jersey (Reversible)</div>
+                                        <div style="font-size: 0.8rem; color: #888;">Black/Red Mesh</div>
+                                    </div>
+                                    <div style="display: flex; gap: 12px; align-items: center;">
+                                        <select class="gear-size-select"
+                                            style="padding: 8px; border-radius: 8px; border: 1px solid #ddd; background: #f9f9f9;">
+                                            <option value="YS">Youth S</option>
+                                            <option value="YM">Youth M</option>
+                                            <option value="YL">Youth L</option>
+                                            <option value="YXL">Youth XL</option>
+                                            <option value="AS">Adult S</option>
+                                            <option value="AM">Adult M</option>
+                                            <option value="AL">Adult L</option>
+                                        </select>
+                                        <input type="number" value="1" min="1"
+                                            style="width: 50px; padding: 8px; border-radius: 8px; border: 1px solid #ddd; text-align: center;">
+                                    </div>
+                                </div>
+
+                                <!-- Shorts -->
+                                <div class="gear-item"
+                                    style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid #eee; margin-bottom: 16px;">
+                                    <div>
+                                        <div style="font-weight: 600;">Game Shorts</div>
+                                        <div style="font-size: 0.8rem; color: #888;">Black with Side Stripe</div>
+                                    </div>
+                                    <div style="display: flex; gap: 12px; align-items: center;">
+                                        <select class="gear-size-select"
+                                            style="padding: 8px; border-radius: 8px; border: 1px solid #ddd; background: #f9f9f9;">
+                                            <option value="YS">Youth S</option>
+                                            <option value="YM">Youth M</option>
+                                            <option value="YL">Youth L</option>
+                                            <option value="YXL">Youth XL</option>
+                                            <option value="AS">Adult S</option>
+                                            <option value="AM">Adult M</option>
+                                        </select>
+                                        <input type="number" value="1" min="1"
+                                            style="width: 50px; padding: 8px; border-radius: 8px; border: 1px solid #ddd; text-align: center;">
+                                    </div>
+                                </div>
+
+                                <!-- Shooting Shirt -->
+                                <div class="gear-item"
+                                    style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid #eee; margin-bottom: 16px;">
+                                    <div>
+                                        <div style="font-weight: 600;">Warmup Shooting Shirt</div>
+                                        <div style="font-size: 0.8rem; color: #888;">Long Sleeve Dry-Fit</div>
+                                    </div>
+                                    <div style="display: flex; gap: 12px; align-items: center;">
+                                        <select class="gear-size-select"
+                                            style="padding: 8px; border-radius: 8px; border: 1px solid #ddd; background: #f9f9f9;">
+                                            <option value="YS">Youth S</option>
+                                            <option value="YM">Youth M</option>
+                                            <option value="YL">Youth L</option>
+                                            <option value="YXL">Youth XL</option>
+                                            <option value="AS">Adult S</option>
+                                            <option value="AM">Adult M</option>
+                                        </select>
+                                        <input type="number" value="1" min="1"
+                                            style="width: 50px; padding: 8px; border-radius: 8px; border: 1px solid #ddd; text-align: center;">
+                                    </div>
+                                </div>
+
+                                <!-- Backpack (Optional) -->
+                                <div class="gear-item"
+                                    style="display: flex; align-items: center; justify-content: space-between;">
+                                    <div>
+                                        <div style="font-weight: 600;">Team Backpack <span
+                                                style="font-size: 0.7rem; background: #eee; padding: 2px 6px; border-radius: 4px; color: #666; margin-left: 6px;">OPTIONAL</span>
+                                        </div>
+                                        <div style="font-size: 0.8rem; color: #888;">Embroidered Name</div>
+                                    </div>
+                                    <div style="display: flex; gap: 12px; align-items: center;">
+                                        <input type="text" placeholder="Name on Bag"
+                                            style="padding: 8px; border-radius: 8px; border: 1px solid #ddd; font-size: 0.9rem;">
+                                        <input type="checkbox" style="width: 20px; height: 20px;">
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div style="text-align: right;">
+                                <button onclick="submitGearOrder()" class="btn-primary"
+                                    style="background: #0071e3; padding: 12px 32px; border-radius: 20px; font-weight: 600;">Confirm
+                                    Order Request</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VIEW: TUITION & TRAVEL -->
+                    <div id="view-tuition" class="portal-view"
+                        style="display: none; background-color: #F2F2F7; min-height: 100%; padding: 20px;">
+                        <div class="section-header" style="margin-bottom: 20px;">
+                            <h2 style="font-size: 34px; font-weight: 700; color: #000; letter-spacing: -0.02em;">Tuition
+                                & Travel</h2>
+                        </div>
+
+                        <div
+                            style="display: grid; grid-template-columns: 1fr; gap: 24px; max-width: 1000px; margin: 0 auto;">
+
+                            <!-- Tuition Card -->
+                            <div
+                                style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
+                                    <div>
+                                        <h3 style="font-size: 18px; margin-bottom: 4px;">Tuition Status</h3>
+                                        <div style="color: #34C759; font-weight: 600; font-size: 0.9rem;">● All Payments
+                                            Up to Date</div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: 0.8rem; color: #666;">Current Balance</div>
+                                        <div style="font-size: 24px; font-weight: 700;">$0.00</div>
+                                    </div>
+                                </div>
+
+                                <div
+                                    style="background: #f9f9f9; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                        <span style="font-weight: 500;">Monthly Dues (Elite)</span>
+                                        <span>$250.00 / mo</span>
+                                    </div>
+                                    <div
+                                        style="display: flex; justify-content: space-between; font-size: 0.9rem; color: #666;">
+                                        <span>Next Payment: Jan 1, 2026</span>
+                                        <span>Auto-Pay: <strong style="color: #000;">Visa •••• 4242</strong></span>
+                                    </div>
+                                </div>
+
+                                <button class="btn-secondary" style="width: 100%;">Manage Payment Method</button>
+                            </div>
+
+                            <!-- Travel Trips Dynamic Container -->
+                            <div id="parent-trips-container" style="display: flex; flex-direction: column; gap: 24px;">
+                                <!-- Injected via JS -->
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- VIEW: SETTINGS -->
+                    <div id="view-settings" class="portal-view"
+                        style="display: none; background-color: #F2F2F7; min-height: 100%; padding: 20px;">
+                        <div class="section-header" style="margin-bottom: 20px;">
+                            <h2 style="font-size: 34px; font-weight: 700; color: #000; letter-spacing: -0.02em;">
+                                Settings</h2>
+                        </div>
+
+                        <form id="settings-form" onsubmit="event.preventDefault(); handleSettingsSave();"
+                            style="max-width: 600px; margin: 0 auto;">
+
+                            <!-- Parent Information Group -->
+                            <div style="margin-bottom: 24px;">
+                                <h3
+                                    style="font-size: 13px; color: #6d6d72; text-transform: uppercase; margin-bottom: 8px; font-weight: 400; padding-left: 16px;">
+                                    Parent Information</h3>
+                                <div
+                                    style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+
+                                    <!-- Parent Name -->
+                                    <div
+                                        style="display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid #e5e5ea;">
+                                        <label for="settings-parent-name"
+                                            style="width: 140px; font-size: 17px; color: #000;">Parent Name</label>
+                                        <input type="text" id="settings-parent-name" placeholder="Enter your full name"
+                                            style="flex-grow: 1; border: none; font-size: 17px; color: #000; outline: none; background: transparent; text-align: right;">
+                                    </div>
+
+                                    <!-- Email Address -->
+                                    <div
+                                        style="display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid #e5e5ea;">
+                                        <label for="settings-parent-email"
+                                            style="width: 140px; font-size: 17px; color: #000;">Email Address</label>
+                                        <input type="email" id="settings-parent-email" placeholder="jewellsco@gmail.com"
+                                            readonly
+                                            style="flex-grow: 1; border: none; font-size: 17px; color: #8e8e93; outline: none; background: transparent; text-align: right;">
+                                    </div>
+
+                                    <!-- Phone Number -->
+                                    <div style="display: flex; align-items: center; padding: 12px 16px;">
+                                        <label for="settings-parent-phone"
+                                            style="width: 140px; font-size: 17px; color: #000;">Phone Number</label>
+                                        <input type="tel" id="settings-parent-phone" placeholder="(555) 555-5555"
+                                            style="flex-grow: 1; border: none; font-size: 17px; color: #0071e3; outline: none; background: transparent; text-align: right;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Athlete Information Group -->
+                            <div style="margin-bottom: 30px;">
+                                <h3
+                                    style="font-size: 13px; color: #6d6d72; text-transform: uppercase; margin-bottom: 8px; font-weight: 400; padding-left: 16px;">
+                                    Athlete Information (Pairing)</h3>
+                                <div
+                                    style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+
+                                    <!-- Athlete Name -->
+                                    <div
+                                        style="display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid #e5e5ea;">
+                                        <label for="settings-athlete-name"
+                                            style="width: 140px; font-size: 17px; color: #000;">Athlete Name</label>
+                                        <input type="text" id="settings-athlete-name"
+                                            placeholder="Enter athlete's full name"
+                                            style="flex-grow: 1; border: none; font-size: 17px; color: #000; outline: none; background: transparent; text-align: right;">
+                                    </div>
+
+                                    <!-- Team Selection -->
+                                    <div
+                                        style="display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid #e5e5ea; justify-content: space-between;">
+                                        <label for="settings-athlete-team"
+                                            style="font-size: 17px; color: #000;">Team</label>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <select id="settings-athlete-team"
+                                                style="border: none; font-size: 17px; color: #8e8e93; outline: none; background: transparent; text-align: right; appearance: none; padding-right: 0; cursor: pointer;">
+                                                <option value="" disabled selected>Select a team...</option>
+                                                <option value="TEAM-10U-DEV-BLACK">10U Development Black</option>
+                                                <option value="TEAM-10U-DEV-RED">10U Development Red</option>
+                                                <option value="TEAM-10U-GOLD-BLACK">10U Gold Black</option>
+                                                <option value="TEAM-10U-ELITE-BLACK">10U Elite Black</option>
+                                            </select>
+                                            <span style="color: #c7c7cc; font-size: 12px;">▼</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Date of Birth -->
+                                    <div
+                                        style="display: flex; align-items: center; padding: 12px 16px; justify-content: space-between;">
+                                        <label for="settings-athlete-dob" style="font-size: 17px; color: #000;">Date of
+                                            Birth</label>
+                                        <input type="date" id="settings-athlete-dob"
+                                            style="border: none; font-size: 17px; color: #8e8e93; outline: none; background: transparent; text-align: right; font-family: inherit;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Save Button -->
+                            <div style="text-align: center;">
+                                <button type="submit" class="btn-primary"
+                                    style="width: 100%; border-radius: 12px; font-size: 17px; font-weight: 600; padding: 14px; background: #0071e3; box-shadow: none;">
+                                    Save Changes
+                                </button>
+                            </div>
+
+                        </form>
+                    </div>
+
+                </div>
+            </main>
+
+            <!-- SHARED MODAL (Kept same) -->
+            <div class="doc-modal-overlay" id="doc-modal-overlay">
+                <div class="doc-modal">
+                    <div class="doc-modal-header">
+                        <h3 id="modal-title">Document Title</h3>
+                        <button class="modal-close" onclick="closeDocModal()">✕</button>
+                    </div>
+                    <div class="doc-modal-body">
+                        <div class="legal-scroll-box" id="modal-content" style="height: 200px; margin-bottom: 1.5rem;">
+                            <!-- Content Injected via JS -->
+                        </div>
+
+                        <div class="signature-section">
+                            <div class="form-row"
+                                style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                                <div class="form-group">
+                                    <label>Name of Child</label>
+                                    <input type="text" id="signer-child-name" class="modal-input"
+                                        placeholder="Athlete Name">
+                                </div>
+                                <div class="form-group">
+                                    <label>Parent Name</label>
+                                    <input type="text" id="signer-parent-name" class="modal-input"
+                                        placeholder="Parent Name">
+                                </div>
+                            </div>
+
+                            <label>Signature:</label>
+                            <div class="signature-pad-wrapper" style="height: 150px;">
+                                <canvas id="signature-pad"></canvas>
+                                <div class="signature-overlay">Sign Here</div>
+                            </div>
+                            <button id="clear-signature" class="btn-text" style="font-size: 0.8rem;">Clear</button>
+
+                            <div class="agreement-checkbox">
+                                <input type="checkbox" id="agree-check">
+                                <label for="agree-check">I agree to the terms above. <span
+                                        style="font-size: 0.8em; color: #888;">(Date: <span
+                                            id="current-date"></span>)</span></label>
+                            </div>
+
+                            <button id="submit-waiver" class="btn-primary full-width" disabled>Sign & Accept</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ONBOARDING MODAL -->
+    <div class="doc-modal-overlay" id="onboarding-modal"
+        style="display: none; align-items: center; justify-content: center;">
+        <div class="doc-modal" style="max-height: auto; height: auto; padding: 2.5rem; width: 100%; max-width: 500px;">
+            <div class="doc-modal-header" style="border:none; padding-bottom: 0.5rem; justify-content: center;">
+                <h3 style="font-size: 1.5rem; text-align: center;">Welcome to Godspeed</h3>
+            </div>
+            <div class="doc-modal-body" style="padding: 0;">
+                <p style="text-align: center; color: #666; margin-bottom: 2rem;">Please confirm your details to set up
+                    your parent portal.</p>
+
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Parent / Guardian
+                        Name</label>
+                    <input type="text" id="intake-parent-name" class="modal-input" placeholder="e.g. James Parent"
+                        style="width: 100%; padding: 0.8rem; border: 1px solid #d2d2d7; border-radius: 8px;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 2rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Athlete Name</label>
+                    <input type="text" id="intake-child-name" class="modal-input" placeholder="e.g. Jordan Athlete"
+                        style="width: 100%; padding: 0.8rem; border: 1px solid #d2d2d7; border-radius: 8px;">
+                </div>
+
+                <button id="btn-complete-onboarding" class="btn-primary full-width" onclick="completeOnboarding()"
+                    style="width: 100%;">Continue to Dashboard</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="portal-data.js"></script>
+    <script src="parent-portal.js"></script>
+    <script src="auth.js"></script>
+</body>
+
+</html>
