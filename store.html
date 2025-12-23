@@ -502,7 +502,7 @@
                     <div class="product-info">
                         <h3 class="product-title">${product.title}</h3>
                         <div class="product-price">$${(product.price / 100).toFixed(2)}</div>
-                        <button class="quick-add-btn" onclick="quickAdd(${product.id}, '${product.title}')">
+                        <button class="quick-add-btn" onclick="addToCart(${product.id}, '${product.title}', ${product.price})">
                             Quick Add
                         </button>
                     </div>
@@ -570,6 +570,145 @@
     </script>
     <script src="nav-security.js"></script>
     <script src="src/components/MobileBottomNav.js"></script>
+
+    <!-- GODSPEED CART DRAWER -->
+    <div id="cart-drawer"
+        class="fixed top-0 right-0 h-full w-full md:w-[400px] z-50 bg-white border-l border-black transform translate-x-full transition-transform duration-300">
+        <!-- Header -->
+        <div class="flex items-center justify-between p-6 border-b border-black">
+            <h2 class="text-2xl font-bold tracking-tight">YOUR STASH</h2>
+            <button id="close-cart" class="text-2xl font-bold hover:opacity-50 transition-opacity">✕</button>
+        </div>
+
+        <!-- Cart Items -->
+        <div id="cart-items" class="overflow-y-auto h-[calc(100%-200px)] p-6">
+            <!-- Items will be injected here -->
+        </div>
+
+        <!-- Footer -->
+        <div class="absolute bottom-0 left-0 right-0 border-t border-black bg-white p-6">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-sm font-bold tracking-wider">TOTAL</span>
+                <span id="cart-total" class="text-2xl font-mono font-bold">$0.00</span>
+            </div>
+            <button id="checkout-btn"
+                class="w-full bg-black text-white py-4 font-bold tracking-wider hover:bg-gray-900 transition-colors">
+                SECURE CHECKOUT
+            </button>
+        </div>
+    </div>
+
+    <!-- Cart Overlay -->
+    <div id="cart-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
+
+    <!-- CART LOGIC -->
+    <script>
+        // =====================================================
+        // GODSPEED CART ENGINE - Vanilla JS
+        // ===================================================== 
+
+        let cart = [];
+
+        // DOM Elements
+        const cartDrawer = document.getElementById('cart-drawer');
+        const cartOverlay = document.getElementById('cart-overlay');
+        const cartItemsContainer = document.getElementById('cart-items');
+        const cartTotalElement = document.getElementById('cart-total');
+        const cartBadge = document.querySelector('.cart-badge');
+        const closeCartBtn = document.getElementById('close-cart');
+        const cartBtn = document.getElementById('cart-btn');
+        const checkoutBtn = document.getElementById('checkout-btn');
+
+        // Open Cart
+        function openCart() {
+            cartDrawer.classList.remove('translate-x-full');
+            cartOverlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close Cart
+        function closeCart() {
+            cartDrawer.classList.add('translate-x-full');
+            cartOverlay.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Add to Cart
+        function addToCart(productId, productTitle, productPrice) {
+            // Check if item already exists
+            const existingItem = cart.find(item => item.id === productId);
+
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({
+                    id: productId,
+                    title: productTitle,
+                    price: productPrice,
+                    quantity: 1
+                });
+            }
+
+            updateCart();
+            openCart();
+        }
+
+        // Remove from Cart
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            updateCart();
+        }
+
+        // Update Cart Display
+        function updateCart() {
+            // Update badge
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            cartBadge.textContent = totalItems;
+
+            // Update total
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            cartTotalElement.textContent = `$${(total / 100).toFixed(2)}`;
+
+            // Render items
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = `
+                    <div class="text-center py-12">
+                        <p class="text-gray-500 text-sm">Your stash is empty</p>
+                    </div>
+                `;
+            } else {
+                cartItemsContainer.innerHTML = cart.map(item => `
+                    <div class="flex items-start justify-between mb-6 pb-6 border-b border-gray-200">
+                        <div class="flex-1">
+                            <h3 class="font-bold text-sm mb-2">${item.title}</h3>
+                            <p class="text-sm font-mono">$${(item.price / 100).toFixed(2)}</p>
+                            <p class="text-xs text-gray-500 mt-1">Qty: ${item.quantity}</p>
+                        </div>
+                        <button onclick="removeFromCart(${item.id})" class="text-sm font-bold hover:opacity-50 transition-opacity">
+                            REMOVE
+                        </button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Event Listeners
+        closeCartBtn.addEventListener('click', closeCart);
+        cartOverlay.addEventListener('click', closeCart);
+        cartBtn.addEventListener('click', openCart);
+
+        checkoutBtn.addEventListener('click', () => {
+            if (cart.length === 0) {
+                alert('Your stash is empty');
+                return;
+            }
+            alert('Checkout coming soon! Total: ' + cartTotalElement.textContent);
+        });
+
+        // Update the existing quickAdd function
+        window.addToCart = addToCart;
+        window.removeFromCart = removeFromCart;
+    </script>
 </body>
 
 </html>
