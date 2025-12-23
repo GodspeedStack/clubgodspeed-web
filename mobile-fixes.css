@@ -303,3 +303,26 @@ section,
         padding: 0.75rem 1rem !important;
     }
 }
+
+/* =====================================================
+   SURGICAL STRIKE - KILL NAV SCROLLBARS
+   ===================================================== */
+
+/* NUCLEAR OPTION: Force all nav elements to never scroll */
+nav,
+.navbar,
+header,
+.nav-links,
+.navbar .nav-links {
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    height: auto !important;
+    max-height: none !important;
+}
+
+/* Body is the ONLY element allowed to scroll */
+body {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+}
