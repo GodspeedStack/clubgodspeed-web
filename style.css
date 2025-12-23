@@ -2010,8 +2010,8 @@ img[src*="coach-scott.png"] {
     right: -24px;
     /* Float to the right */
     font-size: 9px;
-    color: #000000;
-    /* Changed to black for visibility */
+    color: #86868b;
+    /* Gray for light backgrounds */
     padding: 2px 4px;
     border: 1px solid #d2d2d7;
     border-radius: 4px;
@@ -2021,6 +2021,13 @@ img[src*="coach-scott.png"] {
     line-height: 1;
     letter-spacing: 0.05em;
     pointer-events: none;
+}
+
+/* White badge for AAU page (dark background) */
+.aau-page .coming-soon-badge {
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.3);
+    background: transparent;
 }
 
 .nav-item-disabled {
