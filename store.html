@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Shop | Godspeed Basketball</title>
-    <meta name="description" content="Premium basketball gear and apparel for elite athletes.">
+    <title>The Pro Shop | Godspeed Basketball</title>
+    <meta name="description" content="Official Godspeed Performance Gear. Premium basketball apparel and equipment.">
 
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,128 +14,137 @@
 
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="responsive-nav.css">
-    <link rel="stylesheet" href="store-hero.css">
+    <link rel="stylesheet" href="mobile-fixes.css">
 
     <style>
-        /* Store-specific styles */
-        .store-container {
-            min-height: 100vh;
-            background-color: #ffffff;
-            padding-top: 0;
-            /* Remove padding for full-bleed hero */
+        /* =====================================================
+           THE PRO SHOP - DIGITAL FLAGSHIP DESIGN
+           ===================================================== */
+
+        body {
+            background: #000000;
+            margin: 0;
+            padding: 0;
         }
 
+        /* Section A: Immersive Hero */
         .store-hero {
-            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), url('assets/store-hero.png');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            color: #ffffff;
-            padding: 60px 5%;
-            text-align: center;
-            min-height: 500px;
+            position: relative;
+            height: 70vh;
+            width: 100%;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .store-hero h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: -0.02em;
-            margin: 0 0 16px 0;
-            line-height: 1.1;
-            padding: 0 20px;
-            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
+        .store-hero-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.7)),
+                url('https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=2000&q=80');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
 
-        @media (min-width: 768px) {
-            .store-hero {
-                padding: 100px 5%;
-                min-height: 600px;
-            }
+        .store-hero-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            background: linear-gradient(to bottom, transparent, #000000);
+            pointer-events: none;
+        }
 
-            .store-hero h1 {
-                font-size: 4.5rem;
-                padding: 0;
-            }
+        .store-hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            color: #ffffff;
+            padding: 0 20px;
+        }
+
+        .store-hero h1 {
+            font-size: 4rem;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            margin: 0 0 1rem 0;
+            text-transform: uppercase;
+            line-height: 0.9;
         }
 
         .store-hero p {
-            font-size: 1rem;
+            font-size: 1.2rem;
             font-weight: 400;
-            color: #ffffff;
+            color: rgba(255, 255, 255, 0.8);
             margin: 0;
-            letter-spacing: 0.02em;
-            padding: 0 20px;
-            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.9);
+            letter-spacing: 0.05em;
         }
 
-        @media (min-width: 768px) {
+        @media (max-width: 768px) {
+            .store-hero {
+                height: 60vh;
+            }
+
+            .store-hero h1 {
+                font-size: 2.5rem;
+            }
+
             .store-hero p {
-                font-size: 1.2rem;
-                padding: 0;
+                font-size: 1rem;
             }
         }
 
-        .store-filters {
-            padding: 40px 5%;
-            border-bottom: 1px solid #e5e5e5;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        .filter-group {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .filter-btn {
-            background: transparent;
-            color: #999999;
-            border: none;
-            padding: 8px 16px;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 0.1em;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .filter-btn.active {
-            color: #000000;
-            border-bottom: 2px solid #000000;
+        /* Section B: Product Grid (Layered Over Hero) */
+        .store-products {
+            position: relative;
+            z-index: 10;
+            margin-top: -6rem;
+            /* Negative margin for overlap effect */
+            padding: 0 1rem 4rem 1rem;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .product-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 1px;
-            background-color: #e5e5e5;
+            gap: 1rem;
         }
 
         @media (min-width: 768px) {
+            .product-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 2rem;
+            }
+        }
+
+        @media (min-width: 1024px) {
             .product-grid {
                 grid-template-columns: repeat(4, 1fr);
             }
         }
 
+        /* Product Card */
         .product-card {
-            background-color: #ffffff;
-            border: 1px solid #e5e5e5;
+            background: #111111;
+            border-radius: 12px;
             overflow: hidden;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #222222;
         }
 
         .product-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            border-color: #333333;
         }
 
         .product-image-container {
@@ -143,8 +152,8 @@
             width: 100%;
             padding-bottom: 125%;
             /* 4:5 aspect ratio */
+            background: #1a1a1a;
             overflow: hidden;
-            background-color: #f5f5f5;
         }
 
         .product-image {
@@ -154,57 +163,83 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.3s ease;
         }
 
-        .member-badge {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background-color: #000000;
-            color: #ffffff;
-            padding: 6px 12px;
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 0.1em;
+        .product-card:hover .product-image {
+            transform: scale(1.05);
         }
 
         .product-info {
-            padding: 20px;
+            padding: 1rem;
         }
 
         .product-title {
-            font-size: 14px;
+            font-size: 0.9rem;
             font-weight: 700;
-            color: #000000;
+            color: #ffffff;
+            margin: 0 0 0.5rem 0;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            margin: 0 0 8px 0;
-            line-height: 1.4;
-            min-height: 40px;
+            line-height: 1.3;
         }
 
         .product-price {
-            font-size: 14px;
-            font-weight: 400;
-            color: #666666;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0 0 0.75rem 0;
         }
 
+        .product-supplier {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #666666;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin: 0 0 0.75rem 0;
+        }
+
+        .quick-add-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .quick-add-btn:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+        }
+
+        .quick-add-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Loading State */
         .loading {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 100px 20px;
-            gap: 20px;
+            text-align: center;
+            padding: 4rem 1rem;
+            color: #666666;
         }
 
         .spinner {
             width: 40px;
             height: 40px;
-            border: 3px solid #e5e5e5;
-            border-top: 3px solid #000000;
+            border: 3px solid #222222;
+            border-top: 3px solid #ffffff;
             border-radius: 50%;
             animation: spin 1s linear infinite;
+            margin: 0 auto 1rem auto;
         }
 
         @keyframes spin {
@@ -217,12 +252,11 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="mobile-fixes.css">
 </head>
 
-<body class="store-page">
+<body>
     <!-- Navbar -->
-    <nav class="navbar navbar-dark-initial">
+    <nav class="navbar">
         <div class="logo">GODSPEED<span class="accent">BASKETBALL</span></div>
         <ul class="nav-links">
             <li><a href="index.html">Home</a></li>
@@ -286,184 +320,135 @@
         <div class="mobile-menu-btn">☰</div>
     </nav>
 
-    <!-- Store Container -->
-    <div class="store-container">
-        <!-- Hero Section -->
-        <div class="store-hero">
-            <div class="store-hero-content">
-                <div class="hero-eyebrow">GODSPEED COLLECTION</div>
-                <h1>BUILT<br>DIFFERENT</h1>
-            </div>
-            <div class="scroll-indicator">↓</div>
+    <!-- Section A: Immersive Hero -->
+    <section class="store-hero">
+        <div class="store-hero-bg"></div>
+        <div class="store-hero-overlay"></div>
+        <div class="store-hero-content">
+            <h1>THE PRO<br>SHOP</h1>
+            <p>Official Godspeed Performance Gear</p>
         </div>
+    </section>
 
-        <!-- Filters -->
-        <div id="products" class="store-filters">
-            <div class="filter-group">
-                <button class="filter-btn active" data-category="all">ALL</button>
-                <button class="filter-btn" data-category="Apparel">APPAREL</button>
-                <button class="filter-btn" data-category="Footwear">FOOTWEAR</button>
-                <button class="filter-btn" data-category="Equipment">EQUIPMENT</button>
-            </div>
-        </div>
-
-        <!-- Product Grid -->
+    <!-- Section B: Product Grid (Layered Over Hero) -->
+    <section class="store-products">
         <div id="product-grid" class="product-grid">
-            <!-- Loading State -->
-            <div class="loading" style="grid-column: 1 / -1;">
+            <!-- Products will be injected here -->
+            <div class="loading">
                 <div class="spinner"></div>
-                <p style="font-size: 14px; color: #999999; letter-spacing: 0.05em;">Loading products...</p>
+                <p>Loading products...</p>
             </div>
         </div>
-    </div>
+    </section>
 
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Initialize Supabase
-        const supabaseUrl = 'https://nnqokhqennuxalamnvps.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis';
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        // =====================================================
+        // THE INVENTORY - HYBRID SUPPLIER MODEL
+        // ===================================================== 
 
-        let allProducts = [];
-        let selectedCategory = 'all';
-
-        // Mock products fallback (ensures store is never empty)
-        const mockProducts = [
+        const INVENTORY = [
             {
-                id: 'mock-1',
-                title: 'Godspeed Pro Hoodie',
+                id: 1,
+                title: "Godspeed Pro Hoodie",
                 price: 6500,
-                category: 'Apparel',
-                status: 'active',
-                images: ['https://images.unsplash.com/photo-1556906781-9a412961c28c?auto=format&fit=crop&w=800&q=80'],
-                is_member_exclusive: false,
-                variants: [{ is_active: true, color: 'Black', stock_quantity: 10 }]
+                image: "https://images.unsplash.com/photo-1556906781-9a412961c28c?auto=format&fit=crop&w=800",
+                supplier: "Fourthwall"
             },
             {
-                id: 'mock-2',
-                title: 'Elite Shooter Shirt',
+                id: 2,
+                title: "Elite Shooter Shirt",
                 price: 4500,
-                category: 'Apparel',
-                status: 'active',
-                images: ['https://images.unsplash.com/photo-1519861531473-920026393112?auto=format&fit=crop&w=800&q=80'],
-                is_member_exclusive: false,
-                variants: [{ is_active: true, color: 'White', stock_quantity: 15 }]
+                image: "https://images.unsplash.com/photo-1519861531473-920026393112?auto=format&fit=crop&w=800",
+                supplier: "Nike"
+            },
+            {
+                id: 3,
+                title: "Performance Socks",
+                price: 1800,
+                image: "https://images.unsplash.com/photo-1591191538573-86c477e6fa3a?auto=format&fit=crop&w=800",
+                supplier: "Nike"
+            },
+            {
+                id: 4,
+                title: "Training Shorts",
+                price: 3500,
+                image: "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?auto=format&fit=crop&w=800",
+                supplier: "Fourthwall"
             }
         ];
 
-        // Load products
-        async function loadProducts() {
-            try {
-                const { data, error } = await supabase
-                    .from('products')
-                    .select(`
-                        *,
-                        variants:product_variants(*)
-                    `)
-                    .eq('status', 'active')
-                    .order('created_at', { ascending: false });
+        // =====================================================
+        // RENDER PRODUCTS
+        // ===================================================== 
 
-                if (error) throw error;
-
-                // Filter products to only include Black & White variants
-                allProducts = (data || []).map(product => {
-                    return {
-                        ...product,
-                        variants: (product.variants || []).filter(v =>
-                            v.is_active &&
-                            (v.color === 'Black' || v.color === 'White')
-                        )
-                    };
-                }).filter(product => product.variants.length > 0); // Only show products with valid variants
-
-                console.log('✅ Products loaded:', allProducts.length);
-
-                // CRITICAL FALLBACK: Use mock data if no products found
-                if (allProducts.length === 0) {
-                    console.warn('⚠️ No products in database, using mock data');
-                    allProducts = mockProducts;
-                }
-
-                renderProducts();
-            } catch (err) {
-                console.error('❌ CRITICAL ERROR loading products:', err);
-                console.error('Error details:', err.message);
-                console.error('Supabase URL:', supabaseUrl);
-
-                // CRITICAL FALLBACK: Use mock data on error
-                console.warn('⚠️ Database error, using mock data');
-                allProducts = mockProducts;
-                renderProducts();
-            }
-        }
-
-        // Render products
         function renderProducts() {
             const grid = document.getElementById('product-grid');
 
-            const filtered = selectedCategory === 'all'
-                ? allProducts
-                : allProducts.filter(p => p.category === selectedCategory);
-
-            if (filtered.length === 0) {
-                grid.innerHTML = `
-                    <div style="grid-column: 1 / -1; padding: 100px 20px; text-align: center;">
-                        <p style="font-size: 14px; color: #999999;">No products found</p>
-                    </div>
-                `;
-                return;
-            }
-
-            grid.innerHTML = filtered.map(product => {
-                // Calculate total stock across all variants
-                const totalStock = product.variants.reduce((sum, v) => sum + (v.stock_quantity || 0), 0);
-                const inStock = totalStock > 0;
-                const lowStock = totalStock > 0 && totalStock <= 10;
-
-                return `
+            const html = INVENTORY.map(product => `
                 <div class="product-card">
                     <div class="product-image-container">
-                        <img src="${product.images[0] || 'https://images.unsplash.com/photo-1556906781-9a412961c28c?auto=format&fit=crop&w=800&q=80'}" 
+                        <img src="${product.image}" 
                              alt="${product.title}" 
                              class="product-image"
-                             onerror="this.src='https://images.unsplash.com/photo-1556906781-9a412961c28c?auto=format&fit=crop&w=800&q=80'">
-                        ${product.is_member_exclusive ? '<div class="member-badge">MEMBERS ONLY</div>' : ''}
-                        ${!inStock ? '<div class="member-badge" style="background: #ff3b30;">OUT OF STOCK</div>' : ''}
-                        ${lowStock ? '<div class="member-badge" style="background: #ff9500; top: 50px;">LOW STOCK</div>' : ''}
+                             onerror="this.src='https://images.unsplash.com/photo-1556906781-9a412961c28c?auto=format&fit=crop&w=800'">
                     </div>
                     <div class="product-info">
                         <h3 class="product-title">${product.title}</h3>
                         <div class="product-price">$${(product.price / 100).toFixed(2)}</div>
-                        ${inStock ? '<div style="font-size: 11px; color: #34c759; font-weight: 600; margin-top: 8px;">IN STOCK</div>' : ''}
+                        <div class="product-supplier">Powered by ${product.supplier}</div>
+                        <button class="quick-add-btn" onclick="quickAdd(${product.id}, '${product.title}')">
+                            Quick Add
+                        </button>
                     </div>
                 </div>
-            `;
-            }).join('');
+            `).join('');
+
+            grid.innerHTML = html;
         }
 
-        // Filter buttons
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                selectedCategory = btn.dataset.category;
-                renderProducts();
-            });
-        });
+        // =====================================================
+        // QUICK ADD FUNCTIONALITY
+        // ===================================================== 
 
-        // Load products on page load
-        loadProducts();
+        function quickAdd(productId, productTitle) {
+            console.log(`✅ Added to cart: ${productTitle} (ID: ${productId})`);
+            
+            // Visual feedback
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = 'Added ✓';
+            btn.style.background = '#34c759';
+            btn.style.color = '#ffffff';
+
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = '#ffffff';
+                btn.style.color = '#000000';
+            }, 1500);
+
+            // Update cart badge
+            const cartBadge = document.querySelector('.cart-badge');
+            const currentCount = parseInt(cartBadge.textContent) || 0;
+            cartBadge.textContent = currentCount + 1;
+        }
+
+        // =====================================================
+        // INITIALIZE
+        // ===================================================== 
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderProducts();
+            console.log('🏀 The Pro Shop loaded with', INVENTORY.length, 'products');
+        });
 
         // Navbar scroll effect
         window.addEventListener('scroll', () => {
             const navbar = document.querySelector('.navbar');
             if (window.scrollY > 50) {
                 navbar.classList.add('scrolled');
-                navbar.classList.remove('navbar-dark-initial');
             } else {
                 navbar.classList.remove('scrolled');
-                navbar.classList.add('navbar-dark-initial');
             }
         });
 
