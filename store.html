@@ -27,76 +27,158 @@
             padding: 0;
         }
 
-        /* Section A: Immersive Hero */
+        /* =====================================================
+           CSS COLLAGE HERO - "CONTROLLED CHAOS"
+           ===================================================== */
+
+        /* Hero Container */
         .store-hero {
             position: relative;
-            height: 70vh;
+            height: 80vh;
             width: 100%;
             overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: #000000;
         }
 
-        .store-hero-bg {
+        /* Dark Textured Base */
+        .hero-base {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)),
-                url('assets/store-hero.png');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
+            background: radial-gradient(circle at 30% 50%, #1a1a1a 0%, #000000 70%);
+            z-index: 1;
         }
 
-        .store-hero-overlay {
+        /* Model Images - Layered Composition */
+        .hero-model {
+            position: absolute;
+            z-index: 2;
+        }
+
+        .hero-model img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(30%) contrast(120%);
+            transition: all 0.3s ease;
+        }
+
+        /* Model 1: Coach True (Back-Left) */
+        .hero-model-1 {
+            bottom: 0;
+            left: -5%;
+            width: 45%;
+            height: 85%;
+            opacity: 0.7;
+            z-index: 2;
+        }
+
+        /* Model 2: Quest (Center-Right) */
+        .hero-model-2 {
+            bottom: 0;
+            right: 5%;
+            width: 40%;
+            height: 80%;
+            opacity: 0.85;
+            z-index: 4;
+        }
+
+        /* Model 3: Home Hero (Front-Center) */
+        .hero-model-3 {
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50%;
+            height: 75%;
+            opacity: 0.9;
+            z-index: 6;
+            mix-blend-mode: luminosity;
+        }
+
+        /* Typography Layer (Parallax Effect) */
+        .hero-typography {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            text-align: center;
+        }
+
+        .hero-typography h1 {
+            font-size: clamp(4rem, 12vw, 10rem);
+            font-weight: 900;
+            letter-spacing: -0.05em;
+            line-height: 0.85;
+            margin: 0;
+            color: #ffffff;
+            text-shadow: 0 0 40px rgba(255, 0, 0, 0.3),
+                0 0 80px rgba(0, 0, 0, 0.8);
+            -webkit-text-stroke: 2px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Gradient Overlay for Depth */
+        .hero-overlay {
             position: absolute;
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 50%;
-            background: linear-gradient(to bottom, transparent, #000000);
+            height: 40%;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+            z-index: 7;
             pointer-events: none;
         }
 
-        .store-hero-content {
-            position: relative;
-            z-index: 2;
+        /* Subtitle */
+        .hero-subtitle {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 8;
             text-align: center;
-            color: #ffffff;
-            padding: 0 20px;
         }
 
-        .store-hero h1 {
-            font-size: 4rem;
-            font-weight: 900;
-            letter-spacing: -0.03em;
-            margin: 0 0 1rem 0;
-            text-transform: uppercase;
-            line-height: 0.9;
-        }
-
-        .store-hero p {
-            font-size: 1.2rem;
-            font-weight: 400;
-            color: rgba(255, 255, 255, 0.8);
+        .hero-subtitle p {
+            font-size: 1rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
             margin: 0;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
         }
 
+        /* Mobile Responsive */
         @media (max-width: 768px) {
             .store-hero {
                 height: 60vh;
             }
 
-            .store-hero h1 {
-                font-size: 2.5rem;
+            .hero-model-1 {
+                width: 60%;
+                height: 70%;
+                left: -10%;
             }
 
-            .store-hero p {
-                font-size: 1rem;
+            .hero-model-2 {
+                width: 55%;
+                height: 65%;
+                right: -5%;
+            }
+
+            .hero-model-3 {
+                width: 70%;
+                height: 60%;
+            }
+
+            .hero-typography h1 {
+                font-size: clamp(3rem, 15vw, 6rem);
+            }
+
+            .hero-subtitle p {
+                font-size: 0.75rem;
             }
         }
 
@@ -328,12 +410,36 @@
         <div class="mobile-menu-btn">☰</div>
     </nav>
 
-    <!-- Section A: Immersive Hero -->
+    <!-- Section A: CSS COLLAGE HERO - "Controlled Chaos" -->
     <section class="store-hero">
-        <div class="store-hero-bg"></div>
-        <div class="store-hero-overlay"></div>
-        <div class="store-hero-content">
-            <h1>THE PRO<br>SHOP</h1>
+        <!-- Dark textured base -->
+        <div class="hero-base"></div>
+
+        <!-- Model Layer 1: Coach True (Back-Left) -->
+        <div class="hero-model hero-model-1">
+            <img src="/assets/coach-true-v2.png" alt="Coach True">
+        </div>
+
+        <!-- Typography Layer (Middle) -->
+        <div class="hero-typography">
+            <h1>THE<br>PRO<br>SHOP</h1>
+        </div>
+
+        <!-- Model Layer 2: Quest (Center-Right) -->
+        <div class="hero-model hero-model-2">
+            <img src="/quest_scott.jpg" alt="Quest Scott">
+        </div>
+
+        <!-- Model Layer 3: Home Hero (Front-Center) -->
+        <div class="hero-model hero-model-3">
+            <img src="/assets/hero-collage.png" alt="Godspeed Athletes">
+        </div>
+
+        <!-- Gradient overlay for depth -->
+        <div class="hero-overlay"></div>
+
+        <!-- Subtitle -->
+        <div class="hero-subtitle">
             <p>Official Godspeed Performance Gear</p>
         </div>
     </section>
@@ -361,42 +467,36 @@
                 title: "Godspeed Pro Hoodie",
                 price: 6500,
                 image: "/assets/godspeed-hoodie.png",
-                supplier: "Fourthwall"
             },
             {
                 id: 2,
                 title: "Elite Shooter Shirt",
                 price: 4500,
                 image: "/assets/godspeed-tshirt.png",
-                supplier: "Fourthwall"
             },
             {
                 id: 3,
                 title: "Performance Shorts",
                 price: 3500,
                 image: "/assets/godspeed-shorts.png",
-                supplier: "Fourthwall"
             },
             {
                 id: 4,
                 title: "Women's Crop Top",
                 price: 2800,
                 image: "/assets/godspeed-croptop.png",
-                supplier: "Fourthwall"
             },
             {
                 id: 5,
                 title: "Performance Socks",
                 price: 1800,
                 image: "/assets/godspeed-socks.png",
-                supplier: "Fourthwall"
             },
             {
                 id: 6,
                 title: "Training Bag",
                 price: 8500,
                 image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800",
-                supplier: "Nike"
             }
         ];
 
@@ -418,7 +518,6 @@
                     <div class="product-info">
                         <h3 class="product-title">${product.title}</h3>
                         <div class="product-price">$${(product.price / 100).toFixed(2)}</div>
-                        <div class="product-supplier">Powered by ${product.supplier}</div>
                         <button class="quick-add-btn" onclick="quickAdd(${product.id}, '${product.title}')">
                             Quick Add
                         </button>
