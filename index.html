@@ -23,9 +23,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="responsive-nav.css">
+
 
     <!-- Snipcart CSS -->
     <link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.0.31/default/snipcart.css" />
+    <link rel="stylesheet" href="mobile-fixes.css">
 </head>
 
 <body>
@@ -52,9 +55,11 @@
             </li>
             <li class="nav-item-dropdown">
                 <div class="nav-login-wrapper">
-                    <a href="parent-portal.html" class="btn-secondary"
-                        style="padding: 0.6rem 1.2rem; font-size: 0.85rem; font-weight: 700;">
-                        SIGN IN
+                    <a href="#" class="nav-cart-btn" aria-label="Sign In">
+                        <svg class="cart-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
                     </a>
                     <div class="login-dropdown">
                         <div
@@ -691,6 +696,8 @@
     <script src="portal-data.js"></script>
     <script src="enrollment.js"></script>
     <script src="auth.js"></script>
+    <script src="src/components/MobileBottomNav.js"></script>
+    <script src="nav-security.js"></script>
 </body>
 
 </html>

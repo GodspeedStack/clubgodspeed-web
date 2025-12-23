@@ -1,7 +1,33 @@
-.DS_Store
+# Dependencies
 node_modules/
-dist/
+package-lock.json
+
+# Environment variables
 .env
-godspeed_site_deploy.zip
-.agent/
-**/.DS_Store
+.env.local
+.env.production
+
+# Firebase
+.firebase/
+.firebaserc
+firebase-debug.log
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Build outputs
+dist/
+build/
+.cache/
+
+# Netlify
+.netlify/
