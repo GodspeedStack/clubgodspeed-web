@@ -102,14 +102,21 @@
 
         /* Section B: Product Grid (Layered Over Hero) */
         .store-products {
-            position: relative;
+            \n position: relative;
             z-index: 10;
-            margin-top: -6rem;
-            /* Negative margin for overlap effect */
+            margin-top: 1rem;
+            /* Safe spacing on mobile */
             padding: 0 1rem 4rem 1rem;
             max-width: 1400px;
             margin-left: auto;
             margin-right: auto;
+        }
+
+        @media (min-width: 768px) {
+            .store-products {
+                margin-top: -6rem;
+                /* Negative margin overlap on desktop only */
+            }
         }
 
         .product-grid {
@@ -263,7 +270,8 @@
             <li><a href="training.html">Training</a></li>
             <li><a href="aau.html">AAU</a></li>
             <li><a href="calendar-preview.html">Calendar</a></li>
-            <li><a href="store.html" class="active">Shop</a></li>
+            <li><a href="store.html" class="active"
+                    style="color: white; font-weight: 700; border-bottom: 2px solid white;">Shop</a></li>
             <li><a href="about.html">About</a></li>
             <li>
                 <a href="#" id="cart-btn" class="nav-cart-btn" aria-label="Cart">
@@ -331,7 +339,7 @@
     </section>
 
     <!-- Section B: Product Grid (Layered Over Hero) -->
-    <section class="store-products">
+    <section class="store-products" style="margin-top: 1rem;">
         <div id="product-grid" class="product-grid">
             <!-- Products will be injected here -->
             <div class="loading">
@@ -352,28 +360,28 @@
                 id: 1,
                 title: "Godspeed Pro Hoodie",
                 price: 6500,
-                image: "assets/godspeed-hoodie.png",
+                image: "/assets/godspeed-hoodie.png",
                 supplier: "Fourthwall"
             },
             {
                 id: 2,
                 title: "Elite Shooter Shirt",
                 price: 4500,
-                image: "assets/godspeed-tshirt.png",
+                image: "/assets/godspeed-tshirt.png",
                 supplier: "Fourthwall"
             },
             {
                 id: 3,
                 title: "Performance Shorts",
                 price: 3500,
-                image: "assets/godspeed-shorts.png",
+                image: "/assets/godspeed-shorts.png",
                 supplier: "Fourthwall"
             },
             {
                 id: 4,
                 title: "Women's Crop Top",
                 price: 2800,
-                image: "assets/godspeed-croptop.png",
+                image: "/assets/godspeed-croptop.png",
                 supplier: "Fourthwall"
             },
             {
