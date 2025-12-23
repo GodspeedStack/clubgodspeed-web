@@ -2010,7 +2010,8 @@ img[src*="coach-scott.png"] {
     right: -24px;
     /* Float to the right */
     font-size: 9px;
-    color: #86868b;
+    color: #000000;
+    /* Changed to black for visibility */
     padding: 2px 4px;
     border: 1px solid #d2d2d7;
     border-radius: 4px;
@@ -4912,14 +4913,16 @@ body:not(.logged-in) .auth-restricted {
     cursor: pointer;
     margin-top: 16px;
 }
+
 /* Strict Coach Image Sizing */
 .coach-image-container {
     width: 350px;
     height: 350px;
     margin: 0 auto;
     border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    overflow: hidden; /* Ensures image respects border radius */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    /* Ensures image respects border radius */
 }
 
 .coach-photo {
