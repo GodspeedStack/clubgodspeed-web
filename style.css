@@ -30,6 +30,24 @@
     --shadow-lift: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
+/* =====================================================
+   GLOBAL SCROLLBAR FIX - Prevent Double Scrollbars
+   ===================================================== */
+html {
+    height: auto;
+    /* Allow natural growth */
+    overflow-x: hidden;
+    /* Prevent horizontal scroll */
+    overflow-y: auto;
+    /* Let browser handle vertical scroll */
+}
+
+html,
+body {
+    max-height: none;
+    /* Remove any height constraints */
+}
+
 * {
     margin: 0;
     padding: 0;
