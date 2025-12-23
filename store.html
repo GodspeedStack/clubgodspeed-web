@@ -352,29 +352,43 @@
                 id: 1,
                 title: "Godspeed Pro Hoodie",
                 price: 6500,
-                image: "https://images.unsplash.com/photo-1556906781-9a412961c28c?auto=format&fit=crop&w=800",
+                image: "assets/godspeed-hoodie.png",
                 supplier: "Fourthwall"
             },
             {
                 id: 2,
                 title: "Elite Shooter Shirt",
                 price: 4500,
-                image: "https://images.unsplash.com/photo-1519861531473-920026393112?auto=format&fit=crop&w=800",
-                supplier: "Nike"
+                image: "assets/godspeed-tshirt.png",
+                supplier: "Fourthwall"
             },
             {
                 id: 3,
+                title: "Performance Shorts",
+                price: 3500,
+                image: "assets/godspeed-shorts.png",
+                supplier: "Fourthwall"
+            },
+            {
+                id: 4,
+                title: "Women's Crop Top",
+                price: 2800,
+                image: "assets/godspeed-croptop.png",
+                supplier: "Fourthwall"
+            },
+            {
+                id: 5,
                 title: "Performance Socks",
                 price: 1800,
                 image: "https://images.unsplash.com/photo-1591191538573-86c477e6fa3a?auto=format&fit=crop&w=800",
                 supplier: "Nike"
             },
             {
-                id: 4,
-                title: "Training Shorts",
-                price: 3500,
-                image: "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?auto=format&fit=crop&w=800",
-                supplier: "Fourthwall"
+                id: 6,
+                title: "Training Bag",
+                price: 8500,
+                image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800",
+                supplier: "Nike"
             }
         ];
 
@@ -413,7 +427,7 @@
 
         function quickAdd(productId, productTitle) {
             console.log(`✅ Added to cart: ${productTitle} (ID: ${productId})`);
-            
+
             // Visual feedback
             const btn = event.target;
             const originalText = btn.textContent;
