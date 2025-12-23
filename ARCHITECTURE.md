@@ -4,12 +4,12 @@
 
 Think of your app like a physical Nike store:
 
-### 🏢 **Netlify = The Building**
+### 🏢 **Vercel = The Building**
 
 - The glass windows, doors, and shelves customers see
 - **Role**: Frontend hosting
 - **What it serves**: HTML, CSS, JavaScript, images
-- **URL**: <https://clubgodspeed-web.netlify.app>
+- **URL**: <https://clubgodspeed-web.vercel.app>
 
 ### 📦 **Supabase = The Stockroom**
 
@@ -30,10 +30,10 @@ Think of your app like a physical Nike store:
 
 ### **Frontend**
 
-- **Platform**: Netlify
+- **Platform**: Vercel
 - **Repository**: <https://github.com/Jewellsco/clubgodspeed-web>
 - **Auto-Deploy**: ✅ On push to `main` branch
-- **Live URL**: <https://clubgodspeed-web.netlify.app>
+- **Live URL**: <https://clubgodspeed-web.vercel.app>
 
 ### **Backend**
 
@@ -62,12 +62,18 @@ Think of your app like a physical Nike store:
 - **Status**: Deprecated, no longer deploying
 - **Note**: Firebase uses NoSQL (Firestore), we need SQL (PostgreSQL)
 
+### **Netlify** ❌
+
+- **Reason**: Persistent caching issues causing deployment problems
+- **Status**: Migrated to Vercel on 2025-12-23
+- **Note**: Vercel provides faster deploys and better cache management
+
 ---
 
 ## 📊 **Data Flow**
 
-```
-Customer visits Netlify site
+```text
+Customer visits Vercel site
         ↓
 Clicks "Add to Cart"
         ↓
@@ -106,9 +112,9 @@ Webhook updates Supabase order status
 
 ## 🔐 **Environment Variables**
 
-### **Set in Netlify Dashboard**
+### **Set in Vercel Dashboard**
 
-```
+```bash
 SUPABASE_URL=https://nnqokhqennuxalamnvps.supabase.co
 SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 RESEND_API_KEY=re_MELpnVZ2_N9oYxN9uKCJhQboruPK3t59o
@@ -139,26 +145,27 @@ git push
 
 ### **3. Auto-Deploy**
 
-- Netlify detects push to GitHub
+- Vercel detects push to GitHub
 - Builds and deploys automatically
-- Live in ~1-2 minutes
+- Live in ~30-60 seconds
 
 ### **4. Verify**
 
-- Check: <https://clubgodspeed-web.netlify.app>
+- Check: <https://clubgodspeed-web.vercel.app>
 - Hard refresh: `Cmd + Shift + R`
 
 ---
 
 ## 📝 **Why This Stack?**
 
-### **Netlify (Frontend)**
+### **Vercel (Frontend)**
 
 - ✅ GitHub integration
-- ✅ Auto-deploy on push
+- ✅ Auto-deploy on push (30-60 seconds)
 - ✅ Preview deployments
-- ✅ Fast CDN
+- ✅ Fast global CDN
 - ✅ Easy rollbacks
+- ✅ Better cache management than Netlify
 
 ### **Supabase (Backend)**
 
@@ -181,7 +188,7 @@ git push
 
 **Frontend and Backend are SEPARATE**
 
-- **Frontend** (Netlify): What customers see
+- **Frontend** (Vercel): What customers see
 - **Backend** (Supabase): Where data lives
 - **Never mix**: Don't use Firebase when using Supabase
 
@@ -189,16 +196,16 @@ git push
 
 ## 📚 **Documentation**
 
-- [Deployment Guide](DEPLOY_TO_NETLIFY.md)
+- [Deployment Guide](DEPLOY_TO_VERCEL.md)
 - [Store Infrastructure](docs/STORE_INFRASTRUCTURE.md)
 - [Database Migrations](supabase/migrations/)
-- [Environment Variables](docs/ENVIRONMENT_VARIABLES.md)
 
 ---
 
 **Architecture Status**: ✅ **CONFIRMED & DEPLOYED**
 
-- Frontend: Netlify ✅
+- Frontend: Vercel ✅
 - Backend: Supabase ✅
 - Payments: Stripe ✅
 - Firebase: Deprecated ❌
+- Netlify: Deprecated ❌ (Migrated to Vercel 2025-12-23)
