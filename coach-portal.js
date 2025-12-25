@@ -770,8 +770,8 @@ function switchTeamView(viewName) {
     const rosterView = document.getElementById('roster-view');
     const analyticsView = document.getElementById('analytics-view');
     const academyView = document.getElementById('academy-view');
-    const tabRoster = document.getElementById('tab-roster');
-    const tabAnalytics = document.getElementById('tab-analytics');
+    const tabRoster = document.getElementById('btn-view-roster');
+    const tabAnalytics = document.getElementById('btn-view-analytics');
 
     // UI Reset
     rosterView.style.display = 'none';
@@ -1298,3 +1298,80 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+
+// Global function to handle edits in the Player Report cards
+window.updateGradeNote = function (element, gradeId, fieldType) {
+    const newText = element.innerText.trim();
+    const db = getDB();
+    const gradeIndex = db.grades.findIndex(g => g.gradeId === gradeId);
+
+    if (gradeIndex !== -1) {
+        const grade = db.grades[gradeIndex];
+
+        // Ensure notes is an object (handle legacy string case)
+        if (typeof grade.notes !== 'object') {
+            grade.notes = { well: grade.notes, improve: '' };
+        }
+
+        // Update field
+        grade.notes[fieldType] = newText;
+
+        // Update Metadata
+        grade.lastEdited = {
+            coach: 'Coach Scott',
+            timestamp: new Date().toISOString()
+        };
+
+        // Save
+        db.grades[gradeIndex] = grade;
+        saveDB(db);
+
+        // Update Footer in UI without full reload
+        const card = document.getElementById('card-' + gradeId);
+        let footerDiv = card.lastElementChild;
+        // Check if it's the footer by content
+        if (footerDiv.innerHTML.includes('Edited by')) {
+            footerDiv.remove();
+        }
+
+        const timestampStr = new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' });
+        const footerHtml = 'Edited by Coach Scott • ' + timestampStr;
+
+        const newFooter = document.createElement('div');
+        newFooter.style.cssText = 'margin-top: 12px; padding-top: 8px; border-top: 1px solid #f5f5f7; font-size: 0.7rem; color: #86868b; text-align: right; font-style: italic;';
+        newFooter.innerHTML = footerHtml;
+        card.appendChild(newFooter);
+    }
+};
+
+// Handle edits for the main Narrative Report
+window.updateNarrative = function (element, athleteId) {
+    const newText = element.innerText.trim();
+    const db = getDB();
+
+    if (db.reports && db.reports[athleteId]) {
+        let headerText = 'Performance Analysis';
+        const prev = element.previousElementSibling;
+        if (prev && prev.tagName === 'H4') {
+            headerText = prev.innerText;
+        }
+
+        const newContent = '<h4>' + headerText + '</h4><p>' + element.innerHTML + '</p>';
+
+        db.reports[athleteId].content = newContent;
+
+        db.reports[athleteId].lastEdited = {
+            coach: 'Coach Scott',
+            timestamp: new Date().toISOString()
+        };
+
+        saveDB(db);
+
+        const footerInfo = document.getElementById('narrative-footer-' + athleteId);
+        if (footerInfo) {
+            const timestampStr = new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' });
+            footerInfo.innerHTML = 'Edited by Coach Scott • ' + timestampStr;
+            footerInfo.style.cssText = 'margin-top: 12px; padding-top: 8px; border-top: 1px solid #f5f5f7; font-size: 0.7rem; color: #86868b; text-align: right; font-style: italic;';
+        }
+    }
+};
