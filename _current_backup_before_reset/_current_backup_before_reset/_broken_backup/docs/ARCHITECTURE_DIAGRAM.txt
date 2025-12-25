@@ -1,0 +1,237 @@
+```
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                    GODSPEED COMMS CENTER ARCHITECTURE                      ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                            COACH INTERFACE                               │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    │ Compose Message
+                                    ▼
+                    ┌───────────────────────────────┐
+                    │  CoachMessageComposer.jsx     │
+                    │  ─────────────────────────    │
+                    │  • Recipient Selection        │
+                    │  • Subject & Body             │
+                    │  • Delivery Method            │
+                    └───────────────────────────────┘
+                                    │
+                    ┌───────────────┴───────────────┐
+                    │                               │
+                    ▼                               ▼
+        ┌───────────────────────┐       ┌───────────────────────┐
+        │   SUPABASE DATABASE   │       │    RESEND EMAIL API   │
+        │   ─────────────────   │       │    ───────────────    │
+        │   • messages          │       │   • Send bulk emails  │
+        │   • message_recipients│       │   • Track delivery    │
+        │   • message_replies   │       │   • Email templates   │
+        └───────────────────────┘       └───────────────────────┘
+                    │                               │
+                    │                               │
+                    │                               ▼
+                    │                   ┌───────────────────────┐
+                    │                   │  EMAIL INBOX          │
+                    │                   │  ─────────────────    │
+                    │                   │  • HTML template      │
+                    │                   │  • CTA to portal      │
+                    │                   │  • Tracking pixels    │
+                    │                   └───────────────────────┘
+                    │
+                    │ Real-time Subscription
+                    │
+                    ▼
+        ┌───────────────────────────────┐
+        │     ParentInbox.jsx           │
+        │     ─────────────────────     │
+        │     • Message list            │
+        │     • Auto-mark as read       │
+        │     • Reply to coach          │
+        └───────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                            PARENT INTERFACE                              │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                           DATA FLOW DIAGRAM                                ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+1. COACH SENDS MESSAGE
+   ┌─────────┐
+   │  Coach  │ ──[Compose]──> CoachMessageComposer
+   └─────────┘                        │
+                                      │
+                        ┌─────────────┴─────────────┐
+                        │                           │
+                        ▼                           ▼
+                   [Database]                   [Email API]
+                        │                           │
+                        │                           │
+                        ▼                           ▼
+                  Insert into:                 Send to:
+                  • messages                   • parent@email.com
+                  • message_recipients         • Email ID stored
+                        │
+                        │
+                        ▼
+                  [Real-time Event]
+                        │
+                        │
+                        ▼
+
+2. PARENT RECEIVES MESSAGE
+   ┌─────────┐
+   │ Parent  │ ──[Opens Portal]──> ParentInbox
+   └─────────┘                          │
+                                        │
+                                        ▼
+                                  [Load Messages]
+                                        │
+                                        ▼
+                                  [Display List]
+                                        │
+                                        │
+                                        ▼
+                                  [Click Message]
+                                        │
+                                        ▼
+                                  [Auto Mark Read]
+                                        │
+                                        ▼
+                                  Update DB:
+                                  • status = 'read'
+                                  • read_at = NOW()
+                                        │
+                                        ▼
+                                  [Trigger Updates]
+                                  • read_count++
+                                  • Coach analytics
+
+3. PARENT REPLIES
+   ┌─────────┐
+   │ Parent  │ ──[Type Reply]──> ParentInbox
+   └─────────┘                        │
+                                      │
+                                      ▼
+                                 [Send Reply]
+                                      │
+                                      ▼
+                                 Insert into:
+                                 • message_replies
+                                   - parent_message_id
+                                   - sender_id (parent)
+                                   - recipient_id (coach)
+                                   - body
+                                      │
+                                      ▼
+                                 [Coach Notified]
+                                 (1-on-1 only, no Reply All)
+
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                         SECURITY & PERMISSIONS                             ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+ROW LEVEL SECURITY (RLS) POLICIES:
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ messages                                                                 │
+├─────────────────────────────────────────────────────────────────────────┤
+│ SELECT: auth.uid() = sender_id                                          │
+│ INSERT: auth.uid() = sender_id                                          │
+│ UPDATE: auth.uid() = sender_id                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ message_recipients                                                       │
+├─────────────────────────────────────────────────────────────────────────┤
+│ SELECT: auth.uid() = user_id  OR  coach owns message                   │
+│ UPDATE: auth.uid() = user_id  (parents can mark as read)               │
+│ INSERT: coach owns message                                              │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ message_replies                                                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│ SELECT: auth.uid() = sender_id  OR  auth.uid() = recipient_id          │
+│ INSERT: auth.uid() = sender_id                                          │
+│ UPDATE: auth.uid() = recipient_id  (mark reply as read)                │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                          ANALYTICS & TRACKING                              ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+COACH DASHBOARD METRICS:
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ Message Analytics                                                        │
+├─────────────────────────────────────────────────────────────────────────┤
+│ • Total Sent: 15 messages                                               │
+│ • Total Recipients: 45 parents                                          │
+│ • Read Rate: 78% (35/45)                                                │
+│ • Unread: 10 parents                                                    │
+│                                                                          │
+│ Per-Message Stats:                                                       │
+│ ┌──────────────────────────────────────────────────────────────┐       │
+│ │ Subject: "Tournament Schedule Update"                        │       │
+│ │ Sent: Dec 20, 2025 3:45 PM                                   │       │
+│ │ Recipients: 15                                                │       │
+│ │ Read: 12 (80%)                                                │       │
+│ │ Unread: 3                                                     │       │
+│ │ [Resend to Unopened] ← Future feature                        │       │
+│ └──────────────────────────────────────────────────────────────┘       │
+└─────────────────────────────────────────────────────────────────────────┘
+
+READ TRACKING:
+
+In-App:
+  ┌─────────────┐
+  │ Message     │
+  │ Rendered    │ ──> Auto-mark as read
+  └─────────────┘       │
+                        ▼
+                  Update DB immediately
+                  • status = 'read'
+                  • read_at = timestamp
+
+Email (V2 - Webhook):
+  ┌─────────────┐
+  │ Email       │
+  │ Opened      │ ──> Resend webhook
+  └─────────────┘       │
+                        ▼
+                  POST /api/webhooks/resend
+                        │
+                        ▼
+                  Update DB
+                  • email_opened_at = timestamp
+
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                            TECH STACK                                      ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+Frontend:
+  • React 18
+  • Godspeed Design System
+  • Real-time subscriptions
+
+Backend:
+  • Supabase (PostgreSQL + Auth + Real-time)
+  • Resend (Email delivery)
+
+Database:
+  • PostgreSQL with RLS
+  • Triggers for auto-updates
+  • Indexes for performance
+
+Email:
+  • HTML templates
+  • Tracking pixels (V2)
+  • Webhook integration (V2)
+```

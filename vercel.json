@@ -1,5 +1,14 @@
 {
-    "buildCommand": null,
-    "outputDirectory": ".",
-    "cleanUrls": true
+    "version": 2,
+    "builds": [
+        {
+            "src": "**/*",
+            "use": "@vercel/static"
+        }
+    ],
+    "routes": [
+        {
+            "handle": "filesystem"
+        }
+    ]
 }

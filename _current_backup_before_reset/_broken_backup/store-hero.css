@@ -1,0 +1,199 @@
+/* =====================================================
+   STORE PAGE - FULL BLEED HERO & TRANSPARENT NAVBAR
+   ===================================================== */
+
+/* Make navbar transparent on store page */
+body.store-page .navbar {
+    background: transparent !important;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 50;
+    transition: background 0.3s ease;
+}
+
+/* Navbar becomes black on scroll */
+body.store-page .navbar.scrolled {
+    background: #000000 !important;
+}
+
+/* Full-screen hero */
+.store-hero {
+    position: relative;
+    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)), url('assets/store-hero.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    color: #ffffff;
+    padding: 0 5%;
+    text-align: center;
+    height: 100vh !important;
+    min-height: 600px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.store-hero-content {
+    position: relative;
+    z-index: 2;
+    padding-top: 80px;
+}
+
+.store-hero h1 {
+    font-size: 3rem !important;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    margin: 0 0 24px 0 !important;
+    line-height: 1 !important;
+    padding: 0 20px !important;
+    text-shadow: 3px 3px 12px rgba(0, 0, 0, 0.9) !important;
+}
+
+@media (min-width: 768px) {
+    .store-hero h1 {
+        font-size: 5.5rem !important;
+        padding: 0 !important;
+        margin: 0 0 32px 0 !important;
+    }
+}
+
+.store-hero p {
+    font-size: 1.1rem !important;
+    font-weight: 400;
+    color: #ffffff !important;
+    margin: 0 0 40px 0 !important;
+    letter-spacing: 0.02em;
+    padding: 0 20px !important;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.9) !important;
+}
+
+@media (min-width: 768px) {
+    .store-hero p {
+        font-size: 1.4rem !important;
+        padding: 0 !important;
+    }
+}
+
+/* Scroll indicator */
+.scroll-indicator {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #ffffff;
+    font-size: 2rem;
+    animation: bounce 2s infinite;
+    cursor: pointer;
+}
+
+@keyframes bounce {
+
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+        transform: translateX(-50%) translateY(0);
+    }
+
+    40% {
+        transform: translateX(-50%) translateY(-10px);
+    }
+
+    60% {
+        transform: translateX(-50%) translateY(-5px);
+    }
+}
+
+/* Hero eyebrow text */
+.hero-eyebrow {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: #ffffff;
+    opacity: 0.8;
+    margin-bottom: 24px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+@media (min-width: 768px) {
+    .hero-eyebrow {
+        font-size: 0.875rem;
+        margin-bottom: 32px;
+    }
+}
+
+/* Hero title */
+.store-hero h1 {
+    font-size: 4rem !important;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -0.03em;
+    margin: 0 !important;
+    line-height: 0.9 !important;
+    padding: 0 !important;
+    text-shadow: 4px 4px 16px rgba(0, 0, 0, 0.9) !important;
+    color: #ffffff;
+}
+
+@media (min-width: 768px) {
+    .store-hero h1 {
+        font-size: 7rem !important;
+        letter-spacing: -0.04em;
+    }
+}
+
+@media (min-width: 1024px) {
+    .store-hero h1 {
+        font-size: 9rem !important;
+    }
+}
+
+/* Hero CTA */
+.hero-cta {
+    margin-top: 48px;
+}
+
+@media (min-width: 768px) {
+    .hero-cta {
+        margin-top: 64px;
+    }
+}
+
+.hero-shop-btn {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    color: #ffffff;
+    padding: 14px 32px;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    border-radius: 100px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.hero-shop-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: scale(1.02);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.hero-shop-btn:active {
+    transform: scale(0.98);
+}
+
+@media (min-width: 768px) {
+    .hero-shop-btn {
+        padding: 16px 40px;
+        font-size: 1rem;
+    }
+}
