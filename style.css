@@ -4,7 +4,7 @@ body {
     font-family: 'Inter', sans-serif;
 }
 
-/* NAVBARS */
+/* LIGHT NAV */
 .navbar {
     display: flex;
     justify-content: space-between;
@@ -13,16 +13,8 @@ body {
     position: sticky;
     top: 0;
     z-index: 50;
-}
-
-.light-nav {
     background: white;
     border-bottom: 1px solid #f3f4f6;
-}
-
-.dark-nav {
-    background: black;
-    border-bottom: 1px solid #333;
 }
 
 .logo {
@@ -31,7 +23,15 @@ body {
     letter-spacing: -0.05em;
 }
 
-/* SHARED HERO ASSET */
+/* LIGHT HERO (Black Text, White Fade) */
+.hero-section-light {
+    position: relative;
+    height: 85vh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+
 .hero-bg {
     position: absolute;
     inset: 0;
@@ -41,15 +41,6 @@ body {
     z-index: 0;
 }
 
-/* LIGHT MODE HERO (Home) */
-.hero-section-light {
-    position: relative;
-    height: 85vh;
-    display: flex;
-    align-items: center;
-    overflow: hidden;
-}
-
 .hero-overlay-light {
     position: absolute;
     inset: 0;
@@ -57,7 +48,7 @@ body {
     z-index: 1;
 }
 
-/* DARK MODE HERO (Store) */
+/* DARK STORE HERO (White Text, Black Fade) */
 .hero-section-dark {
     position: relative;
     height: 70vh;
@@ -73,7 +64,13 @@ body {
     z-index: 1;
 }
 
-/* MOBILE ADJUSTMENTS */
+/* DARK STORE NAV */
+.dark-nav {
+    background: black;
+    border-bottom: 1px solid #333;
+}
+
+/* MOBILE RESPONSIVE */
 @media (max-width: 768px) {
     .hero-bg {
         background-position: top center;
@@ -89,5 +86,9 @@ body {
 
     .hero-content {
         padding-top: 4rem;
+    }
+
+    .navbar {
+        padding: 1rem;
     }
 }

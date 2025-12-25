@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GODSPEED BASKETBALL</title>
+    <title>GODSPEED BASKETBALL | Built Different</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
@@ -16,29 +16,36 @@
         <div class="hidden md:flex space-x-8 text-sm font-bold uppercase tracking-wide">
             <a href="index.html" class="text-black">Home</a>
             <a href="training.html" class="text-black">Training</a>
+            <a href="aau.html" class="text-black">AAU</a>
+            <div class="relative group opacity-50 cursor-not-allowed">
+                <span class="text-black">Academy</span>
+                <span
+                    class="absolute -top-3 -right-6 text-[9px] bg-gray-100 text-gray-500 px-1 rounded border">SOON</span>
+            </div>
             <a href="store.html" class="text-blue-600">Shop</a>
             <a href="about.html" class="text-black">About</a>
         </div>
         <div class="flex items-center space-x-4">
-            <a href="store.html"
+            <a href="training.html#signup"
                 class="hidden md:block px-6 py-2 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition">TRAIN
                 WITH US</a>
+            <button class="md:hidden text-2xl">☰</button>
         </div>
     </nav>
     <header class="hero-section-light">
         <div class="hero-bg"></div>
         <div class="hero-overlay-light"></div>
-        <div class="hero-content relative z-10 pl-6 md:pl-20 max-w-4xl">
+        <div class="hero-content relative z-10 pl-6 md:pl-20 max-w-4xl pt-20">
             <h1 class="text-6xl md:text-8xl font-black text-black leading-[0.9] mb-6 uppercase tracking-tight">
                 BUILT DIFFERENT.<br>TRAINED DIFFERENT.
             </h1>
             <p class="text-gray-800 text-lg md:text-xl max-w-xl mb-10 leading-relaxed font-medium">
-                Movement science. High-level decision-making. Competitive confidence.
+                Movement science. High-level decision-making. Competitive confidence.<br>
                 Godspeed builds complete players for the modern game.
             </p>
             <div class="flex flex-col md:flex-row gap-4">
-                <a href="training.html"
-                    class="px-8 py-4 bg-blue-600 text-white font-bold rounded-full text-center hover:bg-blue-700 transition">TRAIN
+                <a href="training.html#signup"
+                    class="px-8 py-4 bg-blue-600 text-white font-bold rounded-full text-center hover:bg-blue-700 transition shadow-lg">TRAIN
                     WITH GODSPEED</a>
                 <a href="#club"
                     class="px-8 py-4 bg-white text-black font-bold rounded-full text-center border-2 border-gray-100 hover:border-gray-300 transition">JOIN
@@ -46,6 +53,119 @@
             </div>
         </div>
     </header>
+    <section class="py-24 bg-white text-center">
+        <h2 class="text-5xl font-black mb-6 uppercase tracking-tight">WHAT WE STAND FOR</h2>
+        <p class="max-w-2xl mx-auto text-gray-600 text-lg px-6">
+            Godspeed is a performance-driven basketball program committed to developing technically sound, mentally
+            sharp, and purpose-led athletes.
+        </p>
+    </section>
+    <section class="py-12 px-6 max-w-7xl mx-auto space-y-24">
+
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+            <div class="bg-gray-100 aspect-video rounded-xl overflow-hidden">
+                <img src="assets/movement-mastery.png" alt="Movement" class="w-full h-full object-cover">
+            </div>
+            <div>
+                <h3 class="text-3xl font-black uppercase mb-4">Movement Mastery</h3>
+                <p class="font-bold text-gray-400 mb-6">We engineer movement not mimic drills.</p>
+                <h4 class="font-bold mb-2">The Problem: "Instagram Training"</h4>
+                <p class="text-gray-600 mb-6">Modern training focuses on flashy drills that don't translate. Kids learn
+                    to dribble around cones but can't move efficiently against a defender.</p>
+                <h4 class="font-bold mb-2">The Godspeed Solution: Biomechanics First</h4>
+                <p class="text-gray-600">We teach your child how to load their hips, absorb force safely, and explode
+                    out of cuts. We strip away the "fluff."</p>
+            </div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-12 items-center md:flex-row-reverse">
+            <div class="order-1 md:order-2 bg-gray-100 aspect-video rounded-xl overflow-hidden">
+                <img src="assets/iq-decision.png" alt="IQ" class="w-full h-full object-cover">
+            </div>
+            <div class="order-2 md:order-1">
+                <h3 class="text-3xl font-black uppercase mb-4">IQ & Decision Training</h3>
+                <p class="font-bold text-gray-400 mb-6">Players learn to process faster than opponents can react.</p>
+                <h4 class="font-bold mb-2">The Problem: The "Robot" Athlete</h4>
+                <p class="text-gray-600 mb-6">Traditional coaching treats players like robots—"go here, do this." They
+                    freeze when the defense does something unexpected.</p>
+                <h4 class="font-bold mb-2">The Godspeed Solution: Cognitive Overload</h4>
+                <p class="text-gray-600">We put players in chaotic scenarios where rules change constantly. We teach
+                    them *how* to think, not just *what* to think.</p>
+            </div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+            <div class="bg-gray-100 aspect-video rounded-xl overflow-hidden">
+                <img src="assets/confidence-resilience.jpg" alt="Confidence" class="w-full h-full object-cover">
+            </div>
+            <div>
+                <h3 class="text-3xl font-black uppercase mb-4">Confidence & Resilience</h3>
+                <p class="font-bold text-gray-400 mb-6">Growth without shortcuts. Leadership without ego.</p>
+                <h4 class="font-bold mb-2">The Problem: Fragile Confidence</h4>
+                <p class="text-gray-600 mb-6">In a world of participation trophies, many athletes have never truly faced
+                    failure. Their confidence crumbles under pressure.</p>
+                <h4 class="font-bold mb-2">The Godspeed Solution: Manufactured Adversity</h4>
+                <p class="text-gray-600">We create high-pressure environments where failure is guaranteed. We teach
+                    athletes to look failure in the eye and own it.</p>
+            </div>
+        </div>
+    </section>
+    <section class="py-24 bg-black text-white text-center mt-24">
+        <div class="max-w-4xl mx-auto px-6">
+            <h2 class="text-5xl font-black mb-12 uppercase">THE STANDARD</h2>
+            <p class="text-xl mb-16 text-gray-400">We don't recruit talent. We build it.</p>
+
+            <div class="grid md:grid-cols-3 gap-8 text-left">
+                <div class="p-6 border border-gray-800 rounded-lg">
+                    <div class="text-blue-500 font-black text-4xl mb-2">100%</div>
+                    <h3 class="font-bold text-lg mb-2">Commitment Required</h3>
+                    <p class="text-gray-500 text-sm">Expect consistent, high-intensity coaching. We don't waste time.
+                    </p>
+                </div>
+                <div class="p-6 border border-gray-800 rounded-lg">
+                    <div class="text-blue-500 font-black text-4xl mb-2">0%</div>
+                    <h3 class="font-bold text-lg mb-2">Politics / Favoritism</h3>
+                    <p class="text-gray-500 text-sm">Expect total transparency. We play those who are prepared.</p>
+                </div>
+                <div class="p-6 border border-gray-800 rounded-lg">
+                    <div class="text-blue-500 font-black text-4xl mb-2">100%</div>
+                    <h3 class="font-bold text-lg mb-2">Earned Minutes</h3>
+                    <p class="text-gray-500 text-sm">Playing time is a reward for performance, not a participation
+                        trophy.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <footer class="bg-white border-t border-gray-200 pt-16 pb-8">
+        <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-4 gap-12 mb-12">
+            <div>
+                <div class="font-black text-xl mb-4">GODSPEED</div>
+                <p class="text-gray-500 text-sm">Building the future of Denver basketball.<br>Character. Discipline.
+                    Excellence.</p>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 uppercase text-sm">Programs</h4>
+                <ul class="space-y-2 text-sm text-gray-600">
+                    <li><a href="training.html" class="hover:text-blue-600">Training</a></li>
+                    <li><a href="aau.html" class="hover:text-blue-600">AAU Club</a></li>
+                    <li>Academy</li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 uppercase text-sm">Athletes</h4>
+                <ul class="space-y-2 text-sm text-gray-600">
+                    <li><a href="#" class="hover:text-blue-600">Skill Assessment</a></li>
+                    <li><a href="#" class="hover:text-blue-600">Player Card</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 uppercase text-sm">Contact</h4>
+                <p class="text-sm text-gray-600">info@godspeed.com</p>
+                <p class="text-sm text-gray-600">@godspeedbasketball</p>
+            </div>
+        </div>
+        <div class="text-center text-xs text-gray-400 border-t pt-8">
+            &copy; 2025 Godspeed Basketball. All rights reserved.
+        </div>
+    </footer>
 </body>
 
 </html>
