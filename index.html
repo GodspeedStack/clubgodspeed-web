@@ -7,10 +7,10 @@
     <title>GODSPEED BASKETBALL | Built Different</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 
-<body class="bg-white text-black font-sans antialiased">
+<body class="bg-gray-50 text-black font-sans antialiased">
     <nav class="navbar light-nav">
         <div class="logo">GODSPEED<span class="text-blue-600">BASKETBALL</span></div>
         <div class="hidden md:flex space-x-8 text-sm font-bold uppercase tracking-wide">
@@ -53,83 +53,212 @@
             </div>
         </div>
     </header>
-    <section class="py-24 bg-white text-center">
-        <h2 class="text-5xl font-black mb-6 uppercase tracking-tight">WHAT WE STAND FOR</h2>
-        <p class="max-w-2xl mx-auto text-gray-600 text-lg px-6">
-            Godspeed is a performance-driven basketball program committed to developing technically sound, mentally
-            sharp, and purpose-led athletes.
-        </p>
-    </section>
-    <section class="py-12 px-6 max-w-7xl mx-auto space-y-24">
+    <section class="py-24 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-5xl font-black uppercase mb-6 tracking-tight text-gray-900">WHAT WE STAND FOR</h2>
+                <p class="text-gray-600 text-lg max-w-3xl mx-auto leading-relaxed">
+                    Godspeed is a performance-driven basketball program committed to developing technically sound,
+                    mentally sharp, and purpose-led athletes.
+                </p>
+            </div>
 
-        <div class="grid md:grid-cols-2 gap-12 items-center">
-            <div class="bg-gray-100 aspect-video rounded-xl overflow-hidden">
-                <img src="assets/movement-mastery.png" alt="Movement" class="w-full h-full object-cover">
-            </div>
-            <div>
-                <h3 class="text-3xl font-black uppercase mb-4">Movement Mastery</h3>
-                <p class="font-bold text-gray-400 mb-6">We engineer movement not mimic drills.</p>
-                <h4 class="font-bold mb-2">The Problem: "Instagram Training"</h4>
-                <p class="text-gray-600 mb-6">Modern training focuses on flashy drills that don't translate. Kids learn
-                    to dribble around cones but can't move efficiently against a defender.</p>
-                <h4 class="font-bold mb-2">The Godspeed Solution: Biomechanics First</h4>
-                <p class="text-gray-600">We teach your child how to load their hips, absorb force safely, and explode
-                    out of cuts. We strip away the "fluff."</p>
-            </div>
-        </div>
-        <div class="grid md:grid-cols-2 gap-12 items-center md:flex-row-reverse">
-            <div class="order-1 md:order-2 bg-gray-100 aspect-video rounded-xl overflow-hidden">
-                <img src="assets/iq-decision.png" alt="IQ" class="w-full h-full object-cover">
-            </div>
-            <div class="order-2 md:order-1">
-                <h3 class="text-3xl font-black uppercase mb-4">IQ & Decision Training</h3>
-                <p class="font-bold text-gray-400 mb-6">Players learn to process faster than opponents can react.</p>
-                <h4 class="font-bold mb-2">The Problem: The "Robot" Athlete</h4>
-                <p class="text-gray-600 mb-6">Traditional coaching treats players like robots—"go here, do this." They
-                    freeze when the defense does something unexpected.</p>
-                <h4 class="font-bold mb-2">The Godspeed Solution: Cognitive Overload</h4>
-                <p class="text-gray-600">We put players in chaotic scenarios where rules change constantly. We teach
-                    them *how* to think, not just *what* to think.</p>
-            </div>
-        </div>
-        <div class="grid md:grid-cols-2 gap-12 items-center">
-            <div class="bg-gray-100 aspect-video rounded-xl overflow-hidden">
-                <img src="assets/confidence-resilience.jpg" alt="Confidence" class="w-full h-full object-cover">
-            </div>
-            <div>
-                <h3 class="text-3xl font-black uppercase mb-4">Confidence & Resilience</h3>
-                <p class="font-bold text-gray-400 mb-6">Growth without shortcuts. Leadership without ego.</p>
-                <h4 class="font-bold mb-2">The Problem: Fragile Confidence</h4>
-                <p class="text-gray-600 mb-6">In a world of participation trophies, many athletes have never truly faced
-                    failure. Their confidence crumbles under pressure.</p>
-                <h4 class="font-bold mb-2">The Godspeed Solution: Manufactured Adversity</h4>
-                <p class="text-gray-600">We create high-pressure environments where failure is guaranteed. We teach
-                    athletes to look failure in the eye and own it.</p>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div
+                    class="bg-white rounded-3xl shadow-xl overflow-hidden group hover:ring-2 hover:ring-blue-600 transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="h-64 relative bg-gray-200">
+                        <img src="assets/movement-mastery.png" alt="Movement" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-10">
+                        <h3 class="text-2xl font-black uppercase mb-2 text-gray-900">MOVEMENT MASTERY</h3>
+                        <p class="text-gray-500 mb-6 text-sm">We engineer movement not mimic drills.</p>
+                        <ul class="space-y-3 text-gray-800 font-bold text-sm">
+                            <li class="flex items-center"><span
+                                    class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Footwork</li>
+                            <li class="flex items-center"><span
+                                    class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Posture</li>
+                            <li class="flex items-center"><span
+                                    class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Balance</li>
+                            <li class="flex items-center"><span
+                                    class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Efficiency</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-white rounded-3xl shadow-xl overflow-hidden group hover:ring-2 hover:ring-blue-600 transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="h-64 relative bg-gray-200">
+                        <img src="assets/iq-decision.png" alt="IQ" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-10">
+                        <h3 class="text-2xl font-black uppercase mb-2 text-gray-900">IQ & DECISION TRAINING</h3>
+                        <p class="text-gray-500 mb-6 text-sm">Players learn to process faster than opponents can react.
+                        </p>
+                        <ul class="space-y-3 text-gray-800 font-bold text-sm">
+                            <li class="flex items-center"><span
+                                    class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Reads</li>
+                            <li class="flex items-center"><span
+                                    class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Spacing</li>
+                            <li class="flex items-center"><span
+                                    class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Manipulation</li>
+                            <li class="flex items-center"><span
+                                    class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Tempo</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-white rounded-3xl shadow-xl overflow-hidden group hover:ring-2 hover:ring-blue-600 transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="h-64 relative bg-gray-200">
+                        <img src="assets/confidence-resilience.jpg" alt="Confidence" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-10">
+                        <h3 class="text-2xl font-black uppercase mb-2 text-gray-900">CONFIDENCE & RESILIENCE</h3>
+                        <p class="text-gray-500 mb-6 text-sm">Growth without shortcuts. Leadership without ego.</p>
+                        <ul class="space-y-3 text-gray-800 font-bold text-sm">
+                            <li class="flex items-center"><span
+                                    class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Pressure-tested confidence
+                            </li>
+                            <li class="flex items-center"><span
+                                    class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Failure without shame</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
-    <section class="py-24 bg-black text-white text-center mt-24">
-        <div class="max-w-4xl mx-auto px-6">
-            <h2 class="text-5xl font-black mb-12 uppercase">THE STANDARD</h2>
-            <p class="text-xl mb-16 text-gray-400">We don't recruit talent. We build it.</p>
 
-            <div class="grid md:grid-cols-3 gap-8 text-left">
-                <div class="p-6 border border-gray-800 rounded-lg">
-                    <div class="text-blue-500 font-black text-4xl mb-2">100%</div>
-                    <h3 class="font-bold text-lg mb-2">Commitment Required</h3>
-                    <p class="text-gray-500 text-sm">Expect consistent, high-intensity coaching. We don't waste time.
+    <section class="py-24 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-20">
+                <h2 class="text-5xl font-black uppercase tracking-tight text-gray-900">PROGRAMS</h2>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <div
+                    class="bg-white p-10 rounded-3xl shadow-xl flex flex-col h-full hover:shadow-2xl transition-shadow duration-300">
+                    <h3 class="text-2xl font-black uppercase mb-4 text-gray-900">ELITE GUARD ACADEMY</h3>
+                    <p class="text-gray-500 text-sm mb-6 leading-relaxed">Designed for guards who depend on skill, IQ,
+                        and movement not height.</p>
+                    <ul class="space-y-3 text-sm text-gray-800 font-medium mb-10 flex-1">
+                        <li class="flex items-center"><span
+                                class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Footwork and separation</li>
+                        <li class="flex items-center"><span
+                                class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Advanced finishing</li>
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Shot
+                            creation</li>
+                        <li class="flex items-center"><span
+                                class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Defensive manipulation</li>
+                    </ul>
+                    <button
+                        class="w-full py-4 bg-blue-600 text-white font-bold rounded-full uppercase tracking-wider hover:bg-blue-700 transition shadow-lg shadow-blue-600/20">SELECT
+                        PROGRAM</button>
+                </div>
+
+                <div
+                    class="bg-white p-10 rounded-3xl shadow-xl flex flex-col h-full hover:shadow-2xl transition-shadow duration-300">
+                    <h3 class="text-2xl font-black uppercase mb-4 text-gray-900">IQ SCHOOL (HYDRA)</h3>
+                    <p class="text-gray-500 text-sm mb-6 leading-relaxed">Not plays. Patterns. Players learn to read
+                        space and manipulate defenders.</p>
+                    <ul class="space-y-3 text-sm text-gray-800 font-medium mb-10 flex-1">
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Read
+                            space early</li>
+                        <li class="flex items-center"><span
+                                class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Manipulate defenders</li>
+                        <li class="flex items-center"><span
+                                class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Understand overloads</li>
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Create
+                            advantages</li>
+                    </ul>
+                    <button
+                        class="w-full py-4 bg-blue-600 text-white font-bold rounded-full uppercase tracking-wider hover:bg-blue-700 transition shadow-lg shadow-blue-600/20">SELECT
+                        PROGRAM</button>
+                </div>
+
+                <div
+                    class="bg-white p-10 rounded-3xl shadow-xl flex flex-col h-full hover:shadow-2xl transition-shadow duration-300">
+                    <h3 class="text-2xl font-black uppercase mb-4 text-gray-900">STRENGTH + MOVEMENT</h3>
+                    <p class="text-gray-500 text-sm mb-6 leading-relaxed">Functional athletic development without the
+                        burnout culture.</p>
+                    <ul class="space-y-3 text-sm text-gray-800 font-medium mb-10 flex-1">
+                        <li class="flex items-center"><span
+                                class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Reflexive strength</li>
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Ground
+                            reaction force</li>
+                        <li class="flex items-center"><span
+                                class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Plyometric sequencing</li>
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Joint
+                            stability</li>
+                    </ul>
+                    <button
+                        class="w-full py-4 bg-blue-600 text-white font-bold rounded-full uppercase tracking-wider hover:bg-blue-700 transition shadow-lg shadow-blue-600/20">SELECT
+                        PROGRAM</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-24 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-5xl font-black uppercase tracking-tight text-gray-900">THE GODSPEED <span
+                        class="text-blue-600">FAMILY</span></h2>
+                <p class="text-center text-gray-600 max-w-2xl mx-auto mt-6 text-lg leading-relaxed">
+                    It's more than a jersey. It's a promise. When you join Club Godspeed, you join a brotherhood.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white rounded-3xl overflow-hidden shadow-xl">
+                    <div class="h-80 bg-black relative">
+                        <img src="assets/family-1.jpg" alt="Mentorship" class="w-full h-full object-cover opacity-90">
+                    </div>
+                    <div class="p-10">
+                        <h3 class="text-xl font-black uppercase mb-3 text-gray-900">MENTORSHIP FIRST</h3>
+                        <p class="text-gray-500 text-sm leading-relaxed">Our coaches are mentors, not just trainers. We
+                            guide athletes through competition, school, and life.</p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-3xl overflow-hidden shadow-xl">
+                    <div class="h-80 bg-black flex items-center justify-center relative">
+                        <img src="assets/family-2.jpg" alt="Vision" class="w-full h-full object-cover opacity-90">
+                    </div>
+                    <div class="p-10">
+                        <h3 class="text-xl font-black uppercase mb-3 text-gray-900">LONG-TERM VISION</h3>
+                        <p class="text-gray-500 text-sm leading-relaxed">We don't chase trophies. We build skills that
+                            translate to high school, college, and beyond.</p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-3xl overflow-hidden shadow-xl">
+                    <div class="h-80 bg-black relative">
+                        <img src="assets/family-3.jpg" alt="Skills" class="w-full h-full object-cover opacity-90">
+                    </div>
+                    <div class="p-10">
+                        <h3 class="text-xl font-black uppercase mb-3 text-gray-900">ELITE SKILLS DEVELOPMENT</h3>
+                        <p class="text-gray-500 text-sm leading-relaxed">Iron sharpens iron. We play a national schedule
+                            to expose weaknesses and accelerate growth.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-24 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="bg-black rounded-[3rem] p-16 md:p-32 text-center shadow-2xl relative overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-b from-gray-900 to-black opacity-50 pointer-events-none">
+                </div>
+
+                <div class="relative z-10">
+                    <h2 class="text-4xl md:text-6xl font-black text-white uppercase mb-8 tracking-tight">READY TO
+                        COMMIT?</h2>
+                    <p class="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-12 font-medium">
+                        Our roster spots are earned, not bought. If you are ready to work, we are ready to build.
                     </p>
-                </div>
-                <div class="p-6 border border-gray-800 rounded-lg">
-                    <div class="text-blue-500 font-black text-4xl mb-2">0%</div>
-                    <h3 class="font-bold text-lg mb-2">Politics / Favoritism</h3>
-                    <p class="text-gray-500 text-sm">Expect total transparency. We play those who are prepared.</p>
-                </div>
-                <div class="p-6 border border-gray-800 rounded-lg">
-                    <div class="text-blue-500 font-black text-4xl mb-2">100%</div>
-                    <h3 class="font-bold text-lg mb-2">Earned Minutes</h3>
-                    <p class="text-gray-500 text-sm">Playing time is a reward for performance, not a participation
-                        trophy.</p>
+                    <a href="aau.html"
+                        class="inline-block px-12 py-5 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition transform hover:-translate-y-1 shadow-lg shadow-blue-600/40 uppercase tracking-widest text-sm">
+                        APPLY FOR AAU
+                    </a>
                 </div>
             </div>
         </div>
