@@ -32,12 +32,47 @@ export default function ProductCard({ product }) {
     const lowStock = selectedVariant.inventory_count > 0 && selectedVariant.inventory_count <= selectedVariant.low_stock_threshold;
 
     const handleAddToCart = () => {
-        // TODO: Implement add to cart logic
-        console.log('Adding to cart:', {
-            product: product.id,
-            variant: selectedVariant.id,
-            quantity: 1
-        });
+        // Load cart manager
+        if (typeof window.cartManager === 'undefined') {
+            // Try to load cart context
+            const script = document.createElement('script');
+            script.src = '/src/lib/cartContext.js';
+            script.onload = () => {
+                if (window.cartManager) {
+                    window.cartManager.addItem(product, selectedVariant, 1);
+                    showCartNotification();
+                }
+            };
+            document.head.appendChild(script);
+        } else {
+            window.cartManager.addItem(product, selectedVariant, 1);
+            showCartNotification();
+        }
+    };
+
+    const showCartNotification = () => {
+        // Show a brief notification that item was added
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #000;
+            color: #fff;
+            padding: 16px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease;
+        `;
+        notification.textContent = 'Added to cart';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }, 2000);
     };
 
     return (

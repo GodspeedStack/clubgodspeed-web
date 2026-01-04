@@ -1,0 +1,145 @@
+/**
+ * Mobile Responsive Styles
+ * Ensures touch targets are 44px minimum and calendar iframe is mobile-friendly
+ */
+
+/* Touch Target Minimums */
+@media (max-width: 768px) {
+    /* Ensure all buttons are at least 44px touch target */
+    button,
+    .btn,
+    .btn-primary,
+    .btn-secondary,
+    .btn-card,
+    .btn-text,
+    a.button {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 12px 16px;
+    }
+
+    /* Training dashboard mobile optimizations */
+    #training-hours-card {
+        padding: 20px !important;
+    }
+
+    #training-hours-card #hours-remaining {
+        font-size: 36px !important;
+    }
+
+    /* Calendar iframe mobile optimization */
+    .calendar-wrapper-v3,
+    #training-calendar-container {
+        height: 400px !important;
+        min-height: 400px !important;
+        overflow: hidden;
+    }
+
+    #training-calendar-iframe,
+    .calendar-wrapper-v3 iframe {
+        width: 100% !important;
+        height: 400px !important;
+        min-height: 400px !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Training athlete selector */
+    #training-athlete-select {
+        min-height: 44px !important;
+        padding: 12px 16px !important;
+        font-size: 16px !important; /* Prevents zoom on iOS */
+    }
+
+    /* Document buttons */
+    .btn-secondary {
+        min-height: 44px !important;
+        padding: 10px 16px !important;
+    }
+
+    /* Portal navigation items */
+    .nav-item {
+        min-height: 44px !important;
+        padding: 12px 16px !important;
+    }
+
+    /* Card buttons */
+    .btn-card {
+        min-height: 44px !important;
+        padding: 12px 20px !important;
+    }
+
+    /* Training dashboard sections */
+    #view-training {
+        padding: 16px !important;
+    }
+
+    #view-training > div {
+        margin-bottom: 16px !important;
+    }
+
+    /* Receipt and invoice download buttons */
+    .btn-text {
+        min-height: 44px !important;
+        padding: 8px 16px !important;
+    }
+
+    /* Product card add to cart buttons */
+    .add-to-cart-btn,
+    .select-program-btn {
+        min-height: 44px !important;
+        padding: 12px 24px !important;
+    }
+
+    /* Cart notification */
+    .cart-notification {
+        top: 10px !important;
+        right: 10px !important;
+        left: 10px !important;
+        max-width: calc(100% - 20px) !important;
+    }
+}
+
+/* Tablet optimizations */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .calendar-wrapper-v3,
+    #training-calendar-container {
+        height: 500px !important;
+    }
+
+    #training-calendar-iframe,
+    .calendar-wrapper-v3 iframe {
+        height: 500px !important;
+    }
+}
+
+/* Landscape mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+    .calendar-wrapper-v3,
+    #training-calendar-container {
+        height: 300px !important;
+    }
+
+    #training-calendar-iframe,
+    .calendar-wrapper-v3 iframe {
+        height: 300px !important;
+    }
+}
+
+/* Prevent text size adjustment on iOS */
+@media (max-width: 768px) {
+    input,
+    select,
+    textarea {
+        font-size: 16px !important; /* Prevents zoom on focus */
+    }
+}
+
+/* Improve touch scrolling */
+@media (max-width: 768px) {
+    .portal-view,
+    #view-training,
+    .items-container {
+        -webkit-overflow-scrolling: touch;
+        overflow-y: auto;
+    }
+}
