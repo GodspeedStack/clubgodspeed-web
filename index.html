@@ -6,31 +6,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GODSPEED BASKETBALL | Built Different</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Navbar styles */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 900;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: -0.03em;
+            color: #000;
+            line-height: 1;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+    </style>
 </head>
 
 <body class="bg-gray-50 text-black font-sans antialiased">
     <nav class="navbar light-nav">
         <div class="logo">GODSPEED<span class="text-blue-600">BASKETBALL</span></div>
-        <div class="hidden md:flex space-x-8 text-sm font-bold uppercase tracking-wide">
-            <a href="index.html" class="text-black">Home</a>
-            <a href="training.html" class="text-black">Training</a>
-            <a href="aau.html" class="text-black">AAU</a>
-            <div class="relative group opacity-50 cursor-not-allowed">
-                <span class="text-black">Academy</span>
-                <span
-                    class="absolute -top-3 -right-6 text-[9px] bg-gray-100 text-gray-500 px-1 rounded border">SOON</span>
+        <div class="hidden md:flex items-center space-x-8">
+            <div class="flex space-x-8 text-sm font-bold uppercase tracking-wide">
+                <a href="index.html" class="text-black">Home</a>
+                <a href="training.html" class="text-black">Training</a>
+                <a href="aau.html" class="text-black">AAU</a>
+                <div class="relative group opacity-50 cursor-not-allowed">
+                    <span class="text-black">Academy</span>
+                    <span class="absolute -top-3 -right-6 text-[9px] bg-gray-100 text-gray-500 px-1 rounded border">SOON</span>
+                </div>
+                <a href="store.html" class="text-blue-600">Shop</a>
+                <a href="about.html" class="text-black">About</a>
             </div>
-            <a href="store.html" class="text-blue-600">Shop</a>
-            <a href="about.html" class="text-black">About</a>
+            <a href="training.html#signup" class="ml-4 px-6 py-2 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition">TRAIN WITH US</a>
         </div>
-        <div class="flex items-center space-x-4">
-            <a href="training.html#signup"
-                class="hidden md:block px-6 py-2 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition">TRAIN
-                WITH US</a>
-            <button class="md:hidden text-2xl">☰</button>
-        </div>
+        <button class="md:hidden text-2xl">☰</button>
     </nav>
     <header class="hero-section-light">
         <div class="hero-bg"></div>
@@ -198,45 +220,61 @@
         </div>
     </section>
 
-    <section class="py-24 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-16">
-                <h2 class="text-5xl font-black uppercase tracking-tight text-gray-900">THE GODSPEED <span
-                        class="text-blue-600">FAMILY</span></h2>
-                <p class="text-center text-gray-600 max-w-2xl mx-auto mt-6 text-lg leading-relaxed">
-                    It's more than a jersey. It's a promise. When you join Club Godspeed, you join a brotherhood.
-                </p>
-            </div>
+    <section class="bg-brand-dark py-24 px-6 text-center">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-4xl md:text-5xl font-black text-white uppercase mb-6">
+                THE GODSPEED <span class="text-brand-blue">FAMILY</span>
+            </h2>
+            <p class="text-gray-400 max-w-2xl mx-auto text-lg mb-16 leading-relaxed">
+                It's more than a jersey. It's a promise. When you join Club Godspeed, you join a brotherhood dedicated
+                to excellence on and off the court.
+            </p>
 
-            <div class="grid md:grid-cols-3 gap-8">
-                <div class="bg-white rounded-3xl overflow-hidden shadow-xl">
-                    <div class="h-80 bg-black relative">
-                        <img src="assets/family-1.jpg" alt="Mentorship" class="w-full h-full object-cover opacity-90">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Card 1: Mentorship -->
+                <div
+                    class="bg-black border border-gray-800 rounded-lg overflow-hidden group hover:border-brand-blue transition duration-300">
+                    <div class="h-64 overflow-hidden">
+                        <img src="assets/family-1.jpg" alt="Mentorship First"
+                            class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                     </div>
-                    <div class="p-10">
-                        <h3 class="text-xl font-black uppercase mb-3 text-gray-900">MENTORSHIP FIRST</h3>
-                        <p class="text-gray-500 text-sm leading-relaxed">Our coaches are mentors, not just trainers. We
-                            guide athletes through competition, school, and life.</p>
-                    </div>
-                </div>
-                <div class="bg-white rounded-3xl overflow-hidden shadow-xl">
-                    <div class="h-80 bg-black flex items-center justify-center relative">
-                        <img src="assets/family-2.jpg" alt="Vision" class="w-full h-full object-cover opacity-90">
-                    </div>
-                    <div class="p-10">
-                        <h3 class="text-xl font-black uppercase mb-3 text-gray-900">LONG-TERM VISION</h3>
-                        <p class="text-gray-500 text-sm leading-relaxed">We don't chase trophies. We build skills that
-                            translate to high school, college, and beyond.</p>
+                    <div class="p-8 text-left">
+                        <h3 class="text-xl font-black text-white uppercase mb-4">MENTORSHIP FIRST</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">
+                            Our coaches are mentors, not just trainers. We guide athletes through the challenges of
+                            competition, school, and life.
+                        </p>
                     </div>
                 </div>
-                <div class="bg-white rounded-3xl overflow-hidden shadow-xl">
-                    <div class="h-80 bg-black relative">
-                        <img src="assets/family-3.jpg" alt="Skills" class="w-full h-full object-cover opacity-90">
+
+                <!-- Card 2: Long-Term Vision -->
+                <div
+                    class="bg-black border border-gray-800 rounded-lg overflow-hidden group hover:border-brand-blue transition duration-300">
+                    <div class="h-64 overflow-hidden flex items-center justify-center bg-gray-900">
+                        <img src="assets/vision-gold.png" alt="Long-Term Vision"
+                            class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                     </div>
-                    <div class="p-10">
-                        <h3 class="text-xl font-black uppercase mb-3 text-gray-900">ELITE SKILLS DEVELOPMENT</h3>
-                        <p class="text-gray-500 text-sm leading-relaxed">Iron sharpens iron. We play a national schedule
-                            to expose weaknesses and accelerate growth.</p>
+                    <div class="p-8 text-left">
+                        <h3 class="text-xl font-black text-white uppercase mb-4">LONG-TERM VISION</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">
+                            We don't chase trophies. We build skills that translate to high school, college, and beyond.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Card 3: Elite Skills -->
+                <div
+                    class="bg-black border border-gray-800 rounded-lg overflow-hidden group hover:border-brand-blue transition duration-300">
+                    <div class="h-64 overflow-hidden flex items-center justify-center bg-gray-900">
+                        <img src="assets/family-3.png" alt="Elite Skills Development"
+                            class="w-full h-full object-cover group-hover:scale-105 transition duration-500 grayscale hover:grayscale-0">
+                    </div>
+                    <div class="p-8 text-left">
+                        <h3 class="text-xl font-black text-white uppercase mb-4">ELITE SKILLS DEVELOPMENT</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">
+                            We are preparing kids to play. Iron sharpens iron. We plan to play a national schedule to
+                            expose weaknesses and accelerate growth.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -263,36 +301,59 @@
             </div>
         </div>
     </section>
-    <footer class="bg-white border-t border-gray-200 pt-16 pb-8">
-        <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-4 gap-12 mb-12">
-            <div>
-                <div class="font-black text-xl mb-4">GODSPEED</div>
-                <p class="text-gray-500 text-sm">Building the future of Denver basketball.<br>Character. Discipline.
-                    Excellence.</p>
+    <footer class="bg-gray-50 pt-20 pb-16 border-t border-gray-100">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-12">
+            <div class="md:col-span-4">
+                <div class="text-2xl font-black tracking-tighter mb-6">
+                    GODSPEED<span class="text-blue-600">BASKETBALL</span>
+                </div>
+                <p class="text-gray-500 leading-relaxed max-w-sm text-sm">
+                    Building the future of Denver basketball.<br>
+                    Character. Discipline. Excellence.
+                </p>
             </div>
-            <div>
-                <h4 class="font-bold mb-4 uppercase text-sm">Programs</h4>
-                <ul class="space-y-2 text-sm text-gray-600">
-                    <li><a href="training.html" class="hover:text-blue-600">Training</a></li>
-                    <li><a href="aau.html" class="hover:text-blue-600">AAU Club</a></li>
-                    <li>Academy</li>
-                </ul>
+            <div class="md:col-span-8 grid grid-cols-2 md:grid-cols-5 gap-8">
+                <div>
+                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Programs</h4>
+                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
+                        <li><a href="training.html" class="hover:text-blue-600 transition">Training</a></li>
+                        <li><a href="aau.html" class="hover:text-blue-600 transition">AAU Club</a></li>
+                        <li class="text-gray-400 cursor-not-allowed" title="Coming Soon">Academy</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Athletes</h4>
+                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
+                        <li><a href="#" class="hover:text-blue-600 transition">Skill Assessment</a></li>
+                        <li><a href="#" class="hover:text-blue-600 transition">Player Card</a></li>
+                        <li class="text-gray-400 cursor-not-allowed" title="Coming Soon">AAU Camps</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Shop</h4>
+                    <ul class="space-y-4 text-sm text-gray-400 font-medium">
+                        <li class="cursor-not-allowed">Apparel</li>
+                        <li class="cursor-not-allowed">Footwear</li>
+                        <li class="cursor-not-allowed">Accessories</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Parents</h4>
+                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
+                        <li><a href="#" class="hover:text-blue-600 transition">Parent Assessment</a></li>
+                        <li><a href="#" class="hover:text-blue-600 transition">Parent Portal</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Company</h4>
+                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
+                        <li><a href="about.html" class="hover:text-blue-600 transition">About Us</a></li>
+                        <li><a href="#contact" class="hover:text-blue-600 transition">Contact</a></li>
+                        <li><a href="#" class="hover:text-blue-600 transition">Coach Portal</a></li>
+                        <li class="text-gray-400 cursor-not-allowed" title="Coming Soon">Careers</li>
+                    </ul>
+                </div>
             </div>
-            <div>
-                <h4 class="font-bold mb-4 uppercase text-sm">Athletes</h4>
-                <ul class="space-y-2 text-sm text-gray-600">
-                    <li><a href="#" class="hover:text-blue-600">Skill Assessment</a></li>
-                    <li><a href="#" class="hover:text-blue-600">Player Card</a></li>
-                </ul>
-            </div>
-            <div>
-                <h4 class="font-bold mb-4 uppercase text-sm">Contact</h4>
-                <p class="text-sm text-gray-600">info@godspeed.com</p>
-                <p class="text-sm text-gray-600">@godspeedbasketball</p>
-            </div>
-        </div>
-        <div class="text-center text-xs text-gray-400 border-t pt-8">
-            &copy; 2025 Godspeed Basketball. All rights reserved.
         </div>
     </footer>
 </body>

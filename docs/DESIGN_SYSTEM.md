@@ -1,39 +1,39 @@
+## 🚨 CRITICAL GOVERNANCE: FOOTER LINKS
+
+**STATUS: LOCKED**
+The footer link structure is hard-coded to a strategic roadmap.
+
+1. **DO NOT** add, remove, or re-order footer links during routine updates.
+2. **DO NOT** enable "grayed out" links (Academy, Shop, Careers) until explicitly instructed.
+3. **REQUIREMENT:** Any change to the footer requires a specific, manual override command from the User.
+
 # Godspeed Design System
 
-## 1. Visual Identity Principles
+## Colors
 
-* **Aesthetic:** "Elite Athleticism." Dark, moody, high-contrast, and stark.
-* **Keywords:** Gritty, Premium, Focused, Intimidating yet Warm.
-* **Core Concept:** "Figure-Ground Merging." Elements should emerge from the darkness (similar to the coach portraits).
+- Brand Blue: #2563EB
+- Brand Dark: #0F172A
+- White: #FFFFFF
+- Gray-50: #F9FAFB
+- Gray-100: #F3F4F6
+- Gray-900: #111827
 
-## 2. Color Palette
+## Typography
 
-The site uses a strict monochromatic palette to maintain focus and intensity.
+- Font Family: 'Inter', sans-serif
+- Weights: 400 (Regular), 500 (Medium), 700 (Bold), 900 (Black)
 
-* **Primary Background:** `#000000` (Pure Black). Used for main pages and hero sections.
-* **Primary Text:** `#FFFFFF` (Pure White). Used for headings and primary copy.
-* **Secondary Text/Borders:** `#333333` (Dark Gray). Used for dividers, subtle borders, or de-emphasized text.
-* **Accent (Action):** `#FFFFFF` (White). Buttons are solid white with black text for maximum contrast.
+## Components
 
-## 3. Typography
+### Buttons
 
-* **Primary Font (Headings):** 'Inter' (or similar robust sans-serif). Heavy weights (Bold/Black), Uppercase usage for impact.
-* **Secondary Font (Body):** 'Inter' or system sans-serif. Clean, legible, high readability against black.
-* **Hierarchy:**
-  * **H1:** Large, Uppercase, Tracking (letter-spacing) slightly wide.
-  * **H2:** Bold, Sentence case or Uppercase.
-  * **Body:** Regular weight, relaxed line-height for readability.
+- Primary: bg-blue-600 text-white rounded-full hover:bg-blue-700
+- Outline: border-2 border-white text-white rounded-full hover:bg-white hover:text-blue-600
 
-## 4. Photography Standards
+### Cards
 
-* **Coach Portraits:** Must follow the Butterfly Lighting Standard (See `docs/COACH_PHOTO_STANDARDS.md`).
-* **Action Shots:** High contrast B&W. Motion blur allowed if artistic.
-* **Backgrounds:** Pure black to blend seamlessly with the UI container.
+- Dark Theme: bg-black border border-gray-800 rounded-lg hover:border-blue-600
 
-## 5. UI Elements
+### Navigation
 
-* **Buttons:**
-  * *Primary:* Solid White background (`#FFFFFF`), Black text (`#000000`), Rectangular (Sharp corners or minimal radius: 2px).
-  * *Secondary:* Transparent background, White Border (1px solid `#FFFFFF`), White text.
-* **Icons:** Minimalist line icons (1.5px or 2px stroke width), White.
-* **Spacing:** Generous "negative space" (black space) to create a premium feel. Avoid clutter.
+- Main: Sticky, backdrop blur, white text on dark / black text on light

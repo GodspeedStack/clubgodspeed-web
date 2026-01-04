@@ -1,0 +1,141 @@
+/* Dark Mode Preview Styles */
+:root {
+    --brand-black: #050505;
+    --brand-dark: #121212;
+    --brand-blue: #2563eb;
+    --brand-blue-hover: #1d4ed8;
+    --text-white: #ffffff;
+    --text-gray: #a3a3a3;
+    --font-stack: 'Inter', sans-serif;
+}
+
+body {
+    background-color: var(--brand-black);
+    color: var(--text-white);
+    font-family: var(--font-stack);
+}
+
+/* Utilities */
+.text-brand-blue {
+    color: var(--brand-blue);
+}
+
+.bg-brand-blue {
+    background-color: var(--brand-blue);
+}
+
+.bg-brand-dark {
+    background-color: var(--brand-dark);
+}
+
+.uppercase {
+    text-transform: uppercase;
+}
+
+.pill-btn {
+    border-radius: 9999px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    padding: 1rem 2.5rem;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.pill-primary {
+    background-color: var(--brand-blue);
+    color: white;
+}
+
+.pill-primary:hover {
+    background-color: var(--brand-blue-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+}
+
+.pill-outline {
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
+.pill-outline:hover {
+    border-color: white;
+    background-color: white;
+    color: black;
+}
+
+/* Nav */
+.preview-nav {
+    background-color: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Hero */
+.preview-hero {
+    height: 90vh;
+    background-image: url('assets/hero-collage.jpg');
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.hero-overlay {
+    background: linear-gradient(90deg, #000 0%, rgba(0, 0, 0, 0.85) 45%, rgba(0, 0, 0, 0.2) 100%);
+    position: absolute;
+    inset: 0;
+}
+
+.hero-text-xxl {
+    font-size: clamp(3.5rem, 6vw, 6rem);
+    line-height: 0.9;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+}
+
+/* Stats Bar */
+.stats-bar {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Philosophy Section */
+.philosophy-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+}
+
+@media (max-width: 768px) {
+    .philosophy-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.philosophy-img {
+    background-image: url('assets/quest_scott.jpg');
+    background-size: cover;
+    background-position: center;
+    min-height: 500px;
+    position: relative;
+}
+
+.philosophy-img::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, #000 0%, transparent 60%);
+}
+
+/* Cards */
+.dark-card {
+    background-color: var(--brand-dark);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.dark-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--brand-blue);
+}
