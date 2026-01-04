@@ -93,27 +93,47 @@ Click **"Environment Variables"** and add these:
 
 ### Step 6: Add Custom Domain
 
+**Important:** `clubgodspeed.com` is the production domain. `www.godspeed.com` is NOT owned by this project (ignore it).
+
 1. Once deployed, go to **"Settings"** → **"Domains"**
 2. Click **"Add"**
 3. Enter: **`clubgodspeed.com`**
-4. Vercel will give you DNS records to update
+4. (Optional) Also add: **`www.clubgodspeed.com`** if you want www subdomain
+5. Vercel will provide DNS records to configure
 
 #### **Update Your DNS (at your domain registrar):**
 
-**Remove old Netlify records:**
+**Step 1: Remove Old Records**
 
 - Delete any `A` records pointing to Netlify IPs
+- Delete any `A` records pointing to Firebase IPs
+- Delete any `CNAME` records pointing to old hosting
 
-**Add Vercel records:**
+**Step 2: Add Vercel DNS Records**
 
-- Vercel will show you exactly what to add (usually a `CNAME` or `A` record)
+Vercel will show you the exact records needed. Typically:
 
-**Example:**
-
+**For root domain (`clubgodspeed.com`):**
 ```
-Type: A     | Host: @              | Value: 76.76.21.21
+Type: A     | Host: @              | Value: [Vercel-provided IP]
+```
+
+**For www subdomain (`www.clubgodspeed.com`):**
+```
 Type: CNAME | Host: www            | Value: cname.vercel-dns.com
 ```
+
+**Important Notes:**
+- Use the exact values Vercel provides (they may differ from examples)
+- DNS changes can take 1-24 hours to propagate (usually 1-2 hours)
+- Vercel automatically provisions SSL certificates (may take up to 24h)
+
+**Step 3: Verify DNS Configuration**
+
+After updating DNS, verify with:
+- Online DNS checker: https://www.whatsmydns.net/
+- Command line: `dig clubgodspeed.com` or `nslookup clubgodspeed.com`
+- Check Vercel dashboard for domain status (should show "Valid Configuration")
 
 ---
 
@@ -133,13 +153,32 @@ Vercel will **automatically** rebuild and deploy in ~30 seconds.
 
 ## 🔍 Verify Deployment
 
-### Check if Coach True's photo is live
+### Verify Vercel Deployment
 
 ```bash
 curl -s "https://clubgodspeed-web.vercel.app/about" | grep "coach-true-v2.png"
 ```
 
 **Expected:** Should show the `<img>` tag with the photo.
+
+### Verify Domain Points to Vercel
+
+Once DNS is configured, verify both URLs show identical content:
+
+1. **Vercel Preview**: <https://clubgodspeed-web.vercel.app>
+2. **Production Domain**: <https://clubgodspeed.com>
+
+Both should show the same content (source of truth: GitHub `main` branch).
+
+**Deployment Flow:**
+```
+GitHub (main branch) → Vercel → Domain (clubgodspeed.com)
+```
+
+If the domain shows different content than Vercel:
+- DNS may not be pointing to Vercel yet
+- DNS may still be propagating (wait 1-24 hours)
+- Check Vercel dashboard → Domains for configuration status
 
 ---
 
@@ -182,9 +221,12 @@ curl -s "https://clubgodspeed-web.vercel.app/about" | grep "coach-true-v2.png"
 - [ ] Set Framework to "Other"
 - [ ] Added environment variables
 - [ ] Deployed successfully
-- [ ] Added custom domain `clubgodspeed.com`
-- [ ] Updated DNS records
+- [ ] Added custom domain `clubgodspeed.com` in Vercel dashboard
+- [ ] Updated DNS records at domain registrar
+- [ ] Verified DNS propagation (check with whatsmydns.net)
+- [ ] Verified `clubgodspeed.com` shows same content as `clubgodspeed-web.vercel.app`
 - [ ] Verified Coach True's photo is showing
+- [ ] Confirmed SSL certificate is active (Vercel auto-provisions)
 
 ---
 

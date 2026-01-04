@@ -33,7 +33,9 @@ Think of your app like a physical Nike store:
 - **Platform**: Vercel
 - **Repository**: <https://github.com/Jewellsco/clubgodspeed-web>
 - **Auto-Deploy**: ✅ On push to `main` branch
-- **Live URL**: <https://clubgodspeed-web.vercel.app>
+- **Production Domain**: `clubgodspeed.com` (points to Vercel)
+- **Vercel Preview URL**: <https://clubgodspeed-web.vercel.app>
+- **Source of Truth**: GitHub `main` branch → Vercel → Domain
 
 ### **Backend**
 
@@ -151,7 +153,9 @@ git push
 
 ### **4. Verify**
 
-- Check: <https://clubgodspeed-web.vercel.app>
+- Check: <https://clubgodspeed-web.vercel.app> (Vercel preview)
+- Check: <https://clubgodspeed.com> (Production domain)
+- Both should show identical content (source of truth: GitHub)
 - Hard refresh: `Cmd + Shift + R`
 
 ---
@@ -183,6 +187,23 @@ git push
 - ✅ Connect for marketplace
 
 ---
+
+## 🌐 **Domain Configuration**
+
+**Production Domain Setup:**
+
+- **Production Domain**: `clubgodspeed.com` (points to Vercel)
+- **Vercel Preview**: `clubgodspeed-web.vercel.app` (always in sync)
+- **Source of Truth**: GitHub `main` branch
+- **Deployment Flow**: GitHub → Vercel → Domain
+- **Note**: `www.godspeed.com` is NOT owned by this project (ignore it)
+
+**How It Works:**
+
+1. Code is pushed to GitHub `main` branch
+2. Vercel automatically detects the push and deploys
+3. `clubgodspeed.com` DNS points to Vercel
+4. Domain shows the same content as Vercel (which reads from GitHub)
 
 ## 🎯 **Key Principle**
 
