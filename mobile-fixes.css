@@ -25,6 +25,15 @@ body>* {
     overflow-x: hidden;
 }
 
+/* iOS Input Optimization: Prevent zoom on focus */
+@supports (-webkit-touch-callout: none) {
+    input,
+    textarea,
+    select {
+        font-size: 16px !important; /* Prevent iOS zoom */
+    }
+}
+
 /* Responsive container standard */
 .responsive-container {
     width: 100%;
@@ -325,4 +334,139 @@ header,
 body {
     overflow-x: hidden !important;
     overflow-y: auto !important;
+}
+
+/* =====================================================
+   TRAINING DASHBOARD MOBILE RESPONSIVENESS
+   ===================================================== */
+
+/* Training View Mobile Optimizations */
+@media (max-width: 767px) {
+    /* Training hours card - stack on mobile */
+    #training-hours-card {
+        padding: 20px !important;
+    }
+
+    #training-hours-card > div:first-child {
+        flex-direction: column !important;
+        gap: 16px !important;
+    }
+
+    #hours-remaining {
+        font-size: 36px !important;
+    }
+
+    /* Quick stats grid - single column on mobile */
+    #view-training > div:nth-child(3) {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    /* Training calendar - full width on mobile */
+    #training-calendar-container {
+        min-height: 300px !important;
+    }
+
+    #training-calendar-iframe {
+        height: 400px !important;
+    }
+
+    /* Skills programs - full width cards */
+    #skills-programs-list > div {
+        padding: 16px !important;
+    }
+
+    /* Documents section - stack vertically */
+    #receipts-list,
+    #invoices-list {
+        gap: 8px !important;
+    }
+
+    #receipts-list > div,
+    #invoices-list > div {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+        padding: 12px !important;
+    }
+
+    /* Training view padding */
+    #view-training {
+        padding: 16px !important;
+    }
+
+    /* Section headers */
+    #view-training .section-header h2 {
+        font-size: 24px !important;
+    }
+
+    /* Athlete select - full width */
+    #training-athlete-select {
+        width: 100% !important;
+        margin-top: 12px;
+    }
+}
+
+/* Tablet optimizations */
+@media (min-width: 768px) and (max-width: 1024px) {
+    #training-hours-card {
+        padding: 24px !important;
+    }
+
+    #view-training > div:nth-child(3) {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+/* Touch-friendly targets for training dashboard */
+@media (hover: none) and (pointer: coarse) {
+    #view-training button,
+    #view-training .btn-secondary,
+    #view-training .btn-primary {
+        min-height: 44px !important;
+        padding: 12px 20px !important;
+    }
+
+    #training-athlete-select {
+        min-height: 44px !important;
+        padding: 12px !important;
+    }
+}
+
+/* Training calendar iframe responsive */
+@media (max-width: 767px) {
+    #training-calendar-iframe {
+        min-height: 400px !important;
+        height: auto !important;
+    }
+}
+
+/* Hours progress bar - visible on all screens */
+#hours-progress-bar {
+    min-height: 8px !important;
+}
+
+/* Prevent text overflow in training cards */
+#view-training h3,
+#view-training h4 {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Receipt/Invoice download buttons - touch friendly */
+#view-training .btn-text {
+    min-height: 36px !important;
+    padding: 8px 16px !important;
+    font-size: 14px !important;
+}
+
+/* Skills program cards - responsive */
+@media (max-width: 767px) {
+    #skills-programs-list > div {
+        margin-bottom: 12px !important;
+    }
+
+    #skills-programs-list h4 {
+        font-size: 16px !important;
+    }
 }

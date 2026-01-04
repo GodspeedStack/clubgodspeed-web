@@ -40,20 +40,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // --- Authentication Logic ---
 
-function handleLogin() {
+async function handleLogin() {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     const btn = document.querySelector('.login-form button[type="submit"]');
+    const errorMsg = document.querySelector('.login-error');
 
-    if (email && password) {
-        btn.innerHTML = 'Signing In...';
-        if (window.auth) window.auth.login(email);
+    if (!email || !password) {
+        if (errorMsg) {
+            errorMsg.textContent = 'Please enter both email and password';
+            errorMsg.style.display = 'block';
+        }
+        return;
+    }
 
-        setTimeout(() => {
-            document.getElementById('portal-login').style.display = 'none';
-            document.getElementById('portal-dashboard').style.display = 'flex'; // V3 Flex Layout
-            updateDashboardProfile(email);
-        }, 800);
+    btn.innerHTML = 'Signing In...';
+    btn.disabled = true;
+
+    try {
+        // Use Supabase auth if available, otherwise fallback
+        if (window.auth && typeof window.auth.login === 'function') {
+            const success = await window.auth.login(email, password);
+            if (success) {
+                document.getElementById('portal-login').style.display = 'none';
+                document.getElementById('portal-dashboard').style.display = 'flex';
+                updateDashboardProfile(email);
+            } else {
+                throw new Error('Login failed');
+            }
+        } else {
+            // Fallback for development
+            localStorage.setItem('gba_parent_auth_token', 'valid_token_' + Date.now());
+            localStorage.setItem('gba_user_email', email);
+            setTimeout(() => {
+                document.getElementById('portal-login').style.display = 'none';
+                document.getElementById('portal-dashboard').style.display = 'flex';
+                updateDashboardProfile(email);
+            }, 800);
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        if (errorMsg) {
+            errorMsg.textContent = error.message || 'Login failed. Please check your credentials.';
+            errorMsg.style.display = 'block';
+        }
+        btn.innerHTML = 'Sign In';
+        btn.disabled = false;
     }
 }
 
@@ -116,6 +148,10 @@ window.switchPortalView = function (viewName, linkElement) {
 
     if (viewName === 'tuition') {
         renderParentTrips();
+    }
+    
+    if (viewName === 'training') {
+        renderTrainingDashboard();
     }
 }
 
@@ -663,3 +699,522 @@ window.submitGearOrder = function () {
         // Optionally reset form here
     }, 3000);
 }
+
+// --- Training Dashboard Logic ---
+
+/**
+ * Render the training dashboard with hours, calendar, and documents
+ */
+async function renderTrainingDashboard() {
+    const parentEmail = localStorage.getItem('gba_user_email');
+    if (!parentEmail) {
+        console.warn('No parent email found');
+        return;
+    }
+
+    // Load training hours
+    await loadTrainingHours(parentEmail);
+    
+    // Load session counts
+    await loadSessionCounts(parentEmail);
+    
+    // Load training calendar
+    await loadTrainingCalendar(parentEmail);
+    
+    // Load skills programs
+    await loadSkillsPrograms(parentEmail);
+    
+    // Load documents
+    await loadReceipts(parentEmail);
+    await loadInvoices(parentEmail);
+}
+
+/**
+ * Calculate and display remaining training hours
+ */
+async function calculateRemainingHours(parentEmail) {
+    const supabase = window.auth?.getSupabaseClient?.();
+    const db = getDB();
+    
+    let totalPurchased = 0;
+    let totalUsed = 0;
+    
+    if (supabase && window.auth?.isSupabaseAvailable?.()) {
+        try {
+            // Get parent account
+            const { data: parentAccount } = await supabase
+                .from('parent_accounts')
+                .select('id')
+                .eq('email', parentEmail)
+                .single();
+            
+            if (parentAccount) {
+                // Get training purchases
+                const { data: purchases } = await supabase
+                    .from('training_purchases')
+                    .select('hours_purchased, hours_used, hours_remaining, status')
+                    .eq('parent_id', parentAccount.id)
+                    .eq('status', 'active');
+                
+                if (purchases && purchases.length > 0) {
+                    totalPurchased = purchases.reduce((sum, p) => sum + parseFloat(p.hours_purchased || 0), 0);
+                    totalUsed = purchases.reduce((sum, p) => sum + parseFloat(p.hours_used || 0), 0);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching training hours from Supabase:', error);
+        }
+    }
+    
+    // Fallback to localStorage/portal-data
+    if (totalPurchased === 0) {
+        const transactions = (db.transactions || []).filter(t => 
+            t.parentId === parentEmail && t.status === 'PAID'
+        );
+        
+        transactions.forEach(txn => {
+            // Calculate hours from transaction (assuming price per hour or package)
+            // This is a simplified calculation - adjust based on your pricing model
+            const hoursInPackage = txn.hoursPurchased || (txn.amount / 50); // Default $50/hour
+            totalPurchased += hoursInPackage;
+        });
+        
+        // Calculate used hours from attendance (if tracked)
+        const athletes = (db.roster || []).filter(a => a.parentId === parentEmail);
+        athletes.forEach(athlete => {
+            // This would need to be calculated from actual attendance records
+            // For now, we'll use a placeholder
+        });
+    }
+    
+    const remaining = totalPurchased - totalUsed;
+    const progressPercent = totalPurchased > 0 ? (totalUsed / totalPurchased) * 100 : 0;
+    
+    return {
+        purchased: totalPurchased,
+        used: totalUsed,
+        remaining: remaining,
+        progressPercent: progressPercent
+    };
+}
+
+/**
+ * Load and display training hours
+ */
+async function loadTrainingHours(parentEmail) {
+    const hoursData = await calculateRemainingHours(parentEmail);
+    
+    // Update hours display
+    const hoursRemainingEl = document.getElementById('hours-remaining');
+    const hoursPurchasedEl = document.getElementById('hours-purchased');
+    const hoursUsedEl = document.getElementById('hours-used');
+    const progressFillEl = document.getElementById('hours-progress-fill');
+    
+    if (hoursRemainingEl) {
+        hoursRemainingEl.textContent = hoursData.remaining.toFixed(1);
+        
+        // Add warning class if low hours
+        if (hoursData.remaining < 5) {
+            hoursRemainingEl.parentElement.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+        }
+    }
+    
+    if (hoursPurchasedEl) hoursPurchasedEl.textContent = hoursData.purchased.toFixed(1);
+    if (hoursUsedEl) hoursUsedEl.textContent = hoursData.used.toFixed(1);
+    if (progressFillEl) progressFillEl.style.width = `${hoursData.progressPercent}%`;
+}
+
+/**
+ * Load session counts (completed and upcoming)
+ */
+async function loadSessionCounts(parentEmail) {
+    const supabase = window.auth?.getSupabaseClient?.();
+    const db = getDB();
+    
+    const athletes = (db.roster || []).filter(a => a.parentId === parentEmail);
+    let completedCount = 0;
+    let upcomingCount = 0;
+    
+    if (supabase && window.auth?.isSupabaseAvailable?.()) {
+        try {
+            const { data: parentAccount } = await supabase
+                .from('parent_accounts')
+                .select('id')
+                .eq('email', parentEmail)
+                .single();
+            
+            if (parentAccount) {
+                const athleteIds = athletes.map(a => a.athleteId);
+                
+                // Get completed sessions (attendance records)
+                const { data: purchases } = await supabase
+                    .from('training_purchases')
+                    .select('id')
+                    .eq('parent_id', parentAccount.id)
+                    .in('athlete_id', athleteIds);
+                
+                if (purchases && purchases.length > 0) {
+                    const purchaseIds = purchases.map(p => p.id);
+                    const { data: attendance } = await supabase
+                        .from('training_attendance')
+                        .select('id')
+                        .in('purchase_id', purchaseIds);
+                    
+                    completedCount = attendance ? attendance.length : 0;
+                }
+                
+                // Get upcoming sessions
+                const { data: enrollments } = await supabase
+                    .from('player_enrollments')
+                    .select('program_id')
+                    .eq('parent_id', parentAccount.id)
+                    .in('athlete_id', athleteIds)
+                    .eq('status', 'active');
+                
+                if (enrollments && enrollments.length > 0) {
+                    const programIds = enrollments.map(e => e.program_id);
+                    const today = new Date().toISOString().split('T')[0];
+                    const { data: sessions } = await supabase
+                        .from('training_sessions')
+                        .select('id')
+                        .in('program_id', programIds)
+                        .gte('session_date', today)
+                        .eq('status', 'scheduled');
+                    
+                    upcomingCount = sessions ? sessions.length : 0;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading session counts:', error);
+        }
+    }
+    
+    // Update UI
+    const completedEl = document.getElementById('sessions-completed');
+    const upcomingEl = document.getElementById('sessions-upcoming');
+    
+    if (completedEl) completedEl.textContent = completedCount;
+    if (upcomingEl) upcomingEl.textContent = upcomingCount;
+}
+
+/**
+ * Load training calendar filtered by athlete's training days
+ */
+async function loadTrainingCalendar(parentEmail) {
+    const db = getDB();
+    const supabase = window.auth?.getSupabaseClient?.();
+    
+    // Get athlete enrollments
+    const athletes = (db.roster || []).filter(a => a.parentId === parentEmail);
+    
+    // Populate athlete select
+    const athleteSelect = document.getElementById('training-athlete-select');
+    if (athleteSelect) {
+        athleteSelect.innerHTML = '<option value="">All Athletes</option>';
+        athletes.forEach(athlete => {
+            const option = document.createElement('option');
+            option.value = athlete.athleteId;
+            option.textContent = athlete.name;
+            athleteSelect.appendChild(option);
+        });
+        
+        athleteSelect.addEventListener('change', (e) => {
+            filterCalendarByAthlete(e.target.value);
+        });
+    }
+    
+    // Load enrollments to filter calendar
+    let enrolledPrograms = [];
+    if (supabase && window.auth?.isSupabaseAvailable?.()) {
+        try {
+            const { data: parentAccount } = await supabase
+                .from('parent_accounts')
+                .select('id')
+                .eq('email', parentEmail)
+                .single();
+            
+            if (parentAccount) {
+                const athleteIds = athletes.map(a => a.athleteId);
+                const { data: enrollments } = await supabase
+                    .from('player_enrollments')
+                    .select('program_id, enrolled_sessions')
+                    .eq('parent_id', parentAccount.id)
+                    .in('athlete_id', athleteIds)
+                    .eq('status', 'active');
+                
+                if (enrollments) {
+                    enrolledPrograms = enrollments.map(e => e.program_id);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading enrollments:', error);
+        }
+    } else {
+        // Fallback: get from roster active_enrollments
+        athletes.forEach(athlete => {
+            if (athlete.active_enrollments) {
+                enrolledPrograms.push(...athlete.active_enrollments);
+            }
+        });
+    }
+    
+    // Store enrolled programs for calendar filtering
+    window.trainingEnrolledPrograms = enrolledPrograms;
+}
+
+/**
+ * Filter calendar by selected athlete
+ */
+function filterCalendarByAthlete(athleteId) {
+    // This will be handled by the calendar iframe
+    // For now, we'll pass the filter via postMessage
+    const iframe = document.getElementById('training-calendar-iframe');
+    if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage({
+            type: 'filterByAthlete',
+            athleteId: athleteId
+        }, '*');
+    }
+}
+
+/**
+ * Load skills programs for the parent's athletes
+ */
+async function loadSkillsPrograms(parentEmail) {
+    const db = getDB();
+    const supabase = window.auth?.getSupabaseClient?.();
+    const container = document.getElementById('skills-programs-list');
+    
+    if (!container) return;
+    
+    const athletes = (db.roster || []).filter(a => a.parentId === parentEmail);
+    let programs = [];
+    
+    if (supabase && window.auth?.isSupabaseAvailable?.()) {
+        try {
+            const { data: parentAccount } = await supabase
+                .from('parent_accounts')
+                .select('id')
+                .eq('email', parentEmail)
+                .single();
+            
+            if (parentAccount) {
+                const athleteIds = athletes.map(a => a.athleteId);
+                const { data: enrollments } = await supabase
+                    .from('player_enrollments')
+                    .select('*, training_packages(name, description, program_type)')
+                    .eq('parent_id', parentAccount.id)
+                    .in('athlete_id', athleteIds)
+                    .eq('status', 'active');
+                
+                if (enrollments) {
+                    programs = enrollments;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading skills programs:', error);
+        }
+    }
+    
+    // Fallback: get from roster
+    if (programs.length === 0) {
+        athletes.forEach(athlete => {
+            if (athlete.active_enrollments && athlete.active_enrollments.length > 0) {
+                athlete.active_enrollments.forEach(programId => {
+                    programs.push({
+                        program_id: programId,
+                        program_name: programId,
+                        athlete_id: athlete.athleteId,
+                        athlete_name: athlete.name
+                    });
+                });
+            }
+        });
+    }
+    
+    // Render programs
+    if (programs.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #888;"><p>No active skills programs found.</p></div>';
+        return;
+    }
+    
+    let html = '';
+    programs.forEach(program => {
+        const athlete = athletes.find(a => a.athleteId === program.athlete_id);
+        html += `
+            <div style="background: #f9f9f9; border-radius: 12px; padding: 20px; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                    <div>
+                        <h4 style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">${program.program_name || program.program_id}</h4>
+                        <p style="font-size: 14px; color: #666;">${athlete ? athlete.name : 'Unknown Athlete'}</p>
+                    </div>
+                    <span style="background: #10b981; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">Active</span>
+                </div>
+                ${program.start_date ? `<div style="font-size: 14px; color: #666; margin-top: 8px;">Started: ${new Date(program.start_date).toLocaleDateString()}</div>` : ''}
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+    
+    // Update active programs count
+    const activeProgramsEl = document.getElementById('active-programs');
+    if (activeProgramsEl) activeProgramsEl.textContent = programs.length;
+}
+
+/**
+ * Load receipts for the parent
+ */
+async function loadReceipts(parentEmail) {
+    const supabase = window.auth?.getSupabaseClient?.();
+    const container = document.getElementById('receipts-list');
+    
+    if (!container) return;
+    
+    let receipts = [];
+    
+    if (supabase && window.auth?.isSupabaseAvailable?.()) {
+        try {
+            const { data: parentAccount } = await supabase
+                .from('parent_accounts')
+                .select('id')
+                .eq('email', parentEmail)
+                .single();
+            
+            if (parentAccount) {
+                const { data } = await supabase
+                    .from('receipts')
+                    .select('*')
+                    .eq('parent_id', parentAccount.id)
+                    .order('payment_date', { ascending: false })
+                    .limit(5);
+                
+                if (data) receipts = data;
+            }
+        } catch (error) {
+            console.error('Error loading receipts:', error);
+        }
+    }
+    
+    // Fallback: get from transactions
+    if (receipts.length === 0) {
+        const db = getDB();
+        const transactions = (db.transactions || []).filter(t => 
+            t.parentId === parentEmail && t.status === 'PAID'
+        ).slice(0, 5);
+        
+        receipts = transactions.map(txn => ({
+            receipt_number: txn.id,
+            amount: txn.amount,
+            payment_date: txn.date,
+            transaction_id: txn.id
+        }));
+    }
+    
+    if (receipts.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 20px; color: #888;"><p>No receipts found.</p></div>';
+        return;
+    }
+    
+    let html = '';
+    receipts.forEach(receipt => {
+        html += `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background: #f9f9f9; border-radius: 8px;">
+                <div>
+                    <div style="font-weight: 600; margin-bottom: 4px;">Receipt #${receipt.receipt_number || receipt.transaction_id}</div>
+                    <div style="font-size: 14px; color: #666;">${new Date(receipt.payment_date).toLocaleDateString()}</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-weight: 600; margin-bottom: 4px;">$${parseFloat(receipt.amount).toFixed(2)}</div>
+                    <button onclick="generateReceiptPDF('${receipt.receipt_number || receipt.transaction_id}')" class="btn-text" style="font-size: 12px; color: #2563eb;">Download</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+/**
+ * Load invoices for the parent
+ */
+async function loadInvoices(parentEmail) {
+    const supabase = window.auth?.getSupabaseClient?.();
+    const container = document.getElementById('invoices-list');
+    
+    if (!container) return;
+    
+    let invoices = [];
+    
+    if (supabase && window.auth?.isSupabaseAvailable?.()) {
+        try {
+            const { data: parentAccount } = await supabase
+                .from('parent_accounts')
+                .select('id')
+                .eq('email', parentEmail)
+                .single();
+            
+            if (parentAccount) {
+                const { data } = await supabase
+                    .from('invoices')
+                    .select('*')
+                    .eq('parent_id', parentAccount.id)
+                    .order('issue_date', { ascending: false })
+                    .limit(5);
+                
+                if (data) invoices = data;
+            }
+        } catch (error) {
+            console.error('Error loading invoices:', error);
+        }
+    }
+    
+    if (invoices.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 20px; color: #888;"><p>No invoices found.</p></div>';
+        return;
+    }
+    
+    let html = '';
+    invoices.forEach(invoice => {
+        const statusColor = invoice.status === 'paid' ? '#10b981' : invoice.status === 'overdue' ? '#ef4444' : '#f59e0b';
+        html += `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background: #f9f9f9; border-radius: 8px;">
+                <div>
+                    <div style="font-weight: 600; margin-bottom: 4px;">Invoice #${invoice.invoice_number}</div>
+                    <div style="font-size: 14px; color: #666;">Due: ${new Date(invoice.due_date).toLocaleDateString()}</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-weight: 600; margin-bottom: 4px;">$${parseFloat(invoice.total_amount).toFixed(2)}</div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <span style="background: ${statusColor}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">${invoice.status.toUpperCase()}</span>
+                        <button onclick="generateInvoicePDF('${invoice.invoice_number}')" class="btn-text" style="font-size: 12px; color: #2563eb;">Download</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+/**
+ * Generate receipt PDF
+ */
+window.generateReceiptPDF = async function(receiptId) {
+    // This would generate a PDF - for now, just show alert
+    alert(`Generating receipt ${receiptId}...`);
+    // TODO: Implement PDF generation using jsPDF or similar
+}
+
+/**
+ * Generate invoice PDF
+ */
+window.generateInvoicePDF = async function(invoiceNumber) {
+    // This would generate a PDF - for now, just show alert
+    alert(`Generating invoice ${invoiceNumber}...`);
+    // TODO: Implement PDF generation using jsPDF or similar
+}
+
+// Make functions globally available
+window.loadReceipts = () => loadReceipts(localStorage.getItem('gba_user_email'));
+window.loadInvoices = () => loadInvoices(localStorage.getItem('gba_user_email'));

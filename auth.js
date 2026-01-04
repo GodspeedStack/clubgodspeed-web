@@ -2,36 +2,63 @@
 /**
  * Global Authentication Manager for Godspeed Basketball
  * Handles visibility of restricted content (Calendar, Parent Portal Links).
+ * Uses Supabase Auth when available, falls back to localStorage mock.
  */
 
 (function () {
     const AUTH_KEY = 'gba_parent_auth_token';
     const LOGGED_IN_CLASS = 'logged-in';
 
+    // Check if Supabase auth is available (loaded via auth-supabase.js)
+    const useSupabase = typeof window.auth !== 'undefined' && window.auth.isSupabaseAvailable && window.auth.isSupabaseAvailable();
+
     // Expose Auth API globally
-    window.auth = {
-        login: function (email) {
-            // In a real app, this would validate credentials with a server.
-            // For now, we simulate a successful login.
+    window.auth = window.auth || {
+        login: async function (email, password) {
+            if (useSupabase && password) {
+                // Use Supabase auth
+                try {
+                    return await window.auth.login(email, password);
+                } catch (error) {
+                    console.error('Supabase login failed, using fallback');
+                    // Fall through to fallback
+                }
+            }
+            
+            // Fallback: localStorage mock (for development/testing)
             localStorage.setItem(AUTH_KEY, 'valid_token_' + Date.now());
             localStorage.setItem('gba_user_email', email);
             updateUI(true);
             return true;
         },
 
-        logout: function () {
+        logout: async function () {
+            if (useSupabase) {
+                await window.auth.logout();
+                return;
+            }
+            
             localStorage.removeItem(AUTH_KEY);
             localStorage.removeItem('gba_user_email');
+            localStorage.removeItem('gba_user_id');
             updateUI(false);
-            window.location.href = 'index.html'; // Redirect to home on logout
+            window.location.href = 'index.html';
         },
 
         isLoggedIn: function () {
+            if (useSupabase) {
+                return window.auth.isLoggedIn();
+            }
             return !!localStorage.getItem(AUTH_KEY);
         },
 
-        init: function () {
-            const isLoggedIn = this.isLoggedIn();
+        init: async function () {
+            if (useSupabase) {
+                await window.auth.init();
+                return;
+            }
+            
+            const isLoggedIn = !!localStorage.getItem(AUTH_KEY);
             updateUI(isLoggedIn);
         }
     };
@@ -71,9 +98,13 @@
         }
     }
 
-    // Auto-init on load
-    document.addEventListener('DOMContentLoaded', () => {
-        window.auth.init();
-    });
+    // Auto-init on load (wait for auth-supabase.js if it exists)
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => window.auth.init(), 100); // Small delay to allow auth-supabase.js to load
+        });
+    } else {
+        setTimeout(() => window.auth.init(), 100);
+    }
 
 })();

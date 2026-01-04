@@ -18,14 +18,19 @@
     --text-dark: #333333;
     --bg-light: #F5F5F5;
     --bg-dark: #1A1A1A;
-    --transition: all 0.3s ease;
+    --transition: all 0.2s ease;
+    --transition-fast: all 0.15s ease;
+    --transition-slow: all 0.3s ease;
 }
 
 body {
-    font-family: 'Arial', 'Helvetica', sans-serif;
+    font-family: 'Inter', 'Arial', 'Helvetica', sans-serif;
     line-height: 1.6;
     color: var(--text-dark);
     background-color: var(--text-light);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
 
 .container {
@@ -44,6 +49,112 @@ a {
     text-decoration: none;
     color: inherit;
     transition: var(--transition);
+}
+
+/* Accessibility: Focus states with box-shadow instead of outline */
+*:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--brand-blue);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--brand-blue);
+}
+
+/* Touch Optimization: Hide hover states on touch devices */
+@media (hover: hover) {
+    /* Hover effects only on devices that support hover */
+    a:hover,
+    button:hover {
+        transition: var(--transition);
+    }
+}
+
+@media (hover: none) {
+    /* Remove hover effects on touch devices to prevent flickering */
+    a:hover,
+    button:hover {
+        /* No hover styles on touch */
+    }
+    
+    /* Ensure touch targets are large enough */
+    a, button {
+        min-height: 44px;
+        min-width: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+/* iOS Input Optimization: Prevent zoom on focus */
+input,
+textarea,
+select {
+    font-size: 16px; /* Minimum 16px to prevent iOS zoom */
+}
+
+@media screen and (max-width: 768px) {
+    input,
+    textarea,
+    select {
+        font-size: 16px !important; /* Force 16px on mobile */
+    }
+}
+
+/* Touch target minimum size (44x44px for accessibility) */
+button,
+a[role="button"],
+input[type="button"],
+input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
+}
+
+/* Button States: Disabled and Loading */
+button:disabled,
+.button-disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.button-loading {
+    position: relative;
+    color: transparent !important;
+    pointer-events: none;
+}
+
+.button-loading::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Button Press Feedback */
+button:active:not(:disabled),
+.button-press:active {
+    transform: scale(0.98);
 }
 
 ul {
@@ -617,6 +728,7 @@ ul {
 .contact-form textarea:focus {
     outline: none;
     border-color: var(--brand-blue);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
 .cart-total {
@@ -723,7 +835,7 @@ ul {
 .dark-card {
     background-color: var(--brand-dark);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: transform 0.3s ease;
+    transition: transform 0.2s ease;
 }
 
 .dark-card:hover {
@@ -794,7 +906,7 @@ ul {
     font-size: 1rem;
     font-weight: 600;
     color: var(--primary-color);
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     font-family: 'Inter', sans-serif;
 }
 
@@ -802,6 +914,7 @@ ul {
     outline: none;
     background-color: #ffffff;
     border-color: var(--brand-blue);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
 }
 
@@ -866,7 +979,7 @@ ul {
     border: none;
     border-radius: 50px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     margin-top: 1rem;
 }
 

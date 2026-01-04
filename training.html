@@ -15,6 +15,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="animations.css">
     <style>
         /* Navbar styles */
         .navbar {
@@ -59,92 +60,84 @@
         </div>
     </header>
 
-    <section class="section-dark">
-        <div class="container">
-            <h2 class="section-title">AVAILABLE PROGRAMS</h2>
-            <div class="about-grid">
-                <div class="feature-card">
-                    <div class="card-content">
-                        <h3>Elite Guard Academy</h3>
-                        <p>Designed for guards who depend on skill, IQ, and movement not height.</p>
-                        <ul class="feature-list" style="margin-top: 1rem; margin-bottom: 1rem;">
-                            <li>Footwork and separation</li>
-                            <li>Advanced finishing</li>
-                            <li>Shot creation</li>
-                            <li>Defensive manipulation</li>
-                            <li>Pace + deception</li>
-                            <li>Finishing at multiple angles</li>
-                            <li>Footwork systems</li>
-                            <li>Shooting mechanics</li>
-                            <li>Spacing habits</li>
-                        </ul>
-                        <button class="btn-primary select-program-btn add-to-cart-btn" data-program="guard-academy"
-                            data-id="elite-guard-academy" data-price="150" data-name="Elite Guard Academy"
-                            style="width: 100%;">Select Program</button>
-                    </div>
+    <section class="py-24 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-20">
+                <h2 class="text-5xl font-black uppercase tracking-tight text-gray-900">AVAILABLE PROGRAMS</h2>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white p-10 rounded-3xl shadow-xl flex flex-col h-full hover:shadow-2xl transition-shadow duration-200">
+                    <h3 class="text-2xl font-black uppercase mb-4 text-gray-900">ELITE GUARD ACADEMY</h3>
+                    <p class="text-gray-500 text-sm mb-6 leading-relaxed">Designed for guards who depend on skill, IQ, and movement not height.</p>
+                    <ul class="space-y-3 text-sm text-gray-800 font-medium mb-10 flex-1">
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Footwork and separation</li>
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Advanced finishing</li>
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Shot creation</li>
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Defensive manipulation</li>
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Pace + deception</li>
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Finishing at multiple angles</li>
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Footwork systems</li>
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Shooting mechanics</li>
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Spacing habits</li>
+                    </ul>
+                    <button class="w-full py-4 bg-blue-600 text-white font-bold rounded-full uppercase tracking-wider hover:bg-blue-700 transition shadow-lg shadow-blue-600/20 select-program-btn add-to-cart-btn" data-program="guard-academy" data-id="elite-guard-academy" data-price="150" data-name="Elite Guard Academy">SELECT PROGRAM</button>
                 </div>
-                <div class="feature-card">
-                    <div class="card-content">
-                        <h3>IQ School (Hydra Principles)</h3>
-                        <p>Not plays. Patterns. Players learn to read space, manipulate defenders, and make
-                            decisions.</p>
-                        <ul class="feature-list" style="margin-top: 1rem; margin-bottom: 1rem;">
-                            <li>Read space early</li>
-                            <li>Manipulate defenders</li>
-                            <li>Understand overloads</li>
-                            <li>Create advantages</li>
-                            <li>Attack contours of a defense</li>
-                            <li>Make decisions at live speed</li>
-                        </ul>
-                        <p class="text-muted" style="margin-bottom: 1.5rem;">This is where players become
-                            problem-solvers.</p>
-                        <button class="btn-primary select-program-btn add-to-cart-btn" data-program="iq-school"
-                            data-id="iq-school" data-price="120" data-name="IQ School (Hydra Principles)"
-                            style="width: 100%;">Select Program</button>
-                    </div>
+
+                <div class="bg-white p-10 rounded-3xl shadow-xl flex flex-col h-full hover:shadow-2xl transition-shadow duration-200">
+                    <h3 class="text-2xl font-black uppercase mb-4 text-gray-900">IQ SCHOOL (HYDRA)</h3>
+                    <p class="text-gray-500 text-sm mb-6 leading-relaxed">Not plays. Patterns. Players learn to read space, manipulate defenders, and make decisions.</p>
+                    <ul class="space-y-3 text-sm text-gray-800 font-medium mb-6 flex-1">
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Read space early</li>
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Manipulate defenders</li>
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Understand overloads</li>
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Create advantages</li>
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Attack contours of a defense</li>
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Make decisions at live speed</li>
+                    </ul>
+                    <p class="text-gray-400 text-sm italic mb-4">This is where players become problem-solvers.</p>
+                    <button class="w-full py-4 bg-blue-600 text-white font-bold rounded-full uppercase tracking-wider hover:bg-blue-700 transition shadow-lg shadow-blue-600/20 select-program-btn add-to-cart-btn" data-program="iq-school" data-id="iq-school" data-price="120" data-name="IQ School (Hydra Principles)">SELECT PROGRAM</button>
                 </div>
-                <div class="feature-card">
-                    <div class="card-content">
-                        <h3>Strength + Movement</h3>
-                        <p>Functional athletic development without the burnout culture.</p>
-                        <ul class="feature-list" style="margin-top: 1rem; margin-bottom: 1rem;">
-                            <li>Reflexive strength</li>
-                            <li>Ground reaction force</li>
-                            <li>Plyometric sequencing</li>
-                            <li>Balance + posture</li>
-                            <li>Speed mechanics</li>
-                            <li>Joint stability</li>
-                            <li>Low-to-the-ground efficiency</li>
-                        </ul>
-                        <p class="text-muted" style="margin-bottom: 1.5rem;">Athletes move better, last longer, and
-                            react faster.</p>
-                        <button class="btn-primary select-program-btn add-to-cart-btn" data-program="strength"
-                            data-id="strength-movement" data-price="100" data-name="Strength + Movement"
-                            style="width: 100%;">Select Program</button>
-                    </div>
+
+                <div class="bg-white p-10 rounded-3xl shadow-xl flex flex-col h-full hover:shadow-2xl transition-shadow duration-200">
+                    <h3 class="text-2xl font-black uppercase mb-4 text-gray-900">STRENGTH + MOVEMENT</h3>
+                    <p class="text-gray-500 text-sm mb-6 leading-relaxed">Functional athletic development without the burnout culture.</p>
+                    <ul class="space-y-3 text-sm text-gray-800 font-medium mb-6 flex-1">
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Reflexive strength</li>
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Ground reaction force</li>
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Plyometric sequencing</li>
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Balance + posture</li>
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Speed mechanics</li>
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Joint stability</li>
+                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Low-to-the-ground efficiency</li>
+                    </ul>
+                    <p class="text-gray-400 text-sm italic mb-4">Athletes move better, last longer, and react faster.</p>
+                    <button class="w-full py-4 bg-blue-600 text-white font-bold rounded-full uppercase tracking-wider hover:bg-blue-700 transition shadow-lg shadow-blue-600/20 select-program-btn add-to-cart-btn" data-program="strength" data-id="strength-movement" data-price="100" data-name="Strength + Movement">SELECT PROGRAM</button>
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="faq" class="section-light">
-        <div class="container">
-            <h2 class="section-title">COMMON QUESTIONS</h2>
-            <div class="faq-list">
-                <div class="faq-item">
-                    <div class="faq-question">What is the time commitment?</div>
-                    <div class="faq-answer">We expect players to train at least 2x per week. Consistency is the only way
-                        to see real results.</div>
+    <section id="faq" class="py-24 bg-white">
+        <div class="max-w-4xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-black uppercase tracking-tight text-gray-900">COMMON QUESTIONS</h2>
+            </div>
+            
+            <div class="space-y-6">
+                <div class="bg-gray-50 p-8 rounded-2xl border border-gray-200 hover:border-gray-300 transition-colors duration-200">
+                    <h3 class="text-lg font-bold text-gray-900 mb-3">What is the time commitment?</h3>
+                    <p class="text-gray-600 leading-relaxed">We expect players to train at least 2x per week. Consistency is the only way to see real results.</p>
                 </div>
-                <div class="faq-item">
-                    <div class="faq-question">Do you travel for tournaments?</div>
-                    <div class="faq-answer">Yes, our AAU teams travel for major tournaments. We believe in exposing
-                        players to high-level competition outside their local bubble.</div>
+                
+                <div class="bg-gray-50 p-8 rounded-2xl border border-gray-200 hover:border-gray-300 transition-colors duration-200">
+                    <h3 class="text-lg font-bold text-gray-900 mb-3">Do you travel for tournaments?</h3>
+                    <p class="text-gray-600 leading-relaxed">Yes, our AAU teams travel for major tournaments. We believe in exposing players to high-level competition outside their local bubble.</p>
                 </div>
-                <div class="faq-item">
-                    <div class="faq-question">Is this for beginners?</div>
-                    <div class="faq-answer">Our programs are designed for serious athletes. While we welcome motivated
-                        beginners, the intensity is high. We recommend a trial session to see if it's a good fit.</div>
+                
+                <div class="bg-gray-50 p-8 rounded-2xl border border-gray-200 hover:border-gray-300 transition-colors duration-200">
+                    <h3 class="text-lg font-bold text-gray-900 mb-3">Is this for beginners?</h3>
+                    <p class="text-gray-600 leading-relaxed">Our programs are designed for serious athletes. While we welcome motivated beginners, the intensity is high. We recommend a trial session to see if it's a good fit.</p>
                 </div>
             </div>
         </div>
@@ -414,7 +407,7 @@
                     <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Parents</h4>
                     <ul class="space-y-4 text-sm text-gray-600 font-medium">
                         <li><a href="#" class="hover:text-blue-600 transition">Parent Assessment</a></li>
-                        <li><a href="#" class="hover:text-blue-600 transition">Parent Portal</a></li>
+                        <li><a href="parent-portal.html" class="hover:text-blue-600 transition">Parent Portal</a></li>
                     </ul>
                 </div>
                 <div>
@@ -482,6 +475,8 @@
     <script src="auth.js"></script>
     <script src="src/components/MobileBottomNav.js"></script>
     <script src="nav-security.js"></script>
+    <script src="performance.js"></script>
+    <script src="button-states.js"></script>
 </body>
 
 </html>

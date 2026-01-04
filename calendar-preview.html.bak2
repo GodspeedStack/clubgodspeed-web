@@ -603,7 +603,7 @@
                     <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Parents</h4>
                     <ul class="space-y-4 text-sm text-gray-600 font-medium">
                         <li><a href="#" class="hover:text-blue-600 transition">Parent Assessment</a></li>
-                        <li><a href="parent-portal.html" class="hover:text-blue-600 transition">Parent Portal</a></li>
+                        <li><a href="#" class="hover:text-blue-600 transition">Parent Portal</a></li>
                     </ul>
                 </div>
                 <div>
@@ -791,7 +791,7 @@
             // Stats Calculation (Season Total)
             const stats = calculateSeasonStats(year, month);
             document.getElementById('calculated-hours').innerHTML = `
-                <span style="background: rgba(37,99,235,0.1); color: #2563eb; padding: 4px 10px; border-radius: 99px;">${stats.practice} Practice Hours</span>
+                <span style="background: rgba(0,113,227,0.1); color: #2563eb; padding: 4px 10px; border-radius: 99px;">${stats.practice} Practice Hours</span>
                 <span style="background: rgba(0,0,0,0.05); color: #1d1d1f; padding: 4px 10px; border-radius: 99px;">${stats.game} Game Hours</span>
             `;
 
