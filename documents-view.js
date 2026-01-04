@@ -72,6 +72,8 @@ window.generateReceiptPDF = async function(receiptId) {
     generateReceiptPDFDocument(receiptData);
 };
 
+// Function is already globally available as window.generateReceiptPDF
+
 /**
  * Generate Invoice PDF
  */
@@ -119,156 +121,289 @@ window.generateInvoicePDF = async function(invoiceNumber) {
     generateInvoicePDFDocument(invoiceData);
 };
 
+// Function is already globally available as window.generateInvoicePDF
+
 /**
  * Generate Receipt PDF Document
  */
 function generateReceiptPDFDocument(receipt) {
+    // Wait for jsPDF to load if needed
     if (typeof window.jspdf === 'undefined') {
-        alert('PDF library not loaded. Please refresh the page.');
+        // Try loading jsPDF
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+        script.onload = () => {
+            if (typeof window.jspdf !== 'undefined') {
+                generateReceiptPDFDocument(receipt);
+            } else {
+                alert('PDF library not loaded. Please refresh the page.');
+            }
+        };
+        document.head.appendChild(script);
         return;
     }
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
 
-    // Receipt Header
-    doc.setFontSize(24);
-    doc.setTextColor(37, 99, 235); // Blue
-    doc.text('GODSPEED BASKETBALL', 20, 30);
+    // Header with branding
+    doc.setFillColor(37, 99, 235); // Brand blue
+    doc.rect(0, 0, pageWidth, 40, 'F');
     
-    doc.setFontSize(12);
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(28);
+    doc.setFont(undefined, 'bold');
+    doc.text('GODSPEED', margin, 20);
+    doc.text('BASKETBALL', margin, 30);
+    
+    // Receipt title
+    doc.setFontSize(16);
+    doc.setTextColor(255, 255, 255);
+    doc.text('TRAINING RECEIPT', pageWidth - margin, 25, { align: 'right' });
+
+    // Receipt Details Section
+    let yPos = 55;
+    doc.setFontSize(10);
     doc.setTextColor(0, 0, 0);
-    doc.text('Training Receipt', 20, 40);
+    doc.setFont(undefined, 'normal');
+    
+    // Receipt number
+    doc.setFont(undefined, 'bold');
+    doc.text('Receipt Number:', margin, yPos);
+    doc.setFont(undefined, 'normal');
+    doc.text(receipt.receipt_number || receipt.transaction_id || 'N/A', margin + 50, yPos);
+    yPos += 8;
+    
+    // Date
+    doc.setFont(undefined, 'bold');
+    doc.text('Date:', margin, yPos);
+    doc.setFont(undefined, 'normal');
+    doc.text(new Date(receipt.payment_date).toLocaleDateString('en-US', { 
+        year: 'numeric', month: 'long', day: 'numeric' 
+    }), margin + 50, yPos);
+    yPos += 8;
+    
+    // Payment method
+    doc.setFont(undefined, 'bold');
+    doc.text('Payment Method:', margin, yPos);
+    doc.setFont(undefined, 'normal');
+    doc.text(receipt.payment_method || 'Credit Card', margin + 50, yPos);
+    yPos += 15;
 
-    // Receipt Details
-    let yPos = 60;
-    doc.setFontSize(10);
-    doc.text(`Receipt Number: ${receipt.receipt_number}`, 20, yPos);
-    yPos += 10;
-    doc.text(`Date: ${new Date(receipt.payment_date).toLocaleDateString()}`, 20, yPos);
-    yPos += 10;
-    doc.text(`Payment Method: ${receipt.payment_method || 'Credit Card'}`, 20, yPos);
-    yPos += 20;
-
-    // Items
+    // Items Section
     doc.setFontSize(12);
-    doc.text('Items:', 20, yPos);
+    doc.setFont(undefined, 'bold');
+    doc.text('Items Purchased:', margin, yPos);
     yPos += 10;
 
     doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
     if (receipt.items && receipt.items.length > 0) {
         receipt.items.forEach((item, index) => {
             const itemText = typeof item === 'string' ? item : (item.name || item.program || 'Training Session');
-            doc.text(`${index + 1}. ${itemText}`, 25, yPos);
+            doc.text(`${index + 1}. ${itemText}`, margin + 5, yPos);
             yPos += 8;
+            if (yPos > 250) {
+                doc.addPage();
+                yPos = 20;
+            }
         });
     } else {
-        doc.text('Training Package', 25, yPos);
+        doc.text('1. Training Package', margin + 5, yPos);
         yPos += 8;
     }
 
     yPos += 10;
 
-    // Total
-    doc.setFontSize(12);
+    // Total Section
+    doc.setDrawColor(200, 200, 200);
+    doc.line(margin, yPos, pageWidth - margin, yPos);
+    yPos += 10;
+    
+    doc.setFontSize(14);
     doc.setFont(undefined, 'bold');
-    doc.text(`Total: $${parseFloat(receipt.amount).toFixed(2)}`, 20, yPos);
+    doc.text('Total Amount:', margin, yPos);
+    doc.setTextColor(37, 99, 235);
+    doc.text(`$${parseFloat(receipt.amount).toFixed(2)}`, pageWidth - margin, yPos, { align: 'right' });
     yPos += 20;
 
     // Footer
-    doc.setFontSize(8);
-    doc.setFont(undefined, 'normal');
     doc.setTextColor(128, 128, 128);
-    doc.text('Thank you for your payment!', 20, yPos);
-    yPos += 5;
-    doc.text('For questions, contact: info@godspeedbasketball.com', 20, yPos);
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+    doc.text('Thank you for your payment!', margin, yPos);
+    yPos += 6;
+    doc.text('For questions, contact: info@godspeedbasketball.com', margin, yPos);
+    yPos += 6;
+    doc.text('Denver Basketball Center | Godspeed HQ, Denver, CO', margin, yPos);
 
     // Download
-    doc.save(`receipt-${receipt.receipt_number}.pdf`);
+    doc.save(`receipt-${receipt.receipt_number || receipt.transaction_id || 'receipt'}.pdf`);
 }
 
 /**
  * Generate Invoice PDF Document
  */
 function generateInvoicePDFDocument(invoice) {
+    // Wait for jsPDF to load if needed
     if (typeof window.jspdf === 'undefined') {
-        alert('PDF library not loaded. Please refresh the page.');
+        // Try loading jsPDF
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+        script.onload = () => {
+            if (typeof window.jspdf !== 'undefined') {
+                generateInvoicePDFDocument(invoice);
+            } else {
+                alert('PDF library not loaded. Please refresh the page.');
+            }
+        };
+        document.head.appendChild(script);
         return;
     }
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
 
-    // Invoice Header
-    doc.setFontSize(24);
-    doc.setTextColor(37, 99, 235); // Blue
-    doc.text('GODSPEED BASKETBALL', 20, 30);
+    // Header with branding
+    doc.setFillColor(37, 99, 235); // Brand blue
+    doc.rect(0, 0, pageWidth, 40, 'F');
     
-    doc.setFontSize(12);
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(28);
+    doc.setFont(undefined, 'bold');
+    doc.text('GODSPEED', margin, 20);
+    doc.text('BASKETBALL', margin, 30);
+    
+    // Invoice title
+    doc.setFontSize(16);
+    doc.setTextColor(255, 255, 255);
+    doc.text('INVOICE', pageWidth - margin, 25, { align: 'right' });
+
+    // Invoice Details Section
+    let yPos = 55;
+    doc.setFontSize(10);
     doc.setTextColor(0, 0, 0);
-    doc.text('Invoice', 20, 40);
+    doc.setFont(undefined, 'normal');
+    
+    // Invoice number
+    doc.setFont(undefined, 'bold');
+    doc.text('Invoice Number:', margin, yPos);
+    doc.setFont(undefined, 'normal');
+    doc.text(invoice.invoice_number || 'N/A', margin + 50, yPos);
+    yPos += 8;
+    
+    // Issue date
+    doc.setFont(undefined, 'bold');
+    doc.text('Issue Date:', margin, yPos);
+    doc.setFont(undefined, 'normal');
+    doc.text(new Date(invoice.issue_date).toLocaleDateString('en-US', { 
+        year: 'numeric', month: 'long', day: 'numeric' 
+    }), margin + 50, yPos);
+    yPos += 8;
+    
+    // Due date
+    doc.setFont(undefined, 'bold');
+    doc.text('Due Date:', margin, yPos);
+    doc.setFont(undefined, 'normal');
+    doc.text(new Date(invoice.due_date).toLocaleDateString('en-US', { 
+        year: 'numeric', month: 'long', day: 'numeric' 
+    }), margin + 50, yPos);
+    yPos += 8;
+    
+    // Status
+    doc.setFont(undefined, 'bold');
+    doc.text('Status:', margin, yPos);
+    doc.setFont(undefined, 'normal');
+    const statusColor = invoice.status === 'paid' ? [16, 185, 129] : 
+                        invoice.status === 'overdue' ? [239, 68, 68] : 
+                        [245, 158, 11];
+    doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+    doc.text(invoice.status.toUpperCase(), margin + 50, yPos);
+    yPos += 15;
 
-    // Invoice Details
-    let yPos = 60;
-    doc.setFontSize(10);
-    doc.text(`Invoice Number: ${invoice.invoice_number}`, 20, yPos);
-    yPos += 10;
-    doc.text(`Issue Date: ${new Date(invoice.issue_date).toLocaleDateString()}`, 20, yPos);
-    yPos += 10;
-    doc.text(`Due Date: ${new Date(invoice.due_date).toLocaleDateString()}`, 20, yPos);
-    yPos += 10;
-    doc.text(`Status: ${invoice.status.toUpperCase()}`, 20, yPos);
-    yPos += 20;
-
-    // Line Items
+    // Line Items Section
+    doc.setTextColor(0, 0, 0);
     doc.setFontSize(12);
-    doc.text('Line Items:', 20, yPos);
+    doc.setFont(undefined, 'bold');
+    doc.text('Line Items:', margin, yPos);
     yPos += 10;
 
+    // Table header
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'bold');
+    doc.text('Description', margin + 5, yPos);
+    doc.text('Amount', pageWidth - margin - 5, yPos, { align: 'right' });
+    yPos += 8;
+    
+    doc.setDrawColor(200, 200, 200);
+    doc.line(margin, yPos, pageWidth - margin, yPos);
+    yPos += 8;
+
     doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
     if (invoice.line_items && invoice.line_items.length > 0) {
         invoice.line_items.forEach((item, index) => {
             const itemText = typeof item === 'string' ? item : (item.description || item.name || 'Training Service');
-            const itemAmount = typeof item === 'object' && item.amount ? item.amount : (invoice.amount / invoice.line_items.length);
-            doc.text(`${index + 1}. ${itemText}`, 25, yPos);
-            doc.text(`$${parseFloat(itemAmount).toFixed(2)}`, 170, yPos);
+            const itemAmount = typeof item === 'object' && item.amount ? item.amount : (invoice.total_amount / invoice.line_items.length);
+            doc.text(`${index + 1}. ${itemText}`, margin + 5, yPos);
+            doc.text(`$${parseFloat(itemAmount).toFixed(2)}`, pageWidth - margin - 5, yPos, { align: 'right' });
             yPos += 8;
+            if (yPos > 250) {
+                doc.addPage();
+                yPos = 20;
+            }
         });
     } else {
-        doc.text('Training Services', 25, yPos);
-        doc.text(`$${parseFloat(invoice.amount).toFixed(2)}`, 170, yPos);
+        doc.text('1. Training Services', margin + 5, yPos);
+        doc.text(`$${parseFloat(invoice.total_amount || invoice.amount || 0).toFixed(2)}`, pageWidth - margin - 5, yPos, { align: 'right' });
         yPos += 8;
     }
 
     yPos += 10;
 
-    // Totals
+    // Totals Section
+    doc.setDrawColor(200, 200, 200);
+    doc.line(margin, yPos, pageWidth - margin, yPos);
+    yPos += 10;
+    
     doc.setFontSize(10);
     if (invoice.tax_amount && invoice.tax_amount > 0) {
-        doc.text(`Subtotal: $${parseFloat(invoice.amount - invoice.tax_amount).toFixed(2)}`, 150, yPos);
+        doc.text('Subtotal:', pageWidth - margin - 60, yPos);
+        doc.text(`$${parseFloat((invoice.total_amount || invoice.amount) - invoice.tax_amount).toFixed(2)}`, pageWidth - margin - 5, yPos, { align: 'right' });
         yPos += 8;
-        doc.text(`Tax: $${parseFloat(invoice.tax_amount).toFixed(2)}`, 150, yPos);
+        doc.text('Tax:', pageWidth - margin - 60, yPos);
+        doc.text(`$${parseFloat(invoice.tax_amount).toFixed(2)}`, pageWidth - margin - 5, yPos, { align: 'right' });
         yPos += 8;
     }
-    doc.setFontSize(12);
+    
+    doc.setFontSize(14);
     doc.setFont(undefined, 'bold');
-    doc.text(`Total: $${parseFloat(invoice.total_amount).toFixed(2)}`, 150, yPos);
+    doc.text('Total:', pageWidth - margin - 60, yPos);
+    doc.setTextColor(37, 99, 235);
+    doc.text(`$${parseFloat(invoice.total_amount || invoice.amount || 0).toFixed(2)}`, pageWidth - margin - 5, yPos, { align: 'right' });
     yPos += 20;
 
     // Payment Instructions
-    if (invoice.status === 'pending') {
+    if (invoice.status === 'pending' || invoice.status === 'overdue') {
+        doc.setTextColor(239, 68, 68);
         doc.setFontSize(10);
-        doc.setFont(undefined, 'normal');
-        doc.setTextColor(200, 0, 0);
-        doc.text('Payment Due: Please pay by the due date', 20, yPos);
+        doc.setFont(undefined, 'bold');
+        doc.text('Payment Due: Please pay by the due date', margin, yPos);
         yPos += 10;
     }
 
     // Footer
-    doc.setFontSize(8);
     doc.setTextColor(128, 128, 128);
-    doc.text('For questions, contact: info@godspeedbasketball.com', 20, yPos);
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+    doc.text('For questions, contact: info@godspeedbasketball.com', margin, yPos);
+    yPos += 6;
+    doc.text('Denver Basketball Center | Godspeed HQ, Denver, CO', margin, yPos);
 
     // Download
-    doc.save(`invoice-${invoice.invoice_number}.pdf`);
+    doc.save(`invoice-${invoice.invoice_number || 'invoice'}.pdf`);
 }

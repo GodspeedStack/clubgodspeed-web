@@ -241,17 +241,32 @@ CREATE INDEX IF NOT EXISTS idx_invoices_due_date ON invoices(due_date);
 -- =====================================================
 CREATE OR REPLACE FUNCTION update_training_purchase_hours()
 RETURNS TRIGGER AS $$
+DECLARE
+    affected_purchase_id UUID;
 BEGIN
+    -- Handle both INSERT/UPDATE (NEW) and DELETE (OLD)
+    IF TG_OP = 'DELETE' THEN
+        affected_purchase_id := OLD.purchase_id;
+    ELSE
+        affected_purchase_id := NEW.purchase_id;
+    END IF;
+    
+    -- Update hours_used for the affected purchase
     UPDATE training_purchases
     SET hours_used = (
         SELECT COALESCE(SUM(hours_used), 0)
         FROM training_attendance
-        WHERE purchase_id = NEW.purchase_id
+        WHERE purchase_id = affected_purchase_id
     ),
     updated_at = NOW()
-    WHERE id = NEW.purchase_id;
+    WHERE id = affected_purchase_id;
     
-    RETURN NEW;
+    -- Return appropriate row
+    IF TG_OP = 'DELETE' THEN
+        RETURN OLD;
+    ELSE
+        RETURN NEW;
+    END IF;
 END;
 $$ LANGUAGE plpgsql;
 

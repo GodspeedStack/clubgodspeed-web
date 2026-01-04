@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { addToCart } from '../../lib/cart';
 
 /**
  * ProductCard - Minimalist High-Contrast Product Display
@@ -27,13 +28,42 @@ export default function ProductCard({ product }) {
     // Check stock
     const inStock = selectedVariant && selectedVariant.stock_quantity > 0;
 
-    const handleQuickAdd = (e) => {
+    const handleQuickAdd = async (e) => {
         e.stopPropagation();
-        console.log('Quick add:', {
-            product: product.id,
-            variant: selectedVariant?.id
-        });
-        // TODO: Implement add to cart
+        
+        if (!selectedVariant) {
+            console.error('No variant selected');
+            return;
+        }
+
+        if (!inStock) {
+            alert('This item is out of stock');
+            return;
+        }
+
+        try {
+            const result = await addToCart(selectedVariant.id, 1);
+            if (result.success) {
+                // Show success feedback
+                const button = e.target;
+                const originalText = button.textContent;
+                button.textContent = 'ADDED!';
+                button.style.backgroundColor = '#22c55e';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.backgroundColor = '#ffffff';
+                }, 1500);
+                
+                // Dispatch custom event to update cart count
+                window.dispatchEvent(new CustomEvent('cartUpdated'));
+            } else {
+                alert('Failed to add to cart. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error adding to cart:', error);
+            alert('An error occurred. Please try again.');
+        }
     };
 
     return (

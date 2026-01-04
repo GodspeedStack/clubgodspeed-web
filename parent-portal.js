@@ -1199,21 +1199,15 @@ async function loadInvoices(parentEmail) {
 
 /**
  * Generate receipt PDF
+ * Implementation is in documents-view.js
+ * This function is defined there with full jsPDF implementation
  */
-window.generateReceiptPDF = async function(receiptId) {
-    // This would generate a PDF - for now, just show alert
-    alert(`Generating receipt ${receiptId}...`);
-    // TODO: Implement PDF generation using jsPDF or similar
-}
 
 /**
  * Generate invoice PDF
+ * Implementation is in documents-view.js
+ * This function is defined there with full jsPDF implementation
  */
-window.generateInvoicePDF = async function(invoiceNumber) {
-    // This would generate a PDF - for now, just show alert
-    alert(`Generating invoice ${invoiceNumber}...`);
-    // TODO: Implement PDF generation using jsPDF or similar
-}
 
 // Make functions globally available
 window.loadReceipts = () => loadReceipts(localStorage.getItem('gba_user_email'));
