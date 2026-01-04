@@ -53,10 +53,22 @@
         <button class="md:hidden text-2xl">☰</button>
     </nav>
 
-    <header class="hero-section" style="height: 60vh;">
-        <div class="hero-content">
-            <h1 class="hero-title">TRAIN WITH <span class="highlight">GODSPEED.</span></h1>
-            <p class="hero-subtitle">Commit to the process. Elevate your game.</p>
+    <header class="relative bg-black flex items-center justify-center overflow-hidden" style="min-height: 70vh;">
+        <!-- Gradient Mesh Background -->
+        <div class="absolute inset-0" style="background: radial-gradient(circle at 80% 20%, #1a1a1a 0%, #000 70%);"></div>
+        
+        <div class="relative z-10 text-center max-w-6xl mx-auto px-6 py-24">
+            <h1 class="text-6xl md:text-8xl lg:text-[8rem] font-black leading-[0.85] mb-10 uppercase tracking-tight" 
+                style="background: linear-gradient(to bottom, #ffffff 20%, #666666 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                TRAIN WITH<br>GODSPEED.
+            </h1>
+            <p class="text-2xl md:text-3xl text-gray-400 max-w-3xl mx-auto mb-14 leading-snug font-medium">
+                Commit to the process.<br>Elevate your game.
+            </p>
+            <a href="#signup" 
+               class="inline-block px-12 py-5 bg-white text-black text-sm font-bold rounded-full uppercase tracking-wider hover:bg-gray-200 transition-all duration-300 shadow-2xl">
+                GET STARTED
+            </a>
         </div>
     </header>
 
@@ -224,145 +236,77 @@
         </div>
     </section>
 
-    <footer class="site-footer">
-        <div class="container">
-            <div class="footer-top">
-                <div class="footer-brand-section">
-                    <span class="footer-logo">GODSPEED BASKETBALL</span>
-                    <p class="footer-tagline">Building the future of Denver basketball. Character. Discipline.
-                        Excellence.</p>
-                </div>
-                <div class="footer-columns">
-                    <div class="footer-column">
-                        <h4>Programs</h4>
-                        <ul>
-                            <li><a href="training.html">Training</a></li>
-                            <li><a href="aau.html">AAU Club</a></li>
-                            <li><span class="nav-item-disabled">Academy </span></li>
-                        </ul>
-                    </div>
-                    <div class="footer-column">
-                        <h4>Athletes</h4>
-                        <ul>
-                            <li><a href="skill-audit.html">Skill Assessment</a></li>
-                            <li><a href="card-preview.html" class="auth-restricted">Player Card</a></li>
-                        </ul>
-                    </div>
-                    <div class="footer-column">
-                        <h4>Shop</h4>
-                        <ul>
-                            <li><span class="nav-item-disabled">Apparel </span></li>
-                            <li><span class="nav-item-disabled">Footwear </span></li>
-                            <li><span class="nav-item-disabled">Accessories </span></li>
-                        </ul>
-                    </div>
-                    <div class="footer-column">
-                        <h4>Parents</h4>
-                        <ul>
-                            <li><a href="calendar-preview.html" class="auth-restricted">Calendar</a></li>
-                            <li><a href="parent-audit.html" class="auth-restricted">Parent Assessment</a></li>
-                            <li><a href="parent-portal.html">Parent Portal</a></li>
-                            <li><span class="nav-item-disabled auth-restricted">Manage Account </span></li>
-                        </ul>
-                    </div>
-                    <div class="footer-column">
-                        <h4>Company</h4>
-                        <ul>
-                            <li><a href="about.html">About Us</a></li>
-                            <li><a href="#" onclick="openContactModal()">Contact</a></li>
-                            <li><a href="coach-portal.html">Coach Portal</a></li>
-                            <li><span class="nav-item-disabled">Careers </span></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <div class="footer-copyright">Copyright © 2025 Godspeed Basketball. All rights reserved.</div>
-                <div class="footer-legal-links">
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Terms of Use</a>
-                    <a href="#">Sales Policy</a>
-                    <a href="#">Legal</a>
-                    <a href="#">Site Map</a>
-                </div>
-            </div>
-        </div>
-    </footer>
-
     <!-- Global Contact Modal -->
-    <div class="modal-overlay" id="contactModal">
-        <div class="contact-modal">
-            <button class="modal-close" onclick="closeContactModal()">✕</button>
+    <div id="contactModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm" onclick="if(event.target===this) closeContactModal()">
+        <div class="relative bg-white rounded-3xl shadow-2xl max-w-5xl w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <button onclick="closeContactModal()" class="absolute top-6 right-6 text-gray-400 hover:text-gray-600 text-2xl font-light w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition">✕</button>
+            
+            <div class="grid md:grid-cols-2 gap-0">
+                <!-- Left: Info Side -->
+                <div class="bg-gray-900 text-white p-12 flex flex-col justify-between">
+                    <div>
+                        <h2 class="text-5xl font-black uppercase mb-6 leading-tight">GET IN<br>TOUCH</h2>
+                        <p class="text-gray-400 text-lg leading-relaxed mb-12">Questions about the Academy, AAU teams, or training? We're locked in.</p>
+                    </div>
 
-            <!-- Left: Info Side -->
-            <div class="modal-info">
-                <div>
-                    <h2 class="modal-title">GET IN<br>TOUCH</h2>
-                    <p style="color: #86868b; font-weight: 500; line-height: 1.6;">Questions about the Academy, AAU
-                        teams, or training? We're locked in.</p>
+                    <div class="space-y-8">
+                        <div>
+                            <div class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">HQ Location</div>
+                            <div class="text-lg font-semibold mb-1">Denver Basketball Center</div>
+                            <div class="text-sm text-gray-400">Godspeed HQ, Denver, CO</div>
+                        </div>
+
+                        <div>
+                            <div class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Direct Email</div>
+                            <div class="text-lg font-semibold">info@godspeed.com</div>
+                        </div>
+
+                        <div>
+                            <div class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Socials</div>
+                            <div class="text-lg font-semibold">@godspeedbasketball</div>
+                        </div>
+                    </div>
                 </div>
 
-                <div>
-                    <div class="contact-detail-item">
-                        <div class="contact-label">HQ Location</div>
-                        <div class="contact-value">Denver Basketball Center</div>
-                        <div style="font-size: 0.9rem; color: #86868b; margin-top: 4px;">Godspeed HQ, Denver, CO</div>
-                    </div>
+                <!-- Right: Form Side -->
+                <div class="p-12">
+                    <form onsubmit="event.preventDefault(); alert('Message sent! We will reach out shortly.'); closeContactModal();" class="space-y-6">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">First Name</label>
+                                <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent" placeholder="LeBron" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">Last Name</label>
+                                <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent" placeholder="James" required>
+                            </div>
+                        </div>
 
-                    <div class="contact-detail-item">
-                        <div class="contact-label">Direct Email</div>
-                        <div class="contact-value">info@godspeed.com</div>
-                    </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">Email Address</label>
+                            <input type="email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent" placeholder="king@lakers.com" required>
+                        </div>
 
-                    <div class="contact-detail-item" style="margin-bottom: 0;">
-                        <div class="contact-label">Socials</div>
-                        <div class="contact-value" style="font-size: 0.95rem;">@godspeedbasketball</div>
-                    </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">Topic</label>
+                            <div class="relative">
+                                <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent appearance-none bg-white cursor-pointer">
+                                    <option>General Inquiry</option>
+                                    <option>AAU Tryouts</option>
+                                    <option>Private Training</option>
+                                </select>
+                                <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">Message</label>
+                            <textarea rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent resize-none" placeholder="How can we help you build your legacy?" required></textarea>
+                        </div>
+
+                        <button type="submit" class="w-full px-8 py-4 bg-blue-600 text-white font-bold rounded-full uppercase tracking-wider hover:bg-blue-700 transition shadow-lg shadow-blue-600/20">SEND MESSAGE</button>
+                    </form>
                 </div>
-            </div>
-
-            <!-- Right: Form Side -->
-            <div class="modal-form-section">
-                <form
-                    onsubmit="event.preventDefault(); alert('Message sent! We will reach out shortly.'); closeContactModal();">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                        <div>
-                            <label class="contact-label">First Name</label>
-                            <input type="text" class="modal-input" placeholder="LeBron" required>
-                        </div>
-                        <div>
-                            <label class="contact-label">Last Name</label>
-                            <input type="text" class="modal-input" placeholder="James" required>
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom: 1rem;">
-                        <label class="contact-label">Email Address</label>
-                        <input type="email" class="modal-input" placeholder="king@lakers.com" required>
-                    </div>
-
-                    <div style="margin-bottom: 1rem;">
-                        <label class="contact-label">Topic</label>
-                        <div style="position: relative;">
-                            <select class="modal-input" style="appearance: none; cursor: pointer;">
-                                <option>General Inquiry</option>
-                                <option>AAU Tryouts</option>
-                                <option>Private Training</option>
-                            </select>
-                            <div
-                                style="position: absolute; right: 15px; top: 15px; pointer-events: none; font-size: 0.7rem; color: #888;">
-                                ▼</div>
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom: 1.5rem;">
-                        <label class="contact-label">Message</label>
-                        <textarea class="modal-input" rows="4" style="resize: none;"
-                            placeholder="How can we help you build your legacy?"></textarea>
-                    </div>
-
-                    <button type="submit" class="modal-btn">Send Message_</button>
-                </form>
             </div>
         </div>
     </div>
@@ -414,10 +358,24 @@
                     <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Company</h4>
                     <ul class="space-y-4 text-sm text-gray-600 font-medium">
                         <li><a href="about.html" class="hover:text-blue-600 transition">About Us</a></li>
-                        <li><a href="#contact" class="hover:text-blue-600 transition">Contact</a></li>
+                        <li><a href="#" onclick="openContactModal(); return false;" class="hover:text-blue-600 transition">Contact</a></li>
                         <li><a href="#" class="hover:text-blue-600 transition">Coach Portal</a></li>
                         <li class="text-gray-400 cursor-not-allowed" title="Coming Soon">Careers</li>
                     </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer Bottom -->
+        <div class="pt-8 border-t border-gray-200 mt-12">
+            <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-sm text-gray-500">Copyright © 2025 Godspeed Basketball. All rights reserved.</p>
+                <div class="flex flex-wrap gap-6 text-sm text-gray-500">
+                    <a href="#" class="hover:text-blue-600 transition">Privacy Policy</a>
+                    <a href="#" class="hover:text-blue-600 transition">Terms of Use</a>
+                    <a href="#" class="hover:text-blue-600 transition">Sales Policy</a>
+                    <a href="#" class="hover:text-blue-600 transition">Legal</a>
+                    <a href="#" class="hover:text-blue-600 transition">Site Map</a>
                 </div>
             </div>
         </div>
@@ -447,21 +405,18 @@
     <script>
         // Modal Logic
         function openContactModal() {
-            document.getElementById('contactModal').classList.add('active');
+            const modal = document.getElementById('contactModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
             document.body.style.overflow = 'hidden'; // Prevent background scrolling
         }
 
         function closeContactModal() {
-            document.getElementById('contactModal').classList.remove('active');
+            const modal = document.getElementById('contactModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
             document.body.style.overflow = ''; // Restore scrolling
         }
-
-        // Close on outside click
-        document.getElementById('contactModal').addEventListener('click', function (e) {
-            if (e.target === this) {
-                closeContactModal();
-            }
-        });
 
         // Escape key to close
         document.addEventListener('keydown', function (e) {
