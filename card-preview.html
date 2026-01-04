@@ -78,157 +78,6 @@
     </style>
 
     <script>
-        const players = [
-            {
-                id: 'quest',
-                name: 'Quest',
-                lastname: 'Scott',
-                image: 'quest_scott_fantasy.jpg',
-                number: '4',
-                stats: { s1: '12.4', l1: 'PPG', s2: '6.2', l2: 'APG', s3: '45%', l3: 'FG%', s4: '88%', l4: 'FT%' },
-                games: [
-                    { opp: 'vs. Warriors', stat: '18 PTS, 5 AST' },
-                    { opp: '@ Knights', stat: '14 PTS, 8 AST' },
-                    { opp: 'vs. Heat', stat: '22 PTS, 3 STL' }
-                ]
-            },
-            {
-                id: 'ashton',
-                name: 'Ashton',
-                lastname: 'Godspeed',
-                image: 'src/assets/athletes/ashton_comic.jpg',
-                number: '2',
-                stats: { s1: '3.0', l1: 'PPG', s2: '1.0', l2: 'STL', s3: '1.0', l3: 'REB', s4: '7.6', l4: 'V2 RATING' },
-                games: [
-                    { opp: 'vs. Weeks', stat: '3 PTS, 100% FT' },
-                    { opp: '@ Practice 5', stat: 'Defensive Anchor' },
-                    { opp: 'Trend', stat: 'Steady Growth' }
-                ]
-            }
-        ];
-
-        function renderCards() {
-            const grid = document.getElementById('cards-grid');
-            let html = '';
-
-            players.forEach(p => {
-                html += `
-                <div class="card-container relative w-[320px] h-[450px] group perspective-1000 cursor-pointer" onclick="this.classList.toggle('is-flipped')">
-                    <div class="card-inner relative w-full h-full transition-transform duration-700 transform-style-3d shadow-2xl rounded-xl">
-                        <!-- FRONT -->
-                        <div class="absolute inset-0 w-full h-full backface-hidden bg-black rounded-xl overflow-hidden border border-white/20">
-                            <div class="absolute inset-0 z-0">
-                                <img src="${p.image}" class="w-full h-full object-cover object-top opacity-100 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-1">
-                            </div>
-                            <div class="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/80 to-transparent z-0"></div>
-                            
-                            <div class="relative z-10 flex flex-col h-full p-4 justify-between">
-                                <div class="flex justify-between items-center mb-2">
-                                    <div class="bg-black/40 backdrop-blur-xl border border-white/20 rounded-lg px-3 py-1.5 shadow-[0_0_15px_rgba(76,201,240,0.3)]">
-                                        <div class="text-[9px] font-black tracking-[0.25em] text-[#4cc9f0] uppercase mb-0.5 drop-shadow-lg">Godspeed</div>
-                                        <div class="text-[10px] font-bold text-white uppercase tracking-wider">Mythic</div>
-                                    </div>
-                                    <div class="relative">
-                                        <div class="text-6xl font-black italic text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400"
-                                            style="font-family: 'Impact', sans-serif; -webkit-text-stroke: 1px rgba(255,255,255,0.3);">
-                                            ${p.number}
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="mt-auto relative z-20">
-                                    <div class="absolute -top-12 right-0 w-24 h-24 bg-purple-500 rounded-full blur-[60px] opacity-20 mix-blend-color-dodge"></div>
-                                    <div class="relative z-10 mb-2">
-                                        <h2 class="text-4xl font-black text-white uppercase tracking-tighter leading-[0.85] italic transform -skew-x-6 drop-shadow-[0_4px_4px_rgba(0,0,0,1)]">
-                                            ${p.name}<br>
-                                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#4cc9f0] to-[#f72585]">${p.lastname}</span>
-                                        </h2>
-                                    </div>
-                                    <div class="text-center mt-4">
-                                        <span class="text-[9px] font-bold text-white/50 uppercase tracking-widest border border-white/10 px-3 py-1 rounded-full backdrop-blur-md flex items-center justify-center gap-2">
-                                            <span>↺</span> Flip for Stats
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- Shine -->
-                            <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent w-[200%] h-full -translate-x-[150%] skew-x-12 gloss-animate pointer-events-none z-20"></div>
-                            <div class="absolute inset-0 border-[2px] border-white/20 rounded-xl pointer-events-none z-30"></div>
-                        </div>
-
-                        <!-- BACK -->
-                        <div class="absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-black rounded-xl overflow-hidden border border-white/20 p-5 flex flex-col">
-                             <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-30"></div>
-                             <div class="absolute inset-0 bg-gradient-to-br from-[#0a0a0a] to-[#111] -z-10"></div>
-                             
-                             <div class="relative z-10 flex flex-col h-full">
-                                <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
-                                    <div class="text-xl font-black text-white italic uppercase">Season Stats</div>
-                                    <div class="text-[#4cc9f0] text-xs font-bold tracking-widest">2024-25</div>
-                                </div>
-                                <div class="grid grid-cols-2 gap-4 mb-6">
-                                    <div class="bg-white/5 rounded-lg p-3 text-center border border-white/5">
-                                        <div class="text-3xl font-black text-white">${p.stats.s1}</div>
-                                        <div class="text-[9px] text-gray-400 uppercase tracking-widest font-bold">${p.stats.l1}</div>
-                                    </div>
-                                    <div class="bg-white/5 rounded-lg p-3 text-center border border-white/5">
-                                        <div class="text-3xl font-black text-white">${p.stats.s2}</div>
-                                        <div class="text-[9px] text-gray-400 uppercase tracking-widest font-bold">${p.stats.l2}</div>
-                                    </div>
-                                    <div class="bg-white/5 rounded-lg p-3 text-center border border-white/5">
-                                        <div class="text-3xl font-black text-white">${p.stats.s3}</div>
-                                        <div class="text-[9px] text-gray-400 uppercase tracking-widest font-bold">${p.stats.l3}</div>
-                                    </div>
-                                    <div class="bg-white/5 rounded-lg p-3 text-center border border-white/5">
-                                        <div class="text-3xl font-black text-white">${p.stats.s4}</div>
-                                        <div class="text-[9px] text-gray-400 uppercase tracking-widest font-bold">${p.stats.l4}</div>
-                                    </div>
-                                </div>
-                                <div class="flex-grow">
-                                    <div class="text-[10px] text-gray-500 uppercase font-bold mb-2">Last 3 Games</div>
-                                    <div class="space-y-2">
-                                        ${p.games.map(g => `
-                                            <div class="flex justify-between items-center bg-white/5 p-2 rounded text-xs">
-                                                <span class="text-gray-300">${g.opp}</span>
-                                                <span class="text-white font-bold">${g.stat}</span>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                </div>
-                                <button onclick="event.stopPropagation(); downloadCard('${p.id}')" class="mt-4 w-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white py-2 rounded font-bold text-xs tracking-wide transition-colors">
-                                    DOWNLOAD CARD
-                                </button>
-                             </div>
-                        </div>
-                    </div>
-                </div>
-                `;
-            });
-
-            grid.innerHTML = html;
-        }
-
-        function downloadCard(id) {
-            // Find the specific card element based on context, or just the card-inner child of the clicked button's parent's parent
-            // Since we use ID for tracking but classes for rendering, we need to be careful.
-            // Actually, `event.stopPropagation()` is used, so valid.
-            // But we need to target the specific DOM element. 
-            // The simplest way is to select by index or modify the render to map IDs to DOM elements.
-            // Or just traverse up DOM.
-
-            // Let's rely on event.target to find the card container
-            // Actually, html2canvas needs the element.
-            // Let's add ID to the rendered inner card.
-
-            // Wait, I can't easily select it by ID if I don't rendering unique IDs.
-            // Let's re-render with unique IDs.
-            // See the template above: I'll add id="card-inner-${p.id}"
-        }
-
-        // Re-defining render to add IDs
-        // And fix download function
-    </script>
-    <script>
         // Rerunning script block to overwrite correctly
         const playerList = [
             {
@@ -346,7 +195,7 @@
                                         `).join('')}
                                     </div>
                                 </div>
-                                <button onclick="event.stopPropagation(); downloadCard('${p.id}')" class="mt-4 w-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white py-2 rounded font-bold text-xs tracking-wide transition-colors">
+                                <button onclick="event.stopPropagation(); downloadCard('${p.id}', event)" class="mt-4 w-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white py-2 rounded font-bold text-xs tracking-wide transition-colors">
                                     DOWNLOAD CARD
                                 </button>
                              </div>
@@ -358,11 +207,22 @@
             grid.innerHTML = html;
         }
 
-        function downloadCard(id) {
+        function downloadCard(id, event) {
             const cardElement = document.getElementById('card-inner-' + id);
-            const btn = event.currentTarget; // The specific button clicked
+            if (!cardElement) {
+                console.error('Card element not found for id:', id);
+                return;
+            }
+            
+            const btn = event ? event.currentTarget : document.querySelector(`button[onclick*="downloadCard('${id}')"]`);
+            if (!btn) {
+                console.error('Button not found for card:', id);
+                return;
+            }
 
+            const originalText = btn.innerHTML;
             btn.innerHTML = 'GENERATING...';
+            btn.disabled = true;
 
             html2canvas(cardElement, {
                 scale: 3,
@@ -373,7 +233,12 @@
                 link.download = id + '_Godspeed_Card.png';
                 link.href = canvas.toDataURL();
                 link.click();
-                btn.innerHTML = 'DOWNLOAD CARD';
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }).catch(error => {
+                console.error('Error generating card image:', error);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             });
         }
 

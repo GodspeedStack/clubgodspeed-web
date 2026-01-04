@@ -115,8 +115,6 @@ function handleLogout() {
 // --- Navigation Logic (V3 Side Panel) ---
 
 window.switchPortalView = function (viewName, linkElement) {
-    console.log('Switching to view:', viewName); // Debug
-
     // 1. Hide all views
     document.querySelectorAll('.portal-view').forEach(el => {
         el.style.display = 'none';
@@ -149,7 +147,7 @@ window.switchPortalView = function (viewName, linkElement) {
     if (viewName === 'tuition') {
         renderParentTrips();
     }
-    
+
     if (viewName === 'training') {
         renderTrainingDashboard();
     }
@@ -276,7 +274,6 @@ const DOCUMENT_TEMPLATE = {
 let currentDocType = null;
 
 window.openDocModal = function (type) {
-    console.log('Opening modal for:', type);
     currentDocType = type;
     document.getElementById('modal-title').textContent = getTitleFromType(type);
 
@@ -461,7 +458,10 @@ function loadPerformance(parentEmail) {
 
     if (!child) {
         console.warn('No child linked to this account.');
-        document.getElementById('performance-grade-list').innerHTML = '<p class="text-muted">No athlete found linked to your account.</p>';
+        const listContainer = document.getElementById('performance-grade-list');
+        if (listContainer) {
+            listContainer.innerHTML = '<p class="text-muted">No athlete found linked to your account.</p>';
+        }
         return;
     }
 
@@ -470,11 +470,17 @@ function loadPerformance(parentEmail) {
 
     // 3. Render List
     const listContainer = document.getElementById('performance-grade-list');
+    if (!listContainer) {
+        console.warn('Performance grade list container not found');
+        return;
+    }
 
     if (grades.length === 0) {
         listContainer.innerHTML = '<p style="color: #888;">No grades recorded yet. Check back after next practice.</p>';
-        document.getElementById('stat-gpa').textContent = '-';
-        document.getElementById('stat-attendance').textContent = '0%';
+        const gpaEl = document.getElementById('stat-gpa');
+        const attendanceEl = document.getElementById('stat-attendance');
+        if (gpaEl) gpaEl.textContent = '-';
+        if (attendanceEl) attendanceEl.textContent = '0%';
         return;
     }
 
@@ -507,25 +513,31 @@ function loadPerformance(parentEmail) {
 
     // 4. Update Stats Summary
     const overallGpa = (totalScore / count).toFixed(1);
-    document.getElementById('stat-gpa').textContent = overallGpa;
+    const gpaEl = document.getElementById('stat-gpa');
+    const attendanceEl = document.getElementById('stat-attendance');
+    if (gpaEl) gpaEl.textContent = overallGpa;
 
     // Mock Attendance (Grades count vs Expected)
     // Simple logic: 1 grade = 1 attendance point for now
-    document.getElementById('stat-attendance').textContent = '100%'; // Placeholder logic
+    if (attendanceEl) attendanceEl.textContent = '100%'; // Placeholder logic
 }
 
 // Hook into View Switching to load data when tab is clicked
-const originalSwitch = window.switchPortalView;
-window.switchPortalView = function (viewName, linkElement) {
-    originalSwitch(viewName, linkElement);
-    const email = document.getElementById('email').value || localStorage.getItem('gba_user_email'); // Fallback to stored
+(function () {
+    const originalSwitch = window.switchPortalView;
+    if (originalSwitch) {
+        window.switchPortalView = function (viewName, linkElement) {
+            originalSwitch.call(this, viewName, linkElement);
+            const email = document.getElementById('email')?.value || localStorage.getItem('gba_user_email'); // Fallback to stored
 
-    if (viewName === 'performance') {
-        if (email) loadPerformance(email);
-    } else if (viewName === 'settings') {
-        loadSettings(email);
+            if (viewName === 'performance') {
+                if (email) loadPerformance(email);
+            } else if (viewName === 'settings') {
+                loadSettings(email);
+            }
+        };
     }
-}
+})();
 
 // --- Settings Logic ---
 function loadSettings(email) {
@@ -705,91 +717,123 @@ window.submitGearOrder = function () {
 /**
  * Render the training dashboard with hours, calendar, and documents
  */
+// --- Training Dashboard Logic ---
+
+/**
+ * Render the training dashboard with hours, calendar, and documents
+ */
 async function renderTrainingDashboard() {
     const parentEmail = localStorage.getItem('gba_user_email');
-    if (!parentEmail) {
-        console.warn('No parent email found');
+    /* if (!parentEmail) {
+         console.warn('No parent email found');
+         return;
+     } */
+    // For demo "tomorrow", even if no email, show mock data
+
+    const db = getDB(); // Uses portal-data.js mock if need be
+    const data = db.training;
+
+    if (!data) {
+        console.warn('No training data found in DB');
         return;
     }
 
-    // Load training hours
-    await loadTrainingHours(parentEmail);
-    
-    // Load session counts
-    await loadSessionCounts(parentEmail);
-    
-    // Load training calendar
-    await loadTrainingCalendar(parentEmail);
-    
-    // Load skills programs
-    await loadSkillsPrograms(parentEmail);
-    
-    // Load documents
-    await loadReceipts(parentEmail);
-    await loadInvoices(parentEmail);
-}
+    // 1. Training Hours & Counts
+    const hoursEl = document.getElementById('training-hours-display');
+    const utilizedEl = document.getElementById('training-utilized-display');
 
+    if (hoursEl) hoursEl.textContent = data.hours.remaining.toFixed(1);
+    if (utilizedEl) utilizedEl.textContent = data.hours.used.toFixed(1);
+
+    // 2. Scheduled Sessions
+    const calendarContainer = document.getElementById('training-calendar-container');
+    if (calendarContainer) {
+        if (data.upcomingSessions.length === 0) {
+            calendarContainer.innerHTML = '<div class="text-gray-500 text-sm">No upcoming sessions.</div>';
+        } else {
+            calendarContainer.innerHTML = data.upcomingSessions.map(sess => `
+                <div class="session-card" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#f9fafb; border-radius:8px; margin-bottom:8px; border:1px solid #eee;">
+                    <div>
+                        <div style="font-weight:700; color:#111; font-size:14px;">${new Date(sess.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} @ ${sess.time}</div>
+                        <div style="font-size:12px; color:#666;">${sess.program} • ${sess.topic}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <span style="font-size:11px; padding:4px 8px; background:#e0f2fe; color:#0284c7; border-radius:12px; font-weight:600;">Scheduled</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+
+    // 3. Active Programs
+    const programsList = document.getElementById('skills-programs-list');
+    if (programsList) {
+        programsList.innerHTML = data.programs.map(prog => `
+            <div class="program-card" style="padding:16px; border:1px solid #eee; border-radius:10px; margin-bottom:12px; background:white; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <div style="font-weight:700; font-size:15px;">${prog.name}</div>
+                    <span class="badge ${prog.status === 'Active' ? 'badge-active' : 'badge-inactive'}" 
+                          style="font-size:10px; padding:2px 8px; border-radius:10px; background:${prog.status === 'Active' ? '#dcfce7' : '#f3f4f6'}; color:${prog.status === 'Active' ? '#166534' : '#6b7280'}; text-transform:uppercase; font-weight:700;">
+                        ${prog.status}
+                    </span>
+                </div>
+                <div style="font-size:12px; color:#555; display:flex; gap:12px;">
+                    <span>📅 ${prog.schedule}</span>
+                    <span>👤 ${prog.coach}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // 4. Documents
+    const docsContainer = document.getElementById('training-documents-list');
+    // Note: ID in HTML might be 'training-documents' or similar, let's target the inner list if possible or just append
+    if (docsContainer) {
+        docsContainer.innerHTML = data.documents.map(doc => `
+            <div class="doc-item" style="display:flex; align-items:center; gap:12px; padding:12px; border-bottom:1px solid #f0f0f0;">
+                <div style="background:#fee2e2; color:#991b1b; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:6px; font-size:10px; font-weight:700;">PDF</div>
+                <div style="flex:1;">
+                    <div style="font-size:13px; font-weight:600;">${doc.title}</div>
+                    <div style="font-size:11px; color:#888;">Added ${doc.date}</div>
+                </div>
+                <a href="${doc.link}" style="font-size:12px; color:#2563eb; font-weight:600; text-decoration:none;">Download</a>
+            </div>
+        `).join('');
+    }
+}
 /**
  * Calculate and display remaining training hours
  */
 async function calculateRemainingHours(parentEmail) {
     const supabase = window.auth?.getSupabaseClient?.();
     const db = getDB();
-    
+
     let totalPurchased = 0;
     let totalUsed = 0;
-    
+
+    // Check Supabase first
     if (supabase && window.auth?.isSupabaseAvailable?.()) {
         try {
-            // Get parent account
-            const { data: parentAccount } = await supabase
-                .from('parent_accounts')
-                .select('id')
-                .eq('email', parentEmail)
-                .single();
-            
+            const { data: parentAccount } = await supabase.from('parent_accounts').select('id').eq('email', parentEmail).single();
             if (parentAccount) {
-                // Get training purchases
-                const { data: purchases } = await supabase
-                    .from('training_purchases')
-                    .select('hours_purchased, hours_used, hours_remaining, status')
-                    .eq('parent_id', parentAccount.id)
-                    .eq('status', 'active');
-                
-                if (purchases && purchases.length > 0) {
-                    totalPurchased = purchases.reduce((sum, p) => sum + parseFloat(p.hours_purchased || 0), 0);
-                    totalUsed = purchases.reduce((sum, p) => sum + parseFloat(p.hours_used || 0), 0);
+                const { data: purchases } = await supabase.from('training_purchases').select('hours_purchased, hours_used').eq('parent_id', parentAccount.id).eq('status', 'active');
+                if (purchases) {
+                    totalPurchased = purchases.reduce((sum, p) => sum + (parseFloat(p.hours_purchased) || 0), 0);
+                    totalUsed = purchases.reduce((sum, p) => sum + (parseFloat(p.hours_used) || 0), 0);
                 }
             }
-        } catch (error) {
-            console.error('Error fetching training hours from Supabase:', error);
-        }
+        } catch (e) { console.error(e); }
     }
-    
-    // Fallback to localStorage/portal-data
-    if (totalPurchased === 0) {
-        const transactions = (db.transactions || []).filter(t => 
-            t.parentId === parentEmail && t.status === 'PAID'
-        );
-        
-        transactions.forEach(txn => {
-            // Calculate hours from transaction (assuming price per hour or package)
-            // This is a simplified calculation - adjust based on your pricing model
-            const hoursInPackage = txn.hoursPurchased || (txn.amount / 50); // Default $50/hour
-            totalPurchased += hoursInPackage;
-        });
-        
-        // Calculate used hours from attendance (if tracked)
-        const athletes = (db.roster || []).filter(a => a.parentId === parentEmail);
-        athletes.forEach(athlete => {
-            // This would need to be calculated from actual attendance records
-            // For now, we'll use a placeholder
-        });
+
+    // Fallback to Mock Data
+    if (totalPurchased === 0 && db.training) {
+        totalPurchased = db.training.hours.totalPurchased;
+        totalUsed = db.training.hours.used;
     }
-    
+
     const remaining = totalPurchased - totalUsed;
     const progressPercent = totalPurchased > 0 ? (totalUsed / totalPurchased) * 100 : 0;
-    
+
     return {
         purchased: totalPurchased,
         used: totalUsed,
@@ -803,22 +847,22 @@ async function calculateRemainingHours(parentEmail) {
  */
 async function loadTrainingHours(parentEmail) {
     const hoursData = await calculateRemainingHours(parentEmail);
-    
+
     // Update hours display
     const hoursRemainingEl = document.getElementById('hours-remaining');
     const hoursPurchasedEl = document.getElementById('hours-purchased');
     const hoursUsedEl = document.getElementById('hours-used');
     const progressFillEl = document.getElementById('hours-progress-fill');
-    
+
     if (hoursRemainingEl) {
         hoursRemainingEl.textContent = hoursData.remaining.toFixed(1);
-        
+
         // Add warning class if low hours
         if (hoursData.remaining < 5) {
             hoursRemainingEl.parentElement.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
         }
     }
-    
+
     if (hoursPurchasedEl) hoursPurchasedEl.textContent = hoursData.purchased.toFixed(1);
     if (hoursUsedEl) hoursUsedEl.textContent = hoursData.used.toFixed(1);
     if (progressFillEl) progressFillEl.style.width = `${hoursData.progressPercent}%`;
@@ -830,11 +874,11 @@ async function loadTrainingHours(parentEmail) {
 async function loadSessionCounts(parentEmail) {
     const supabase = window.auth?.getSupabaseClient?.();
     const db = getDB();
-    
+
     const athletes = (db.roster || []).filter(a => a.parentId === parentEmail);
     let completedCount = 0;
     let upcomingCount = 0;
-    
+
     if (supabase && window.auth?.isSupabaseAvailable?.()) {
         try {
             const { data: parentAccount } = await supabase
@@ -842,27 +886,27 @@ async function loadSessionCounts(parentEmail) {
                 .select('id')
                 .eq('email', parentEmail)
                 .single();
-            
+
             if (parentAccount) {
                 const athleteIds = athletes.map(a => a.athleteId);
-                
+
                 // Get completed sessions (attendance records)
                 const { data: purchases } = await supabase
                     .from('training_purchases')
                     .select('id')
                     .eq('parent_id', parentAccount.id)
                     .in('athlete_id', athleteIds);
-                
+
                 if (purchases && purchases.length > 0) {
                     const purchaseIds = purchases.map(p => p.id);
                     const { data: attendance } = await supabase
                         .from('training_attendance')
                         .select('id')
                         .in('purchase_id', purchaseIds);
-                    
+
                     completedCount = attendance ? attendance.length : 0;
                 }
-                
+
                 // Get upcoming sessions
                 const { data: enrollments } = await supabase
                     .from('player_enrollments')
@@ -870,7 +914,7 @@ async function loadSessionCounts(parentEmail) {
                     .eq('parent_id', parentAccount.id)
                     .in('athlete_id', athleteIds)
                     .eq('status', 'active');
-                
+
                 if (enrollments && enrollments.length > 0) {
                     const programIds = enrollments.map(e => e.program_id);
                     const today = new Date().toISOString().split('T')[0];
@@ -880,7 +924,7 @@ async function loadSessionCounts(parentEmail) {
                         .in('program_id', programIds)
                         .gte('session_date', today)
                         .eq('status', 'scheduled');
-                    
+
                     upcomingCount = sessions ? sessions.length : 0;
                 }
             }
@@ -888,11 +932,11 @@ async function loadSessionCounts(parentEmail) {
             console.error('Error loading session counts:', error);
         }
     }
-    
+
     // Update UI
     const completedEl = document.getElementById('sessions-completed');
     const upcomingEl = document.getElementById('sessions-upcoming');
-    
+
     if (completedEl) completedEl.textContent = completedCount;
     if (upcomingEl) upcomingEl.textContent = upcomingCount;
 }
@@ -903,10 +947,10 @@ async function loadSessionCounts(parentEmail) {
 async function loadTrainingCalendar(parentEmail) {
     const db = getDB();
     const supabase = window.auth?.getSupabaseClient?.();
-    
+
     // Get athlete enrollments
     const athletes = (db.roster || []).filter(a => a.parentId === parentEmail);
-    
+
     // Populate athlete select
     const athleteSelect = document.getElementById('training-athlete-select');
     if (athleteSelect) {
@@ -917,12 +961,12 @@ async function loadTrainingCalendar(parentEmail) {
             option.textContent = athlete.name;
             athleteSelect.appendChild(option);
         });
-        
+
         athleteSelect.addEventListener('change', (e) => {
             filterCalendarByAthlete(e.target.value);
         });
     }
-    
+
     // Load enrollments to filter calendar
     let enrolledPrograms = [];
     if (supabase && window.auth?.isSupabaseAvailable?.()) {
@@ -932,7 +976,7 @@ async function loadTrainingCalendar(parentEmail) {
                 .select('id')
                 .eq('email', parentEmail)
                 .single();
-            
+
             if (parentAccount) {
                 const athleteIds = athletes.map(a => a.athleteId);
                 const { data: enrollments } = await supabase
@@ -941,7 +985,7 @@ async function loadTrainingCalendar(parentEmail) {
                     .eq('parent_id', parentAccount.id)
                     .in('athlete_id', athleteIds)
                     .eq('status', 'active');
-                
+
                 if (enrollments) {
                     enrolledPrograms = enrollments.map(e => e.program_id);
                 }
@@ -957,7 +1001,7 @@ async function loadTrainingCalendar(parentEmail) {
             }
         });
     }
-    
+
     // Store enrolled programs for calendar filtering
     window.trainingEnrolledPrograms = enrolledPrograms;
 }
@@ -984,12 +1028,12 @@ async function loadSkillsPrograms(parentEmail) {
     const db = getDB();
     const supabase = window.auth?.getSupabaseClient?.();
     const container = document.getElementById('skills-programs-list');
-    
+
     if (!container) return;
-    
+
     const athletes = (db.roster || []).filter(a => a.parentId === parentEmail);
     let programs = [];
-    
+
     if (supabase && window.auth?.isSupabaseAvailable?.()) {
         try {
             const { data: parentAccount } = await supabase
@@ -997,7 +1041,7 @@ async function loadSkillsPrograms(parentEmail) {
                 .select('id')
                 .eq('email', parentEmail)
                 .single();
-            
+
             if (parentAccount) {
                 const athleteIds = athletes.map(a => a.athleteId);
                 const { data: enrollments } = await supabase
@@ -1006,7 +1050,7 @@ async function loadSkillsPrograms(parentEmail) {
                     .eq('parent_id', parentAccount.id)
                     .in('athlete_id', athleteIds)
                     .eq('status', 'active');
-                
+
                 if (enrollments) {
                     programs = enrollments;
                 }
@@ -1015,7 +1059,7 @@ async function loadSkillsPrograms(parentEmail) {
             console.error('Error loading skills programs:', error);
         }
     }
-    
+
     // Fallback: get from roster
     if (programs.length === 0) {
         athletes.forEach(athlete => {
@@ -1031,13 +1075,13 @@ async function loadSkillsPrograms(parentEmail) {
             }
         });
     }
-    
+
     // Render programs
     if (programs.length === 0) {
         container.innerHTML = '<div style="text-align: center; padding: 40px; color: #888;"><p>No active skills programs found.</p></div>';
         return;
     }
-    
+
     let html = '';
     programs.forEach(program => {
         const athlete = athletes.find(a => a.athleteId === program.athlete_id);
@@ -1054,9 +1098,9 @@ async function loadSkillsPrograms(parentEmail) {
             </div>
         `;
     });
-    
+
     container.innerHTML = html;
-    
+
     // Update active programs count
     const activeProgramsEl = document.getElementById('active-programs');
     if (activeProgramsEl) activeProgramsEl.textContent = programs.length;
@@ -1068,11 +1112,11 @@ async function loadSkillsPrograms(parentEmail) {
 async function loadReceipts(parentEmail) {
     const supabase = window.auth?.getSupabaseClient?.();
     const container = document.getElementById('receipts-list');
-    
+
     if (!container) return;
-    
+
     let receipts = [];
-    
+
     if (supabase && window.auth?.isSupabaseAvailable?.()) {
         try {
             const { data: parentAccount } = await supabase
@@ -1080,7 +1124,7 @@ async function loadReceipts(parentEmail) {
                 .select('id')
                 .eq('email', parentEmail)
                 .single();
-            
+
             if (parentAccount) {
                 const { data } = await supabase
                     .from('receipts')
@@ -1088,21 +1132,21 @@ async function loadReceipts(parentEmail) {
                     .eq('parent_id', parentAccount.id)
                     .order('payment_date', { ascending: false })
                     .limit(5);
-                
+
                 if (data) receipts = data;
             }
         } catch (error) {
             console.error('Error loading receipts:', error);
         }
     }
-    
+
     // Fallback: get from transactions
     if (receipts.length === 0) {
         const db = getDB();
-        const transactions = (db.transactions || []).filter(t => 
+        const transactions = (db.transactions || []).filter(t =>
             t.parentId === parentEmail && t.status === 'PAID'
         ).slice(0, 5);
-        
+
         receipts = transactions.map(txn => ({
             receipt_number: txn.id,
             amount: txn.amount,
@@ -1110,12 +1154,12 @@ async function loadReceipts(parentEmail) {
             transaction_id: txn.id
         }));
     }
-    
+
     if (receipts.length === 0) {
         container.innerHTML = '<div style="text-align: center; padding: 20px; color: #888;"><p>No receipts found.</p></div>';
         return;
     }
-    
+
     let html = '';
     receipts.forEach(receipt => {
         html += `
@@ -1131,7 +1175,7 @@ async function loadReceipts(parentEmail) {
             </div>
         `;
     });
-    
+
     container.innerHTML = html;
 }
 
@@ -1141,11 +1185,11 @@ async function loadReceipts(parentEmail) {
 async function loadInvoices(parentEmail) {
     const supabase = window.auth?.getSupabaseClient?.();
     const container = document.getElementById('invoices-list');
-    
+
     if (!container) return;
-    
+
     let invoices = [];
-    
+
     if (supabase && window.auth?.isSupabaseAvailable?.()) {
         try {
             const { data: parentAccount } = await supabase
@@ -1153,7 +1197,7 @@ async function loadInvoices(parentEmail) {
                 .select('id')
                 .eq('email', parentEmail)
                 .single();
-            
+
             if (parentAccount) {
                 const { data } = await supabase
                     .from('invoices')
@@ -1161,19 +1205,19 @@ async function loadInvoices(parentEmail) {
                     .eq('parent_id', parentAccount.id)
                     .order('issue_date', { ascending: false })
                     .limit(5);
-                
+
                 if (data) invoices = data;
             }
         } catch (error) {
             console.error('Error loading invoices:', error);
         }
     }
-    
+
     if (invoices.length === 0) {
         container.innerHTML = '<div style="text-align: center; padding: 20px; color: #888;"><p>No invoices found.</p></div>';
         return;
     }
-    
+
     let html = '';
     invoices.forEach(invoice => {
         const statusColor = invoice.status === 'paid' ? '#10b981' : invoice.status === 'overdue' ? '#ef4444' : '#f59e0b';
@@ -1193,7 +1237,7 @@ async function loadInvoices(parentEmail) {
             </div>
         `;
     });
-    
+
     container.innerHTML = html;
 }
 

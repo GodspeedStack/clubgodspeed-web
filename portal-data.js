@@ -104,6 +104,29 @@ const GODSPEED_DATA = {
         trends: null,
         patterns: null,
         prescription: null
+    },
+
+    // 7. Training Data (New for Parent Portal)
+    training: {
+        hours: {
+            totalPurchased: 50,
+            used: 12.5,
+            remaining: 37.5,
+            expiryDate: "2026-12-31" // Valid for year
+        },
+        programs: [
+            { id: "prog_1", name: "Elite Guard Academy", status: "Active", schedule: "Mon/Wed 6pm", coach: "Coach Mike" },
+            { id: "prog_2", name: "Shooting Lab", status: "Completed", schedule: "Sat 9am", coach: "Coach Sarah" }
+        ],
+        upcomingSessions: [
+            { id: "sess_101", date: "2026-01-05", time: "18:00", program: "Elite Guard Academy", location: "Main Court", topic: "Pick & Roll Reads" },
+            { id: "sess_102", date: "2026-01-07", time: "18:00", program: "Elite Guard Academy", location: "Main Court", topic: "Finishing vs Contact" },
+            { id: "sess_103", date: "2026-01-12", time: "18:00", program: "Elite Guard Academy", location: "Main Court", topic: "Mid-Range Scoring" }
+        ],
+        documents: [
+            { id: "doc_1", title: "Guard Academy Syllabus", date: "2025-01-01", type: "PDF", link: "#" },
+            { id: "doc_2", title: "Nutrition Guide V2", date: "2024-12-15", type: "PDF", link: "#" }
+        ]
     }
 };
 
@@ -116,7 +139,7 @@ if (!storedData || forceSeed) {
     // Generate Reports (Derived from Roster)
     const derivedReports = {};
     GODSPEED_DATA.roster.forEach(p => {
-        derivedReports[p.id] = {
+        derivedReports[p.athleteId] = {
             tier: p.tier,
             avg: p.avg_grade,
             trend: p.trend,

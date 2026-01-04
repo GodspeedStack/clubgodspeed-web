@@ -125,9 +125,9 @@
          */
         isLoggedIn: function () {
             if (isSupabaseAvailable && supabaseClient) {
-                // Check for active session
-                const session = supabaseClient.auth.session();
-                return !!session || !!localStorage.getItem(AUTH_KEY);
+                // Check for active session using getSession (async) or check localStorage
+                // For synchronous check, use localStorage as fallback
+                return !!localStorage.getItem(AUTH_KEY);
             }
             return !!localStorage.getItem(AUTH_KEY);
         },
