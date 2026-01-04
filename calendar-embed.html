@@ -154,7 +154,7 @@
         }
 
         .day-number.today {
-            background: #0071e3;
+            background: #2563eb;
             color: white;
         }
 
@@ -199,7 +199,7 @@
         }
 
         .event-team-practice {
-            background: #0071e3;
+            background: #2563eb;
             color: white;
             box-shadow: 0 4px 10px rgba(0, 113, 227, 0.25);
             /* Glow shadow */
@@ -207,8 +207,8 @@
 
         .event-mandatory-skills {
             background: #ffffff;
-            color: #0071e3;
-            border: 1.5px solid #0071e3;
+            color: #2563eb;
+            border: 1.5px solid #2563eb;
             box-shadow: 0 2px 5px rgba(0, 113, 227, 0.1);
             font-weight: 700;
             /* Extra weight for mandatory */
@@ -216,7 +216,7 @@
 
         .event-skills {
             background: #ffffff;
-            color: #0071e3;
+            color: #2563eb;
             border: 1px solid rgba(0, 113, 227, 0.3);
             box-shadow: 0 2px 5px rgba(0, 113, 227, 0.05);
         }
@@ -392,7 +392,7 @@
     <!-- Event Detail Card (Float) -->
     <div class="overlay-dim" id="overlay" onclick="closeEvent()"></div>
     <div class="float-card" id="eventCard">
-        <div style="background: #0071e3; padding: 1.5rem; border-radius: 0; margin: -2rem -2rem 1.5rem -2rem;">
+        <div style="background: #2563eb; padding: 1.5rem; border-radius: 0; margin: -2rem -2rem 1.5rem -2rem;">
             <h3 id="eventTitle" style="color: white; margin: 0; font-size: 1.5rem;">Event Title</h3>
             <p id="eventType" style="color: rgba(255,255,255,0.8); margin: 0.5rem 0 0 0;">Event Type</p>
         </div>
@@ -514,6 +514,25 @@
     <script>
         // Calendar State
         let currentDate = new Date(); // Start at current real date
+        let enrolledPrograms = []; // Programs the athlete is enrolled in
+        let filterAthleteId = null; // Current athlete filter
+
+        // Listen for filter messages from parent portal
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'filterByAthlete') {
+                filterAthleteId = event.data.athleteId;
+                // Reload enrolled programs from localStorage or parent
+                if (window.parent && window.parent.trainingEnrolledPrograms) {
+                    enrolledPrograms = window.parent.trainingEnrolledPrograms;
+                }
+                renderCalendar();
+            }
+        });
+
+        // Load enrolled programs from parent window if available
+        if (window.parent && window.parent.trainingEnrolledPrograms) {
+            enrolledPrograms = window.parent.trainingEnrolledPrograms;
+        }
 
         // Configuration
         const RECURRING_EVENTS = {
@@ -536,7 +555,7 @@
                 loc: 'B.F. Elementary School',
                 desc: 'Regular Team Practice',
                 pillClass: 'event-team-practice',
-                color: '#0071e3',
+                color: '#2563eb',
                 textColor: 'light',
                 duration: 2
             },
@@ -558,7 +577,7 @@
                 loc: 'B.F. Elementary School',
                 desc: 'Regular Team Practice',
                 pillClass: 'event-team-practice',
-                color: '#0071e3',
+                color: '#2563eb',
                 textColor: 'light',
                 duration: 2
             }
@@ -650,9 +669,10 @@
                         events.push(ev);
                     }
                 });
-                return events;
                 // Logic above allows mixing specific + recurring if specific array has {recurring:true}
-                if (!SPECIFIC_EVENTS[dateStr].some(e => e.recurring) && events.length > 0) return events;
+                if (!SPECIFIC_EVENTS[dateStr].some(e => e.recurring) && events.length > 0) {
+                    return filterEventsByEnrollment(events);
+                }
             }
 
             // Fallback to Recurring
@@ -664,7 +684,46 @@
                 }
             }
 
-            return events;
+            return filterEventsByEnrollment(events);
+        }
+
+        /**
+         * Filter events based on athlete's enrolled programs
+         * If enrolledPrograms is empty, show all events
+         */
+        function filterEventsByEnrollment(events) {
+            // If no filter is set, show all events
+            if (!filterAthleteId && enrolledPrograms.length === 0) {
+                return events;
+            }
+
+            // If filter is set but no enrolled programs, show nothing
+            if (filterAthleteId && enrolledPrograms.length === 0) {
+                return [];
+            }
+
+            // Filter events based on program type matching enrolled programs
+            return events.filter(event => {
+                // Map event types to program IDs
+                const eventTypeToProgram = {
+                    'skills': 'skills-program',
+                    'mandatory-skills': 'skills-program',
+                    'team-practice': 'team-practice',
+                    'practice': 'team-practice'
+                };
+
+                const programId = eventTypeToProgram[event.type];
+                
+                // If event type doesn't map to a program, show it (e.g., games)
+                if (!programId) return true;
+
+                // Check if athlete is enrolled in this program type
+                return enrolledPrograms.some(ep => 
+                    ep.includes(programId) || 
+                    ep.includes(event.type) ||
+                    ep === programId
+                );
+            });
         }
 
         function renderCalendar() {
@@ -681,7 +740,7 @@
             // Stats Calculation (Season Total)
             const stats = calculateSeasonStats(year, month);
             document.getElementById('calculated-hours').innerHTML = `
-                <span style="background: rgba(0,113,227,0.1); color: #0071e3; padding: 4px 10px; border-radius: 99px;">${stats.practice} Practice Hours</span>
+                <span style="background: rgba(37,99,235,0.1); color: #2563eb; padding: 4px 10px; border-radius: 99px;">${stats.practice} Practice Hours</span>
                 <span style="background: rgba(0,0,0,0.05); color: #1d1d1f; padding: 4px 10px; border-radius: 99px;">${stats.game} Game Hours</span>
             `;
 
@@ -787,7 +846,7 @@
             document.getElementById('eventDetails').innerText = details;
 
             const header = document.querySelector('#eventCard > div:first-child');
-            header.style.background = color || '#0071e3';
+            header.style.background = color || '#2563eb';
 
             const titleEl = document.getElementById('eventTitle');
             const typeEl = document.querySelector('#eventType');

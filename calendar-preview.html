@@ -155,7 +155,7 @@
         }
 
         .day-number.today {
-            background: #0071e3;
+            background: #2563eb;
             color: white;
         }
 
@@ -200,7 +200,7 @@
         }
 
         .event-team-practice {
-            background: #0071e3;
+            background: #2563eb;
             color: white;
             box-shadow: 0 4px 10px rgba(0, 113, 227, 0.25);
             /* Glow shadow */
@@ -208,8 +208,8 @@
 
         .event-mandatory-skills {
             background: #ffffff;
-            color: #0071e3;
-            border: 1.5px solid #0071e3;
+            color: #2563eb;
+            border: 1.5px solid #2563eb;
             box-shadow: 0 2px 5px rgba(0, 113, 227, 0.1);
             font-weight: 700;
             /* Extra weight for mandatory */
@@ -217,7 +217,7 @@
 
         .event-skills {
             background: #ffffff;
-            color: #0071e3;
+            color: #2563eb;
             border: 1px solid rgba(0, 113, 227, 0.3);
             box-shadow: 0 2px 5px rgba(0, 113, 227, 0.05);
         }
@@ -341,7 +341,7 @@
 <body>
     <!-- Navbar -->
     <nav class="navbar">
-        <div class="logo">#Fun<span style="color: #0071e3;">Again</span></div>
+        <div class="logo">#Fun<span style="color: #2563eb;">Again</span></div>
         <ul class="nav-links">
             <li><a href="index.html">Home</a></li>
             <li><a href="training.html">Training</a></li>
@@ -366,7 +366,7 @@
                             <span style="display: flex; align-items: center; gap: 10px;">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                    style="color: #0071e3;">
+                                    style="color: #2563eb;">
                                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                                     <circle cx="9" cy="7" r="4"></circle>
                                     <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -380,7 +380,7 @@
                             <span style="display: flex; align-items: center; gap: 10px;">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                    style="color: #0071e3;">
+                                    style="color: #2563eb;">
                                     <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1-2-2h2">
                                     </path>
                                     <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
@@ -448,7 +448,7 @@
     <!-- Event Detail Card (Float) -->
     <div class="overlay-dim" id="overlay" onclick="closeEvent()"></div>
     <div class="float-card" id="eventCard">
-        <div style="background: #0071e3; padding: 1.5rem; border-radius: 0; margin: -2rem -2rem 1.5rem -2rem;">
+        <div style="background: #2563eb; padding: 1.5rem; border-radius: 0; margin: -2rem -2rem 1.5rem -2rem;">
             <h3 id="eventTitle" style="color: white; margin: 0; font-size: 1.5rem;">Event Title</h3>
             <p id="eventType" style="color: rgba(255,255,255,0.8); margin: 0.5rem 0 0 0;">Event Type</p>
         </div>
@@ -646,7 +646,7 @@
                 loc: 'B.F. Elementary School',
                 desc: 'Regular Team Practice',
                 pillClass: 'event-team-practice',
-                color: '#0071e3',
+                color: '#2563eb',
                 textColor: 'light',
                 duration: 2
             },
@@ -668,7 +668,7 @@
                 loc: 'B.F. Elementary School',
                 desc: 'Regular Team Practice',
                 pillClass: 'event-team-practice',
-                color: '#0071e3',
+                color: '#2563eb',
                 textColor: 'light',
                 duration: 2
             }
@@ -791,7 +791,7 @@
             // Stats Calculation (Season Total)
             const stats = calculateSeasonStats(year, month);
             document.getElementById('calculated-hours').innerHTML = `
-                <span style="background: rgba(0,113,227,0.1); color: #0071e3; padding: 4px 10px; border-radius: 99px;">${stats.practice} Practice Hours</span>
+                <span style="background: rgba(37,99,235,0.1); color: #2563eb; padding: 4px 10px; border-radius: 99px;">${stats.practice} Practice Hours</span>
                 <span style="background: rgba(0,0,0,0.05); color: #1d1d1f; padding: 4px 10px; border-radius: 99px;">${stats.game} Game Hours</span>
             `;
 
@@ -897,7 +897,7 @@
             document.getElementById('eventDetails').innerText = details;
 
             const header = document.querySelector('#eventCard > div:first-child');
-            header.style.background = color || '#0071e3';
+            header.style.background = color || '#2563eb';
 
             const titleEl = document.getElementById('eventTitle');
             const typeEl = document.querySelector('#eventType');
