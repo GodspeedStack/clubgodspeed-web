@@ -7,6 +7,13 @@ const GODSPEED_DATA = {
         { id: 'TEAM-10U-DEV-BLACK', name: '10U Development Black', category: '10U Development', coach: 'Coach Scott' }
     ],
 
+    // 1.5 Coaches List (New Source of Truth)
+    coaches: [
+        { id: "c_scott", name: "Coach Scott", role: "Head Coach", specialty: "Development" },
+        { id: "c_mike", name: "Coach Mike", role: "Skills Trainer", specialty: "Guards" },
+        { id: "c_sarah", name: "Coach Sarah", role: "Shooting Coach", specialty: "Shooting" }
+    ],
+
     // 2. The Roster (Live Snapshot: Finalized 12-Man Squad)
     roster: [
         { athleteId: "p1", teamId: 'TEAM-10U-DEV-BLACK', name: "Aiden", initials: "Ai", tier: "Elite/Starter", avg_grade: 9.05, trend: "Steady", notes: "Fix baseline drives" },
@@ -118,13 +125,12 @@ const GODSPEED_DATA = {
             { id: "prog_1", name: "Elite Guard Academy", type: "1v1 Training", status: "Active", schedule: "Mon 6pm", coach: "Coach Mike", description: "Designed for guards who depend on skill, IQ, and movement not height.", focus: ["Footwork and separation", "Advanced finishing", "Shot creation"] }
         ],
         upcomingSessions: [
-            { id: "sess_101", date: "2026-01-05", time: "18:00", program: "Elite Guard Academy", location: "Main Court", topic: "Pick & Roll Reads" },
-            { id: "sess_104", date: "2026-01-10", time: "10:00", program: "Elite Guard Academy", location: "Main Court", topic: "Tentative Session", status: "Tentative" },
-            { id: "sess_103", date: "2026-01-12", time: "18:00", program: "Elite Guard Academy", location: "Main Court", topic: "Mid-Range Scoring" }
+            { id: "sess_101", date: "2026-01-05", time: "6:00 PM", program: "Elite Guard Academy", location: "Main Court", topic: "Pick & Roll Reads" },
+            { id: "sess_104", date: "2026-01-11", time: "6:00 PM", program: "Elite Guard Academy", location: "Main Court", topic: "Tentative Session", status: "Tentative" },
+            { id: "sess_103", date: "2026-01-12", time: "6:00 PM", program: "Elite Guard Academy", location: "Main Court", topic: "Mid-Range Scoring" }
         ],
         documents: [
-            { id: "doc_1", title: "Guard Academy Syllabus", date: "2025-01-01", type: "PDF", link: "#" },
-            { id: "doc_2", title: "Nutrition Guide V2", date: "2024-12-15", type: "PDF", link: "#" }
+            { id: "doc_1", title: "Guard Academy Syllabus", date: "2025-01-01", type: "PDF", link: "#" }
         ]
     },
 
@@ -136,27 +142,27 @@ const GODSPEED_DATA = {
         { id: "acc_4", parentName: "Lisa Johnson", email: "lisa.j@example.com", phone: "(555) 111-2222", athletes: ["p6"], status: "Active", balance: "$0.00" },
         { id: "acc_5", parentName: "David Brown", email: "david.b@example.com", phone: "(555) 333-4444", athletes: ["p11"], status: "Pending", balance: "$0.00" },
         { id: "acc_6", parentName: "Denis (Anton's Dad)", email: "denis@gmail.com", phone: "(555) 666-7777", athletes: ["p6"], status: "Active", balance: "$0.00" }
-    ]
-};,
+    ],
 
-// 9. Training Records (User Specific - New)
-trainingRecords: {
-    "denis@gmail.com": {
-        hours: {
-            totalPurchased: 10,
+    // 9. Training Records (User Specific - New)
+    trainingRecords: {
+        "denis@gmail.com": {
+            hours: {
+                totalPurchased: 10,
                 used: 3.0,
-                    remaining: 7.0,
-                        expiryDate: "2026-12-31"
-        },
-        logs: [
-            { date: "2026-01-04", time: "1 Hour", activity: "Shooting Gun", notes: "Self-guided session" },
-            { date: "2026-01-03", time: "2 Hours", activity: "1v1 Training", notes: "Focus on ball handling" }
-        ],
+                remaining: 7.0,
+                expiryDate: "2026-12-31"
+            },
+            logs: [
+                { date: "2026-01-04", time: "2:00 PM - 3:00 PM", duration: 1, activity: "1v1 Training", notes: "Self-guided session" },
+                { date: "2026-01-03", time: "2:00 PM - 4:00 PM", duration: 2, activity: "1v1 Training (Coach Mike)", notes: "Focus on ball handling" }
+            ],
             purchases: [
+                { id: "rcpt_002", date: "2026-01-03", item: "Training Credit Top-Up", amount: "$400.00", status: "Paid", link: "#" },
                 { id: "rcpt_001", date: "2026-01-01", item: "10 Hour Training Package", amount: "$850.00", status: "Paid", link: "#" }
             ]
+        }
     }
-}
 };
 
 // Database Initialization & Sync

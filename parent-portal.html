@@ -220,7 +220,7 @@
                 <div class="content-container">
                     <div id="dashboard-welcome" class="welcome-banner">
                         <h1>Welcome back, <span id="dashboard-user-name">James</span></h1>
-                        <p>Here is what's happening with your athlete today.</p>
+                        <p id="dashboard-welcome-msg">Here is what's happening with your athlete today.</p>
                     </div>
 
                     <!-- VIEW: DOCUMENTS -->
@@ -343,7 +343,7 @@
                                 <div>
                                     <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">Training Hours
                                         Remaining</div>
-                                    <div id="hours-remaining"
+                                    <div id="training-hours-display"
                                         style="font-size: 48px; font-weight: 700; line-height: 1;">--</div>
                                     <div style="font-size: 14px; opacity: 0.8; margin-top: 4px;">hours</div>
                                 </div>
@@ -352,7 +352,8 @@
                                     <div id="hours-purchased" style="font-size: 20px; font-weight: 600;">--</div>
                                     <div style="font-size: 12px; opacity: 0.8; margin-top: 8px; margin-bottom: 4px;">
                                         Used</div>
-                                    <div id="hours-used" style="font-size: 20px; font-weight: 600;">--</div>
+                                    <div id="training-utilized-display" style="font-size: 20px; font-weight: 600;">--
+                                    </div>
                                 </div>
                             </div>
                             <div id="hours-progress-bar"
@@ -428,8 +429,12 @@
                                     <button onclick="loadReceipts()" class="btn-secondary"
                                         style="padding: 6px 12px; font-size: 14px;">View All</button>
                                 </div>
+                                <div id="training-documents-list"
+                                    style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px;">
+                                    <!-- Dynamic Training Documents / Receipts -->
+                                </div>
                                 <div id="receipts-list" style="display: flex; flex-direction: column; gap: 12px;">
-                                    <!-- Receipts will be loaded here -->
+                                    <!-- Standard Receipts will be loaded here -->
                                 </div>
                             </div>
 
@@ -797,61 +802,7 @@
     </div>
 
     <!-- Scripts -->
-    <footer class="bg-gray-50 pt-20 pb-16 border-t border-gray-100">
-        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-12">
-            <div class="md:col-span-4">
-                <div class="text-2xl font-black tracking-tighter mb-6">
-                    GODSPEED<span class="text-blue-600">BASKETBALL</span>
-                </div>
-                <p class="text-gray-500 leading-relaxed max-w-sm text-sm">
-                    Building the future of Denver basketball.<br>
-                    Character. Discipline. Excellence.
-                </p>
-            </div>
-            <div class="md:col-span-8 grid grid-cols-2 md:grid-cols-5 gap-8">
-                <div>
-                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Programs</h4>
-                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
-                        <li><a href="training.html" class="hover:text-blue-600 transition">Training</a></li>
-                        <li><a href="aau.html" class="hover:text-blue-600 transition">AAU Club</a></li>
-                        <li class="text-gray-400 cursor-not-allowed" title="Coming Soon">Academy</li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Athletes</h4>
-                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
-                        <li><a href="#" class="hover:text-blue-600 transition">Skill Assessment</a></li>
-                        <li><a href="#" class="hover:text-blue-600 transition">Player Card</a></li>
-                        <li class="text-gray-400 cursor-not-allowed" title="Coming Soon">AAU Camps</li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Shop</h4>
-                    <ul class="space-y-4 text-sm text-gray-400 font-medium">
-                        <li class="cursor-not-allowed">Apparel</li>
-                        <li class="cursor-not-allowed">Footwear</li>
-                        <li class="cursor-not-allowed">Accessories</li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Parents</h4>
-                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
-                        <li><a href="#" class="hover:text-blue-600 transition">Parent Assessment</a></li>
-                        <li><a href="#" class="hover:text-blue-600 transition">Parent Portal</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Company</h4>
-                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
-                        <li><a href="about.html" class="hover:text-blue-600 transition">About Us</a></li>
-                        <li><a href="#contact" class="hover:text-blue-600 transition">Contact</a></li>
-                        <li><a href="#" class="hover:text-blue-600 transition">Coach Portal</a></li>
-                        <li class="text-gray-400 cursor-not-allowed" title="Coming Soon">Careers</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </footer>
+    <!-- Footer Removed per User Request -->
     <!-- Supabase Client (load with defer for non-blocking) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script defer>
