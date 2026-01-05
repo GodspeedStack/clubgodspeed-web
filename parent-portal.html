@@ -10,22 +10,36 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
-    
+
     <!-- Google Fonts: Inter (with font-display: swap) -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
-    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&display=swap" rel="stylesheet"></noscript>
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"
+        media="print" onload="this.media='all'">
+    <noscript>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+            rel="stylesheet">
+    </noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&display=swap" rel="stylesheet"
+        media="print" onload="this.media='all'">
+    <noscript>
+        <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+    </noscript>
+
     <!-- Critical CSS loaded first -->
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-nav.css">
-    
+
     <!-- Non-critical CSS loaded asynchronously -->
     <link rel="preload" href="mobile-fixes.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="mobile-fixes.css"></noscript>
+    <noscript>
+        <link rel="stylesheet" href="mobile-fixes.css">
+    </noscript>
     <link rel="preload" href="mobile-responsive.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="mobile-responsive.css"></noscript>
+    <noscript>
+        <link rel="stylesheet" href="mobile-responsive.css">
+    </noscript>
+
+    <!-- Portal Specific Styles -->
+    <link rel="stylesheet" href="parent-portal.css">
 </head>
 
 <body class="aau-page">
@@ -66,7 +80,9 @@
                     <p>Access your athlete's profile, waivers, and schedule.</p>
                 </div>
                 <form class="login-form" onsubmit="event.preventDefault(); handleLogin();">
-                    <div class="login-error" style="display: none; color: #ef4444; font-size: 14px; margin-bottom: 16px; padding: 12px; background: #fee2e2; border-radius: 8px;"></div>
+                    <div class="login-error"
+                        style="display: none; color: #ef4444; font-size: 14px; margin-bottom: 16px; padding: 12px; background: #fee2e2; border-radius: 8px;">
+                    </div>
                     <div class="form-group">
                         <label for="email">Email Address</label>
                         <input type="email" id="email" placeholder="name@example.com" required>
@@ -312,63 +328,86 @@
                     </div>
 
                     <!-- VIEW: TRAINING -->
-                    <div id="view-training" class="portal-view" style="display: none; background-color: #F2F2F7; min-height: 100%; padding: 20px;">
+                    <div id="view-training" class="portal-view"
+                        style="display: none; background-color: #F2F2F7; min-height: 100%; padding: 20px;">
                         <div class="section-header" style="margin-bottom: 20px;">
-                            <h2 style="font-size: 34px; font-weight: 700; color: #000; letter-spacing: -0.02em;">Training Dashboard</h2>
+                            <h2 style="font-size: 34px; font-weight: 700; color: #000; letter-spacing: -0.02em;">
+                                Training Dashboard</h2>
                         </div>
 
                         <!-- Hours Remaining Card -->
-                        <div id="training-hours-card" style="background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); border-radius: 16px; padding: 24px; margin-bottom: 24px; color: white; box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3);">
-                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+                        <div id="training-hours-card"
+                            style="background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); border-radius: 16px; padding: 24px; margin-bottom: 24px; color: white; box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3);">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
                                 <div>
-                                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">Training Hours Remaining</div>
-                                    <div id="hours-remaining" style="font-size: 48px; font-weight: 700; line-height: 1;">--</div>
+                                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">Training Hours
+                                        Remaining</div>
+                                    <div id="hours-remaining"
+                                        style="font-size: 48px; font-weight: 700; line-height: 1;">--</div>
                                     <div style="font-size: 14px; opacity: 0.8; margin-top: 4px;">hours</div>
                                 </div>
                                 <div style="text-align: right;">
                                     <div style="font-size: 12px; opacity: 0.8; margin-bottom: 4px;">Purchased</div>
                                     <div id="hours-purchased" style="font-size: 20px; font-weight: 600;">--</div>
-                                    <div style="font-size: 12px; opacity: 0.8; margin-top: 8px; margin-bottom: 4px;">Used</div>
+                                    <div style="font-size: 12px; opacity: 0.8; margin-top: 8px; margin-bottom: 4px;">
+                                        Used</div>
                                     <div id="hours-used" style="font-size: 20px; font-weight: 600;">--</div>
                                 </div>
                             </div>
-                            <div id="hours-progress-bar" style="background: rgba(255, 255, 255, 0.2); border-radius: 8px; height: 8px; margin-top: 16px; overflow: hidden;">
-                                <div id="hours-progress-fill" style="background: white; height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+                            <div id="hours-progress-bar"
+                                style="background: rgba(255, 255, 255, 0.2); border-radius: 8px; height: 8px; margin-top: 16px; overflow: hidden;">
+                                <div id="hours-progress-fill"
+                                    style="background: white; height: 100%; width: 0%; transition: width 0.3s ease;">
+                                </div>
                             </div>
                         </div>
 
                         <!-- Quick Stats -->
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 24px;">
-                            <div style="background: white; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                                <div style="font-size: 32px; font-weight: 700; color: #2563eb; margin-bottom: 8px;" id="sessions-completed">0</div>
+                        <div
+                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                            <div
+                                style="background: white; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                                <div style="font-size: 32px; font-weight: 700; color: #2563eb; margin-bottom: 8px;"
+                                    id="sessions-completed">0</div>
                                 <div style="font-size: 14px; color: #666;">Sessions Completed</div>
                             </div>
-                            <div style="background: white; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                                <div style="font-size: 32px; font-weight: 700; color: #10b981; margin-bottom: 8px;" id="sessions-upcoming">0</div>
+                            <div
+                                style="background: white; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                                <div style="font-size: 32px; font-weight: 700; color: #10b981; margin-bottom: 8px;"
+                                    id="sessions-upcoming">0</div>
                                 <div style="font-size: 14px; color: #666;">Upcoming Sessions</div>
                             </div>
-                            <div style="background: white; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                                <div style="font-size: 32px; font-weight: 700; color: #f59e0b; margin-bottom: 8px;" id="active-programs">0</div>
+                            <div
+                                style="background: white; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                                <div style="font-size: 32px; font-weight: 700; color: #f59e0b; margin-bottom: 8px;"
+                                    id="active-programs">0</div>
                                 <div style="font-size: 14px; color: #666;">Active Programs</div>
                             </div>
                         </div>
 
                         <!-- Training Calendar -->
-                        <div style="background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div
+                            style="background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                                 <h3 style="font-size: 20px; font-weight: 600;">Training Schedule</h3>
-                                <select id="training-athlete-select" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; background: #f9f9f9;">
+                                <select id="training-athlete-select"
+                                    style="padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; background: #f9f9f9;">
                                     <option value="">All Athletes</option>
                                 </select>
                             </div>
                             <div id="training-calendar-container" style="min-height: 400px;">
-                                <iframe id="training-calendar-iframe" src="calendar-embed.html" style="width: 100%; height: 500px; border: none; border-radius: 8px;"></iframe>
+                                <iframe id="training-calendar-iframe" src="calendar-embed.html"
+                                    style="width: 100%; height: 500px; border: none; border-radius: 8px;"></iframe>
                             </div>
                         </div>
 
                         <!-- Skills Programs -->
-                        <div style="background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                            <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 20px;">Current Skills Programs</h3>
+                        <div
+                            style="background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                            <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 20px;">Current Skills Programs
+                            </h3>
                             <div id="skills-programs-list">
                                 <div style="text-align: center; padding: 40px; color: #888;">
                                     <p>Loading programs...</p>
@@ -377,14 +416,17 @@
                         </div>
 
                         <!-- Documents Section -->
-                        <div style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                        <div
+                            style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
                             <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 20px;">Training Documents</h3>
-                            
+
                             <!-- Receipts -->
                             <div style="margin-bottom: 24px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                                     <h4 style="font-size: 16px; font-weight: 600;">Receipts</h4>
-                                    <button onclick="loadReceipts()" class="btn-secondary" style="padding: 6px 12px; font-size: 14px;">View All</button>
+                                    <button onclick="loadReceipts()" class="btn-secondary"
+                                        style="padding: 6px 12px; font-size: 14px;">View All</button>
                                 </div>
                                 <div id="receipts-list" style="display: flex; flex-direction: column; gap: 12px;">
                                     <!-- Receipts will be loaded here -->
@@ -393,9 +435,11 @@
 
                             <!-- Invoices -->
                             <div style="margin-bottom: 24px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                                     <h4 style="font-size: 16px; font-weight: 600;">Invoices</h4>
-                                    <button onclick="loadInvoices()" class="btn-secondary" style="padding: 6px 12px; font-size: 14px;">View All</button>
+                                    <button onclick="loadInvoices()" class="btn-secondary"
+                                        style="padding: 6px 12px; font-size: 14px;">View All</button>
                                 </div>
                                 <div id="invoices-list" style="display: flex; flex-direction: column; gap: 12px;">
                                     <!-- Invoices will be loaded here -->

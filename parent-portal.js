@@ -151,6 +151,54 @@ window.switchPortalView = function (viewName, linkElement) {
     if (viewName === 'training') {
         renderTrainingDashboard();
     }
+
+    if (viewName === 'calendar') {
+        injectTrainingEvents();
+    }
+}
+
+function injectTrainingEvents() {
+    const db = getDB();
+    const training = db.training;
+    if (!training || !training.upcomingSessions) return;
+
+    // Wait for iframe to be ready
+    const iframe = document.querySelector('#view-calendar iframe');
+    if (iframe) {
+        /* Map to Calendar Embed format:
+           { 
+             type: 'training', 
+             title: 'Elite Guard Academy', 
+             time: '18:00', 
+             date: '2026-01-05', 
+             loc: 'Main Court', 
+             desc: 'Pick & Roll Reads', 
+             pillClass: 'event-training',
+             color: '#dcfce7',
+             textColor: 'dark'
+           }
+        */
+        const events = training.upcomingSessions.map(sess => ({
+            type: 'training',
+            title: sess.program, // or sess.topic
+            fullTitle: `${sess.program}: ${sess.topic}`,
+            time: sess.time,
+            date: sess.date,
+            loc: sess.location,
+            desc: sess.topic,
+            pillClass: 'event-training',
+            // style: '...', // optional override
+        }));
+
+        // Post message immediately and after a short delay to ensure load
+        iframe.contentWindow.postMessage({ type: 'injectEvents', events: events }, '*');
+        setTimeout(() => {
+            iframe.contentWindow.postMessage({ type: 'injectEvents', events: events }, '*');
+        }, 500);
+        iframe.onload = () => {
+            iframe.contentWindow.postMessage({ type: 'injectEvents', events: events }, '*');
+        };
+    }
 }
 
 function renderParentTrips() {

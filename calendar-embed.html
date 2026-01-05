@@ -221,6 +221,16 @@
             box-shadow: 0 2px 5px rgba(0, 113, 227, 0.05);
         }
 
+        .event-training {
+            background: #dcfce7;
+            /* Light Green */
+            color: #166534;
+            /* Dark Green */
+            border: 1px solid #bbf7d0;
+            box-shadow: 0 2px 5px rgba(22, 101, 52, 0.05);
+            font-weight: 600;
+        }
+
         /* Import Section */
         .import-section {
             background: white;
@@ -516,16 +526,25 @@
         let currentDate = new Date(); // Start at current real date
         let enrolledPrograms = []; // Programs the athlete is enrolled in
         let filterAthleteId = null; // Current athlete filter
+        let externalEvents = []; // External events injected from parent
 
-        // Listen for filter messages from parent portal
+        // Listen for filter and injection messages from parent portal
         window.addEventListener('message', (event) => {
-            if (event.data && event.data.type === 'filterByAthlete') {
-                filterAthleteId = event.data.athleteId;
-                // Reload enrolled programs from localStorage or parent
-                if (window.parent && window.parent.trainingEnrolledPrograms) {
-                    enrolledPrograms = window.parent.trainingEnrolledPrograms;
+            if (event.data) {
+                if (event.data.type === 'filterByAthlete') {
+                    filterAthleteId = event.data.athleteId;
+                    if (window.parent && window.parent.trainingEnrolledPrograms) {
+                        enrolledPrograms = window.parent.trainingEnrolledPrograms;
+                    }
+                    renderCalendar();
+                } else if (event.data.type === 'injectEvents') {
+                    // Inject external events (e.g. Purchased Training)
+                    // event.data.events should be an array of event objects
+                    if (Array.isArray(event.data.events)) {
+                        externalEvents = event.data.events;
+                        renderCalendar();
+                    }
                 }
-                renderCalendar();
             }
         });
 
@@ -652,7 +671,13 @@
 
             let events = [];
 
-            // Check Specific Overrides first
+            // 1. External Events (Injected)
+            const daysExternal = externalEvents.filter(e => e.date === dateStr);
+            if (daysExternal.length > 0) {
+                events = events.concat(daysExternal);
+            }
+
+            // 2. Check Specific Overrides first
             if (SPECIFIC_EVENTS[dateStr] === 'SKIP') return [];
 
             if (SPECIFIC_EVENTS[dateStr] && Array.isArray(SPECIFIC_EVENTS[dateStr])) {
@@ -713,13 +738,13 @@
                 };
 
                 const programId = eventTypeToProgram[event.type];
-                
+
                 // If event type doesn't map to a program, show it (e.g., games)
                 if (!programId) return true;
 
                 // Check if athlete is enrolled in this program type
-                return enrolledPrograms.some(ep => 
-                    ep.includes(programId) || 
+                return enrolledPrograms.some(ep =>
+                    ep.includes(programId) ||
                     ep.includes(event.type) ||
                     ep === programId
                 );
