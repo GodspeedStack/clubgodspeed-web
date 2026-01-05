@@ -787,30 +787,63 @@ async function renderTrainingDashboard() {
     }
 
     // 1. Training Hours & Counts
+    // CHECK FOR USER SPECIFIC RECORD
+    const userRecord = db.trainingRecords ? db.trainingRecords[parentEmail] : null;
+    let displayHours = data.hours;
+
+    if (userRecord) {
+        displayHours = userRecord.hours;
+    }
+
     const hoursEl = document.getElementById('training-hours-display');
     const utilizedEl = document.getElementById('training-utilized-display');
 
-    if (hoursEl) hoursEl.textContent = data.hours.remaining.toFixed(1);
-    if (utilizedEl) utilizedEl.textContent = data.hours.used.toFixed(1);
+    if (hoursEl) hoursEl.textContent = displayHours.remaining.toFixed(1);
+    if (utilizedEl) utilizedEl.textContent = displayHours.used.toFixed(1);
 
     // 2. Scheduled Sessions
     const calendarContainer = document.getElementById('training-calendar-container');
     if (calendarContainer) {
+        let content = '';
+
+        // A. Upcoming Sessions
         if (data.upcomingSessions.length === 0) {
-            calendarContainer.innerHTML = '<div class="text-gray-500 text-sm">No upcoming sessions.</div>';
+            content += '<div class="text-gray-500 text-sm">No upcoming sessions.</div>';
         } else {
-            calendarContainer.innerHTML = data.upcomingSessions.map(sess => `
+            content += data.upcomingSessions.map(sess => {
+                const isTentative = sess.status === 'Tentative';
+                const badgeColor = isTentative ? '#d97706' : '#0284c7';
+                const badgeBg = isTentative ? '#fef3c7' : '#e0f2fe';
+                const badgeText = isTentative ? 'Tentative' : 'Scheduled';
+
+                return `
                 <div class="session-card" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#f9fafb; border-radius:8px; margin-bottom:8px; border:1px solid #eee;">
                     <div>
                         <div style="font-weight:700; color:#111; font-size:14px;">${new Date(sess.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} @ ${sess.time}</div>
                         <div style="font-size:12px; color:#666;">${sess.program} • ${sess.topic}</div>
                     </div>
                     <div style="text-align:right;">
-                        <span style="font-size:11px; padding:4px 8px; background:#e0f2fe; color:#0284c7; border-radius:12px; font-weight:600;">Scheduled</span>
+                        <span style="font-size:11px; padding:4px 8px; background:${badgeBg}; color:${badgeColor}; border-radius:12px; font-weight:600;">${badgeText}</span>
                     </div>
+                </div>
+            `}).join('');
+        }
+
+        // B. Past Usage Logs (User Specific)
+        if (userRecord && userRecord.logs && userRecord.logs.length > 0) {
+            content += `<h4 style="margin: 24px 0 12px 0; font-size: 14px; color: #444; font-weight: 600; text-transform:uppercase; letter-spacing:0.5px;">Session History</h4>`;
+            content += userRecord.logs.map(log => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#fff; border-radius:8px; margin-bottom:8px; border:1px solid #eee;">
+                     <div>
+                        <div style="font-weight:600; color:#111; font-size:13px;">${log.activity}</div>
+                        <div style="font-size:11px; color:#666;">${new Date(log.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} • ${log.notes}</div>
+                    </div>
+                    <div style="font-weight:700; color:#444; font-size:13px;">-${log.time}</div>
                 </div>
             `).join('');
         }
+
+        calendarContainer.innerHTML = content;
     }
 
     // 3. Active Programs
@@ -818,14 +851,25 @@ async function renderTrainingDashboard() {
     if (programsList) {
         programsList.innerHTML = data.programs.map(prog => `
             <div class="program-card" style="padding:16px; border:1px solid #eee; border-radius:10px; margin-bottom:12px; background:white; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
-                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
                     <div style="font-weight:700; font-size:15px;">${prog.name}</div>
                     <span class="badge ${prog.status === 'Active' ? 'badge-active' : 'badge-inactive'}" 
                           style="font-size:10px; padding:2px 8px; border-radius:10px; background:${prog.status === 'Active' ? '#dcfce7' : '#f3f4f6'}; color:${prog.status === 'Active' ? '#166534' : '#6b7280'}; text-transform:uppercase; font-weight:700;">
                         ${prog.status}
                     </span>
                 </div>
-                <div style="font-size:12px; color:#555; display:flex; gap:12px;">
+                
+                <div style="font-size:11px; color:#666; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">${prog.type || 'Program'}</div>
+
+                ${prog.description ? `<div style="font-size:13px; color:#444; margin-bottom:12px; line-height:1.4;">${prog.description}</div>` : ''}
+
+                ${prog.focus ? `
+                <div style="margin-bottom:12px; display:flex; flex-wrap:wrap; gap:6px;">
+                    ${prog.focus.map(f => `<span style="font-size:11px; background:#f0f9ff; color:#0369a1; padding:2px 8px; border-radius:4px; font-weight:500;">${f}</span>`).join('')}
+                </div>
+                ` : ''}
+
+                <div style="font-size:12px; color:#888; display:flex; gap:12px; padding-top:12px; border-top:1px solid #f9fafb;">
                     <span>📅 ${prog.schedule}</span>
                     <span>👤 ${prog.coach}</span>
                 </div>
@@ -835,18 +879,36 @@ async function renderTrainingDashboard() {
 
     // 4. Documents
     const docsContainer = document.getElementById('training-documents-list');
-    // Note: ID in HTML might be 'training-documents' or similar, let's target the inner list if possible or just append
     if (docsContainer) {
-        docsContainer.innerHTML = data.documents.map(doc => `
+        let docsHtml = '';
+
+        // A. Receipts (User Specific)
+        if (userRecord && userRecord.purchases) {
+            docsHtml += userRecord.purchases.map(p => `
+                <div class="doc-item" style="display:flex; align-items:center; gap:12px; padding:12px; border-bottom:1px solid #f0f0f0; background:#f0fdf4;">
+                    <div style="background:#166534; color:#fff; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:6px; font-size:14px; font-weight:700;">$</div>
+                    <div style="flex:1;">
+                        <div style="font-size:13px; font-weight:600;">Receipt: ${p.item}</div>
+                        <div style="font-size:11px; color:#166534;">${p.date} • ${p.amount} • ${p.status}</div>
+                    </div>
+                    <a href="${p.link}" onclick="alert('Viewing Receipt: ${p.item}'); return false;" class="btn-primary" style="padding: 6px 12px; font-size: 10px; width: auto; display: inline-block; text-decoration: none; line-height:1.2;">View Receipt</a>
+                </div>
+            `).join('');
+        }
+
+        // B. Standard Docs
+        docsHtml += data.documents.map(doc => `
             <div class="doc-item" style="display:flex; align-items:center; gap:12px; padding:12px; border-bottom:1px solid #f0f0f0;">
                 <div style="background:#fee2e2; color:#991b1b; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:6px; font-size:10px; font-weight:700;">PDF</div>
                 <div style="flex:1;">
                     <div style="font-size:13px; font-weight:600;">${doc.title}</div>
                     <div style="font-size:11px; color:#888;">Added ${doc.date}</div>
                 </div>
-                <a href="${doc.link}" style="font-size:12px; color:#2563eb; font-weight:600; text-decoration:none;">Download</a>
+                <a href="${doc.link}" class="btn-primary" style="padding: 6px 12px; font-size: 10px; width: auto; display: inline-block; text-decoration: none; line-height:1.2;">Download</a>
             </div>
         `).join('');
+
+        docsContainer.innerHTML = docsHtml;
     }
 }
 /**
@@ -904,6 +966,63 @@ async function loadTrainingHours(parentEmail) {
 
     if (hoursRemainingEl) {
         hoursRemainingEl.textContent = hoursData.remaining.toFixed(1);
+
+        // --- NEW: User-Specific Usage & Purchase History ---
+        const db = getDB();
+        const userRecords = db.trainingRecords ? db.trainingRecords[parentEmail] : null;
+
+        if (userRecords) {
+            // Overwrite details if user record exists
+            hoursRemainingEl.textContent = userRecords.hours.remaining.toFixed(1);
+            if (hoursPurchasedEl) hoursPurchasedEl.textContent = userRecords.hours.totalPurchased; // if element exists (might not)
+
+            // Also update the main dashboard display elements if they differ
+            if (document.getElementById('training-hours-display')) {
+                document.getElementById('training-hours-display').textContent = userRecords.hours.remaining.toFixed(1);
+            }
+            if (document.getElementById('training-utilized-display')) {
+                document.getElementById('training-utilized-display').textContent = userRecords.hours.used.toFixed(1);
+            }
+
+            // Create Log Container if not exists (Training View)
+            // Use existing container or append a new one
+            /* Assuming we are in 'training' view context or similar elements exist */
+
+            // We'll append usage logs to 'training-calendar-container' used as a placeholder or create a new div if feasible
+            // Actually, let's create a dedicated section dynamically
+            const calendarContainer = document.getElementById('training-calendar-container');
+            if (calendarContainer && !document.getElementById('user-usage-log')) {
+                const logDiv = document.createElement('div');
+                logDiv.id = 'user-usage-log';
+                logDiv.style.marginTop = '20px';
+                logDiv.innerHTML = '<h4 style="margin-bottom:10px; font-size:14px; color:#444;">Session History</h4>' + userRecords.logs.map(log => `
+                    <div style="display:flex; justify-content:space-between; padding:10px; background:#fff; border:1px solid #eee; border-radius:8px; margin-bottom:8px;">
+                        <div>
+                            <div style="font-weight:600; font-size:13px;">${log.activity}</div>
+                            <div style="font-size:11px; color:#666;">${log.date}</div>
+                        </div>
+                        <div style="font-weight:600; color:#444;">${log.time}</div>
+                    </div>
+                `).join('');
+                calendarContainer.parentNode.insertBefore(logDiv, calendarContainer.nextSibling);
+            }
+
+            // Receipts
+            const docsContainer = document.getElementById('training-documents-list');
+            if (docsContainer && userRecords.purchases) {
+                const purchaseHtml = userRecords.purchases.map(p => `
+                    <div class="doc-item" style="display:flex; align-items:center; gap:12px; padding:12px; border-bottom:1px solid #f0f0f0; background:#f9fafb;">
+                        <div style="background:#dcfce7; color:#166534; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:6px; font-size:14px; font-weight:700;">$</div>
+                        <div style="flex:1;">
+                            <div style="font-size:13px; font-weight:600;">Receipt: ${p.item}</div>
+                            <div style="font-size:11px; color:#888;">${p.date} • ${p.amount} • ${p.status}</div>
+                        </div>
+                        <a href="${p.link}" onclick="alert('Receipt View Placeholder'); return false;" style="font-size:11px; color:#2563eb; font-weight:600; text-decoration:none;">View PDF</a>
+                    </div>
+                `).join('');
+                docsContainer.insertAdjacentHTML('afterbegin', purchaseHtml);
+            }
+        }
 
         // Add warning class if low hours
         if (hoursData.remaining < 5) {

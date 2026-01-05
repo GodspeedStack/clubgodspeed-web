@@ -142,6 +142,24 @@ function initDashboard() {
         group.appendChild(details);
         list.appendChild(group);
     });
+
+    // Add Admin Section
+    const adminGroup = document.createElement('div');
+    adminGroup.className = 'sidebar-group';
+    adminGroup.style.marginTop = '2rem';
+    adminGroup.style.borderTop = '1px solid rgba(0,0,0,0.05)';
+    adminGroup.style.paddingTop = '1rem';
+
+    adminGroup.innerHTML = `
+        <div class="sidebar-title">Organization</div>
+        <div class="team-nav-item" onclick="switchTeamView('accounts', this)">
+            <div style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: #E5E5EA; border-radius: 6px; margin-right: 4px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #1c1c1e;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </div>
+            <span style="flex: 1; font-weight: 500;">Accounts</span>
+        </div>
+    `;
+    list.appendChild(adminGroup);
 }
 
 // 3. Load Roster (Table View)
@@ -744,7 +762,8 @@ window.switchTeamView = function (viewName, btnElement) {
         'analytics': document.getElementById('analytics-view'),
         'schedule': document.getElementById('schedule-view'),
         'logistics': document.getElementById('logistics-view'),
-        'postgame': document.getElementById('postgame-view')
+        'postgame': document.getElementById('postgame-view'),
+        'accounts': document.getElementById('accounts-view')
     };
 
     const buttons = {
@@ -777,7 +796,78 @@ window.switchTeamView = function (viewName, btnElement) {
         renderAdminTrips();
     } else if (viewName === 'postgame') {
         renderPostGameEntry();
+    } else if (viewName === 'accounts') {
+        document.getElementById('view-tabs').style.display = 'none';
+        document.getElementById('view-title').textContent = 'User Accounts';
+        renderCoachAccounts();
     }
+}
+
+function renderCoachAccounts() {
+    const db = getDB();
+    const container = document.getElementById('accounts-table-container');
+    const accounts = db.accounts || [];
+
+    let html = `
+        <div style="background: white; border-radius: 24px; border: 1px solid rgba(0,0,0,0.06); overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+            <div style="display: flex; padding: 14px 24px; background: rgba(249, 249, 249, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 11px; font-weight: 600; text-transform: uppercase; color: #86868b; letter-spacing: 0.05em;">
+                <div style="flex: 2;">Parent / User</div>
+                <div style="flex: 2;">Contact</div>
+                <div style="flex: 2;">Athletes</div>
+                <div style="flex: 1;">Status</div>
+                <div style="flex: 1; text-align: right;">Balance</div>
+                <div style="flex: 0 0 40px;"></div>
+            </div>
+            <div style="display: flex; flex-direction: column;">
+    `;
+
+    if (accounts.length === 0) {
+        html += `<div style="padding: 24px; text-align: center; color: #888;">No accounts found.</div>`;
+    } else {
+        accounts.forEach(acc => {
+            // Find athlete names
+            const athleteNames = (acc.athletes || []).map(id => {
+                const a = db.roster.find(r => r.athleteId === id);
+                return a ? a.name : id;
+            }).join(', ');
+
+            // Status Badge
+            let statusColor = '#34C759'; // Green
+            let statusBg = '#E8F5E9';
+            if (acc.status === 'Past Due') { statusColor = '#FF3B30'; statusBg = '#FFEBEE'; }
+            if (acc.status === 'Pending') { statusColor = '#FF9500'; statusBg = '#FFF3E0'; }
+
+            html += `
+                <div class="group" style="display: flex; align-items: center; padding: 16px 24px; border-bottom: 1px solid #f3f4f6; transition: background 0.2s;" onmouseover="this.style.background='rgba(59, 130, 246, 0.03)'" onmouseout="this.style.background='white'">
+                    <div style="flex: 2;">
+                        <div style="font-weight: 600; color: #111;">${acc.parentName}</div>
+                        <div style="font-size: 12px; color: #888;">ID: ${acc.id}</div>
+                    </div>
+                    <div style="flex: 2;">
+                        <div style="font-size: 14px; color: #333;">${acc.email}</div>
+                        <div style="font-size: 12px; color: #888;">${acc.phone}</div>
+                    </div>
+                    <div style="flex: 2; font-size: 14px; color: #111;">
+                        ${athleteNames}
+                    </div>
+                    <div style="flex: 1;">
+                        <span style="font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: ${statusBg}; color: ${statusColor}; border: 1px solid ${statusBg};">
+                            ${acc.status}
+                        </span>
+                    </div>
+                    <div style="flex: 1; text-align: right; font-weight: 600; font-family: monospace; font-size: 14px;">
+                        ${acc.balance || '$0.00'}
+                    </div>
+                    <div style="flex: 0 0 40px; text-align: right; color: #ccc;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    html += `</div></div>`;
+    container.innerHTML = html;
 }
 
 function renderPostGameEntry() {

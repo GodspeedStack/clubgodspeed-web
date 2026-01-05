@@ -4,7 +4,7 @@
 const GODSPEED_DATA = {
     // 1. Teams Configuration (Preserved)
     teams: [
-        { id: 'TEAM-10U-DEV-BLACK', name: '10U Development Black', category: '10U Development', coach: 'Coach Sarah' }
+        { id: 'TEAM-10U-DEV-BLACK', name: '10U Development Black', category: '10U Development', coach: 'Coach Scott' }
     ],
 
     // 2. The Roster (Live Snapshot: Finalized 12-Man Squad)
@@ -14,7 +14,7 @@ const GODSPEED_DATA = {
         { athleteId: "p3", teamId: 'TEAM-10U-DEV-BLACK', name: "Cassius", initials: "C", tier: "Rotation/Starter", avg_grade: 8.20, trend: "Steady", notes: "IQ/Spacing needs work" },
         { athleteId: "p4", teamId: 'TEAM-10U-DEV-BLACK', name: "A.D.", initials: "AD", tier: "Rotation/Starter", avg_grade: 8.00, trend: "Steady", notes: "Needs coachability" },
         { athleteId: "p5", teamId: 'TEAM-10U-DEV-BLACK', name: "Howard", initials: "H", tier: "Rotation/Starter", avg_grade: 8.86, trend: "Up", notes: "Defensive Anchor" },
-        { athleteId: "p6", teamId: 'TEAM-10U-DEV-BLACK', name: "Anton", initials: "A", tier: "Rotation/Starter", avg_grade: 8.35, trend: "New", notes: "Plays under control" },
+        { athleteId: "p6", teamId: 'TEAM-10U-DEV-BLACK', name: "Anton", initials: "A", tier: "Rotation/Starter", avg_grade: 8.35, trend: "New", notes: "Plays under control", parentId: "denis@gmail.com" },
         { athleteId: "p11", teamId: 'TEAM-10U-DEV-BLACK', name: "Oliver", initials: "O", tier: "Rotation/Starter", avg_grade: 8.12, trend: "Rocket", notes: "Huge jump in Practice 8" }, // PROMOTED
         { athleteId: "p7", teamId: 'TEAM-10U-DEV-BLACK', name: "Emory", initials: "E", tier: "Development", avg_grade: 7.30, trend: "Steady", notes: "Lackluster closeouts" },
         {
@@ -115,19 +115,48 @@ const GODSPEED_DATA = {
             expiryDate: "2026-12-31" // Valid for year
         },
         programs: [
-            { id: "prog_1", name: "Elite Guard Academy", status: "Active", schedule: "Mon/Wed 6pm", coach: "Coach Mike" },
-            { id: "prog_2", name: "Shooting Lab", status: "Completed", schedule: "Sat 9am", coach: "Coach Sarah" }
+            { id: "prog_1", name: "Elite Guard Academy", type: "1v1 Training", status: "Active", schedule: "Mon 6pm", coach: "Coach Mike", description: "Designed for guards who depend on skill, IQ, and movement not height.", focus: ["Footwork and separation", "Advanced finishing", "Shot creation"] }
         ],
         upcomingSessions: [
             { id: "sess_101", date: "2026-01-05", time: "18:00", program: "Elite Guard Academy", location: "Main Court", topic: "Pick & Roll Reads" },
-            { id: "sess_102", date: "2026-01-07", time: "18:00", program: "Elite Guard Academy", location: "Main Court", topic: "Finishing vs Contact" },
+            { id: "sess_104", date: "2026-01-10", time: "10:00", program: "Elite Guard Academy", location: "Main Court", topic: "Tentative Session", status: "Tentative" },
             { id: "sess_103", date: "2026-01-12", time: "18:00", program: "Elite Guard Academy", location: "Main Court", topic: "Mid-Range Scoring" }
         ],
         documents: [
             { id: "doc_1", title: "Guard Academy Syllabus", date: "2025-01-01", type: "PDF", link: "#" },
             { id: "doc_2", title: "Nutrition Guide V2", date: "2024-12-15", type: "PDF", link: "#" }
         ]
+    },
+
+    // 8. Admin Accounts (New for Admin View)
+    accounts: [
+        { id: "acc_1", parentName: "James Parent", email: "jewellsco@gmail.com", phone: "(555) 123-4567", athletes: ["p1", "p2"], status: "Active", balance: "$0.00" },
+        { id: "acc_2", parentName: "Sarah Smith", email: "sarah.s@example.com", phone: "(555) 987-6543", athletes: ["p3"], status: "Past Due", balance: "$250.00" },
+        { id: "acc_3", parentName: "Mike Jones", email: "mike.j@example.com", phone: "(555) 555-5555", athletes: ["p4", "p5"], status: "Active", balance: "$0.00" },
+        { id: "acc_4", parentName: "Lisa Johnson", email: "lisa.j@example.com", phone: "(555) 111-2222", athletes: ["p6"], status: "Active", balance: "$0.00" },
+        { id: "acc_5", parentName: "David Brown", email: "david.b@example.com", phone: "(555) 333-4444", athletes: ["p11"], status: "Pending", balance: "$0.00" },
+        { id: "acc_6", parentName: "Denis (Anton's Dad)", email: "denis@gmail.com", phone: "(555) 666-7777", athletes: ["p6"], status: "Active", balance: "$0.00" }
+    ]
+};,
+
+// 9. Training Records (User Specific - New)
+trainingRecords: {
+    "denis@gmail.com": {
+        hours: {
+            totalPurchased: 10,
+                used: 3.0,
+                    remaining: 7.0,
+                        expiryDate: "2026-12-31"
+        },
+        logs: [
+            { date: "2026-01-04", time: "1 Hour", activity: "Shooting Gun", notes: "Self-guided session" },
+            { date: "2026-01-03", time: "2 Hours", activity: "1v1 Training", notes: "Focus on ball handling" }
+        ],
+            purchases: [
+                { id: "rcpt_001", date: "2026-01-01", item: "10 Hour Training Package", amount: "$850.00", status: "Paid", link: "#" }
+            ]
     }
+}
 };
 
 // Database Initialization & Sync
