@@ -826,7 +826,9 @@ window.submitGearOrder = function () {
     btn.style.background = '#34C759'; // Success Green
     btn.disabled = true;
 
-    alert(`Order for ${email} has been submitted to the team admin.`);
+    // Sanitize email before displaying in alert
+    const safeEmail = escapeHTML(email || '');
+    alert(`Order for ${safeEmail} has been submitted to the team admin.`);
 
     setTimeout(() => {
         btn.innerText = originalText;
@@ -891,15 +893,20 @@ async function renderTrainingDashboard() {
                 const badgeColor = isTentative ? '#d97706' : '#0284c7';
                 const badgeBg = isTentative ? '#fef3c7' : '#e0f2fe';
                 const badgeText = isTentative ? 'Tentative' : 'Scheduled';
+                // Sanitize session data
+                const safeDate = escapeHTML(new Date(sess.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }));
+                const safeTime = escapeHTML(sess.time || '');
+                const safeProgram = escapeHTML(sess.program || '');
+                const safeTopic = escapeHTML(sess.topic || '');
 
                 return `
                 <div class="session-card" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#f9fafb; border-radius:8px; margin-bottom:8px; border:1px solid #eee;">
                     <div>
-                        <div style="font-weight:700; color:#111; font-size:14px;">${new Date(sess.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} @ ${sess.time}</div>
-                        <div style="font-size:12px; color:#666;">${sess.program} • ${sess.topic}</div>
+                        <div style="font-weight:700; color:#111; font-size:14px;">${safeDate} @ ${safeTime}</div>
+                        <div style="font-size:12px; color:#666;">${safeProgram} • ${safeTopic}</div>
                     </div>
                     <div style="text-align:right;">
-                        <span style="font-size:11px; padding:4px 8px; background:${badgeBg}; color:${badgeColor}; border-radius:12px; font-weight:600;">${badgeText}</span>
+                        <span style="font-size:11px; padding:4px 8px; background:${badgeBg}; color:${badgeColor}; border-radius:12px; font-weight:600;">${escapeHTML(badgeText)}</span>
                     </div>
                 </div>
             `}).join('');
@@ -908,15 +915,23 @@ async function renderTrainingDashboard() {
         // B. Past Usage Logs (User Specific)
         if (userRecord && userRecord.logs && userRecord.logs.length > 0) {
             content += `<h4 style="margin: 24px 0 12px 0; font-size: 14px; color: #444; font-weight: 600; text-transform:uppercase; letter-spacing:0.5px;">Session History</h4>`;
-            content += userRecord.logs.map(log => `
+            content += userRecord.logs.map(log => {
+                // Sanitize log data
+                const safeActivity = escapeHTML(log.activity || '');
+                const safeDate = escapeHTML(new Date(log.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }));
+                const safeNotes = escapeHTML(log.notes || '');
+                const safeTime = escapeHTML(log.time || '');
+                
+                return `
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#fff; border-radius:8px; margin-bottom:8px; border:1px solid #eee;">
                      <div>
-                        <div style="font-weight:600; color:#111; font-size:13px;">${log.activity}</div>
-                        <div style="font-size:11px; color:#666;">${new Date(log.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} • ${log.notes}</div>
+                        <div style="font-weight:600; color:#111; font-size:13px;">${safeActivity}</div>
+                        <div style="font-size:11px; color:#666;">${safeDate} • ${safeNotes}</div>
                     </div>
-                    <div style="font-weight:700; color:#444; font-size:13px;">-${log.time}</div>
+                    <div style="font-weight:700; color:#444; font-size:13px;">-${safeTime}</div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         calendarContainer.innerHTML = content;
