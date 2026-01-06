@@ -497,6 +497,7 @@
     <script src="schedule-data.js"></script>
     <script>
         // RENDER GAMES
+        // RENDER GAMES
         const gameContainer = document.getElementById('schedule-body');
         // Sort by date (optional, but good for mixed data)
         // gameSchedule.sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -511,20 +512,35 @@
                 statusBadge = `<span class="text-gray-400 italic text-xs">${game.status}</span>`;
             }
 
+            // MVP Badge Logic
+            let mvpBadge = '';
+            if (game.mvp) {
+                mvpBadge = `<div class="mt-1 text-[10px] font-bold text-blue-600 bg-blue-50 inline-block px-1.5 py-0.5 rounded border border-blue-100">🏆 MVP: ${game.mvp}</div>`;
+            }
+
+            // Championship Tag Logic
+            let typeDisplay = `<div class="text-xs text-gray-500">${game.time}</div>`;
+            if (game.type === 'Championship') {
+                typeDisplay += `<div class="mt-1 text-[10px] font-bold text-yellow-600 bg-yellow-50 inline-block px-1.5 py-0.5 rounded border border-yellow-200">🏆 CHAMPIONSHIP</div>`;
+            }
+
             // Team Badge
             const teamBadgeColor = game.team.includes('5th') ? 'bg-black text-white' : 'bg-gray-200 text-gray-800';
 
             gameContainer.innerHTML += `
             <tr class="hover:bg-blue-50 transition border-b border-gray-50 last:border-0">
-                <td class="p-4">
+                <td class="p-4 align-top">
                     <div class="font-bold text-black text-sm">${game.date}</div>
-                    <div class="text-xs text-gray-500">${game.time}</div>
+                    ${typeDisplay}
                 </td>
-                <td class="p-4">
-                    <span class="${teamBadgeColor} px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide mr-2">${game.team}</span>
-                    <span class="font-medium text-gray-800 text-sm">${game.opponent}</span>
+                <td class="p-4 align-top">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="${teamBadgeColor} px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide">${game.team}</span>
+                    </div>
+                    <span class="font-medium text-gray-800 text-sm block">${game.opponent}</span>
+                    ${mvpBadge}
                 </td>
-                <td class="p-4 text-right">
+                <td class="p-4 text-right align-top">
                     ${statusBadge}
                 </td>
             </tr>
