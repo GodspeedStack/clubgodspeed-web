@@ -1096,7 +1096,12 @@ ul {
    Navbar Layout Consistency
    =========================== */
 /* Enforce consistent padding and sizing across all pages */
+/* Enforce consistent padding and sizing across all pages */
 .navbar {
+    display: flex; /* Ensure flex layout */
+    justify-content: space-between; /* Push Logo and Nav to edges */
+    align-items: center; /* Vertically align */
+    gap: 3rem; /* Minimum 3rem separation between Logo and Nav */
     padding: 30px 48px !important;
     /* Matches premium Coach Portal standard per user request */
     min-height: 100px;
@@ -1107,6 +1112,14 @@ ul {
 .navbar .logo {
     display: flex;
     align-items: center;
+}
+
+/* Enforce CTA Typography in Navbar */
+.navbar .btn-primary {
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em; /* Optional: adds polish */
 }
 
 /* ===========================
