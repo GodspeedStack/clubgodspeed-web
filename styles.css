@@ -1004,3 +1004,96 @@ ul {
         padding: 4rem 1.5rem;
     }
 }
+
+/* ===========================
+   Restored Login Dropdown 
+   =========================== */
+.nav-login-wrapper {
+    position: relative;
+    padding: 10px 0; /* Increase hit area */
+}
+
+.login-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 240px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    padding: 8px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px) scale(0.98);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 10000;
+    margin-top: 10px; /* Gap from nav */
+}
+
+/* Show State */
+.nav-login-wrapper:hover .login-dropdown,
+.login-dropdown:hover {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+
+.login-dropdown::before {
+    /* Triangle */
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 14px;
+    width: 12px;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.95);
+    transform: rotate(45deg);
+    border-top: 1px solid rgba(0,0,0,0.05);
+    border-left: 1px solid rgba(0,0,0,0.05);
+    border-radius: 2px;
+}
+
+.login-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1d1d1f;
+    text-decoration: none;
+    border-radius: 10px;
+    transition: background 0.15s ease;
+    margin-bottom: 2px;
+}
+
+.login-option:hover {
+    background: #f5f5f7;
+    color: #0071e3;
+}
+
+.login-option svg {
+    margin-right: 10px;
+}
+
+.login-arrow {
+    color: #86868b;
+    font-size: 16px;
+}
+
+/* ===========================
+   Navbar Layout Consistency
+   =========================== */
+/* Enforce consistent padding and sizing across all pages */
+.navbar {
+    padding: 30px 48px !important; /* Matches premium Coach Portal standard per user request */
+    min-height: 100px; /* Ensure visual height consistency */
+}
+
+/* Ensure logo positioning matches */
+.navbar .logo {
+    display: flex;
+    align-items: center;
+}

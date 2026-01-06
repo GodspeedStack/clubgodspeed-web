@@ -116,7 +116,7 @@
             display: flex;
             height: 100vh;
             width: 100vw;
-            padding-top: 90px;
+            padding-top: 110px;
             /* Prevent navbar overlap */
         }
 
@@ -1008,6 +1008,24 @@
         .video-coach {
             font-size: 0.85rem;
             color: #666;
+        }
+
+        /* Navbar Override */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 30px 48px;
+            /* Increased padding per user request */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(245, 245, 247, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 2000;
+            /* Above sidebar */
         }
     </style>
     <link rel="stylesheet" href="mobile-fixes.css">

@@ -24,9 +24,14 @@ window.handleCoachLogin = function () {
     const code = codeInput ? codeInput.value.trim() : '';
 
     // Secure Access Check
-    // In production, this should be server-side validation. 
-    // For this prototype, we use a shared team code.
-    if (code !== 'G0DSP33D_EL1T3!') {
+    // In production, this should be server-side validation.
+    let role = null;
+
+    if (code === 'G0DSP33D_ADMIN!') {
+        role = 'admin';
+    } else if (code === 'G0DSP33D_EL1T3!') {
+        role = 'coach';
+    } else {
         alert("Access Denied. Invalid Code.");
         if (codeInput) {
             codeInput.value = '';
@@ -34,6 +39,9 @@ window.handleCoachLogin = function () {
         }
         return;
     }
+
+    // Store Role
+    localStorage.setItem('gba_user_role', role);
 
     const loginView = document.getElementById('coach-login');
     const dashboardView = document.getElementById('coach-dashboard');
@@ -48,16 +56,16 @@ window.handleCoachLogin = function () {
 }
 
 function logoutCoach() {
+    localStorage.removeItem('gba_user_role');
     document.getElementById('coach-dashboard').style.display = 'none';
     document.getElementById('coach-login').style.display = 'flex';
 }
 
 // 2. Dashboard Init
-// 2. Dashboard Init
-// 2. Dashboard Init
 function initDashboard() {
     const db = getDB(); // From portal-data.js
     const list = document.getElementById('team-list');
+    const userRole = localStorage.getItem('gba_user_role') || 'coach';
     list.innerHTML = '';
 
     // Group teams by category
@@ -143,23 +151,25 @@ function initDashboard() {
         list.appendChild(group);
     });
 
-    // Add Admin Section
-    const adminGroup = document.createElement('div');
-    adminGroup.className = 'sidebar-group';
-    adminGroup.style.marginTop = '2rem';
-    adminGroup.style.borderTop = '1px solid rgba(0,0,0,0.05)';
-    adminGroup.style.paddingTop = '1rem';
+    // Add Admin Section (RBAC: Admin Only)
+    if (userRole === 'admin') {
+        const adminGroup = document.createElement('div');
+        adminGroup.className = 'sidebar-group';
+        adminGroup.style.marginTop = '2rem';
+        adminGroup.style.borderTop = '1px solid rgba(0,0,0,0.05)';
+        adminGroup.style.paddingTop = '1rem';
 
-    adminGroup.innerHTML = `
-        <div class="sidebar-title">Organization</div>
-        <div class="team-nav-item" onclick="switchTeamView('accounts', this)">
-            <div style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: #E5E5EA; border-radius: 6px; margin-right: 4px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #1c1c1e;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        adminGroup.innerHTML = `
+            <div class="sidebar-title">Organization</div>
+            <div class="team-nav-item" onclick="switchTeamView('accounts', this)">
+                <div style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: #E5E5EA; border-radius: 6px; margin-right: 4px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #1c1c1e;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                </div>
+                <span style="flex: 1; font-weight: 500;">Accounts</span>
             </div>
-            <span style="flex: 1; font-weight: 500;">Accounts</span>
-        </div>
-    `;
-    list.appendChild(adminGroup);
+        `;
+        list.appendChild(adminGroup);
+    }
 }
 
 // 3. Load Roster (Table View)
@@ -1105,7 +1115,13 @@ function openAnalyticsPage() {
             renderArchitectDashboard(view, db.gameAnalysis);
         } catch (e) {
             console.error('CRASH RENDER ARCHITECT:', e);
-            view.innerHTML = `<h3>Error Loading Architect Mode</h3><pre>${e.message}</pre>`;
+            // Sanitize error message to prevent XSS
+            const safeMessage = typeof e.message === 'string' ? 
+                e.message.replace(/[&<>"']/g, m => {
+                    const map = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'};
+                    return map[m];
+                }) : 'An error occurred';
+            view.innerHTML = `<h3>Error Loading Architect Mode</h3><pre>${safeMessage}</pre>`;
         }
     } else {
         console.log('Rendering Legacy Analytics...');

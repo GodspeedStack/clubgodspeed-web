@@ -3,6 +3,37 @@
  * Handles Waiver Signing (Canvas), Navigation (V3 Side Panel), and Authentication.
  */
 
+// Security utility functions
+function escapeHTML(str) {
+    if (typeof str !== 'string') return '';
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return str.replace(/[&<>"']/g, m => map[m]);
+}
+
+function validateURL(url) {
+    if (typeof url !== 'string') return null;
+    const trimmed = url.trim();
+    if (trimmed.toLowerCase().startsWith('javascript:') || 
+        trimmed.toLowerCase().startsWith('data:')) {
+        return null;
+    }
+    if (trimmed.startsWith('http://') || 
+        trimmed.startsWith('https://') || 
+        trimmed.startsWith('mailto:') || 
+        trimmed.startsWith('tel:') || 
+        trimmed.startsWith('/') || 
+        trimmed.startsWith('#')) {
+        return escapeHTML(trimmed);
+    }
+    return null;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     initSignaturePad();
     initPortalNav();
@@ -41,14 +72,36 @@ document.addEventListener('DOMContentLoaded', () => {
 // --- Authentication Logic ---
 
 async function handleLogin() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const email = emailInput ? emailInput.value.trim() : '';
+    const password = passwordInput ? passwordInput.value : '';
     const btn = document.querySelector('.login-form button[type="submit"]');
     const errorMsg = document.querySelector('.login-error');
 
+    // Input validation
     if (!email || !password) {
         if (errorMsg) {
             errorMsg.textContent = 'Please enter both email and password';
+            errorMsg.style.display = 'block';
+        }
+        return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        if (errorMsg) {
+            errorMsg.textContent = 'Please enter a valid email address';
+            errorMsg.style.display = 'block';
+        }
+        return;
+    }
+
+    // Basic password validation (minimum length)
+    if (password.length < 6) {
+        if (errorMsg) {
+            errorMsg.textContent = 'Password must be at least 6 characters';
             errorMsg.style.display = 'block';
         }
         return;
@@ -242,30 +295,38 @@ function renderParentTrips() {
         card.style.padding = '24px';
         card.style.boxShadow = '0 2px 10px rgba(0,0,0,0.05)';
 
+        // Sanitize user data to prevent XSS
+        const safeName = escapeHTML(trip.name || '');
+        const safeStart = escapeHTML(trip.start || 'TBD');
+        const safeEnd = escapeHTML(trip.end || 'TBD');
+        const safeFee = escapeHTML(String(trip.fee || '0'));
+        const safeLocation = escapeHTML(trip.location || 'Details pending...');
+        const safePaymentLink = validateURL(trip.paymentLink) || '#';
+        
         card.innerHTML = `
-            <h3 style="font-size: 18px; margin-bottom: 16px;">${trip.name}</h3>
+            <h3 style="font-size: 18px; margin-bottom: 16px;">${safeName}</h3>
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
                 <div style="background: #eef2ff; padding: 12px; border-radius: 8px;">
                     <div style="font-size: 0.8rem; color: #0071e3; font-weight: 600; margin-bottom: 4px;">DATES</div>
-                    <div style="font-weight: 500;">${trip.start || 'TBD'} - ${trip.end || 'TBD'}</div>
+                    <div style="font-weight: 500;">${safeStart} - ${safeEnd}</div>
                 </div>
                 <div style="background: #eef2ff; padding: 12px; border-radius: 8px;">
                      <div style="font-size: 0.8rem; color: #0071e3; font-weight: 600; margin-bottom: 4px;">TUITION</div>
-                    <div style="font-weight: 500;">$${trip.fee || '0'}</div>
+                    <div style="font-weight: 500;">$${safeFee}</div>
                 </div>
             </div>
             
             <div style="margin-bottom: 20px;">
                 <div style="font-weight: 600; margin-bottom: 8px;">Location & Details</div>
-                <p style="font-size: 0.9rem; color: #666; margin-bottom: 12px; white-space: pre-wrap; line-height: 1.5;">${trip.location || 'Details pending...'}</p>
+                <p style="font-size: 0.9rem; color: #666; margin-bottom: 12px; white-space: pre-wrap; line-height: 1.5;">${safeLocation}</p>
             </div>
             
             ${canPay ? `
             <div style="border-top: 1px solid #eee; padding-top: 16px;">
-                 <a href="${trip.paymentLink}" target="_blank" class="btn-primary" 
+                 <a href="${safePaymentLink}" target="_blank" class="btn-primary" 
                     style="display:block; text-align:center; text-decoration:none; background:#0071e3; color:white; padding:12px; border-radius:8px; width:100%; font-weight:600;">
-                    Pay Tuition ($${trip.fee})
+                    Pay Tuition ($${safeFee})
                  </a>
             </div>
             ` : ''}
@@ -863,32 +924,44 @@ async function renderTrainingDashboard() {
     // 3. Active Programs
     const programsList = document.getElementById('skills-programs-list');
     if (programsList) {
-        programsList.innerHTML = data.programs.map(prog => `
+        programsList.innerHTML = data.programs.map(prog => {
+            // Sanitize all program data
+            const safeName = escapeHTML(prog.name || '');
+            const safeStatus = escapeHTML(prog.status || '');
+            const safeType = escapeHTML(prog.type || 'Program');
+            const safeDescription = prog.description ? escapeHTML(prog.description) : '';
+            const safeSchedule = escapeHTML(prog.schedule || '');
+            const safeCoach = escapeHTML(prog.coach || '');
+            const isActive = prog.status === 'Active';
+            const safeFocus = prog.focus ? prog.focus.map(f => escapeHTML(f)) : [];
+            
+            return `
             <div class="program-card" style="padding:16px; border:1px solid #eee; border-radius:10px; margin-bottom:12px; background:white; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
                 <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                    <div style="font-weight:700; font-size:15px;">${prog.name}</div>
-                    <span class="badge ${prog.status === 'Active' ? 'badge-active' : 'badge-inactive'}" 
-                          style="font-size:10px; padding:2px 8px; border-radius:10px; background:${prog.status === 'Active' ? '#dcfce7' : '#f3f4f6'}; color:${prog.status === 'Active' ? '#166534' : '#6b7280'}; text-transform:uppercase; font-weight:700;">
-                        ${prog.status}
+                    <div style="font-weight:700; font-size:15px;">${safeName}</div>
+                    <span class="badge ${isActive ? 'badge-active' : 'badge-inactive'}" 
+                          style="font-size:10px; padding:2px 8px; border-radius:10px; background:${isActive ? '#dcfce7' : '#f3f4f6'}; color:${isActive ? '#166534' : '#6b7280'}; text-transform:uppercase; font-weight:700;">
+                        ${safeStatus}
                     </span>
                 </div>
                 
-                <div style="font-size:11px; color:#666; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">${prog.type || 'Program'}</div>
+                <div style="font-size:11px; color:#666; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">${safeType}</div>
 
-                ${prog.description ? `<div style="font-size:13px; color:#444; margin-bottom:12px; line-height:1.4;">${prog.description}</div>` : ''}
+                ${safeDescription ? `<div style="font-size:13px; color:#444; margin-bottom:12px; line-height:1.4;">${safeDescription}</div>` : ''}
 
-                ${prog.focus ? `
+                ${safeFocus.length > 0 ? `
                 <div style="margin-bottom:12px; display:flex; flex-wrap:wrap; gap:6px;">
-                    ${prog.focus.map(f => `<span style="font-size:11px; background:#f0f9ff; color:#0369a1; padding:2px 8px; border-radius:4px; font-weight:500;">${f}</span>`).join('')}
+                    ${safeFocus.map(f => `<span style="font-size:11px; background:#f0f9ff; color:#0369a1; padding:2px 8px; border-radius:4px; font-weight:500;">${f}</span>`).join('')}
                 </div>
                 ` : ''}
 
                 <div style="font-size:12px; color:#888; display:flex; gap:12px; padding-top:12px; border-top:1px solid #f9fafb;">
-                    <span>📅 ${prog.schedule}</span>
-                    <span>👤 ${prog.coach}</span>
+                    <span>📅 ${safeSchedule}</span>
+                    <span>👤 ${safeCoach}</span>
                 </div>
             </div>
-        `).join('');
+        `;
+        }).join('');
     }
 
     // 4. Documents
@@ -898,29 +971,45 @@ async function renderTrainingDashboard() {
 
         // A. Receipts (User Specific)
         if (userRecord && userRecord.purchases) {
-            docsHtml += userRecord.purchases.map(p => `
+            docsHtml += userRecord.purchases.map(p => {
+                // Sanitize purchase data
+                const safeItem = escapeHTML(p.item || '');
+                const safeDate = escapeHTML(p.date || '');
+                const safeAmount = escapeHTML(p.amount || '');
+                const safeStatus = escapeHTML(p.status || '');
+                const safeEmail = escapeHTML(parentEmail || '');
+                
+                return `
                 <div class="doc-item" style="display:flex; align-items:center; gap:12px; padding:12px; border-bottom:1px solid #f0f0f0; background:#f0fdf4;">
                     <div style="background:#166534; color:#fff; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:6px; font-size:14px; font-weight:700;">$</div>
                     <div style="flex:1;">
-                        <div style="font-size:13px; font-weight:600;">Receipt: ${p.item}</div>
-                        <div style="font-size:11px; color:#166534;">${p.date} • ${p.amount} • ${p.status}</div>
+                        <div style="font-size:13px; font-weight:600;">Receipt: ${safeItem}</div>
+                        <div style="font-size:11px; color:#166534;">${safeDate} • ${safeAmount} • ${safeStatus}</div>
                     </div>
-                    <button onclick="viewTrainingStatement('${parentEmail}')" class="btn-primary" style="padding: 6px 12px; font-size: 10px; width: auto; display: inline-block; text-decoration: none; line-height:1.2; border:none; cursor:pointer;">View Receipt</button>
+                    <button onclick="viewTrainingStatement('${safeEmail}')" class="btn-primary" style="padding: 6px 12px; font-size: 10px; width: auto; display: inline-block; text-decoration: none; line-height:1.2; border:none; cursor:pointer;">View Receipt</button>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         // B. Standard Docs
-        docsHtml += data.documents.map(doc => `
+        docsHtml += data.documents.map(doc => {
+            // Sanitize document data
+            const safeTitle = escapeHTML(doc.title || '');
+            const safeDate = escapeHTML(doc.date || '');
+            const safeLink = validateURL(doc.link) || '#';
+            
+            return `
             <div class="doc-item" style="display:flex; align-items:center; gap:12px; padding:12px; border-bottom:1px solid #f0f0f0;">
                 <div style="background:#fee2e2; color:#991b1b; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:6px; font-size:10px; font-weight:700;">PDF</div>
                 <div style="flex:1;">
-                    <div style="font-size:13px; font-weight:600;">${doc.title}</div>
-                    <div style="font-size:11px; color:#888;">Added ${doc.date}</div>
+                    <div style="font-size:13px; font-weight:600;">${safeTitle}</div>
+                    <div style="font-size:11px; color:#888;">Added ${safeDate}</div>
                 </div>
-                <a href="${doc.link}" class="btn-primary" style="padding: 6px 12px; font-size: 10px; width: auto; display: inline-block; text-decoration: none; line-height:1.2;">Download</a>
+                <a href="${safeLink}" class="btn-primary" style="padding: 6px 12px; font-size: 10px; width: auto; display: inline-block; text-decoration: none; line-height:1.2;">Download</a>
             </div>
-        `).join('');
+        `;
+        }).join('');
 
         docsContainer.innerHTML = docsHtml;
     }
@@ -1009,15 +1098,21 @@ async function loadTrainingHours(parentEmail) {
                 const logDiv = document.createElement('div');
                 logDiv.id = 'user-usage-log';
                 logDiv.style.marginTop = '20px';
-                logDiv.innerHTML = '<h4 style="margin-bottom:10px; font-size:14px; color:#444;">Session History</h4>' + userRecords.logs.map(log => `
+                const safeLogs = userRecords.logs.map(log => {
+                    const safeActivity = escapeHTML(log.activity || '');
+                    const safeDate = escapeHTML(log.date || '');
+                    const safeTime = escapeHTML(log.time || '');
+                    return `
                     <div style="display:flex; justify-content:space-between; padding:10px; background:#fff; border:1px solid #eee; border-radius:8px; margin-bottom:8px;">
                         <div>
-                            <div style="font-weight:600; font-size:13px;">${log.activity}</div>
-                            <div style="font-size:11px; color:#666;">${log.date}</div>
+                            <div style="font-weight:600; font-size:13px;">${safeActivity}</div>
+                            <div style="font-size:11px; color:#666;">${safeDate}</div>
                         </div>
-                        <div style="font-weight:600; color:#444;">${log.time}</div>
+                        <div style="font-weight:600; color:#444;">${safeTime}</div>
                     </div>
-                `).join('');
+                `;
+                }).join('');
+                logDiv.innerHTML = '<h4 style="margin-bottom:10px; font-size:14px; color:#444;">Session History</h4>' + safeLogs;
                 calendarContainer.parentNode.insertBefore(logDiv, calendarContainer.nextSibling);
             }
 
