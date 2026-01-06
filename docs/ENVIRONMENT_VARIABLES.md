@@ -79,6 +79,9 @@ VITE_SUPABASE_ANON_KEY=your-anon-key-here
 
 # Resend Email Configuration
 VITE_RESEND_API_KEY=re_your_api_key_here
+
+# Snipcart E-commerce Configuration (Optional - for store functionality)
+SNIPCART_API_KEY=your_snipcart_api_key_here
 ```
 
 ---
