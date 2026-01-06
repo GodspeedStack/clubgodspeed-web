@@ -68,6 +68,7 @@ textarea:focus-visible {
 
 /* Touch Optimization: Hide hover states on touch devices */
 @media (hover: hover) {
+
     /* Hover effects only on devices that support hover */
     a:hover,
     button:hover {
@@ -76,14 +77,16 @@ textarea:focus-visible {
 }
 
 @media (hover: none) {
+
     /* Remove hover effects on touch devices to prevent flickering */
     a:hover,
     button:hover {
         /* No hover styles on touch */
     }
-    
+
     /* Ensure touch targets are large enough */
-    a, button {
+    a,
+    button {
         min-height: 44px;
         min-width: 44px;
         display: inline-flex;
@@ -96,14 +99,17 @@ textarea:focus-visible {
 input,
 textarea,
 select {
-    font-size: 16px; /* Minimum 16px to prevent iOS zoom */
+    font-size: 16px;
+    /* Minimum 16px to prevent iOS zoom */
 }
 
 @media screen and (max-width: 768px) {
+
     input,
     textarea,
     select {
-        font-size: 16px !important; /* Force 16px on mobile */
+        font-size: 16px !important;
+        /* Force 16px on mobile */
     }
 }
 
@@ -820,6 +826,7 @@ ul {
         grid-template-columns: 1fr;
     }
 }
+
 /* ===========================
    Dark Mode Additions
    =========================== */
@@ -959,7 +966,7 @@ ul {
     transition: all 0.2s ease;
 }
 
-.program-option input:checked + .program-pill {
+.program-option input:checked+.program-pill {
     background-color: var(--brand-blue);
     border-color: var(--brand-blue);
     color: #fff;
@@ -994,12 +1001,12 @@ ul {
     .nike-title {
         font-size: 3rem;
     }
-    
+
     .form-row {
         grid-template-columns: 1fr;
         gap: 1rem;
     }
-    
+
     .nike-section {
         padding: 4rem 1.5rem;
     }
@@ -1010,7 +1017,8 @@ ul {
    =========================== */
 .nav-login-wrapper {
     position: relative;
-    padding: 10px 0; /* Increase hit area */
+    padding: 10px 0;
+    /* Increase hit area */
 }
 
 .login-dropdown {
@@ -1029,7 +1037,8 @@ ul {
     transform: translateY(10px) scale(0.98);
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 10000;
-    margin-top: 10px; /* Gap from nav */
+    margin-top: 10px;
+    /* Gap from nav */
 }
 
 /* Show State */
@@ -1050,8 +1059,8 @@ ul {
     height: 12px;
     background: rgba(255, 255, 255, 0.95);
     transform: rotate(45deg);
-    border-top: 1px solid rgba(0,0,0,0.05);
-    border-left: 1px solid rgba(0,0,0,0.05);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    border-left: 1px solid rgba(0, 0, 0, 0.05);
     border-radius: 2px;
 }
 
@@ -1088,12 +1097,45 @@ ul {
    =========================== */
 /* Enforce consistent padding and sizing across all pages */
 .navbar {
-    padding: 30px 48px !important; /* Matches premium Coach Portal standard per user request */
-    min-height: 100px; /* Ensure visual height consistency */
+    padding: 30px 48px !important;
+    /* Matches premium Coach Portal standard per user request */
+    min-height: 100px;
+    /* Ensure visual height consistency */
 }
 
 /* Ensure logo positioning matches */
 .navbar .logo {
     display: flex;
     align-items: center;
+}
+
+/* ===========================
+   Floating Navigation Icons (iOS Minimalist)
+   =========================== */
+.nav-cart-btn {
+    width: 44px;
+    /* Standard touch target */
+    height: 44px;
+    border-radius: 50%;
+    background: transparent;
+    /* Clean default state */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    color: #1d1d1f !important;
+}
+
+.nav-cart-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    /* Subtle interaction state */
+    transform: scale(1.05);
+}
+
+/* Ensure icons inside are centered and crisp */
+.nav-cart-btn svg {
+    width: 24px;
+    /* Slightly larger for better visibility without bg */
+    height: 24px;
+    stroke-width: 1.5;
 }
