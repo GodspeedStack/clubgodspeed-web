@@ -1,86 +1,38 @@
-const seasonSchedule = [
-    {
-        date: "Saturday, Jan 10, 2026",
-        time: "8:00 AM",
-        opponent: "CDA 5th Green",
-        location: "Home",
-        status: "Upcoming"
-    },
-    {
-        date: "Saturday, Jan 10, 2026",
-        time: "9:00 AM",
-        opponent: "CO Premier U11 Boys Macaluso",
-        location: "Home",
-        status: "Upcoming"
-    },
-    {
-        date: "Wednesday, Jan 14, 2026",
-        time: "6:30 PM",
-        opponent: "Bureau 5th Mike",
-        location: "Visitor",
-        status: "Upcoming"
-    },
-    {
-        date: "Wednesday, Jan 14, 2026",
-        time: "8:30 PM",
-        opponent: "B&B Black",
-        location: "Visitor",
-        status: "Upcoming"
-    },
-    {
-        date: "Wednesday, Jan 21, 2026",
-        time: "5:30 PM",
-        opponent: "State 38 11U Boys Black",
-        location: "Home",
-        status: "Upcoming"
-    },
-    {
-        date: "Wednesday, Jan 21, 2026",
-        time: "6:30 PM",
-        opponent: "Tru Colorado-Proctor 5th",
-        location: "Home",
-        status: "Upcoming"
-    },
-    {
-        date: "Saturday, Jan 31, 2026",
-        time: "7:00 PM",
-        opponent: "Co. Mountain Stars",
-        location: "Visitor",
-        status: "Upcoming"
-    },
-    {
-        date: "Saturday, Jan 31, 2026",
-        time: "8:00 PM",
-        opponent: "Elevation Flyers",
-        location: "Visitor",
-        status: "Upcoming"
-    },
-    {
-        date: "Wednesday, Feb 4, 2026",
-        time: "6:30 PM",
-        opponent: "CDA 5th Green",
-        location: "Visitor",
-        status: "Upcoming"
-    },
-    {
-        date: "Wednesday, Feb 4, 2026",
-        time: "8:30 PM",
-        opponent: "CO Premier U11 Boys Macaluso",
-        location: "Visitor",
-        status: "Upcoming"
-    },
-    {
-        date: "Saturday, Feb 21, 2026",
-        time: "7:00 PM",
-        opponent: "Tru Colorado 2033",
-        location: "Visitor",
-        status: "Upcoming"
-    },
-    {
-        date: "Saturday, Feb 21, 2026",
-        time: "9:00 PM",
-        opponent: "Amplify Hoops (Lime)",
-        location: "Visitor",
-        status: "Upcoming"
-    }
+// COMBINED SCHEDULE (Past & Future)
+// Fields: date, time, team, opponent, location, type, status, score (optional)
+const gameSchedule = [
+    // --- PAST GAMES (DEC 2025) ---
+    { date: "Sat, Dec 20, 2025", time: "8:00 AM", team: "5th Grade", opponent: "KB3 Elite", location: "Shadow Ridge MS", type: "Tournament", status: "Final", result: "Won" },
+    { date: "Sat, Dec 20, 2025", time: "9:00 AM", team: "4th Grade", opponent: "KB3 Elite", location: "Shadow Ridge MS", type: "Tournament", status: "Final", result: "Won" },
+    { date: "Sat, Dec 20, 2025", time: "10:00 AM", team: "5th Grade", opponent: "Niwot Cougars", location: "Shadow Ridge MS", type: "Tournament", status: "Final", result: "Won" },
+    { date: "Sat, Dec 20, 2025", time: "1:00 PM", team: "4th Grade", opponent: "CO Truth", location: "Shadow Ridge MS", type: "Tournament", status: "Final", result: "Won" },
+    { date: "Sat, Dec 20, 2025", time: "3:00 PM", // Adjusted per user note
+      team: "4th Grade", opponent: "Niwot Cougars", location: "Shadow Ridge MS", type: "Tournament", status: "Final", result: "Lost 12-19" },
+    { date: "Sun, Dec 21, 2025", time: "11:00 AM", team: "4th Grade", opponent: "Niwot Cougars", location: "Legacy HS", type: "Tournament", status: "Final", result: "Won" },
+    { date: "Sun, Dec 21, 2025", time: "12:00 PM", team: "5th Grade", opponent: "KB3 Elite", location: "Legacy HS", type: "Championship", status: "Final", result: "Won" },
+
+    // --- UPCOMING GAMES (JAN/FEB 2026) ---
+    { date: "Sat, Jan 10, 2026", time: "8:00 AM", team: "5th Grade", opponent: "CDA 5th Green", location: "Home", type: "League", status: "Upcoming" },
+    { date: "Sat, Jan 10, 2026", time: "9:00 AM", team: "5th Grade", opponent: "CO Premier U11", location: "Home", type: "League", status: "Upcoming" },
+    { date: "Wed, Jan 14, 2026", time: "6:30 PM", team: "5th Grade", opponent: "Bureau 5th Mike", location: "Visitor", type: "League", status: "Upcoming" },
+    { date: "Wed, Jan 14, 2026", time: "8:30 PM", team: "5th Grade", opponent: "B&B Black", location: "Visitor", type: "League", status: "Upcoming" },
+    { date: "Wed, Jan 21, 2026", time: "5:30 PM", team: "5th Grade", opponent: "State 38 11U", location: "Home", type: "League", status: "Upcoming" },
+    { date: "Wed, Jan 21, 2026", time: "6:30 PM", team: "5th Grade", opponent: "Tru Colorado", location: "Home", type: "League", status: "Upcoming" },
+    { date: "Sat, Jan 31, 2026", time: "7:00 PM", team: "5th Grade", opponent: "Co. Mountain Stars", location: "Visitor", type: "League", status: "Upcoming" },
+    { date: "Sat, Jan 31, 2026", time: "8:00 PM", team: "5th Grade", opponent: "Elevation Flyers", location: "Visitor", type: "League", status: "Upcoming" },
+    { date: "Wed, Feb 4, 2026", time: "6:30 PM", team: "5th Grade", opponent: "CDA 5th Green", location: "Visitor", type: "League", status: "Upcoming" },
+    { date: "Wed, Feb 4, 2026", time: "8:30 PM", team: "5th Grade", opponent: "CO Premier U11", location: "Visitor", type: "League", status: "Upcoming" },
+    { date: "Sat, Feb 21, 2026", time: "7:00 PM", team: "5th Grade", opponent: "Tru Colorado 2033", location: "Visitor", type: "League", status: "Upcoming" },
+    { date: "Sat, Feb 21, 2026", time: "9:00 PM", team: "5th Grade", opponent: "Amplify Hoops", location: "Visitor", type: "League", status: "Upcoming" }
+];
+
+// PRACTICES
+const practiceSchedule = [
+    { day: "Mondays", time: "6:00 PM - 7:30 PM", location: "Main Gym", focus: "Skills & Conditioning" },
+    { day: "Thursdays", time: "6:00 PM - 7:30 PM", location: "Main Gym", focus: "Team Concepts" }
+];
+
+// EVENTS
+const upcomingEvents = [
+    { date: "TBD", title: "Team Photos", location: "Lobby", time: "TBD" }
 ];
