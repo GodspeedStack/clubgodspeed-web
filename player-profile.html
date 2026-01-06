@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Portal: Anton | GODSPEED</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-black">
+    <nav class="bg-black text-white px-6 py-4 sticky top-0 z-50 flex justify-between items-center">
+        <div class="text-xl font-black tracking-tighter">GODSPEED<span class="text-blue-600">OS</span></div>
+        <div class="flex items-center gap-4">
+            <span class="text-xs font-bold text-gray-400 uppercase">Coach View</span>
+            <div class="h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center font-bold text-xs">CS</div>
+        </div>
+    </nav>
+    <header class="bg-white border-b border-gray-200 p-8">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-6">
+                <div class="h-20 w-20 bg-gray-100 rounded-full overflow-hidden border-2 border-gray-100">
+                    <svg class="w-full h-full text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-black uppercase tracking-tight">Anton <span
+                            class="text-gray-400">#23</span></h1>
+                    <div class="flex gap-3 text-sm font-bold text-gray-500 mt-1">
+                        <span class="bg-black text-white px-2 py-0.5 rounded text-xs uppercase">5th Grade</span>
+                        <span>Guard</span>
+                        <span>Class of 2033</span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="generatePDF()"
+                    class="bg-gray-100 hover:bg-gray-200 text-black px-6 py-3 rounded-full font-bold text-sm transition flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    DOWNLOAD REPORT
+                </button>
+                <button onclick="emailParent()"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold text-sm transition flex items-center gap-2 shadow-lg shadow-blue-600/20">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                        </path>
+                    </svg>
+                    EMAIL PARENT
+                </button>
+            </div>
+        </div>
+    </header>
+    <main class="max-w-5xl mx-auto p-8" id="report-content">
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Total Hours Assigned</div>
+                <div class="text-4xl font-black text-black">40.0</div>
+                <div class="text-xs font-bold text-gray-400 mt-2">Season Goal</div>
+            </div>
+            <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Hours Completed</div>
+                <div class="text-4xl font-black text-blue-600">28.5</div>
+                <div class="w-full bg-gray-100 h-1.5 mt-3 rounded-full overflow-hidden">
+                    <div class="bg-blue-600 h-full w-[71%]"></div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Hours Remaining</div>
+                <div class="text-4xl font-black text-gray-300">11.5</div>
+                <div class="text-xs font-bold text-red-500 mt-2">Needs Attention</div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                <h2 class="text-lg font-black uppercase">Training Log</h2>
+                <span class="text-xs font-bold bg-gray-100 px-2 py-1 rounded text-gray-600">DEC 2025 - JAN 2026</span>
+            </div>
+            <table class="w-full text-left text-sm">
+                <thead class="bg-gray-50 text-gray-500 font-bold uppercase text-xs">
+                    <tr>
+                        <th class="p-4">Date</th>
+                        <th class="p-4">Session Focus</th>
+                        <th class="p-4">Coach</th>
+                        <th class="p-4 text-right">Duration</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    <tr>
+                        <td class="p-4 font-bold">Jan 05, 2026</td>
+                        <td class="p-4">Shooting Mechanics & Footwork</td>
+                        <td class="p-4 text-gray-500">Coach Scott</td>
+                        <td class="p-4 text-right font-bold">1.5 Hrs</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold">Jan 03, 2026</td>
+                        <td class="p-4">Defensive Slides & Conditioning</td>
+                        <td class="p-4 text-gray-500">Coach Mike</td>
+                        <td class="p-4 text-right font-bold">2.0 Hrs</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold">Dec 28, 2025</td>
+                        <td class="p-4">IQ & Decision Making (Film)</td>
+                        <td class="p-4 text-gray-500">Coach Scott</td>
+                        <td class="p-4 text-right font-bold">1.0 Hrs</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+    <script>
+        // 1. PDF GENERATOR
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Header
+            doc.setFontSize(22);
+            doc.setFont("helvetica", "bold");
+            doc.text("GODSPEED BASKETBALL", 20, 20);
+
+            doc.setFontSize(16);
+            doc.text("Player Report: ANTON", 20, 35);
+
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "normal");
+            doc.text("Season: 2025-2026", 20, 45);
+            doc.text("Team: 5th Grade", 20, 52);
+
+            // Stats
+            doc.setLineWidth(0.5);
+            doc.line(20, 60, 190, 60);
+
+            doc.text("Total Hours Assigned: 40.0", 20, 75);
+            doc.text("Hours Completed: 28.5", 20, 85);
+            doc.text("Hours Remaining: 11.5", 20, 95);
+
+            // Footer
+            doc.setFontSize(10);
+            doc.text("Generated via GodspeedOS", 20, 280);
+
+            // Save
+            doc.save("Anton_Training_Report.pdf");
+        }
+        // 2. EMAIL TRIGGER (Connects to your Email Service)
+        function emailParent() {
+            // NOTE: You must update these IDs from your EmailJS dashboard
+            const serviceID = "YOUR_SERVICE_ID";
+            const templateID = "YOUR_TEMPLATE_ID";
+            const publicKey = "YOUR_PUBLIC_KEY";
+            // Simulating sending for UI Demo
+            const btn = document.querySelector('button[onclick="emailParent()"]');
+            const originalText = btn.innerHTML;
+
+            btn.innerHTML = "SENDING...";
+            btn.classList.add('opacity-75');
+
+            // Simulate API Call delay
+            setTimeout(() => {
+                btn.innerHTML = "✅ SENT!";
+                btn.classList.remove('bg-blue-600');
+                btn.classList.add('bg-green-600');
+                alert("Email sent to parent (Mockup Mode).\n\nTo make this real:\n1. Create free account at EmailJS.com\n2. Replace 'YOUR_SERVICE_ID' in the code.");
+
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.classList.add('bg-blue-600');
+                    btn.classList.remove('bg-green-600');
+                    btn.classList.remove('opacity-75');
+                }, 3000);
+            }, 1500);
+        }
+    </script>
