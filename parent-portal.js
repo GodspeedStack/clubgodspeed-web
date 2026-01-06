@@ -1160,17 +1160,67 @@ async function loadTrainingHours(parentEmail) {
             // Receipts
             const docsContainer = document.getElementById('training-documents-list');
             if (docsContainer && userRecords.purchases) {
-                const purchaseHtml = userRecords.purchases.map(p => `
-                    <div class="doc-item" style="display:flex; align-items:center; gap:12px; padding:12px; border-bottom:1px solid #f0f0f0; background:#f9fafb;">
-                        <div style="background:#dcfce7; color:#166534; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:6px; font-size:14px; font-weight:700;">$</div>
-                        <div style="flex:1;">
-                            <div style="font-size:13px; font-weight:600;">Receipt: ${p.item}</div>
-                            <div style="font-size:11px; color:#888;">${p.date} • ${p.amount} • ${p.status}</div>
-                        </div>
-                        <a href="${p.link}" onclick="alert('Receipt View Placeholder'); return false;" style="font-size:11px; color:#2563eb; font-weight:600; text-decoration:none;">View PDF</a>
-                    </div>
-                `).join('');
-                docsContainer.insertAdjacentHTML('afterbegin', purchaseHtml);
+                userRecords.purchases.forEach(p => {
+                    // Sanitize purchase data
+                    const safeItem = escapeHTML(p.item || '');
+                    const safeDate = escapeHTML(p.date || '');
+                    const safeAmount = escapeHTML(p.amount || '');
+                    const safeStatus = escapeHTML(p.status || '');
+                    const safeLink = validateURL(p.link) || '#';
+                    
+                    const purchaseDiv = document.createElement('div');
+                    purchaseDiv.className = 'doc-item';
+                    purchaseDiv.style.display = 'flex';
+                    purchaseDiv.style.alignItems = 'center';
+                    purchaseDiv.style.gap = '12px';
+                    purchaseDiv.style.padding = '12px';
+                    purchaseDiv.style.borderBottom = '1px solid #f0f0f0';
+                    purchaseDiv.style.background = '#f9fafb';
+                    
+                    const iconDiv = document.createElement('div');
+                    iconDiv.style.background = '#dcfce7';
+                    iconDiv.style.color = '#166534';
+                    iconDiv.style.width = '32px';
+                    iconDiv.style.height = '32px';
+                    iconDiv.style.display = 'flex';
+                    iconDiv.style.alignItems = 'center';
+                    iconDiv.style.justifyContent = 'center';
+                    iconDiv.style.borderRadius = '6px';
+                    iconDiv.style.fontSize = '14px';
+                    iconDiv.style.fontWeight = '700';
+                    iconDiv.textContent = '$';
+                    
+                    const contentDiv = document.createElement('div');
+                    contentDiv.style.flex = '1';
+                    const itemDiv = document.createElement('div');
+                    itemDiv.style.fontSize = '13px';
+                    itemDiv.style.fontWeight = '600';
+                    itemDiv.textContent = `Receipt: ${safeItem}`;
+                    const detailsDiv = document.createElement('div');
+                    detailsDiv.style.fontSize = '11px';
+                    detailsDiv.style.color = '#888';
+                    detailsDiv.textContent = `${safeDate} • ${safeAmount} • ${safeStatus}`;
+                    contentDiv.appendChild(itemDiv);
+                    contentDiv.appendChild(detailsDiv);
+                    
+                    const linkEl = document.createElement('a');
+                    linkEl.href = safeLink;
+                    linkEl.style.fontSize = '11px';
+                    linkEl.style.color = '#2563eb';
+                    linkEl.style.fontWeight = '600';
+                    linkEl.style.textDecoration = 'none';
+                    linkEl.textContent = 'View PDF';
+                    linkEl.onclick = (e) => {
+                        e.preventDefault();
+                        alert('Receipt View Placeholder');
+                        return false;
+                    };
+                    
+                    purchaseDiv.appendChild(iconDiv);
+                    purchaseDiv.appendChild(contentDiv);
+                    purchaseDiv.appendChild(linkEl);
+                    docsContainer.insertBefore(purchaseDiv, docsContainer.firstChild);
+                });
             }
         }
 
@@ -1267,20 +1317,24 @@ async function loadSessionCounts(parentEmail) {
             }
         }
 
-    // 1. Update Top Stats
-    const completedEl = document.getElementById('sessions-completed');
-    const upcomingEl = document.getElementById('sessions-upcoming');
+        // 1. Update Top Stats
+        const completedEl = document.getElementById('sessions-completed');
+        const upcomingEl = document.getElementById('sessions-upcoming');
 
-    // Note: userRecord and data.upcomingSessions are not defined in this scope.
-    // Assuming 'userRecord' refers to 'db.trainingRecords[parentEmail]' and 'data.upcomingSessions' is a placeholder for 'upcomingCount'.
-    // The instruction implies using these variables, but they are not available in the current function's scope.
-    // To faithfully apply the instruction, the code will be inserted as provided, which might lead to runtime errors if these variables are not globally accessible or passed.
-    const userRecord = db.trainingRecords ? db.trainingRecords[parentEmail] : null; // Define userRecord for this scope
-    const data = { upcomingSessions: [] }; // Placeholder for data, assuming upcomingCount is the intended value
-    data.upcomingSessions = Array(upcomingCount).fill(0); // Populate placeholder based on calculated upcomingCount
+        // Get user record for completed count
+        const db = getDB();
+        const userRecord = db.trainingRecords ? db.trainingRecords[parentEmail] : null;
 
-    if (completedEl) completedEl.textContent = (userRecord && userRecord.logs) ? userRecord.logs.length : 0;
-    if (upcomingEl) upcomingEl.textContent = data.upcomingSessions ? data.upcomingSessions.length : 0;
+        if (completedEl) completedEl.textContent = (userRecord && userRecord.logs) ? userRecord.logs.length : completedCount;
+        if (upcomingEl) upcomingEl.textContent = upcomingCount;
+    } catch (error) {
+        console.error('Error in loadSessionCounts:', error);
+        // Set default values on error
+        const completedEl = document.getElementById('sessions-completed');
+        const upcomingEl = document.getElementById('sessions-upcoming');
+        if (completedEl) completedEl.textContent = '0';
+        if (upcomingEl) upcomingEl.textContent = '0';
+    }
 }
 
 /**
