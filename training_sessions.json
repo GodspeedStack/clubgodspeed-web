@@ -1,0 +1,20 @@
+{
+    "training_sessions": [
+        {
+            "session_id": "S-2026-001",
+            "date": "2026-01-04",
+            "focus": "Ball handling, footwork, shot creation",
+            "coach": "Coach Scott",
+            "duration": "1.0 Hrs",
+            "notes": "Video analysis pending."
+        },
+        {
+            "session_id": "S-2026-002",
+            "date": "2026-01-03",
+            "focus": "Handling pressure defense, ballhandling, footwork",
+            "coach": "Coach Scott",
+            "duration": "2.0 Hrs",
+            "notes": "Focus on high-pressure situations."
+        }
+    ]
+}

@@ -76,17 +76,20 @@
             </div>
             <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
                 <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Hours Completed</div>
-                <div class="text-4xl font-black text-blue-600">4.0</div>
+                <!-- Updated to 3.0 based on latest data correction -->
+                <div class="text-4xl font-black text-blue-600">3.0</div>
                 <div class="w-full bg-gray-100 h-1.5 mt-3 rounded-full overflow-hidden">
-                    <div class="bg-blue-600 h-full w-[40%]"></div>
+                    <div class="bg-blue-600 h-full w-[30%]"></div>
                 </div>
             </div>
             <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
                 <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Hours Remaining</div>
-                <div class="text-4xl font-black text-gray-800">6.0</div>
+                <!-- Updated to 7.0 based on latest data correction -->
+                <div class="text-4xl font-black text-gray-800">7.0</div>
                 <div class="text-xs font-bold text-blue-600 mt-2">Active</div>
             </div>
         </div>
+
         <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-12">
             <div class="p-6 border-b border-gray-100 flex justify-between items-center">
                 <h2 class="text-lg font-black uppercase">Training Log</h2>
@@ -112,13 +115,14 @@
                         <td class="p-4 font-bold">Jan 03, 2026</td>
                         <td class="p-4">Handling pressure defense, ballhandling, footwork</td>
                         <td class="p-4 text-gray-500">Coach Scott</td>
-                        <td class="p-4 text-right font-bold">3.0 Hrs</td>
+                        <!-- Updated to 2.0 Hrs per JSON source of truth -->
+                        <td class="p-4 text-right font-bold">2.0 Hrs</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
-        <!-- Parent Connections Section (New) -->
+        <!-- Parent Connections Section -->
         <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
             <div class="p-6 border-b border-gray-100 flex justify-between items-center">
                 <h2 class="text-lg font-black uppercase">Parent Connections <span
@@ -194,39 +198,103 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
 
-            // Header
-            doc.setFontSize(22);
-            doc.setFont("helvetica", "bold");
-            doc.text("GODSPEED BASKETBALL", 20, 20);
+            // --- HEADER ---
+            doc.setFillColor(0, 0, 0); // Black background
+            doc.rect(0, 0, 210, 40, 'F');
 
+            doc.setTextColor(255, 255, 255); // White text
+            doc.setFontSize(24);
+            doc.setFont("helvetica", "bold");
+            doc.text("GODSPEED BASKETBALL", 15, 20);
+
+            doc.setFontSize(10);
+            doc.text("PLAYER DEVELOPMENT REPORT", 15, 30);
+
+            doc.setFontSize(30);
+            doc.text("#12", 180, 25); // Player Number
+
+            // --- PLAYER INFO ---
+            doc.setTextColor(0, 0, 0); // Reset to black
             doc.setFontSize(16);
-            doc.text("Training Report: ANTON", 20, 35);
+            doc.setFont("helvetica", "bold");
+            doc.text("ANTON", 15, 55);
 
             doc.setFontSize(12);
             doc.setFont("helvetica", "normal");
-            doc.text("Program: Elite Guard Academy", 20, 45);
-            doc.text("Parent: Denis", 20, 52);
+            doc.setTextColor(100, 100, 100);
+            doc.text("Program: Elite Guard Academy", 15, 62);
+            doc.text("Season: Jan 2026", 15, 68);
 
-            // Stats
-            doc.setLineWidth(0.5);
-            doc.line(20, 60, 190, 60);
+            // --- STATS OVERVIEW ---
+            // Draw boxes
+            doc.setDrawColor(220, 220, 220);
+            doc.setFillColor(248, 248, 248);
 
-            doc.text("Total Hours Purchased: 10.0", 20, 75);
-            doc.text("Hours Completed: 4.0", 20, 85);
-            doc.text("Hours Remaining: 6.0", 20, 95);
+            // Box 1: Total
+            doc.rect(15, 80, 50, 25, 'F');
+            doc.setFontSize(8); doc.text("TOTAL HOURS", 18, 86);
+            doc.setFontSize(16); doc.setTextColor(0, 0, 0); doc.text("10.0", 18, 98);
 
-            doc.text("Last Session: Jan 4, 2026", 20, 110);
-            doc.text("Focus: Ball handling, footwork, shot creation", 20, 118);
+            // Box 2: Completed (Updated to 3.0 based on latest JSON data)
+            doc.rect(70, 80, 50, 25, 'F');
+            doc.setFillColor(255, 255, 255); // Reset fill
+            doc.setFontSize(8); doc.setTextColor(100, 100, 100); doc.text("COMPLETED", 73, 86);
+            doc.setFontSize(16); doc.setTextColor(37, 99, 235); // Blue
+            doc.text("3.0", 73, 98);
 
-            // Footer
-            doc.setFontSize(10);
-            doc.text("Generated via GodspeedOS", 20, 280);
+            // Box 3: Remaining (Updated to 7.0 based on latest JSON data)
+            doc.rect(125, 80, 50, 25, 'F');
+            doc.setFontSize(8); doc.setTextColor(100, 100, 100); doc.text("REMAINING", 128, 86);
+            doc.setFontSize(16); doc.setTextColor(0, 0, 0); doc.text("7.0", 128, 98);
 
-            // Save
-            doc.save("Anton_Training_Report.pdf");
+            // --- TRAINING LOG ---
+            doc.setFontSize(14);
+            doc.setTextColor(0, 0, 0);
+            doc.text("Training Log", 15, 120);
+
+            let yPos = 130;
+            const lineHeight = 10;
+
+            // Headers
+            doc.setFontSize(9);
+            doc.setTextColor(150, 150, 150);
+            doc.text("DATE", 15, yPos);
+            doc.text("FOCUS", 45, yPos);
+            doc.text("DURATION", 180, yPos);
+
+            doc.setDrawColor(200, 200, 200);
+            doc.line(15, yPos + 3, 195, yPos + 3);
+            yPos += 10;
+
+            // Data Rows (Matches JSON Data Source)
+            doc.setTextColor(0, 0, 0);
+            doc.setFont("helvetica", "bold");
+
+            // Row 1
+            doc.text("Jan 04", 15, yPos);
+            doc.setFont("helvetica", "normal");
+            doc.text("Ball handling, footwork, shot creation", 45, yPos);
+            doc.text("1.0 Hrs", 180, yPos);
+            yPos += lineHeight;
+
+            // Row 2
+            doc.setFont("helvetica", "bold");
+            doc.text("Jan 03", 15, yPos);
+            doc.setFont("helvetica", "normal");
+            doc.text("Handling pressure defense, footwork", 45, yPos);
+            doc.text("2.0 Hrs", 180, yPos);
+
+
+            // --- FOOTER ---
+            doc.setFontSize(8);
+            doc.setTextColor(150, 150, 150);
+            doc.text("GodspeedOS Generated Report | " + new Date().toLocaleDateString(), 15, 280);
+
+            // Save File
+            doc.save("GODSPEED_Report_Anton_#12_Jan2026.pdf");
         }
 
-        // 2. MAGIC LINK NOTIFICATION (Previous Email Trigger)
+        // 2. MAGIC LINK NOTIFICATION
         function sendMagicLink() {
             const btn = document.querySelector('button[onclick="sendMagicLink()"]');
             const originalText = btn.innerHTML;
@@ -234,12 +302,23 @@
             btn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> SENDING...`;
             btn.classList.add('opacity-75');
 
+            // Simulate Data Payload from Backend
+            const payload = {
+                "recipient": "denis@example.com",
+                "sessions": [
+                    { "date": "2026-01-04", "focus": "Ball handling, footwork..." },
+                    { "date": "2026-01-03", "focus": "Handling pressure..." }
+                ],
+                "token": "mz_88192_sec_11"
+            };
+
             setTimeout(() => {
                 btn.innerHTML = "✅ NOTIFICATION SENT";
                 btn.classList.remove('bg-blue-600');
                 btn.classList.add('bg-green-600');
 
-                alert("📩 NOTIFICATION SENT \n\nRecipient: Denis (denis@example.com)\nAction: Magic Link Generated\nExpires: 7 Days\n\n(Mockup Mode: Real email would be sent via EmailJS/Backend)");
+                console.log("Magic Link Payload:", payload);
+                alert("📩 NOTIFICATION SENT \n\nRecipient: " + payload.recipient + "\nAction: Magic Link Generated\nData Payload Logged to Console.");
 
                 setTimeout(() => {
                     btn.innerHTML = originalText;
@@ -247,5 +326,9 @@
                     btn.classList.remove('bg-green-600');
                     btn.classList.remove('opacity-75');
                 }, 3000);
-            }, 1500);
+            }, 1000);
         }
+    </script>
+</body>
+
+</html>
