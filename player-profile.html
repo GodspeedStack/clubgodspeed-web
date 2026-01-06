@@ -35,7 +35,7 @@
                 </div>
                 <div>
                     <h1 class="text-3xl font-black uppercase tracking-tight">Anton <span
-                            class="text-gray-400">#23</span></h1>
+                            class="text-gray-400">#12</span></h1>
                     <div class="flex gap-3 text-sm font-bold text-gray-500 mt-1">
                         <span class="bg-black text-white px-2 py-0.5 rounded text-xs uppercase">Elite Guard
                             Academy</span>
@@ -54,14 +54,14 @@
                     </svg>
                     DOWNLOAD REPORT
                 </button>
-                <button onclick="emailParent()"
+                <button onclick="sendMagicLink()"
                     class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold text-sm transition flex items-center gap-2 shadow-lg shadow-blue-600/20">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
                         </path>
                     </svg>
-                    EMAIL PARENT
+                    PUBLISH & NOTIFY
                 </button>
             </div>
         </div>
@@ -87,7 +87,7 @@
                 <div class="text-xs font-bold text-blue-600 mt-2">Active</div>
             </div>
         </div>
-        <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-12">
             <div class="p-6 border-b border-gray-100 flex justify-between items-center">
                 <h2 class="text-lg font-black uppercase">Training Log</h2>
                 <span class="text-xs font-bold bg-gray-100 px-2 py-1 rounded text-gray-600">JAN 2026</span>
@@ -116,6 +116,76 @@
                     </tr>
                 </tbody>
             </table>
+        </div>
+
+        <!-- Parent Connections Section (New) -->
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                <h2 class="text-lg font-black uppercase">Parent Connections <span
+                        class="hidden md:inline text-xs font-normal text-gray-400 ml-2 normal-case tracking-normal">Manage
+                        who receives updates</span></h2>
+                <button
+                    class="text-xs font-bold bg-gray-100 hover:bg-gray-200 text-black px-3 py-1.5 rounded transition flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Invite Parent
+                </button>
+            </div>
+            <div class="p-6">
+                <!-- Connected Parent -->
+                <div
+                    class="flex flex-col md:flex-row md:items-center justify-between p-4 border border-gray-100 rounded-lg bg-gray-50 mb-3 gap-4">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="h-10 w-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-sm">
+                            D</div>
+                        <div>
+                            <div class="font-bold text-sm text-gray-900">Denis (Dad)</div>
+                            <div class="text-xs text-gray-500">denis@example.com</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Active
+                        </span>
+                        <div class="h-4 w-px bg-gray-300"></div>
+                        <button class="text-xs text-gray-500 hover:text-black font-semibold"
+                            onclick="alert('Latest report sent manually to Denis.')">Send Report</button>
+                        <button class="text-xs text-red-400 hover:text-red-600"
+                            onclick="alert('Access revoked for Denis.')">Revoke</button>
+                    </div>
+                </div>
+
+                <!-- Invite Sent Example -->
+                <div
+                    class="flex flex-col md:flex-row md:items-center justify-between p-4 border border-dashed border-gray-200 rounded-lg gap-4">
+                    <div class="flex items-center gap-4 opacity-75">
+                        <div
+                            class="h-10 w-10 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center font-bold text-sm">
+                            S</div>
+                        <div>
+                            <div class="font-bold text-sm text-gray-900">Sarah (Mom)</div>
+                            <div class="text-xs text-gray-500">sarah@example.com</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            Invite Sent
+                        </span>
+                        <div class="h-4 w-px bg-gray-300"></div>
+                        <button class="text-xs text-blue-600 hover:text-blue-800 font-semibold"
+                            onclick="alert('Invite resent to Sarah.')">Resend Invite</button>
+                    </div>
+                </div>
+            </div>
+            <div
+                class="px-6 py-4 bg-gray-50 border-t border-gray-100 text-xs text-gray-500 flex justify-between items-center">
+                <span>Security: Magic Links expire in 7 days.</span>
+                <span class="font-mono text-[10px] text-gray-400">ID: USr_882910</span>
+            </div>
         </div>
     </main>
     <script>
@@ -155,19 +225,21 @@
             // Save
             doc.save("Anton_Training_Report.pdf");
         }
-        // 2. EMAIL TRIGGER
-        function emailParent() {
-            const btn = document.querySelector('button[onclick="emailParent()"]');
+
+        // 2. MAGIC LINK NOTIFICATION (Previous Email Trigger)
+        function sendMagicLink() {
+            const btn = document.querySelector('button[onclick="sendMagicLink()"]');
             const originalText = btn.innerHTML;
 
-            btn.innerHTML = "SENDING...";
+            btn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> SENDING...`;
             btn.classList.add('opacity-75');
 
             setTimeout(() => {
-                btn.innerHTML = "✅ SENT!";
+                btn.innerHTML = "✅ NOTIFICATION SENT";
                 btn.classList.remove('bg-blue-600');
                 btn.classList.add('bg-green-600');
-                alert("Email sent to Denis (Mockup Mode).");
+
+                alert("📩 NOTIFICATION SENT \n\nRecipient: Denis (denis@example.com)\nAction: Magic Link Generated\nExpires: 7 Days\n\n(Mockup Mode: Real email would be sent via EmailJS/Backend)");
 
                 setTimeout(() => {
                     btn.innerHTML = originalText;
@@ -177,4 +249,3 @@
                 }, 3000);
             }, 1500);
         }
-    </script>
