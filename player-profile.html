@@ -76,14 +76,14 @@
             </div>
             <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
                 <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Hours Completed</div>
-                <div class="text-4xl font-black text-blue-600">3.0</div>
+                <div class="text-4xl font-black text-blue-600">4.0</div>
                 <div class="w-full bg-gray-100 h-1.5 mt-3 rounded-full overflow-hidden">
-                    <div class="bg-blue-600 h-full w-[30%]"></div>
+                    <div class="bg-blue-600 h-full w-[40%]"></div>
                 </div>
             </div>
             <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
                 <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Hours Remaining</div>
-                <div class="text-4xl font-black text-gray-800">7.0</div>
+                <div class="text-4xl font-black text-gray-800">6.0</div>
                 <div class="text-xs font-bold text-blue-600 mt-2">Active</div>
             </div>
         </div>
@@ -103,6 +103,12 @@
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     <tr>
+                        <td class="p-4 font-bold">Jan 04, 2026</td>
+                        <td class="p-4">Ball handling, footwork, shot creation</td>
+                        <td class="p-4 text-gray-500">Coach Scott</td>
+                        <td class="p-4 text-right font-bold">1.0 Hrs</td>
+                    </tr>
+                    <tr>
                         <td class="p-4 font-bold">Jan 03, 2026</td>
                         <td class="p-4">Handling pressure defense, ballhandling, footwork</td>
                         <td class="p-4 text-gray-500">Coach Scott</td>
@@ -113,66 +119,62 @@
         </div>
     </main>
     <script>
-    // 1. PDF GENERATOR
-    function generatePDF() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        
-        // Header
-        doc.setFontSize(22);
-        doc.setFont("helvetica", "bold");
-        doc.text("GODSPEED BASKETBALL", 20, 20);
-        
-        doc.setFontSize(16);
-        doc.text("Training Report: ANTON", 20, 35);
-        
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "normal");
-        doc.text("Program: Elite Guard Academy", 20, 45);
-        doc.text("Parent: Denis", 20, 52);
-        
-        // Stats
-        doc.setLineWidth(0.5);
-        doc.line(20, 60, 190, 60);
-        
-        doc.text("Total Hours Purchased: 10.0", 20, 75);
-        doc.text("Hours Completed: 3.0", 20, 85);
-        doc.text("Hours Remaining: 7.0", 20, 95);
-        
-        doc.text("Last Session: Jan 3, 2026", 20, 110);
-        doc.text("Focus: Pressure defense, ballhandling, footwork", 20, 118);
-        
-        // Footer
-        doc.setFontSize(10);
-        doc.text("Generated via GodspeedOS", 20, 280);
-        
-        // Save
-        doc.save("Anton_Training_Report.pdf");
-    }
-    // 2. EMAIL TRIGGER
-    function emailParent() {
-        // NOTE: Update these with your EmailJS credentials
-        const serviceID = "YOUR_SERVICE_ID";
-        const templateID = "YOUR_TEMPLATE_ID";
-        const publicKey = "YOUR_PUBLIC_KEY";
-        const btn = document.querySelector('button[onclick="emailParent()"]');
-        const originalText = btn.innerHTML;
-        
-        btn.innerHTML = "SENDING...";
-        btn.classList.add('opacity-75');
-        
-        setTimeout(() => {
-            btn.innerHTML = "✅ SENT!";
-            btn.classList.remove('bg-blue-600');
-            btn.classList.add('bg-green-600');
-            alert("Email sent to Denis (Mockup Mode).\n\nIntegrate EmailJS to make this live.");
-            
+        // 1. PDF GENERATOR
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Header
+            doc.setFontSize(22);
+            doc.setFont("helvetica", "bold");
+            doc.text("GODSPEED BASKETBALL", 20, 20);
+
+            doc.setFontSize(16);
+            doc.text("Training Report: ANTON", 20, 35);
+
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "normal");
+            doc.text("Program: Elite Guard Academy", 20, 45);
+            doc.text("Parent: Denis", 20, 52);
+
+            // Stats
+            doc.setLineWidth(0.5);
+            doc.line(20, 60, 190, 60);
+
+            doc.text("Total Hours Purchased: 10.0", 20, 75);
+            doc.text("Hours Completed: 4.0", 20, 85);
+            doc.text("Hours Remaining: 6.0", 20, 95);
+
+            doc.text("Last Session: Jan 4, 2026", 20, 110);
+            doc.text("Focus: Ball handling, footwork, shot creation", 20, 118);
+
+            // Footer
+            doc.setFontSize(10);
+            doc.text("Generated via GodspeedOS", 20, 280);
+
+            // Save
+            doc.save("Anton_Training_Report.pdf");
+        }
+        // 2. EMAIL TRIGGER
+        function emailParent() {
+            const btn = document.querySelector('button[onclick="emailParent()"]');
+            const originalText = btn.innerHTML;
+
+            btn.innerHTML = "SENDING...";
+            btn.classList.add('opacity-75');
+
             setTimeout(() => {
-                btn.innerHTML = originalText;
-                btn.classList.add('bg-blue-600');
-                btn.classList.remove('bg-green-600');
-                btn.classList.remove('opacity-75');
-            }, 3000);
-        }, 1500);
-    }
+                btn.innerHTML = "✅ SENT!";
+                btn.classList.remove('bg-blue-600');
+                btn.classList.add('bg-green-600');
+                alert("Email sent to Denis (Mockup Mode).");
+
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.classList.add('bg-blue-600');
+                    btn.classList.remove('bg-green-600');
+                    btn.classList.remove('opacity-75');
+                }, 3000);
+            }, 1500);
+        }
     </script>
