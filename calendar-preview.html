@@ -534,7 +534,9 @@
                     ${typeDisplay}
                 </td>
                 <td class="p-4 align-top">
-                    <span class="font-medium text-gray-800 text-sm block">${game.opponent}</span>
+                    <!-- Restored Team Name as Text (No Badge) -->
+                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">${game.team}</div>
+                    <span class="font-bold text-gray-900 text-sm block">${game.opponent}</span>
                     ${mvpBadge}
                 </td>
                 <td class="p-4 text-right align-top">
