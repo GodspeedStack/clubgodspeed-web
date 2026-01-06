@@ -183,7 +183,7 @@
 
             // 2. Call Backend to Create Session
             // Note: Replace with your actual Supabase Function URL
-            const SUPABASE_FUNCTION_URL = "https://your-project-ref.supabase.co/functions/v1/create-checkout-session";
+            const SUPABASE_FUNCTION_URL = "https://nnqokhqennuxalamnvps.supabase.co/functions/v1/create-checkout-session";
 
             // For now, check if we are in "Demo Mode" (no backend)
             // If the URL is placeholder, mock the success
