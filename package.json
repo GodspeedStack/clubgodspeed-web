@@ -1,9 +1,13 @@
 {
     "scripts": {
+        "dev": "vite",
         "build": "echo 'Team Protocol: Static Deploy Active'"
     },
     "dependencies": {
         "@supabase/supabase-js": "^2.89.0",
         "dotenv": "^17.2.3"
+    },
+    "devDependencies": {
+        "vite": "^5.4.21"
     }
 }

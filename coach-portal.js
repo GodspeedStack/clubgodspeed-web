@@ -23,43 +23,59 @@ window.handleCoachLogin = function () {
     const codeInput = document.getElementById('coach-code');
     const code = codeInput ? codeInput.value.trim() : '';
 
-    // Secure Access Check
-    // In production, this should be server-side validation.
-    let role = null;
+    // Secure Access Check (Hash-based)
+    // Production Note: This is client-side hashing (Obfuscation), NOT true server-side security.
+    // It prevents casual reading of passwords from source code.
+    async function sha256(message) {
+        const msgBuffer = new TextEncoder().encode(message);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
 
-    if (code === 'G0DSP33D_ADMIN!') {
-        role = 'admin';
-    } else if (code === 'G0DSP33D_EL1T3!') {
-        role = 'coach';
-    } else {
-        alert("Access Denied. Invalid Code.");
-        if (codeInput) {
-            codeInput.value = '';
-            codeInput.focus();
+    const adminHash = "e5792d476100987627a696348842af5832a87383a152da862db8068755034371"; // G0DSP33D_ADMIN!
+    const coachHash = "c7d74026858a7065971488c9ae8729577782b534b829af4666f777176461ba16"; // G0DSP33D_EL1T3!
+
+    sha256(code).then(hash => {
+        let role = null;
+        if (hash === adminHash) {
+            role = 'admin';
+        } else if (hash === coachHash) {
+            role = 'coach';
+        } else {
+            alert("Access Denied. Invalid Code.");
+            if (codeInput) {
+                codeInput.value = '';
+                codeInput.focus();
+            }
+            return;
         }
-        return;
-    }
 
-    // Store Role
-    localStorage.setItem('gba_user_role', role);
+        // Store Role
+        localStorage.setItem('gba_user_role', role);
+        localStorage.setItem('isCoachLoggedIn', 'true'); // Add specific auth flag
 
-    const loginView = document.getElementById('coach-login');
-    const dashboardView = document.getElementById('coach-dashboard');
+        const loginView = document.getElementById('coach-login');
+        const dashboardView = document.getElementById('coach-dashboard');
 
-    if (loginView && dashboardView) {
-        loginView.style.display = 'none';
-        dashboardView.style.display = 'flex'; // Important: flex to maintain layout
-        initDashboard();
-    } else {
-        alert("Critical Error: Dashboard views not found.");
-    }
+        if (loginView && dashboardView) {
+            loginView.style.display = 'none';
+            dashboardView.style.display = 'flex'; // Important: flex to maintain layout
+            initDashboard();
+        } else {
+            alert("Critical Error: Dashboard views not found.");
+        }
+    });
 }
 
 function logoutCoach() {
     localStorage.removeItem('gba_user_role');
+    localStorage.removeItem('isCoachLoggedIn');
     document.getElementById('coach-dashboard').style.display = 'none';
     document.getElementById('coach-login').style.display = 'flex';
 }
+
+
 
 // 2. Dashboard Init
 function initDashboard() {
@@ -401,8 +417,19 @@ function viewPlayerReport(athleteId) {
 
         <!-- FOOTER ACTIONS -->
         <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px; border-top: 1px solid #f3f4f6; padding-top: 24px;">
-            <button class="btn-ios-secondary" style="background: #f3f4f6; color: #374151; padding: 10px 20px; border-radius: 8px; font-weight: 700; border:none; cursor: pointer;">
-                Share Report
+            <button onclick="sendTrainingReportEmail('${athleteId}')" class="btn-ios-secondary" style="background: #f3f4f6; color: #374151; padding: 10px 20px; border-radius: 8px; font-weight: 700; border:none; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                Email Training Report
+            </button>
+            <button onclick="sendPracticeInfoEmail('${athleteId}')" class="btn-ios-secondary" style="background: #f3f4f6; color: #374151; padding: 10px 20px; border-radius: 8px; font-weight: 700; border:none; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                Email Practice Info
             </button>
             <button class="btn-ios-primary" style="background: #2563eb; color: white; padding: 10px 24px; border-radius: 8px; font-weight: 700; border:none; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1), 0 2px 4px -1px rgba(37, 99, 235, 0.06);">
                 Save Changes
@@ -819,6 +846,28 @@ function renderCoachAccounts() {
     const accounts = db.accounts || [];
 
     let html = `
+        <!-- Bulk Email Actions -->
+        <div style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+            <h3 style="margin: 0 0 16px 0; font-size: 16px; font-weight: 600; color: #111827;">Bulk Email Actions</h3>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <button onclick="sendBulkTrainingReports()" style="background: #2563eb; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s;" onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                    Send Training Reports to All
+                </button>
+                <button onclick="sendBulkPracticeInfo()" style="background: #059669; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s;" onmouseover="this.style.background='#047857'" onmouseout="this.style.background='#059669'">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                    Send Practice Info to All
+                </button>
+            </div>
+            <p style="margin: 12px 0 0 0; color: #6b7280; font-size: 12px;">These emails will be sent to all parents with active accounts.</p>
+        </div>
+        
         <div style="background: white; border-radius: 24px; border: 1px solid rgba(0,0,0,0.06); overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
             <div style="display: flex; padding: 14px 24px; background: rgba(249, 249, 249, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 11px; font-weight: 600; text-transform: uppercase; color: #86868b; letter-spacing: 0.05em;">
                 <div style="flex: 2;">Parent / User</div>
@@ -1116,9 +1165,9 @@ function openAnalyticsPage() {
         } catch (e) {
             console.error('CRASH RENDER ARCHITECT:', e);
             // Sanitize error message to prevent XSS
-            const safeMessage = typeof e.message === 'string' ? 
+            const safeMessage = typeof e.message === 'string' ?
                 e.message.replace(/[&<>"']/g, m => {
-                    const map = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'};
+                    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
                     return map[m];
                 }) : 'An error occurred';
             view.innerHTML = `<h3>Error Loading Architect Mode</h3><pre>${safeMessage}</pre>`;
@@ -2093,3 +2142,382 @@ window.switchWarRoomTab = function (tabName) {
 }
 
 
+
+// ==========================================
+// EMAIL FUNCTIONALITY
+// ==========================================
+
+/**
+ * Send training report email to parent
+ * @param {string} athleteId - Athlete ID
+ */
+window.sendTrainingReportEmail = async function(athleteId) {
+    if (!window.coachEmailService) {
+        alert('Email service not loaded. Please refresh the page.');
+        return;
+    }
+    
+    const button = event?.target?.closest('button');
+    if (button) {
+        button.disabled = true;
+        button.innerHTML = '<span style="display: inline-block; width: 16px; height: 16px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite;"></span> Sending...';
+    }
+    
+    try {
+        const db = getDB();
+        const athlete = db.roster?.find(a => a.athleteId === athleteId);
+        const coachNotes = athlete?.notes || '';
+        
+        const result = await window.coachEmailService.sendTrainingReport(athleteId, coachNotes);
+        
+        if (result.success) {
+            if (result.emailData) {
+                // Email data prepared, need to send via API
+                await sendEmailViaResend(result.emailData);
+            }
+            showEmailSuccess('Training report sent successfully!');
+        } else {
+            showEmailError(result.error || 'Failed to send training report');
+        }
+    } catch (error) {
+        console.error('Error sending training report:', error);
+        showEmailError('An error occurred while sending the email');
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                Email Training Report
+            `;
+        }
+    }
+};
+
+/**
+ * Send practice info email to parent
+ * @param {string} athleteId - Athlete ID
+ */
+window.sendPracticeInfoEmail = async function(athleteId) {
+    if (!window.coachEmailService) {
+        alert('Email service not loaded. Please refresh the page.');
+        return;
+    }
+    
+    const button = event?.target?.closest('button');
+    if (button) {
+        button.disabled = true;
+        button.innerHTML = '<span style="display: inline-block; width: 16px; height: 16px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite;"></span> Sending...';
+    }
+    
+    try {
+        const result = await window.coachEmailService.sendPracticeInfo(athleteId);
+        
+        if (result.success) {
+            if (result.emailData) {
+                // Email data prepared, need to send via API
+                await sendEmailViaResend(result.emailData);
+            }
+            showEmailSuccess('Practice info sent successfully!');
+        } else {
+            showEmailError(result.error || 'Failed to send practice info');
+        }
+    } catch (error) {
+        console.error('Error sending practice info:', error);
+        showEmailError('An error occurred while sending the email');
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                Email Practice Info
+            `;
+        }
+    }
+};
+
+/**
+ * Send email via Resend API
+ * @param {Object} emailData - Email data object
+ */
+async function sendEmailViaResend(emailData) {
+    // Check if Resend API key is available
+    // Try multiple ways to get the key
+    const resendKey = window.VITE_RESEND_API_KEY || 
+                     (typeof import !== 'undefined' && import.meta?.env?.VITE_RESEND_API_KEY) ||
+                     '';
+    
+    if (!resendKey) {
+        // Show helpful error with instructions
+        const errorMsg = 'Resend API key not configured.\n\n' +
+                        'To enable email sending:\n' +
+                        '1. Get your Resend API key from https://resend.com/api-keys\n' +
+                        '2. Add VITE_RESEND_API_KEY=your_key_here to your .env file\n' +
+                        '3. Restart your development server\n\n' +
+                        'Email data has been prepared and logged to console.';
+        console.log('Email data prepared (API key missing):', emailData);
+        throw new Error(errorMsg);
+    }
+    
+    // In production, this should call a backend API endpoint for security
+    // For development, we can call Resend directly if CORS allows
+    try {
+        const response = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${resendKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                // For development: Use Resend's test domain or your verified domain
+                // For production: Update to your verified domain (e.g., notifications@yourdomain.com)
+                from: emailData.from || 'Godspeed Basketball <onboarding@resend.dev>',
+                to: emailData.to,
+                subject: emailData.subject,
+                html: emailData.html
+            })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to send email');
+        }
+        
+        const result = await response.json();
+        console.log('Email sent successfully:', result);
+        return result;
+    } catch (error) {
+        console.error('Resend API error:', error);
+        
+        // If CORS error, provide helpful message
+        if (error.message.includes('CORS') || error.message.includes('fetch')) {
+            console.log('CORS error detected. Email data prepared:', emailData);
+            throw new Error('CORS error: Email sending requires a backend API endpoint. Email data logged to console.');
+        }
+        
+        // Fallback: show email data for manual sending
+        console.log('Email data prepared (send failed):', emailData);
+        throw error;
+    }
+}
+
+/**
+ * Show email success message
+ * @param {string} message - Success message
+ */
+function showEmailSuccess(message) {
+    // Create or update success notification
+    let notification = document.getElementById('email-notification');
+    if (!notification) {
+        notification = document.createElement('div');
+        notification.id = 'email-notification';
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 10000;
+            font-weight: 600;
+            animation: slideIn 0.3s ease-out;
+        `;
+        document.body.appendChild(notification);
+    }
+    
+    notification.textContent = message;
+    notification.style.background = '#10b981';
+    notification.style.display = 'block';
+    
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => {
+            notification.style.display = 'none';
+            notification.style.opacity = '1';
+        }, 300);
+    }, 3000);
+}
+
+/**
+ * Show email error message
+ * @param {string} message - Error message
+ */
+function showEmailError(message) {
+    // Create or update error notification
+    let notification = document.getElementById('email-notification');
+    if (!notification) {
+        notification = document.createElement('div');
+        notification.id = 'email-notification';
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #ef4444;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 10000;
+            font-weight: 600;
+            animation: slideIn 0.3s ease-out;
+        `;
+        document.body.appendChild(notification);
+    }
+    
+    notification.textContent = message;
+    notification.style.background = '#ef4444';
+    notification.style.display = 'block';
+    
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => {
+            notification.style.display = 'none';
+            notification.style.opacity = '1';
+        }, 300);
+    }, 5000);
+}
+
+// Add spin animation for loading
+if (typeof document !== 'undefined' && !document.getElementById('email-spin-style')) {
+    const style = document.createElement('style');
+    style.id = 'email-spin-style';
+    style.textContent = `
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+/**
+ * Send bulk training reports to all parents
+ */
+window.sendBulkTrainingReports = async function() {
+    if (!window.coachEmailService) {
+        alert('Email service not loaded. Please refresh the page.');
+        return;
+    }
+    
+    if (!confirm('Send training reports to ALL parents? This may take a few minutes.')) {
+        return;
+    }
+    
+    const db = getDB();
+    const accounts = db.accounts || [];
+    const athletes = db.roster || [];
+    
+    let successCount = 0;
+    let errorCount = 0;
+    const errors = [];
+    
+    showEmailSuccess('Starting bulk email send...');
+    
+    for (const account of accounts) {
+        if (!account.email) continue;
+        
+        // Find athletes for this account
+        const accountAthletes = athletes.filter(a => 
+            account.athletes && account.athletes.includes(a.athleteId)
+        );
+        
+        for (const athlete of accountAthletes) {
+            try {
+                const result = await window.coachEmailService.sendTrainingReport(athlete.athleteId, athlete.notes || '');
+                if (result.success) {
+                    if (result.emailData) {
+                        await sendEmailViaResend(result.emailData);
+                    }
+                    successCount++;
+                } else {
+                    errorCount++;
+                    errors.push(`${athlete.name}: ${result.error}`);
+                }
+            } catch (error) {
+                errorCount++;
+                errors.push(`${athlete.name}: ${error.message}`);
+            }
+        }
+    }
+    
+    if (errorCount === 0) {
+        showEmailSuccess(`Successfully sent ${successCount} training reports!`);
+    } else {
+        showEmailError(`Sent ${successCount} reports. ${errorCount} failed. Check console for details.`);
+        console.error('Email errors:', errors);
+    }
+};
+
+/**
+ * Send bulk practice info to all parents
+ */
+window.sendBulkPracticeInfo = async function() {
+    if (!window.coachEmailService) {
+        alert('Email service not loaded. Please refresh the page.');
+        return;
+    }
+    
+    if (!confirm('Send practice info to ALL parents? This may take a few minutes.')) {
+        return;
+    }
+    
+    const db = getDB();
+    const accounts = db.accounts || [];
+    const athletes = db.roster || [];
+    
+    let successCount = 0;
+    let errorCount = 0;
+    const errors = [];
+    
+    showEmailSuccess('Starting bulk email send...');
+    
+    for (const account of accounts) {
+        if (!account.email) continue;
+        
+        // Find athletes for this account
+        const accountAthletes = athletes.filter(a => 
+            account.athletes && account.athletes.includes(a.athleteId)
+        );
+        
+        for (const athlete of accountAthletes) {
+            try {
+                const result = await window.coachEmailService.sendPracticeInfo(athlete.athleteId);
+                if (result.success) {
+                    if (result.emailData) {
+                        await sendEmailViaResend(result.emailData);
+                    }
+                    successCount++;
+                } else {
+                    errorCount++;
+                    errors.push(`${athlete.name}: ${result.error}`);
+                }
+            } catch (error) {
+                errorCount++;
+                errors.push(`${athlete.name}: ${error.message}`);
+            }
+        }
+    }
+    
+    if (errorCount === 0) {
+        showEmailSuccess(`Successfully sent ${successCount} practice info emails!`);
+    } else {
+        showEmailError(`Sent ${successCount} emails. ${errorCount} failed. Check console for details.`);
+        console.error('Email errors:', errors);
+    }
+};

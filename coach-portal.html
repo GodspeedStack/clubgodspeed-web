@@ -1626,7 +1626,19 @@
     </div>
 
     <!-- Footer Removed per User Request -->
+    <script>
+        // Load environment variables for email functionality
+        // Try to get from Vite's import.meta.env (if using Vite dev server)
+        if (typeof import !== 'undefined' && import.meta && import.meta.env) {
+            window.VITE_RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY || window.VITE_RESEND_API_KEY || '';
+        } else {
+            // Fallback for static HTML - will need to be set manually or via build process
+            window.VITE_RESEND_API_KEY = window.VITE_RESEND_API_KEY || '';
+        }
+        // Note: For production, use a backend API endpoint or build process to inject env vars
+    </script>
     <script src="portal-data.js"></script>
+    <script src="src/lib/coachEmailService.js"></script>
     <script src="coach-portal.js"></script>
     <script src="src/components/MobileBottomNav.js"></script>
     <script src="nav-security.js"></script>

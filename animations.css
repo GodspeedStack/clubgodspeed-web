@@ -183,3 +183,448 @@
 .pause-animation {
     animation-play-state: paused;
 }
+
+/* ===========================
+   Hero Section Animations
+   =========================== */
+@keyframes hero-text-fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes hero-subtitle-fade {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes hero-cta-spring {
+    0% {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+    }
+    60% {
+        transform: scale(1.05) translateY(-5px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.hero-text-animate {
+    animation: hero-text-fade-up 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+
+.hero-text-animate-delay-1 {
+    animation-delay: 0.1s;
+}
+
+.hero-text-animate-delay-2 {
+    animation-delay: 0.2s;
+}
+
+.hero-subtitle-animate {
+    animation: hero-subtitle-fade 0.6s ease-out 0.3s backwards;
+}
+
+.hero-cta-animate {
+    animation: hero-cta-spring 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s backwards;
+}
+
+.hero-cta-animate-delay {
+    animation-delay: 0.7s;
+}
+
+/* ===========================
+   Scroll Reveal Animations
+   =========================== */
+/* fade-in-up keyframe already defined above */
+
+@keyframes slide-in-left {
+    from {
+        opacity: 0;
+        transform: translateX(-40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slide-in-right {
+    from {
+        opacity: 0;
+        transform: translateX(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes scale-in {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.animate-fade-in-up {
+    animation: fade-in-up 0.6s ease-out forwards;
+}
+
+.animate-slide-in-left {
+    animation: slide-in-left 0.6s ease-out forwards;
+}
+
+.animate-slide-in-right {
+    animation: slide-in-right 0.6s ease-out forwards;
+}
+
+.animate-scale-in {
+    animation: scale-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-fade-in {
+    animation: fade-in 0.6s ease-out forwards;
+}
+
+/* ===========================
+   Image Hover Effects
+   =========================== */
+.image-hover-spring {
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+                opacity 0.3s ease;
+    will-change: transform;
+}
+
+.image-hover-spring:hover {
+    transform: scale(1.08) translateY(-4px);
+}
+
+.image-lazy-fade {
+    opacity: 0;
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    transform: scale(0.98);
+}
+
+.image-lazy-fade.loaded {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Coach Photo Hover */
+.coach-photo-hover {
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.coach-photo-hover::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.coach-photo-hover:hover {
+    transform: scale(1.05);
+}
+
+.coach-photo-hover:hover::after {
+    opacity: 1;
+}
+
+/* ===========================
+   Badge Animations
+   =========================== */
+@keyframes badge-pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1.05);
+    }
+}
+
+@keyframes badge-bounce {
+    0%, 100% {
+        transform: scale(1) translateY(0);
+    }
+    25% {
+        transform: scale(1.2) translateY(-4px);
+    }
+    50% {
+        transform: scale(1.1) translateY(-2px);
+    }
+    75% {
+        transform: scale(1.15) translateY(-3px);
+    }
+}
+
+.badge-pulse {
+    animation: badge-pulse 2s ease-in-out infinite;
+}
+
+.badge-bounce {
+    animation: badge-bounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Notification slide-in */
+@keyframes notification-slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.notification-slide-in {
+    animation: notification-slide-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ===========================
+   Button Enhancements
+   =========================== */
+@keyframes btn-glow {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 20px 4px rgba(37, 99, 235, 0.3);
+    }
+}
+
+@keyframes btn-ripple {
+    0% {
+        transform: scale(0);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+@keyframes checkmark-draw {
+    0% {
+        stroke-dashoffset: 100;
+    }
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+.btn-glow {
+    animation: btn-glow 2s ease-in-out infinite;
+}
+
+.btn-ripple {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-ripple::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn-ripple:active::after {
+    width: 300px;
+    height: 300px;
+    animation: btn-ripple 0.6s ease-out;
+}
+
+.checkmark-animate {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: checkmark-draw 0.6s ease-out forwards;
+}
+
+/* ===========================
+   Navigation Enhancements
+   =========================== */
+@keyframes nav-underline {
+    from {
+        width: 0;
+        left: 50%;
+    }
+    to {
+        width: 100%;
+        left: 0;
+    }
+}
+
+@keyframes mobile-menu-slide {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.nav-link-underline {
+    position: relative;
+}
+
+.nav-link-underline::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: currentColor;
+    transition: width 0.3s ease, left 0.3s ease;
+}
+
+.nav-link-underline:hover::after {
+    width: 100%;
+}
+
+.mobile-menu-slide {
+    animation: mobile-menu-slide 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Dropdown staggered children */
+.login-dropdown > * {
+    opacity: 0;
+    transform: translateY(-10px);
+    animation: fade-in-up 0.3s ease-out forwards;
+}
+
+.login-dropdown > *:nth-child(1) { animation-delay: 0.05s; }
+.login-dropdown > *:nth-child(2) { animation-delay: 0.1s; }
+.login-dropdown > *:nth-child(3) { animation-delay: 0.15s; }
+.login-dropdown > *:nth-child(4) { animation-delay: 0.2s; }
+
+.login-dropdown:hover > *,
+.nav-login-wrapper:hover .login-dropdown > * {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ===========================
+   Page Load Animation
+   =========================== */
+@keyframes page-fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.page-load {
+    animation: page-fade-in 0.6s ease-out;
+}
+
+body {
+    opacity: 0;
+    animation: page-fade-in 0.6s ease-out forwards;
+}
+
+/* ===========================
+   Coach Photo Animations
+   =========================== */
+.coach-photo-reveal-left {
+    opacity: 0;
+    transform: translateX(-40px);
+    transition: opacity 0.6s ease-out, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.coach-photo-reveal-right {
+    opacity: 0;
+    transform: translateX(40px);
+    transition: opacity 0.6s ease-out, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.coach-photo-reveal-left.scroll-revealed,
+.coach-photo-reveal-right.scroll-revealed {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* ===========================
+   Form Input Animations
+   =========================== */
+@keyframes label-float-up {
+    from {
+        transform: translateY(0) scale(1);
+        opacity: 0.7;
+    }
+    to {
+        transform: translateY(-20px) scale(0.85);
+        opacity: 1;
+    }
+}
+
+.floating-label {
+    position: relative;
+}
+
+.floating-label input:focus + label,
+.floating-label input:not(:placeholder-shown) + label {
+    animation: label-float-up 0.3s ease-out forwards;
+    color: var(--brand-blue);
+}
+
+.input-focus-ring {
+    transition: box-shadow 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.input-focus-ring:focus {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Enhanced error shake */
+.input-error-shake {
+    animation: shake 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
