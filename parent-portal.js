@@ -1139,21 +1139,48 @@ async function loadTrainingHours(parentEmail) {
                 const logDiv = document.createElement('div');
                 logDiv.id = 'user-usage-log';
                 logDiv.style.marginTop = '20px';
-                const safeLogs = userRecords.logs.map(log => {
+                const header = document.createElement('h4');
+                header.style.marginBottom = '10px';
+                header.style.fontSize = '14px';
+                header.style.color = '#444';
+                header.textContent = 'Session History';
+                logDiv.appendChild(header);
+                
+                userRecords.logs.forEach(log => {
                     const safeActivity = escapeHTML(log.activity || '');
                     const safeDate = escapeHTML(log.date || '');
                     const safeTime = escapeHTML(log.time || '');
-                    return `
-                    <div style="display:flex; justify-content:space-between; padding:10px; background:#fff; border:1px solid #eee; border-radius:8px; margin-bottom:8px;">
-                        <div>
-                            <div style="font-weight:600; font-size:13px;">${safeActivity}</div>
-                            <div style="font-size:11px; color:#666;">${safeDate}</div>
-                        </div>
-                        <div style="font-weight:600; color:#444;">${safeTime}</div>
-                    </div>
-                `;
-                }).join('');
-                logDiv.innerHTML = '<h4 style="margin-bottom:10px; font-size:14px; color:#444;">Session History</h4>' + safeLogs;
+                    
+                    const logItem = document.createElement('div');
+                    logItem.style.display = 'flex';
+                    logItem.style.justifyContent = 'space-between';
+                    logItem.style.padding = '10px';
+                    logItem.style.background = '#fff';
+                    logItem.style.border = '1px solid #eee';
+                    logItem.style.borderRadius = '8px';
+                    logItem.style.marginBottom = '8px';
+                    
+                    const leftDiv = document.createElement('div');
+                    const activityDiv = document.createElement('div');
+                    activityDiv.style.fontWeight = '600';
+                    activityDiv.style.fontSize = '13px';
+                    activityDiv.textContent = safeActivity;
+                    const dateDiv = document.createElement('div');
+                    dateDiv.style.fontSize = '11px';
+                    dateDiv.style.color = '#666';
+                    dateDiv.textContent = safeDate;
+                    leftDiv.appendChild(activityDiv);
+                    leftDiv.appendChild(dateDiv);
+                    
+                    const timeDiv = document.createElement('div');
+                    timeDiv.style.fontWeight = '600';
+                    timeDiv.style.color = '#444';
+                    timeDiv.textContent = safeTime;
+                    
+                    logItem.appendChild(leftDiv);
+                    logItem.appendChild(timeDiv);
+                    logDiv.appendChild(logItem);
+                });
                 calendarContainer.parentNode.insertBefore(logDiv, calendarContainer.nextSibling);
             }
 
