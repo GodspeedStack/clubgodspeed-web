@@ -583,7 +583,8 @@ function loadPerformance(parentEmail) {
         console.warn('No child linked to this account.');
         const listContainer = document.getElementById('performance-grade-list');
         if (listContainer) {
-            listContainer.innerHTML = '<p class="text-muted">No athlete found linked to your account.</p>';
+            listContainer.textContent = 'No athlete found linked to your account.';
+            listContainer.className = 'text-muted';
         }
         return;
     }
@@ -1362,23 +1363,35 @@ async function loadSkillsPrograms(parentEmail) {
 
     // Render programs
     if (programs.length === 0) {
-        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #888;"><p>No active skills programs found.</p></div>';
+        const emptyDiv = document.createElement('div');
+        emptyDiv.style.textAlign = 'center';
+        emptyDiv.style.padding = '40px';
+        emptyDiv.style.color = '#888';
+        const p = document.createElement('p');
+        p.textContent = 'No active skills programs found.';
+        emptyDiv.appendChild(p);
+        container.appendChild(emptyDiv);
         return;
     }
 
     let html = '';
     programs.forEach(program => {
         const athlete = athletes.find(a => a.athleteId === program.athlete_id);
+        // Sanitize program data
+        const safeProgramName = escapeHTML(program.program_name || program.program_id || '');
+        const safeAthleteName = escapeHTML(athlete ? athlete.name : 'Unknown Athlete');
+        const safeStartDate = program.start_date ? new Date(program.start_date).toLocaleDateString() : '';
+        
         html += `
             <div style="background: #f9f9f9; border-radius: 12px; padding: 20px; margin-bottom: 16px;">
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
                     <div>
-                        <h4 style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">${program.program_name || program.program_id}</h4>
-                        <p style="font-size: 14px; color: #666;">${athlete ? athlete.name : 'Unknown Athlete'}</p>
+                        <h4 style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">${safeProgramName}</h4>
+                        <p style="font-size: 14px; color: #666;">${safeAthleteName}</p>
                     </div>
                     <span style="background: #10b981; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">Active</span>
                 </div>
-                ${program.start_date ? `<div style="font-size: 14px; color: #666; margin-top: 8px;">Started: ${new Date(program.start_date).toLocaleDateString()}</div>` : ''}
+                ${safeStartDate ? `<div style="font-size: 14px; color: #666; margin-top: 8px;">Started: ${escapeHTML(safeStartDate)}</div>` : ''}
             </div>
         `;
     });
@@ -1440,27 +1453,63 @@ async function loadReceipts(parentEmail) {
     }
 
     if (receipts.length === 0) {
-        container.innerHTML = '<div style="text-align: center; padding: 20px; color: #888;"><p>No receipts found.</p></div>';
+        const emptyDiv = document.createElement('div');
+        emptyDiv.style.textAlign = 'center';
+        emptyDiv.style.padding = '20px';
+        emptyDiv.style.color = '#888';
+        const p = document.createElement('p');
+        p.textContent = 'No receipts found.';
+        emptyDiv.appendChild(p);
+        container.appendChild(emptyDiv);
         return;
     }
 
-    let html = '';
     receipts.forEach(receipt => {
-        html += `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background: #f9f9f9; border-radius: 8px;">
-                <div>
-                    <div style="font-weight: 600; margin-bottom: 4px;">Receipt #${receipt.receipt_number || receipt.transaction_id}</div>
-                    <div style="font-size: 14px; color: #666;">${new Date(receipt.payment_date).toLocaleDateString()}</div>
-                </div>
-                <div style="text-align: right;">
-                    <div style="font-weight: 600; margin-bottom: 4px;">$${parseFloat(receipt.amount).toFixed(2)}</div>
-                    <button onclick="generateReceiptPDF('${receipt.receipt_number || receipt.transaction_id}')" class="btn-text" style="font-size: 12px; color: #2563eb;">Download</button>
-                </div>
-            </div>
-        `;
+        // Sanitize receipt data
+        const safeReceiptNumber = escapeHTML(String(receipt.receipt_number || receipt.transaction_id || ''));
+        const safeDate = escapeHTML(new Date(receipt.payment_date).toLocaleDateString());
+        const safeAmount = escapeHTML(parseFloat(receipt.amount || 0).toFixed(2));
+        
+        const receiptDiv = document.createElement('div');
+        receiptDiv.style.display = 'flex';
+        receiptDiv.style.justifyContent = 'space-between';
+        receiptDiv.style.alignItems = 'center';
+        receiptDiv.style.padding = '16px';
+        receiptDiv.style.background = '#f9f9f9';
+        receiptDiv.style.borderRadius = '8px';
+        receiptDiv.style.marginBottom = '8px';
+        
+        const leftDiv = document.createElement('div');
+        const receiptNum = document.createElement('div');
+        receiptNum.style.fontWeight = '600';
+        receiptNum.style.marginBottom = '4px';
+        receiptNum.textContent = `Receipt #${safeReceiptNumber}`;
+        const dateDiv = document.createElement('div');
+        dateDiv.style.fontSize = '14px';
+        dateDiv.style.color = '#666';
+        dateDiv.textContent = safeDate;
+        leftDiv.appendChild(receiptNum);
+        leftDiv.appendChild(dateDiv);
+        
+        const rightDiv = document.createElement('div');
+        rightDiv.style.textAlign = 'right';
+        const amountDiv = document.createElement('div');
+        amountDiv.style.fontWeight = '600';
+        amountDiv.style.marginBottom = '4px';
+        amountDiv.textContent = `$${safeAmount}`;
+        const downloadBtn = document.createElement('button');
+        downloadBtn.className = 'btn-text';
+        downloadBtn.style.fontSize = '12px';
+        downloadBtn.style.color = '#2563eb';
+        downloadBtn.textContent = 'Download';
+        downloadBtn.onclick = () => generateReceiptPDF(safeReceiptNumber);
+        rightDiv.appendChild(amountDiv);
+        rightDiv.appendChild(downloadBtn);
+        
+        receiptDiv.appendChild(leftDiv);
+        receiptDiv.appendChild(rightDiv);
+        container.appendChild(receiptDiv);
     });
-
-    container.innerHTML = html;
 }
 
 /**
@@ -1498,31 +1547,79 @@ async function loadInvoices(parentEmail) {
     }
 
     if (invoices.length === 0) {
-        container.innerHTML = '<div style="text-align: center; padding: 20px; color: #888;"><p>No invoices found.</p></div>';
+        const emptyDiv = document.createElement('div');
+        emptyDiv.style.textAlign = 'center';
+        emptyDiv.style.padding = '20px';
+        emptyDiv.style.color = '#888';
+        const p = document.createElement('p');
+        p.textContent = 'No invoices found.';
+        emptyDiv.appendChild(p);
+        container.appendChild(emptyDiv);
         return;
     }
 
-    let html = '';
     invoices.forEach(invoice => {
+        // Sanitize invoice data
+        const safeInvoiceNumber = escapeHTML(String(invoice.invoice_number || ''));
+        const safeDueDate = escapeHTML(new Date(invoice.due_date).toLocaleDateString());
+        const safeAmount = escapeHTML(parseFloat(invoice.total_amount || 0).toFixed(2));
+        const safeStatus = escapeHTML(String(invoice.status || '').toUpperCase());
         const statusColor = invoice.status === 'paid' ? '#10b981' : invoice.status === 'overdue' ? '#ef4444' : '#f59e0b';
-        html += `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background: #f9f9f9; border-radius: 8px;">
-                <div>
-                    <div style="font-weight: 600; margin-bottom: 4px;">Invoice #${invoice.invoice_number}</div>
-                    <div style="font-size: 14px; color: #666;">Due: ${new Date(invoice.due_date).toLocaleDateString()}</div>
-                </div>
-                <div style="text-align: right;">
-                    <div style="font-weight: 600; margin-bottom: 4px;">$${parseFloat(invoice.total_amount).toFixed(2)}</div>
-                    <div style="display: flex; gap: 8px; align-items: center;">
-                        <span style="background: ${statusColor}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">${invoice.status.toUpperCase()}</span>
-                        <button onclick="generateInvoicePDF('${invoice.invoice_number}')" class="btn-text" style="font-size: 12px; color: #2563eb;">Download</button>
-                    </div>
-                </div>
-            </div>
-        `;
+        
+        const invoiceDiv = document.createElement('div');
+        invoiceDiv.style.display = 'flex';
+        invoiceDiv.style.justifyContent = 'space-between';
+        invoiceDiv.style.alignItems = 'center';
+        invoiceDiv.style.padding = '16px';
+        invoiceDiv.style.background = '#f9f9f9';
+        invoiceDiv.style.borderRadius = '8px';
+        invoiceDiv.style.marginBottom = '8px';
+        
+        const leftDiv = document.createElement('div');
+        const invoiceNum = document.createElement('div');
+        invoiceNum.style.fontWeight = '600';
+        invoiceNum.style.marginBottom = '4px';
+        invoiceNum.textContent = `Invoice #${safeInvoiceNumber}`;
+        const dueDateDiv = document.createElement('div');
+        dueDateDiv.style.fontSize = '14px';
+        dueDateDiv.style.color = '#666';
+        dueDateDiv.textContent = `Due: ${safeDueDate}`;
+        leftDiv.appendChild(invoiceNum);
+        leftDiv.appendChild(dueDateDiv);
+        
+        const rightDiv = document.createElement('div');
+        rightDiv.style.textAlign = 'right';
+        const amountDiv = document.createElement('div');
+        amountDiv.style.fontWeight = '600';
+        amountDiv.style.marginBottom = '4px';
+        amountDiv.textContent = `$${safeAmount}`;
+        const statusContainer = document.createElement('div');
+        statusContainer.style.display = 'flex';
+        statusContainer.style.gap = '8px';
+        statusContainer.style.alignItems = 'center';
+        const statusSpan = document.createElement('span');
+        statusSpan.style.background = statusColor;
+        statusSpan.style.color = 'white';
+        statusSpan.style.padding = '2px 8px';
+        statusSpan.style.borderRadius = '12px';
+        statusSpan.style.fontSize = '11px';
+        statusSpan.style.fontWeight = '600';
+        statusSpan.textContent = safeStatus;
+        const downloadBtn = document.createElement('button');
+        downloadBtn.className = 'btn-text';
+        downloadBtn.style.fontSize = '12px';
+        downloadBtn.style.color = '#2563eb';
+        downloadBtn.textContent = 'Download';
+        downloadBtn.onclick = () => generateInvoicePDF(safeInvoiceNumber);
+        statusContainer.appendChild(statusSpan);
+        statusContainer.appendChild(downloadBtn);
+        rightDiv.appendChild(amountDiv);
+        rightDiv.appendChild(statusContainer);
+        
+        invoiceDiv.appendChild(leftDiv);
+        invoiceDiv.appendChild(rightDiv);
+        container.appendChild(invoiceDiv);
     });
-
-    container.innerHTML = html;
 }
 
 /**
