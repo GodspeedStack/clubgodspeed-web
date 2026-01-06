@@ -8,7 +8,7 @@ const gameSchedule = [
     { date: "Sat, Dec 20, 2025", time: "1:00 PM", team: "5th Grade", opponent: "CO Truth", location: "Shadow Ridge MS", type: "Tournament", status: "Final", result: "Won" },
     { date: "Sat, Dec 20, 2025", time: "3:00 PM", team: "5th Grade", opponent: "Niwot Cougars", location: "Shadow Ridge MS", type: "Tournament", status: "Final", result: "Lost 12-19" },
     { date: "Sun, Dec 21, 2025", time: "11:00 AM", team: "5th Grade", opponent: "Niwot Cougars", location: "Legacy HS", type: "Championship", status: "Final", result: "Won", mvp: "Aydyon Tuiono" },
-    { date: "Sun, Dec 21, 2025", time: "12:00 PM", team: "5th Grade", opponent: "KB3 Elite", location: "Legacy HS", type: "Championship", status: "Final", result: "Won", mvp: "Ashton Bowman" },
+    { date: "Sun, Dec 21, 2025", time: "12:00 PM", team: "5th Grade", opponent: "KB3 Elite", location: "Legacy HS", type: "Tournament", status: "Final", result: "Won" },
 
     // --- UPCOMING GAMES (JAN/FEB 2026) ---
     { date: "Sat, Jan 10, 2026", time: "8:00 AM", team: "5th Grade", opponent: "CDA 5th Green", location: "Home", type: "League", status: "Upcoming" },
