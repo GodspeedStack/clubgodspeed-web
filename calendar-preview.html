@@ -39,6 +39,205 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
+
+        /* ---------------------------------------------------------
+           TAILWIND POLYFILLS (Essential styles if CDN fails)
+           --------------------------------------------------------- */
+
+        /* Layout & Flexbox */
+        .hidden {
+            display: none;
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        .items-center {
+            align-items: center;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        .space-x-8>*+* {
+            margin-left: 2rem;
+        }
+
+        .space-x-6>*+* {
+            margin-left: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .md\:flex {
+                display: flex !important;
+            }
+
+            .md\:hidden {
+                display: none !important;
+            }
+
+            .md\:block {
+                display: block !important;
+            }
+        }
+
+        /* Colors & Backgrounds */
+        .bg-black {
+            background-color: black;
+        }
+
+        .text-white {
+            color: white;
+        }
+
+        .bg-gray-50 {
+            background-color: #f9fafb;
+        }
+
+        .text-black {
+            color: black;
+        }
+
+        .text-gray-400 {
+            color: #9ca3af;
+        }
+
+        .bg-white {
+            background-color: white;
+        }
+
+        /* Typography */
+        .uppercase {
+            text-transform: uppercase;
+        }
+
+        .font-black {
+            font-weight: 900;
+        }
+
+        .font-bold {
+            font-weight: 700;
+        }
+
+        .text-4xl {
+            font-size: 2.25rem;
+        }
+
+        .text-6xl {
+            font-size: 3.75rem;
+        }
+
+        .text-sm {
+            font-size: 0.875rem;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        /* Spacing & Sizing */
+        .w-6 {
+            width: 1.5rem;
+        }
+
+        .h-6 {
+            height: 1.5rem;
+        }
+
+        .py-20 {
+            padding-top: 5rem;
+            padding-bottom: 5rem;
+        }
+
+        .px-6 {
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+        }
+
+        .p-6 {
+            padding: 1.5rem;
+        }
+
+        .mb-4 {
+            margin-bottom: 1rem;
+        }
+
+        /* Table Styles */
+        .w-full {
+            width: 100%;
+        }
+
+        .border-collapse {
+            border-collapse: collapse;
+        }
+
+        th.text-left {
+            text-align: left;
+        }
+
+        /* Fix Icons inside Buttons/Links */
+        button svg,
+        a svg {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        /* Absolute Positioning Fix */
+        .absolute {
+            position: absolute;
+        }
+
+        .relative {
+            position: relative;
+        }
+
+        .top-4 {
+            top: 1rem;
+        }
+
+        .right-6 {
+            right: 1.5rem;
+        }
+
+        /* Cart Badge */
+        .cart-badge {
+            position: absolute;
+            top: -0.25rem;
+            right: -0.25rem;
+            background-color: #ef4444;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 0 4px;
+            border-radius: 9999px;
+        }
+
+        /* Rounded Full Utility */
+        .rounded-full {
+            border-radius: 9999px;
+        }
+
+        .rounded-xl {
+            border-radius: 0.75rem;
+        }
+
+        .shadow-lg {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Ensure Navbar links don't wrap strangely */
+        .navbar .flex.space-x-8 {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .navbar .flex.space-x-8>*+* {
+            margin-left: 0;
+        }
+
+        /* Reset space-x if using gap */
     </style>
 </head>
 
