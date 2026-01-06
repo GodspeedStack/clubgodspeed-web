@@ -1110,32 +1110,102 @@ ul {
 }
 
 /* ===========================
-   Floating Navigation Icons (iOS Minimalist)
+   Floating Navigation Icons (Floating Circle with Shadow)
    =========================== */
 .nav-cart-btn {
     width: 44px;
-    /* Standard touch target */
+    /* Fixed size */
     height: 44px;
+    /* Fixed size */
     border-radius: 50%;
-    background: transparent;
-    /* Clean default state */
+    /* Perfect circle */
+    background: #ffffff;
+    /* White background */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    /* Standard site shadow */
     display: flex;
     align-items: center;
+    /* Center vertically */
     justify-content: center;
+    /* Center horizontally */
     transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     color: #1d1d1f !important;
 }
 
 .nav-cart-btn:hover {
-    background: rgba(0, 0, 0, 0.05);
-    /* Subtle interaction state */
-    transform: scale(1.05);
+    transform: translateY(-1px);
+    /* Subtle lift */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    /* Increased shadow on hover */
 }
 
-/* Ensure icons inside are centered and crisp */
+/* Ensure icons are centered and sized correctly */
 .nav-cart-btn svg {
-    width: 24px;
-    /* Slightly larger for better visibility without bg */
-    height: 24px;
+    width: 20px;
+    height: 20px;
     stroke-width: 1.5;
+    flex-shrink: 0;
+    /* Prevent icon shrinking */
+}
+
+/* ===========================
+   iOS Segmented Control (Airbnb Style)
+   =========================== */
+.ios-segmented-control {
+    background-color: #f5f5f7;
+    /* iOS grouped table bg color */
+    padding: 4px;
+    border-radius: 9rem;
+    /* Fully rounded pill */
+    display: inline-flex;
+    position: relative;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.ios-segment-option {
+    padding: 6px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #6e6e73;
+    border-radius: 9rem;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    cursor: pointer;
+    line-height: normal;
+}
+
+.ios-segment-option:hover {
+    color: #1d1d1f;
+}
+
+.ios-segment-option.active {
+    background-color: white;
+    color: #1d1d1f;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* Sync Button Premium */
+.btn-sync-premium {
+    background-color: white;
+    color: #1d1d1f;
+    border: 1px solid #e5e5ea;
+    padding: 6px 16px;
+    border-radius: 9rem;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-sync-premium:hover {
+    background-color: #f5f5f7;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
 }

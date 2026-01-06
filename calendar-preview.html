@@ -379,26 +379,42 @@
     <main class="max-w-5xl mx-auto px-6 py-16">
 
         <!-- Controls Toolbar -->
-        <div class="flex justify-end gap-3 mb-6">
-            <button onclick="syncCalendar()" class="btn-secondary"
-                style="padding: 0.5rem 1rem; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; white-space: nowrap; background: white; color: #1d1d1f; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <!-- High-End iOS Controls Toolbar -->
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
+
+            <!-- View Switcher (Segmented Control) -->
+            <div class="ios-segmented-control">
+                <span class="ios-segment-option active">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                    </svg>
+                    List
+                </span>
+                <a href="calendar-grid.html" class="ios-segment-option" aria-label="Switch to Grid View">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    Grid
+                </a>
+            </div>
+
+            <!-- Action Actions -->
+            <button onclick="syncCalendar()" class="btn-sync-premium">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                     <polyline points="7 10 12 15 17 10"></polyline>
                     <line x1="12" y1="15" x2="12" y2="3"></line>
                 </svg>
-                Sync
+                Sync Calendar
             </button>
-            <a href="calendar-grid.html" class="btn-secondary"
-                style="padding: 0.5rem 1rem; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; text-decoration: none; white-space: nowrap; background: white; color: black; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="7" height="7"></rect>
-                    <rect x="14" y="3" width="7" height="7"></rect>
-                    <rect x="14" y="14" width="7" height="7"></rect>
-                    <rect x="3" y="14" width="7" height="7"></rect>
-                </svg>
-                Team View
-            </a>
         </div>
 
         <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
