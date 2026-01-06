@@ -402,7 +402,7 @@ const styles = {
     },
     addToCartButton: {
         width: '100%',
-        backgroundColor: '#0071e3',
+        backgroundColor: '#2563eb',
         color: '#ffffff',
         border: 'none',
         padding: '14px',

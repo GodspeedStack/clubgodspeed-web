@@ -244,7 +244,7 @@ export default function CoachMessageComposer({ coachId, onMessageSent }) {
                             <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
                                 <!-- Header -->
                                 <tr>
-                                    <td style="background-color: #0071e3; padding: 30px; text-align: center;">
+                                    <td style="background-color: #2563eb; padding: 30px; text-align: center;">
                                         <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 800; letter-spacing: -0.02em;">
                                             GODSPEED BASKETBALL
                                         </h1>
@@ -267,7 +267,7 @@ export default function CoachMessageComposer({ coachId, onMessageSent }) {
                                 <tr>
                                     <td style="padding: 0 30px 40px 30px; text-align: center;">
                                         <a href="https://clubgodspeed-web.web.app/parent-portal.html" 
-                                           style="display: inline-block; background-color: #0071e3; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 999px; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em;">
+                                           style="display: inline-block; background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 999px; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em;">
                                             View in Parent Portal
                                         </a>
                                     </td>
@@ -527,7 +527,7 @@ const styles = {
         textTransform: 'uppercase',
         letterSpacing: '0.05em',
         color: '#ffffff',
-        backgroundColor: '#0071e3',
+        backgroundColor: '#2563eb',
         border: 'none',
         borderRadius: '999px',
         cursor: 'pointer',

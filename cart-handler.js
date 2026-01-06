@@ -3,18 +3,18 @@
  * Works with training programs, products, and store items
  */
 
-(function() {
+(function () {
     'use strict';
 
     // Load cart context if available
     let cartManager = null;
-    
+
     function initCartManager() {
         if (typeof window.cartManager !== 'undefined') {
             cartManager = window.cartManager;
             return true;
         }
-        
+
         // Try to load cart context
         const script = document.createElement('script');
         script.src = '/src/lib/cartContext.js';
@@ -125,9 +125,9 @@
             animation: slideInRight 0.3s ease;
             font-family: 'Inter', sans-serif;
         `;
-        
+
         document.body.appendChild(notification);
-        
+
         setTimeout(() => {
             notification.style.animation = 'slideOutRight 0.3s ease';
             setTimeout(() => notification.remove(), 300);
@@ -142,7 +142,7 @@
 
         const count = cartManager.getItemCount();
         const badges = document.querySelectorAll('.cart-badge, .cart-count, [data-cart-count]');
-        
+
         badges.forEach(badge => {
             badge.textContent = count;
             badge.style.display = count > 0 ? 'block' : 'none';
@@ -164,6 +164,80 @@
     /**
      * Initialize cart functionality
      */
+    /**
+     * Handle Checkout
+     */
+    async function handleCheckout(button) {
+        if (!cartManager || cartManager.getItemCount() === 0) {
+            alert("Your cart is empty!");
+            return;
+        }
+
+        const originalText = button.innerText;
+        button.innerText = "Processing...";
+        button.disabled = true;
+
+        try {
+            // 1. Get Cart Items
+            const items = cartManager.getItems();
+
+            // 2. Call Backend to Create Session
+            // Note: Replace with your actual Supabase Function URL
+            const SUPABASE_FUNCTION_URL = "https://your-project-ref.supabase.co/functions/v1/create-checkout-session";
+
+            // For now, check if we are in "Demo Mode" (no backend)
+            // If the URL is placeholder, mock the success
+            if (SUPABASE_FUNCTION_URL.includes("your-project-ref")) {
+                console.warn("Stripe Backend not configured. Simulating checkout.");
+                await new Promise(r => setTimeout(r, 1500));
+
+                // Simulation Success
+                alert("Checkout Simulation Successful!\n(Configure Supabase Function URL in cart-handler.js for real payments)");
+                cartManager.clear();
+                updateCartBadges();
+
+                // Close cart
+                const overlay = document.getElementById('cart-overlay');
+                if (overlay) overlay.style.display = 'none';
+
+                button.innerText = originalText;
+                button.disabled = false;
+                return;
+            }
+
+            const response = await fetch(SUPABASE_FUNCTION_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY // If needed
+                },
+                body: JSON.stringify({
+                    items: items,
+                    success_url: window.location.origin + "/success.html",
+                    cancel_url: window.location.href
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.error) throw new Error(data.error);
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                throw new Error("No checkout URL returned");
+            }
+
+        } catch (error) {
+            console.error("Checkout Error:", error);
+            alert("Checkout failed: " + error.message);
+            button.innerText = originalText;
+            button.disabled = false;
+        }
+    }
+
+    /**
+     * Initialize cart functionality
+     */
     function init() {
         // Wait for DOM
         if (document.readyState === 'loading') {
@@ -177,13 +251,21 @@
         // Setup add to cart handlers
         document.addEventListener('click', (e) => {
             const button = e.target.closest('.add-to-cart-btn, .select-program-btn');
+            const checkoutBtn = e.target.closest('.checkout-btn');
+
+            if (checkoutBtn) {
+                e.preventDefault();
+                handleCheckout(checkoutBtn);
+                return;
+            }
+
             if (!button) return;
 
             // Check if it's a program button
             if (button.classList.contains('select-program-btn') || button.hasAttribute('data-program')) {
                 e.preventDefault();
                 handleProgramAddToCart(button);
-            } 
+            }
             // Check if it's a product button
             else if (button.classList.contains('add-to-cart-btn') && !button.classList.contains('snipcart-add-item')) {
                 e.preventDefault();

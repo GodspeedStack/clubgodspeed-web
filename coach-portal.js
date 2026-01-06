@@ -98,7 +98,7 @@ function initDashboard() {
     // Helper for colors
     const getColor = (name) => {
         if (name.includes('Red')) return '#ff3b30';
-        if (name.includes('Blue')) return '#0071e3';
+        if (name.includes('Blue')) return '#2563eb';
         if (name.includes('Black')) return '#1d1d1f';
         if (name.includes('Green')) return '#34c759';
         if (name.includes('White')) return '#e5e5e5';
@@ -1790,7 +1790,7 @@ function renderAcademyGrid(videos) {
                 </div>
             </div>
             <div class="video-meta">
-                <div style="font-size: 0.7rem; color: #0071e3; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">${v.category}</div>
+                <div style="font-size: 0.7rem; color: #2563eb; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">${v.category}</div>
                 <div class="video-title">${v.title}</div>
                 <div class="video-coach">${v.coach}</div>
             </div>

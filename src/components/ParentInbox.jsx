@@ -360,7 +360,7 @@ const styles = {
         color: '#FFFFFF'
     },
     unreadBadge: {
-        color: '#0071e3',
+        color: '#2563eb',
         fontSize: '1.5rem',
         lineHeight: 1
     },
@@ -434,7 +434,7 @@ const styles = {
         textTransform: 'uppercase',
         letterSpacing: '0.05em',
         color: '#ffffff',
-        backgroundColor: '#0071e3',
+        backgroundColor: '#2563eb',
         border: 'none',
         borderRadius: '999px',
         cursor: 'pointer',
@@ -456,7 +456,7 @@ const styles = {
         width: '40px',
         height: '40px',
         border: '3px solid rgba(0, 113, 227, 0.1)',
-        borderTop: '3px solid #0071e3',
+        borderTop: '3px solid #2563eb',
         borderRadius: '50%',
         animation: 'spin 1s linear infinite',
         marginBottom: '1rem'
@@ -472,7 +472,7 @@ const styles = {
         fontSize: '0.9rem',
         fontWeight: '600',
         color: '#ffffff',
-        backgroundColor: '#0071e3',
+        backgroundColor: '#2563eb',
         border: 'none',
         borderRadius: '999px',
         cursor: 'pointer'

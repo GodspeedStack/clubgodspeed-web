@@ -56,30 +56,55 @@
         <button class="md:hidden text-2xl">☰</button>
     </nav>
 
-    <header class="hero-section hero-pattern" style="height: 60vh;">
-        <div class="hero-content">
-            <h1 class="hero-title">A DIFFERENT KIND OF <span class="highlight">COACH.</span></h1>
-            <p class="hero-subtitle">For a different kind of player.</p>
+    <!-- Hero Section -->
+    <header class="relative bg-black min-h-[60vh] flex items-center justify-center overflow-hidden">
+        <!-- Background Overlay -->
+        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent z-10"></div>
+        <div class="absolute inset-0 opacity-40">
+            <!-- Placeholder for hero pattern or image -->
+            <img src="assets/hero-collage.png" alt="Background" class="w-full h-full object-cover">
+        </div>
+
+        <div class="relative z-20 container mx-auto px-6 text-center">
+            <h1 class="text-5xl md:text-7xl font-black text-white uppercase tracking-tighter mb-4 leading-none">
+                A Different Kind of <span class="text-blue-600">Coach.</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-gray-300 font-medium max-w-2xl mx-auto">
+                For a different kind of player.
+            </p>
         </div>
     </header>
 
-    <section class="section-dark">
-        <div class="container">
-            <h2 class="section-title">MEET THE COACHES</h2>
-            <div class="content-block"
-                style="display: grid; grid-template-columns: 1fr 2fr; gap: 3rem; align-items: start; max-width: 1000px; margin: 0 auto; margin-bottom: 3rem;">
-                <div class="coach-image-container">
-                    <img src="assets/coach-scott.png" alt="Coach Scott" class="coach-photo">
+    <!-- Coaches Section -->
+    <section class="bg-[#050505] text-white py-24">
+        <div class="container mx-auto px-6 max-w-6xl">
+            <div class="text-center mb-20">
+                <h2 class="text-3xl md:text-4xl font-black uppercase tracking-widest text-white mb-4">Meet the Coaches
+                </h2>
+                <div class="w-24 h-1 bg-blue-600 mx-auto rounded-full"></div>
+            </div>
+
+            <!-- Coach Scott -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-12 items-center mb-24">
+                <div class="md:col-span-4 relative group">
+                    <div
+                        class="absolute -inset-2 bg-gradient-to-r from-blue-600 to-blue-400 rounded-3xl opacity-30 group-hover:opacity-60 blur transition duration-500">
+                    </div>
+                    <img src="assets/coach-scott.png" alt="Coach Scott"
+                        class="relative w-full h-auto object-cover rounded-2xl shadow-2xl transform transition duration-500 group-hover:scale-[1.02]">
                 </div>
-                <div class="coach-bio" style="text-align: left;">
-                    <h3
-                        style="font-size: 1.8rem; margin-top: 0; color: #2563eb; font-weight: 700; letter-spacing: -0.02em;">
-                        COACH SCOTT</h3>
-                    <p style="font-size: 1.2rem; line-height: 1.8; color: #ccc; margin-top: 1rem;">
-                        Godspeed Basketball was founded to develop young men through a blend of movement science,
-                        basketball intelligence, and identity.
+                <div class="md:col-span-8 space-y-6">
+                    <div>
+                        <h3 class="text-4xl font-black text-blue-600 uppercase tracking-tight">Coach Scott</h3>
+                        <p class="text-gray-400 font-bold uppercase tracking-wide text-sm mt-1">Head Coach & Founder</p>
+                    </div>
+                    <p class="text-lg text-gray-300 leading-relaxed">
+                        Godspeed Basketball was founded to develop young men through a blend of <span
+                            class="text-white font-bold">movement science</span>, <span
+                            class="text-white font-bold">basketball intelligence</span>, and <span
+                            class="text-white font-bold">identity</span>.
                     </p>
-                    <p style="font-size: 1.2rem; line-height: 1.8; color: #ccc; margin-top: 1.5rem;">
+                    <p class="text-lg text-gray-300 leading-relaxed">
                         Coach Scott's coaching bridges biomechanics, cognitive skill-building, and identity-rooted in
                         purpose. The goal is to create an environment where players learn to move efficiently, think
                         clearly, and lead boldly.
@@ -87,91 +112,137 @@
                 </div>
             </div>
 
-            <div class="content-block"
-                style="display: grid; grid-template-columns: 1fr 2fr; gap: 3rem; align-items: start; max-width: 1000px; margin: 0 auto; margin-bottom: 3rem;">
-                <div class="coach-image-container">
-                    <img src="assets/coach-true-v2.png" alt="Coach True" class="coach-photo coach-photo-hover coach-photo-reveal-left scroll-reveal-left">
-                </div>
-                <div class="coach-bio" style="text-align: left;">
-                    <h3
-                        style="font-size: 1.8rem; margin-top: 0; color: #2563eb; font-weight: 700; letter-spacing: -0.02em;">
-                        COACH TRUE</h3>
-                    <p style="font-size: 1.2rem; line-height: 1.8; color: #ccc; margin-top: 1rem;">
-                        Coach True brings intensity and detail to player development. His focus on fundamental
-                        mastery
-                        and game-speed application ensures players are ready for any level of competition.
-                    </p>
-                </div>
-            </div>
-
-            <div class="content-block"
-                style="display: grid; grid-template-columns: 1fr 2fr; gap: 3rem; align-items: start; max-width: 1000px; margin: 0 auto;">
-                <div class="coach-image-container">
-                    <img src="assets/coach-gene.png" alt="Coach Gene" class="coach-photo coach-photo-hover coach-photo-reveal-right scroll-reveal-right">
-                </div>
-                <div class="coach-bio" style="text-align: left;">
-                    <h3
-                        style="font-size: 1.8rem; margin-top: 0; color: #2563eb; font-weight: 700; letter-spacing: -0.02em;">
-                        COACH GENE</h3>
-                    <h4 style="font-size: 1.1rem; color: black; margin-top: 0.5rem; text-transform: uppercase;">
-                        Community & Education</h4>
-                    <p style="font-size: 1.2rem; line-height: 1.8; color: #ccc; margin-top: 1rem;">
-                        Coach Gene is an educator who bridges the gap between the game and life. His focus is on
-                        mentorship, ensuring every player feels part of the Godspeed family and succeeds beyond the
-                        court.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="section-dark">
-        <div class="container">
-            <h2 class="section-title">COACHING STYLE</h2>
-            <div class="about-grid">
-                <div class="feature-card">
-                    <div class="card-content">
-                        <h3>Direct & Demanding</h3>
-                        <p>Supportive but firm. No shortcuts. Precision first, speed second.</p>
+            <!-- Coach True -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-12 items-center mb-24">
+                <!-- Image on Right for Desktop -->
+                <div class="md:col-span-4 md:order-last relative group">
+                    <div
+                        class="absolute -inset-2 bg-gradient-to-r from-purple-600 to-blue-500 rounded-3xl opacity-30 group-hover:opacity-60 blur transition duration-500">
                     </div>
+                    <img src="assets/coach-true-v2.png" alt="Coach True"
+                        class="relative w-full h-auto object-cover rounded-2xl shadow-2xl transform transition duration-500 group-hover:scale-[1.02]">
                 </div>
-                <div class="feature-card">
-                    <div class="card-content">
-                        <h3>Holistic Approach</h3>
-                        <p>Players are coached as complete people. Compact rosters ensure individual attention.</p>
+                <div class="md:col-span-8 space-y-6 text-left md:text-right">
+                    <div>
+                        <h3 class="text-4xl font-black text-blue-600 uppercase tracking-tight">Coach True</h3>
+                        <p class="text-gray-400 font-bold uppercase tracking-wide text-sm mt-1">Player Development</p>
+                    </div>
+                    <p class="text-lg text-gray-300 leading-relaxed">
+                        Coach True brings <span class="text-white font-bold">intensity and detail</span> to player
+                        development. His focus on fundamental mastery and game-speed application ensures players are
+                        ready for any level of competition.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Coach Gene -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-12 items-center">
+                <div class="md:col-span-4 relative group">
+                    <div
+                        class="absolute -inset-2 bg-gradient-to-r from-green-500 to-blue-500 rounded-3xl opacity-30 group-hover:opacity-60 blur transition duration-500">
+                    </div>
+                    <img src="assets/coach-gene.png" alt="Coach Gene"
+                        class="relative w-full h-auto object-cover rounded-2xl shadow-2xl transform transition duration-500 group-hover:scale-[1.02]">
+                </div>
+                <div class="md:col-span-8 space-y-6">
+                    <div>
+                        <h3 class="text-4xl font-black text-blue-600 uppercase tracking-tight">Coach Gene</h3>
+                        <p class="text-gray-400 font-bold uppercase tracking-wide text-sm mt-1">Community & Mentorship
+                        </p>
+                    </div>
+                    <p class="text-lg text-gray-300 leading-relaxed">
+                        Coach Gene is an <span class="text-white font-bold">educator</span> who bridges the gap between
+                        the game and life. His focus is on mentorship, ensuring every player feels part of the Godspeed
+                        family and succeeds beyond the court.
+                    </p>
+                    <div
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10">
+                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        <span class="text-xs font-bold tracking-wider text-gray-300 uppercase">Community Leader</span>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="section-light">
-        <div class="container">
-            <h2 class="section-title">TRAINING PHILOSOPHY</h2>
-            <div class="about-grid">
-                <div class="feature-card">
-                    <div class="card-content">
-                        <h3>Movement Science</h3>
-                        <p>Principles for efficiency, speed, and injury prevention.</p>
+    <!-- Coaching Style Section -->
+    <section class="bg-white py-24 border-t border-gray-100">
+        <div class="container mx-auto px-6 max-w-4xl">
+            <h2 class="text-3xl md:text-5xl font-black text-black text-center uppercase tracking-tighter mb-16">
+                Coaching Style
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-gray-50 p-8 rounded-3xl border border-gray-100 hover:shadow-xl transition duration-300">
+                    <div class="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center mb-6 text-blue-600">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
                     </div>
+                    <h3 class="text-2xl font-bold text-black mb-3">Direct & Demanding</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        Supportive but firm. No shortcuts. We prioritize precision first, speed second. We hold athletes
+                        to a standard that demands their best effort.
+                    </p>
                 </div>
-                <div class="feature-card">
-                    <div class="card-content">
-                        <h3>Modern IQ</h3>
-                        <p>Decision-making for the modern, positionless game.</p>
+                <div class="bg-gray-50 p-8 rounded-3xl border border-gray-100 hover:shadow-xl transition duration-300">
+                    <div
+                        class="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center mb-6 text-purple-600">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
                     </div>
+                    <h3 class="text-2xl font-bold text-black mb-3">Holistic Approach</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        Players are coached as complete people. Compact rosters ensure individual attention and a family
+                        atmosphere where no one is left behind.
+                    </p>
                 </div>
-                <div class="feature-card">
-                    <div class="card-content">
-                        <h3>Psychology</h3>
-                        <p>Confidence building from global performance coaches.</p>
-                    </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Training Philosophy -->
+    <section class="bg-[#0a0a0a] text-white py-24">
+        <div class="container mx-auto px-6 max-w-6xl">
+            <h2 class="text-3xl md:text-5xl font-black text-white text-center uppercase tracking-tighter mb-16">
+                Training Philosophy
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <!-- Card 1 -->
+                <div
+                    class="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10 hover:border-blue-600 transition duration-300 group">
+                    <h3 class="text-xl font-bold text-blue-500 mb-3 group-hover:text-blue-400 transition">Movement
+                        Science</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">
+                        Principles for efficiency, speed, and injury prevention tailored to basketball movements.
+                    </p>
                 </div>
-                <div class="feature-card">
-                    <div class="card-content">
-                        <h3>Identity</h3>
-                        <p>Purpose-driven mentorship founded on strong character.</p>
-                    </div>
+                <!-- Card 2 -->
+                <div
+                    class="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10 hover:border-blue-600 transition duration-300 group">
+                    <h3 class="text-xl font-bold text-blue-500 mb-3 group-hover:text-blue-400 transition">Modern IQ</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">
+                        Decision-making training for the modern, positionless game ensuring high adaptability.
+                    </p>
+                </div>
+                <!-- Card 3 -->
+                <div
+                    class="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10 hover:border-blue-600 transition duration-300 group">
+                    <h3 class="text-xl font-bold text-blue-500 mb-3 group-hover:text-blue-400 transition">Psychology
+                    </h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">
+                        Confidence building techniques derived from global performance coaches.
+                    </p>
+                </div>
+                <!-- Card 4 -->
+                <div
+                    class="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10 hover:border-blue-600 transition duration-300 group">
+                    <h3 class="text-xl font-bold text-blue-500 mb-3 group-hover:text-blue-400 transition">Identity</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">
+                        Purpose-driven mentorship founded on strong character and personal responsibility.
+                    </p>
                 </div>
             </div>
         </div>
@@ -253,8 +324,7 @@
                     <span>Total:</span>
                     <span id="cart-total-price">$0.00</span>
                 </div>
-                <button class="btn-primary checkout-btn"
-                    onclick="alert('Checkout integration coming soon!')">Checkout</button>
+                <button class="btn-primary checkout-btn">Checkout</button>
             </div>
         </div>
     </div>

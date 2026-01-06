@@ -314,11 +314,11 @@ function renderParentTrips() {
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
                 <div style="background: #eef2ff; padding: 12px; border-radius: 8px;">
-                    <div style="font-size: 0.8rem; color: #0071e3; font-weight: 600; margin-bottom: 4px;">DATES</div>
+                    <div style="font-size: 0.8rem; color: #2563eb; font-weight: 600; margin-bottom: 4px;">DATES</div>
                     <div style="font-weight: 500;">${safeStart} - ${safeEnd}</div>
                 </div>
                 <div style="background: #eef2ff; padding: 12px; border-radius: 8px;">
-                     <div style="font-size: 0.8rem; color: #0071e3; font-weight: 600; margin-bottom: 4px;">TUITION</div>
+                     <div style="font-size: 0.8rem; color: #2563eb; font-weight: 600; margin-bottom: 4px;">TUITION</div>
                     <div style="font-weight: 500;">$${safeFee}</div>
                 </div>
             </div>
@@ -331,7 +331,7 @@ function renderParentTrips() {
             ${canPay ? `
             <div style="border-top: 1px solid #eee; padding-top: 16px;">
                  <a href="${safePaymentLink}" target="_blank" class="btn-primary" 
-                    style="display:block; text-align:center; text-decoration:none; background:#0071e3; color:white; padding:12px; border-radius:8px; width:100%; font-weight:600;">
+                    style="display:block; text-align:center; text-decoration:none; background:#2563eb; color:white; padding:12px; border-radius:8px; width:100%; font-weight:600;">
                     Pay Tuition ($${safeFee})
                  </a>
             </div>
@@ -838,7 +838,7 @@ window.submitGearOrder = function () {
 
     setTimeout(() => {
         btn.innerText = originalText;
-        btn.style.background = '#0071e3';
+        btn.style.background = '#2563eb';
         btn.disabled = false;
         // Optionally reset form here
     }, 3000);

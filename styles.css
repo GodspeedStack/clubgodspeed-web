@@ -318,6 +318,7 @@ ul {
 .btn-primary {
     background-color: var(--brand-blue);
     color: var(--text-light);
+    border-radius: 9999px;
 }
 
 .btn-primary:hover {
@@ -330,6 +331,7 @@ ul {
     background-color: transparent;
     color: var(--text-light);
     border: 2px solid var(--brand-blue);
+    border-radius: 9999px;
 }
 
 .btn-secondary:hover {
@@ -1080,7 +1082,7 @@ ul {
 
 .login-option:hover {
     background: #f5f5f7;
-    color: #0071e3;
+    color: #2563eb;
 }
 
 .login-option svg {
