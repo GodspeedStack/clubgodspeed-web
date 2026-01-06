@@ -422,9 +422,9 @@
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-gray-100 text-gray-600 text-xs uppercase tracking-wider">
-                            <th class="p-6 font-bold">Date</th>
-                            <th class="p-6 font-bold">Matchup</th>
-                            <th class="p-6 font-bold text-right">Result</th>
+                            <th class="px-6 py-4 font-bold">Date</th>
+                            <th class="px-6 py-4 font-bold">Matchup</th>
+                            <th class="px-6 py-4 font-bold text-right">Result</th>
                         </tr>
                     </thead>
                     <tbody id="schedule-body" class="divide-y divide-gray-100 text-sm">
@@ -497,7 +497,6 @@
     <script src="schedule-data.js"></script>
     <script>
         // RENDER GAMES
-        // RENDER GAMES
         const gameContainer = document.getElementById('schedule-body');
         // Sort by date (optional, but good for mixed data)
         // gameSchedule.sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -529,17 +528,17 @@
 
             gameContainer.innerHTML += `
             <tr class="hover:bg-blue-50 transition border-b border-gray-50 last:border-0">
-                <td class="p-4 align-top">
+                <td class="px-6 py-4 align-top">
                     <div class="font-bold text-black text-sm">${game.date}</div>
                     ${typeDisplay}
                 </td>
-                <td class="p-4 align-top">
+                <td class="px-6 py-4 align-top">
                     <!-- Restored Team Name as Text (No Badge) -->
                     <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">${game.team}</div>
                     <span class="font-bold text-gray-900 text-sm block">${game.opponent}</span>
                     ${mvpBadge}
                 </td>
-                <td class="p-4 text-right align-top">
+                <td class="px-6 py-4 text-right align-top">
                     ${statusBadge}
                 </td>
             </tr>
