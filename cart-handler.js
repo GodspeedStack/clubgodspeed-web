@@ -115,6 +115,11 @@
         cartManager.addItem(programItem, variant, 1);
         showCartNotification(`${programName} added to cart`);
         updateCartBadges();
+        
+        // Also update cart overlay if open
+        if (typeof window.renderCartItems === 'function') {
+            window.renderCartItems();
+        }
     }
 
     /**
@@ -158,7 +163,7 @@
     /**
      * Show cart notification
      */
-    function showCartNotification(message) {
+    window.showCartNotification = function(message) {
         const notification = document.createElement('div');
         notification.className = 'cart-notification';
         notification.textContent = message;
@@ -189,15 +194,26 @@
     /**
      * Update cart badges across the site
      */
-    function updateCartBadges() {
-        if (!cartManager) return;
+    window.updateCartBadges = function() {
+        if (!cartManager) {
+            // Try to initialize if not already done
+            initCartManager();
+            if (!cartManager) return;
+        }
 
         const count = cartManager.getItemCount();
         const badges = document.querySelectorAll('.cart-badge, .cart-count, [data-cart-count]');
 
         badges.forEach(badge => {
             badge.textContent = count;
-            badge.style.display = count > 0 ? 'block' : 'none';
+            if (count > 0) {
+                badge.style.display = 'block';
+                badge.classList.add('badge-bounce');
+                // Remove animation class after animation completes
+                setTimeout(() => badge.classList.remove('badge-bounce'), 500);
+            } else {
+                badge.style.display = 'none';
+            }
         });
     }
 
@@ -299,6 +315,9 @@
 
         // Initialize cart manager
         initCartManager();
+        
+        // Setup cart listeners for badge updates
+        setupCartListeners();
 
         // Setup add to cart handlers
         document.addEventListener('click', (e) => {

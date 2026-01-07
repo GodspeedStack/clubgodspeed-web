@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.0.31/default/snipcart.css" />
+    <link rel="stylesheet" href="responsive-nav.css">
     <style>
         /* HISTORICAL STORE STYLES ADAPTED FOR DARK MODE */
         .store-filters {
@@ -175,15 +175,16 @@
             </div>
 
             <div class="flex items-center space-x-6">
-                <!-- Cart Icon (Snipcart) -->
-                <button class="relative p-0 text-gray-400 hover:text-white transition snipcart-checkout">
+                <!-- Cart Icon -->
+                <a href="#" id="cart-btn" class="nav-cart-btn text-gray-400 hover:text-white transition relative"
+                    aria-label="Cart">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                             d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
                     <span
-                        class="absolute -top-1 -right-1 h-2.5 w-2.5 bg-red-500 rounded-full snipcart-items-count"></span>
-                </button>
+                        class="cart-badge badge-bounce absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1 rounded-full min-w-[18px] text-center">0</span>
+                </a>
 
                 <!-- Member Login Dropdown -->
                 <div class="nav-login-wrapper relative z-50">
@@ -231,7 +232,7 @@
                 </div>
             </div>
         </div>
-        <button class="md:hidden text-2xl text-white">☰</button>
+        <button class="md:hidden text-3xl w-10 h-10 flex items-center justify-center cursor-pointer hover:opacity-70 transition text-white" aria-label="Menu" onclick="openMobileMenu()">☰</button>
     </nav>
     <header class="hero-section-dark">
         <div class="hero-bg"></div>
@@ -380,26 +381,20 @@
                 : products.filter(p => p.category === selectedCategory);
 
             grid.innerHTML = filteredProducts.map(product => `
-                <div class="product-card">
+                <a href="product.html?id=${product.id}" class="product-card" style="text-decoration: none; color: inherit;">
                     <div class="product-image-container">
                         <img src="${product.image}" alt="${product.title}" class="product-image">
                         <div class="product-overlay">
-                            <button class="add-to-cart-btn snipcart-add-item"
-                                data-item-id="${product.id}"
-                                data-item-price="${product.price / 100}"
-                                data-item-url="${product.url}"
-                                data-item-description="${product.description}"
-                                data-item-image="${product.image}"
-                                data-item-name="${product.title}">
-                                Add to Cart
-                            </button>
+                            <div class="add-to-cart-btn" style="pointer-events: none;">
+                                View Details
+                            </div>
                         </div>
                     </div>
                     <div class="product-info">
                         <h3 class="product-title">${product.title}</h3>
                         <div class="product-price">$${(product.price / 100).toFixed(2)}</div>
                     </div>
-                </div>
+                </a>
             `).join('');
         }
 
@@ -415,13 +410,30 @@
 
         loadProducts();
     </script>
-    <script async src="https://cdn.snipcart.com/themes/v3.0.31/default/snipcart.js"></script>
-    <div hidden id="snipcart" data-api-key="">
+    <script src="mobile-menu.js"></script>
+    <script src="cart-handler.js"></script>
+    
+    <!-- Cart Overlay -->
+    <div id="cart-overlay" class="cart-overlay">
+        <div class="cart-sidebar">
+            <div class="cart-header">
+                <h2>Your Cart</h2>
+                <button id="close-cart" class="close-cart-btn">×</button>
+            </div>
+            <div id="cart-items" class="cart-items">
+                <p class="empty-cart-msg">Your cart is empty.</p>
+            </div>
+            <div class="cart-footer">
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <span id="cart-total-price">$0.00</span>
+                </div>
+                <button class="btn-primary checkout-btn">Checkout</button>
+            </div>
+        </div>
     </div>
-    <script>
-        // Set Snipcart API key from environment variable
-        (function() {
-            const snipcartDiv = document.getElementById('snipcart');
+</body>
+</html>
             if (snipcartDiv) {
                 // Get from window config or environment variable
                 const apiKey = window.SNIPCART_API_KEY || '';
