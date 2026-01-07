@@ -1064,23 +1064,23 @@ function renderPostGameRoster(db) {
             </div>
             <div style="flex: 1; display:flex; flex-direction:column; min-width: 60px;">
                  <label style="font-size:0.7rem; color:#888; margin-bottom:2px;">REB</label>
-                <input type="number" class="stat-input" data-pid="${player.athleteId}" data-stat="rebounds" placeholder="0" style="padding:8px; border:1px solid #ddd; border-radius:8px; text-align:center;">
+                <input type="number" class="stat-input" data-pid="${safePlayerId}" data-stat="rebounds" placeholder="0" style="padding:8px; border:1px solid #ddd; border-radius:8px; text-align:center;">
             </div>
              <div style="flex: 1; display:flex; flex-direction:column; min-width: 60px;">
                  <label style="font-size:0.7rem; color:#888; margin-bottom:2px;">AST</label>
-                <input type="number" class="stat-input" data-pid="${player.athleteId}" data-stat="assists" placeholder="0" style="padding:8px; border:1px solid #ddd; border-radius:8px; text-align:center;">
+                <input type="number" class="stat-input" data-pid="${safePlayerId}" data-stat="assists" placeholder="0" style="padding:8px; border:1px solid #ddd; border-radius:8px; text-align:center;">
             </div>
              <div style="flex: 1; display:flex; flex-direction:column; min-width: 60px;">
                  <label style="font-size:0.7rem; color:#888; margin-bottom:2px;">STL</label>
-                <input type="number" class="stat-input" data-pid="${player.athleteId}" data-stat="steals" placeholder="0" style="padding:8px; border:1px solid #ddd; border-radius:8px; text-align:center;">
+                <input type="number" class="stat-input" data-pid="${safePlayerId}" data-stat="steals" placeholder="0" style="padding:8px; border:1px solid #ddd; border-radius:8px; text-align:center;">
             </div>
              <div style="flex: 1; display:flex; flex-direction:column; min-width: 60px;">
                  <label style="font-size:0.7rem; color:#888; margin-bottom:2px;">DEF</label>
-                <input type="number" class="stat-input" data-pid="${player.athleteId}" data-stat="deflections" placeholder="0" style="padding:8px; border:1px solid #ddd; border-radius:8px; text-align:center;">
+                <input type="number" class="stat-input" data-pid="${safePlayerId}" data-stat="deflections" placeholder="0" style="padding:8px; border:1px solid #ddd; border-radius:8px; text-align:center;">
             </div>
              <div style="flex: 1; display:flex; flex-direction:column; min-width: 60px;">
                  <label style="font-size:0.7rem; color:#888; margin-bottom:2px;">BLK</label>
-                <input type="number" class="stat-input" data-pid="${player.athleteId}" data-stat="blocks" placeholder="0" style="padding:8px; border:1px solid #ddd; border-radius:8px; text-align:center;">
+                <input type="number" class="stat-input" data-pid="${safePlayerId}" data-stat="blocks" placeholder="0" style="padding:8px; border:1px solid #ddd; border-radius:8px; text-align:center;">
             </div>
         `;
         rosterList.appendChild(row);
