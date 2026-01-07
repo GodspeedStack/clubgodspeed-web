@@ -3,6 +3,34 @@ import { X, Share, Save, Trophy, Activity, Quote } from 'lucide-react'; // Added
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { practiceHistory, gameLog } from '../../data/seed_godspeed_data'; // IMPORT GAMELOG
 
+/**
+ * @typedef {Object} Player
+ * @property {string} id - Player ID
+ * @property {string} name - Player name
+ * @property {string} tier - Player tier
+ * @property {string} initials - Player initials
+ * @property {number} [avg_grade] - Average grade
+ * @property {number} [grade] - Grade
+ * @property {string} [image] - Player image URL
+ * @property {Array<string>} [highlights] - Player highlights
+ */
+
+/**
+ * @typedef {Object} PlayerStats
+ * @property {string} playerId - Player ID
+ * @property {Object} stats - Player statistics
+ * @property {number} [stats.points] - Points scored
+ * @property {number} [stats.steals] - Steals
+ * @property {number} [stats.rebounds] - Rebounds
+ */
+
+/**
+ * AthleteProfileModal component displays detailed player information
+ * @param {Object} props - Component props
+ * @param {Player | null} props.player - The player object to display
+ * @param {() => void} props.onClose - Callback function to close the modal
+ * @returns {JSX.Element | null} The modal component or null if no player
+ */
 const AthleteProfileModal = ({ player, onClose }) => {
     if (!player) return null;
 

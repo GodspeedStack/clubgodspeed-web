@@ -2,9 +2,33 @@ import React, { useState } from 'react';
 import AthleteProfileModal from '../../components/modals/AthleteProfileModal';
 import { roster } from '../../data/seed_godspeed_data';
 
+/**
+ * @typedef {Object} Player
+ * @property {string} id - Player ID
+ * @property {string} name - Player name
+ * @property {string} tier - Player tier
+ * @property {string} initials - Player initials
+ * @property {number} [avg_grade] - Average grade
+ * @property {number} [grade] - Grade
+ * @property {string} [trend] - Trend indicator
+ * @property {string} [notes] - Additional notes
+ * @property {string} [image] - Player image URL
+ * @property {Array<string>} [highlights] - Player highlights
+ */
+
+/**
+ * TeamRoster component displays the team roster with player details
+ * @returns {JSX.Element} The TeamRoster component
+ */
 const TeamRoster = () => {
+    /** @type {[Player | null, React.Dispatch<React.SetStateAction<Player | null>>]} */
     const [selectedPlayer, setSelectedPlayer] = useState(null);
 
+    /**
+     * Get the appropriate color class based on player tier
+     * @param {string} tier - The player's tier
+     * @returns {string} Tailwind CSS classes for the tier badge
+     */
     const getTierColor = (tier) => {
         if (tier.includes('Elite')) return 'bg-yellow-100 text-yellow-800';
         if (tier.includes('Rotation')) return 'bg-blue-100 text-blue-800';

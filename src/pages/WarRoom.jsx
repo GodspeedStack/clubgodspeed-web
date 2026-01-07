@@ -2,9 +2,15 @@ import React from 'react';
 import { TrendingUp, AlertTriangle, Shield, Zap } from 'lucide-react';
 import { roster } from '../data/seed_godspeed_data';
 
+/**
+ * WarRoom component displays momentum risers, rotation risks, and the best lineup
+ * @returns {JSX.Element} The WarRoom component
+ */
 const WarRoom = () => {
     // Derived Data
+    /** @type {Array<{id: string, name: string, trend: string, tier: string, notes?: string}>} */
     const risers = roster.filter(p => p.trend === 'up' || p.trend === 'rocket' || p.trend === 'Improving');
+    /** @type {Array<{id: string, name: string, trend: string, tier: string, notes?: string}>} */
     const limited = roster.filter(p => p.tier.includes('Limited'));
 
     return (

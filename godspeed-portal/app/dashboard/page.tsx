@@ -11,11 +11,12 @@ interface Athlete {
     id: string;
     name: string;
     team: string;
-    number?: string;    // Add optional fields
+    number?: string;
     position?: string;
     height?: string;
     gradYear?: string;
-    [key: string]: any;
+    photoUrl?: string;
+    status?: string;
 }
 
 export default function DashboardPage() {
