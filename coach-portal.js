@@ -1,5 +1,77 @@
 console.log("LOGIN SCRIPT LOADED - VERSION 21");
 
+// =====================================================
+// SECURITY UTILITIES - XSS Prevention
+// =====================================================
+/**
+ * Escape HTML entities to prevent XSS attacks
+ * @param {string} str - String to escape
+ * @returns {string} - Escaped string safe for HTML
+ */
+function escapeHTML(str) {
+    if (typeof str !== 'string') {
+        if (str === null || str === undefined) return '';
+        return String(str);
+    }
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;',
+        '/': '&#x2F;'
+    };
+    return str.replace(/[&<>"'/]/g, m => map[m]);
+}
+
+/**
+ * Validate and sanitize URL to prevent javascript: and data: protocols
+ * @param {string} url - URL to validate
+ * @returns {string|null} - Sanitized URL or null if invalid
+ */
+function validateURL(url) {
+    if (typeof url !== 'string') return null;
+    const trimmed = url.trim();
+    // Block dangerous protocols
+    const lowerTrimmed = trimmed.toLowerCase();
+    if (lowerTrimmed.startsWith('javascript:') || 
+        lowerTrimmed.startsWith('data:') ||
+        lowerTrimmed.startsWith('vbscript:') ||
+        lowerTrimmed.startsWith('on')) {
+        return null;
+    }
+    // Allow safe protocols
+    if (trimmed.startsWith('http://') || 
+        trimmed.startsWith('https://') || 
+        trimmed.startsWith('mailto:') || 
+        trimmed.startsWith('tel:') || 
+        trimmed.startsWith('/') || 
+        trimmed.startsWith('#')) {
+        return escapeHTML(trimmed);
+    }
+    return null;
+}
+
+/**
+ * Sanitize text for safe display (escapes HTML)
+ * @param {any} value - Value to sanitize
+ * @returns {string} - Sanitized string
+ */
+function sanitizeText(value) {
+    if (value === null || value === undefined) return '';
+    return escapeHTML(String(value));
+}
+
+/**
+ * Safe way to set text content (prevents XSS)
+ * @param {HTMLElement} element - Element to set text on
+ * @param {any} text - Text to set
+ */
+function setSafeText(element, text) {
+    if (!element) return;
+    element.textContent = text === null || text === undefined ? '' : String(text);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // Attach Login Listener
     const loginForm = document.getElementById('staff-login-form');
@@ -262,10 +334,15 @@ function loadTeamRoster(teamId, navItem) {
     };
 
     athletes.forEach(athlete => {
-        const initials = athlete.initials || athlete.name.substring(0, 2).toUpperCase();
+        // Sanitize all athlete data
+        const safeAthleteId = escapeHTML(String(athlete.athleteId || ''));
+        const safeName = escapeHTML(String(athlete.name || ''));
+        const safeInitials = escapeHTML(String(athlete.initials || athlete.name.substring(0, 2).toUpperCase() || ''));
+        const safeNotes = escapeHTML(String(athlete.notes || 'No Focus Set'));
+        const safeTier = escapeHTML(String(athlete.tier || ''));
 
         html += `
-            <div onclick="viewPlayerReport('${athlete.athleteId}')" 
+            <div onclick="viewPlayerReport('${safeAthleteId}')" 
                  class="group"
                  style="display: flex; align-items: center; padding: 16px 24px; border-bottom: 1px solid #f3f4f6; cursor: pointer; transition: background 0.2s;"
                  onmouseover="this.style.background='rgba(59, 130, 246, 0.03)'" 
@@ -273,15 +350,15 @@ function loadTeamRoster(teamId, navItem) {
                 
                 <!-- Avatar -->
                 <div style="width: 48px; height: 48px; background: #f3f4f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #6b7280; font-size: 18px; margin-right: 16px;">
-                    ${initials}
+                    ${safeInitials}
                 </div>
 
                 <!-- Content -->
                 <div style="flex: 1;">
-                    <h4 style="margin: 0; font-size: 16px; font-weight: 600; color: #111827;">${athlete.name}</h4>
+                    <h4 style="margin: 0; font-size: 16px; font-weight: 600; color: #111827;">${safeName}</h4>
                     <p style="margin: 4px 0 0; font-size: 13px; color: #6b7280; display: flex; align-items: center; gap: 6px;">
                         <span style="width: 6px; height: 6px; background: #ef4444; border-radius: 50%;"></span>
-                        ${athlete.notes || 'No Focus Set'}
+                        ${safeNotes}
                     </p>
                 </div>
 
@@ -976,12 +1053,14 @@ function renderPostGameRoster(db) {
         row.style.gap = '1rem';
         row.style.border = '1px solid #eee';
 
+        const safePlayerName = escapeHTML(String(player.name || ''));
+        const safePlayerId = escapeHTML(String(player.athleteId || ''));
         row.innerHTML = `
-            <div style="flex: 1 1 100%; font-weight: 600; margin-bottom: 0.5rem; color: #333;">${player.name}</div>
+            <div style="flex: 1 1 100%; font-weight: 600; margin-bottom: 0.5rem; color: #333;">${safePlayerName}</div>
             
             <div style="flex: 1; display:flex; flex-direction:column; min-width: 60px;">
                 <label style="font-size:0.7rem; color:#888; margin-bottom:2px;">PTS</label>
-                <input type="number" class="stat-input" data-pid="${player.athleteId}" data-stat="points" placeholder="0" style="padding:8px; border:1px solid #ddd; border-radius:8px; text-align:center;">
+                <input type="number" class="stat-input" data-pid="${safePlayerId}" data-stat="points" placeholder="0" style="padding:8px; border:1px solid #ddd; border-radius:8px; text-align:center;">
             </div>
             <div style="flex: 1; display:flex; flex-direction:column; min-width: 60px;">
                  <label style="font-size:0.7rem; color:#888; margin-bottom:2px;">REB</label>
@@ -1065,13 +1144,17 @@ function renderAdminTrips() {
         item.style.background = 'white';
         item.style.border = '1px solid #eee';
         item.style.borderRadius = '10px';
+        const safeTripName = escapeHTML(String(trip.name || ''));
+        const safeTripFee = escapeHTML(String(trip.fee || '0'));
+        const safeTripStart = escapeHTML(String(trip.start || ''));
+        const safeTripEnd = escapeHTML(String(trip.end || ''));
         item.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div style="font-weight: 600; font-size: 0.95rem;">${trip.name}</div>
-                <div style="font-size: 0.85rem; color: #0071E3;">$${trip.fee}</div>
+                <div style="font-weight: 600; font-size: 0.95rem;">${safeTripName}</div>
+                <div style="font-size: 0.85rem; color: #0071E3;">$${safeTripFee}</div>
             </div>
             <div style="font-size: 0.8rem; color: #666; margin-top: 4px;">
-                ${trip.start} - ${trip.end}
+                ${safeTripStart} - ${safeTripEnd}
             </div>
             <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">
                 ${trip.teamId}
@@ -2073,11 +2156,19 @@ function renderLifetimeStats() {
         </div>
         <div style="background: white; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.03);">
             <table style="width: 100%; border-collapse: collapse;">
-                ${gameLog.map((g, i) => `
+                ${gameLog.map((g, i) => {
+                    // Sanitize game log data
+                    const safeDate = escapeHTML(String(g.date || ''));
+                    const safeOpponent = escapeHTML(String(g.opponent || ''));
+                    const safeResult = escapeHTML(String(g.result || ''));
+                    const safeScoreUs = escapeHTML(String(g.scoreUs !== null && g.scoreUs !== undefined ? g.scoreUs : ''));
+                    const safeScoreThem = escapeHTML(String(g.scoreThem !== null && g.scoreThem !== undefined ? g.scoreThem : ''));
+                    const scoreText = g.result === 'N/A' ? 'N/A' : `${safeResult} ${safeScoreUs}-${safeScoreThem}`;
+                    return `
                     <tr style="${i !== gameLog.length - 1 ? 'border-bottom: 1px solid #E5E5EA;' : ''}">
-                        <td style="padding: 14px 16px; color: #8E8E93; font-size: 0.85rem; width: 60px; font-variant-numeric: tabular-nums;">${g.date}</td>
+                        <td style="padding: 14px 16px; color: #8E8E93; font-size: 0.85rem; width: 60px; font-variant-numeric: tabular-nums;">${safeDate}</td>
                         <td style="padding: 14px 4px; font-weight: 500; color: #000; font-size: 0.9rem;">
-                            ${g.opponent}
+                            ${safeOpponent}
                         </td>
                         <td style="padding: 14px 16px; text-align: right;">
                              <span style="
@@ -2091,11 +2182,12 @@ function renderLifetimeStats() {
                                 background: ${g.result === 'W' ? '#34C759' : g.result === 'L' ? '#FF3B30' : '#E5E5EA'};
                                 color: ${g.result === 'N/A' ? '#8E8E93' : '#FFF'};
                              ">
-                                ${g.result === 'N/A' ? 'N/A' : (g.result + ' ' + g.scoreUs + '-' + g.scoreThem)}
+                                ${scoreText}
                              </span>
                         </td>
                     </tr>
-                `).join('')}
+                `;
+                }).join('')}
             </table>
         </div>
         
@@ -2447,11 +2539,11 @@ window.sendBulkTrainingReports = async function() {
                     successCount++;
                 } else {
                     errorCount++;
-                    errors.push(`${athlete.name}: ${result.error}`);
+                    errors.push(`${escapeHTML(String(athlete.name || ''))}: ${escapeHTML(String(result.error || 'Unknown error'))}`);
                 }
             } catch (error) {
                 errorCount++;
-                errors.push(`${athlete.name}: ${error.message}`);
+                errors.push(`${escapeHTML(String(athlete.name || ''))}: ${escapeHTML(String(error.message || 'Unknown error'))}`);
             }
         }
     }
@@ -2505,11 +2597,11 @@ window.sendBulkPracticeInfo = async function() {
                     successCount++;
                 } else {
                     errorCount++;
-                    errors.push(`${athlete.name}: ${result.error}`);
+                    errors.push(`${escapeHTML(String(athlete.name || ''))}: ${escapeHTML(String(result.error || 'Unknown error'))}`);
                 }
             } catch (error) {
                 errorCount++;
-                errors.push(`${athlete.name}: ${error.message}`);
+                errors.push(`${escapeHTML(String(athlete.name || ''))}: ${escapeHTML(String(error.message || 'Unknown error'))}`);
             }
         }
     }
