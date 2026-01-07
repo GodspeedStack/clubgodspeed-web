@@ -8,12 +8,14 @@ import { useRouter } from "next/navigation";
 interface AuthContextType {
     user: User | null;
     loading: boolean;
+    loggingOut: boolean;
     logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
     user: null,
     loading: true,
+    loggingOut: false,
     logout: async () => { },
 });
 
@@ -22,6 +24,7 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [loggingOut, setLoggingOut] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -34,12 +37,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     const logout = async () => {
-        await signOut(auth);
-        router.push("/");
+        setLoggingOut(true);
+        try {
+            await signOut(auth);
+            router.push("/");
+        } catch (error) {
+            console.error("Logout failed:", error);
+            // Still set loggingOut to false on error so UI recovers
+            setLoggingOut(false);
+            // You might want to show a toast/alert here
+            throw error; // Re-throw so caller can handle if needed
+        }
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, logout }}>
+        <AuthContext.Provider value={{ user, loading, loggingOut, logout }}>
             {children}
         </AuthContext.Provider>
     );
