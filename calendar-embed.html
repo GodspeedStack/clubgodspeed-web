@@ -141,6 +141,116 @@
             background: rgba(0, 0, 0, 0.02);
         }
 
+        /* Mobile List View */
+        .calendar-list-view {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            padding: 1rem;
+        }
+
+        .calendar-list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-height: 70vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .calendar-list-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .calendar-list-item:active {
+            transform: scale(0.98);
+            background: #f5f5f7;
+        }
+
+        .calendar-list-item.today {
+            border-left: 3px solid #2563eb;
+        }
+
+        .list-item-date {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 50px;
+        }
+
+        .list-item-day {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1d1d1f;
+            line-height: 1;
+        }
+
+        .list-item-weekday {
+            font-size: 0.75rem;
+            color: #86868b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.25rem;
+        }
+
+        .list-item-content {
+            flex: 1;
+        }
+
+        .list-item-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 0.25rem;
+        }
+
+        .list-item-meta {
+            font-size: 0.875rem;
+            color: #86868b;
+        }
+
+        .list-item-indicator {
+            width: 4px;
+            height: 100%;
+            border-radius: 2px;
+            min-height: 40px;
+        }
+
+        .calendar-list-empty {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #86868b;
+            font-size: 1rem;
+        }
+
+        @media (max-width: 767px) {
+            .calendar-grid {
+                display: none !important;
+            }
+            
+            .calendar-list-view {
+                display: block !important;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .calendar-list-view {
+                display: none !important;
+            }
+        }
+
         .day-number {
             font-weight: 600;
             color: #333;
@@ -395,6 +505,41 @@
             <!-- Dynamic Days Container -->
             <div id="calendarGridBody" style="display: contents;">
                 <!-- Days injected by JS -->
+            </div>
+        </div>
+
+        <!-- Mobile List View -->
+        <div class="calendar-list-view" style="display: none;">
+            <div class="calendar-header-cell">
+                <div>
+                    <div class="month-title" id="monthTitle">DECEMBER</div>
+                    <div class="year-subtitle" id="yearSubtitle">2025 Schedule</div>
+                    <div id="calculated-hours"
+                        style="margin-top: 10px; display: inline-flex; gap: 8px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+                        <!-- Stats injected by JS -->
+                    </div>
+                </div>
+                <div class="calendar-controls">
+                    <button class="btn-secondary" onclick="openSyncModal()"
+                        style="padding: 0.5rem 1rem; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Sync
+                    </button>
+                    <button class="btn-secondary" onclick="prevMonth()"
+                        style="padding: 0.5rem 1rem; font-size: 0.9rem;">&lt;</button>
+                    <button class="btn-secondary" onclick="gotoToday()"
+                        style="padding: 0.5rem 1rem; font-size: 0.9rem;">Today</button>
+                    <button class="btn-secondary" onclick="nextMonth()"
+                        style="padding: 0.5rem 1rem; font-size: 0.9rem;">&gt;</button>
+                </div>
+            </div>
+            <div id="calendarListBody" class="calendar-list-container">
+                <!-- List items injected by JS -->
             </div>
         </div>
     </div>
@@ -754,20 +899,36 @@
         function renderCalendar() {
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
+            const isMobile = window.innerWidth < 768;
 
             // Update Header
             document.getElementById('monthTitle').innerText = MONTH_NAMES[month];
             document.getElementById('yearSubtitle').innerText = `${year} Schedule`;
 
             const grid = document.getElementById('calendarGridBody');
-            grid.innerHTML = ''; // Clear
-
+            const listContainer = document.getElementById('calendarListBody');
+            
             // Stats Calculation (Season Total)
             const stats = calculateSeasonStats(year, month);
             document.getElementById('calculated-hours').innerHTML = `
                 <span style="background: rgba(37,99,235,0.1); color: #2563eb; padding: 4px 10px; border-radius: 99px;">${stats.practice} Practice Hours</span>
                 <span style="background: rgba(0,0,0,0.05); color: #1d1d1f; padding: 4px 10px; border-radius: 99px;">${stats.game} Game Hours</span>
             `;
+
+            // Mobile: Render as list
+            if (isMobile && listContainer) {
+                renderCalendarList(year, month, listContainer);
+                document.querySelector('.calendar-grid').style.display = 'none';
+                document.querySelector('.calendar-list-view').style.display = 'block';
+                return;
+            }
+
+            // Desktop: Render as grid
+            if (listContainer) {
+                document.querySelector('.calendar-list-view').style.display = 'none';
+            }
+            document.querySelector('.calendar-grid').style.display = 'grid';
+            grid.innerHTML = ''; // Clear
 
             // Days Generation
             const firstDay = new Date(year, month, 1);
@@ -823,6 +984,66 @@
 
                 grid.appendChild(cell);
             }
+        }
+
+        function renderCalendarList(year, month, container) {
+            container.innerHTML = '';
+            const lastDay = new Date(year, month + 1, 0);
+            const today = new Date();
+            
+            // Collect all events for the month
+            const eventsByDate = [];
+            for (let i = 1; i <= lastDay.getDate(); i++) {
+                const currentDayDate = new Date(year, month, i);
+                const events = getEventsForDate(currentDayDate);
+                if (events.length > 0) {
+                    eventsByDate.push({
+                        date: currentDayDate,
+                        day: i,
+                        events: events,
+                        isToday: currentDayDate.toDateString() === today.toDateString()
+                    });
+                }
+            }
+            
+            // Render list items
+            if (eventsByDate.length === 0) {
+                container.innerHTML = '<div class="calendar-list-empty">No events scheduled for this month.</div>';
+                return;
+            }
+            
+            eventsByDate.forEach(({date, day, events, isToday}) => {
+                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                const monthName = MONTH_NAMES[month].substring(0, 3);
+                
+                events.forEach(ev => {
+                    const listItem = document.createElement('div');
+                    listItem.className = `calendar-list-item ${isToday ? 'today' : ''}`;
+                    listItem.onclick = () => openEvent(
+                        ev.fullTitle || ev.title,
+                        ev.desc ? 'Event' : 'Info',
+                        ev.time || 'All Day',
+                        ev.loc || 'TBD',
+                        ev.desc || '',
+                        ev.color,
+                        ev.textColor
+                    );
+                    
+                    const bgColor = ev.color || '#2563eb';
+                    listItem.innerHTML = `
+                        <div class="list-item-date">
+                            <div class="list-item-day">${day}</div>
+                            <div class="list-item-weekday">${dayName}</div>
+                        </div>
+                        <div class="list-item-content">
+                            <div class="list-item-title">${ev.fullTitle || ev.title}</div>
+                            <div class="list-item-meta">${ev.time || 'All Day'} ${ev.loc ? '• ' + ev.loc : ''}</div>
+                        </div>
+                        <div class="list-item-indicator" style="background: ${bgColor};"></div>
+                    `;
+                    container.appendChild(listItem);
+                });
+            });
         }
 
         function calculateSeasonStats(targetYear, targetMonth) {
@@ -987,6 +1208,15 @@
             document.getElementById('contactModal').classList.remove('active');
             document.body.style.overflow = '';
         }
+
+        // Re-render on window resize to switch between grid/list
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                renderCalendar();
+            }, 250);
+        });
 
         // Init
         document.addEventListener('DOMContentLoaded', renderCalendar);

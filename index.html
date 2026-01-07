@@ -13,6 +13,7 @@
 
     <!-- Critical CSS loaded first -->
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="responsive-nav.css">
 
     <!-- Google Fonts (async load) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet"
@@ -172,7 +173,7 @@
                     WITH US</a>
             </div>
         </div>
-        <button class="md:hidden text-2xl">☰</button>
+        <button class="md:hidden text-3xl w-10 h-10 flex items-center justify-center cursor-pointer hover:opacity-70 transition" aria-label="Menu" onclick="openMobileMenu()">☰</button>
     </nav>
     <header class="hero-section-light">
         <div class="hero-bg"></div>

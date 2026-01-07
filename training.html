@@ -15,6 +15,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="responsive-nav.css">
     <link rel="stylesheet" href="animations.css">
     <style>
         /* Navbar styles */
@@ -53,7 +54,7 @@
                 class="ml-4 px-6 py-2 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition">TRAIN
                 WITH US</a>
         </div>
-        <button class="md:hidden text-3xl w-10 h-10 flex items-center justify-center" aria-label="Menu">☰</button>
+        <button class="md:hidden text-3xl w-10 h-10 flex items-center justify-center cursor-pointer hover:opacity-70 transition" aria-label="Menu" onclick="openMobileMenu()">☰</button>
     </nav>
 
     <header class="relative bg-black flex items-center justify-center overflow-hidden" style="min-height: 70vh;">
@@ -409,8 +410,8 @@
                 <div>
                     <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Athletes</h4>
                     <ul class="space-y-4 text-sm text-gray-600 font-medium">
-                        <li><a href="#" class="hover:text-blue-600 transition">Skill Assessment</a></li>
-                        <li><a href="#" class="hover:text-blue-600 transition">Player Card</a></li>
+                        <li><a href="skill-audit.html" class="hover:text-blue-600 transition">Skill Assessment</a></li>
+                        <li><a href="card-preview.html" class="hover:text-blue-600 transition">Player Card</a></li>
                         <li class="text-gray-400 cursor-not-allowed" title="Coming Soon">AAU Camps</li>
                     </ul>
                 </div>
@@ -505,6 +506,7 @@
         });
     </script>
 
+    <script src="mobile-menu.js"></script>
     <script src="script.js"></script>
     <script src="cart-handler.js"></script>
     <script src="auth.js"></script>

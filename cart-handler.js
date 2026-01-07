@@ -15,18 +15,70 @@
             return true;
         }
 
-        // Try to load cart context
-        const script = document.createElement('script');
-        script.src = '/src/lib/cartContext.js';
-        script.onload = () => {
-            if (window.cartManager) {
-                cartManager = window.cartManager;
-                updateCartBadges();
-                setupCartListeners();
-            }
-        };
-        document.head.appendChild(script);
-        return false;
+        // Create cart manager inline if not loaded
+        if (!window.cartManager) {
+            window.cartManager = {
+                cart: JSON.parse(localStorage.getItem('godspeed_cart') || '[]'),
+                addItem: function(item, variant, qty) {
+                    const existingIndex = this.cart.findIndex(
+                        cartItem => cartItem.productId === item.id && cartItem.variantId === variant.id
+                    );
+                    if (existingIndex >= 0) {
+                        this.cart[existingIndex].quantity += qty;
+                    } else {
+                        this.cart.push({
+                            productId: item.id,
+                            variantId: variant.id,
+                            productName: item.title,
+                            variantName: variant.size || variant.color || '',
+                            price: variant.price_override || item.base_price,
+                            image: variant.image_url || item.featured_image_url || '',
+                            quantity: qty,
+                            addedAt: new Date().toISOString()
+                        });
+                    }
+                    localStorage.setItem('godspeed_cart', JSON.stringify(this.cart));
+                    this.notifyListeners();
+                },
+                getItems: function() { return [...this.cart]; },
+                getItemCount: function() { return this.cart.reduce((sum, item) => sum + item.quantity, 0); },
+                getTotal: function() { return this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0); },
+                clear: function() { this.cart = []; localStorage.removeItem('godspeed_cart'); this.notifyListeners(); },
+                removeItem: function(productId, variantId) {
+                    this.cart = this.cart.filter(item => !(item.productId === productId && item.variantId === variantId));
+                    localStorage.setItem('godspeed_cart', JSON.stringify(this.cart));
+                    this.notifyListeners();
+                },
+                updateQuantity: function(productId, variantId, qty) {
+                    const item = this.cart.find(i => i.productId === productId && i.variantId === variantId);
+                    if (item) {
+                        if (qty <= 0) {
+                            this.removeItem(productId, variantId);
+                        } else {
+                            item.quantity = qty;
+                            localStorage.setItem('godspeed_cart', JSON.stringify(this.cart));
+                            this.notifyListeners();
+                        }
+                    }
+                },
+                listeners: [],
+                subscribe: function(listener) {
+                    this.listeners.push(listener);
+                    return () => { this.listeners = this.listeners.filter(l => l !== listener); };
+                },
+                notifyListeners: function() {
+                    this.listeners.forEach(listener => {
+                        try {
+                            listener(this.cart, this.getItemCount(), this.getTotal());
+                        } catch (e) {
+                            console.error('Cart listener error:', e);
+                        }
+                    });
+                }
+            };
+        }
+        cartManager = window.cartManager;
+        return true;
     }
 
     /**
@@ -273,11 +325,96 @@
             }
         });
 
+        // Setup cart overlay handlers
+        setupCartOverlay();
+
         // Update badges on load
         setTimeout(updateCartBadges, 500);
     }
 
-    // Add CSS animations
+    /**
+     * Setup cart overlay functionality
+     */
+    function setupCartOverlay() {
+        const overlay = document.getElementById('cart-overlay');
+        const closeBtn = document.getElementById('close-cart');
+        const cartBtn = document.getElementById('cart-btn');
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                if (overlay) overlay.style.display = 'none';
+            });
+        }
+
+        if (cartBtn) {
+            cartBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (overlay) {
+                    overlay.style.display = 'flex';
+                    renderCartItems();
+                }
+            });
+        }
+
+        if (overlay) {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.style.display = 'none';
+                }
+            });
+        }
+
+        // Render cart items
+        function renderCartItems() {
+            if (!cartManager) return;
+            const container = document.getElementById('cart-items');
+            const totalEl = document.getElementById('cart-total-price');
+            if (!container) return;
+
+            const items = cartManager.getItems();
+            const total = cartManager.getTotal();
+
+            if (items.length === 0) {
+                container.innerHTML = '<p class="empty-cart-msg">Your cart is empty.</p>';
+            } else {
+                let html = '';
+                items.forEach((item, index) => {
+                    html += `
+                        <div class="cart-item" style="display: flex; gap: 1rem; padding: 1rem; border-bottom: 1px solid #eee;">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; margin-bottom: 0.25rem;">${item.productName}</div>
+                                <div style="font-size: 0.875rem; color: #666;">$${item.price.toFixed(2)} × ${item.quantity}</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <button onclick="window.cartManager.updateQuantity('${item.productId}', '${item.variantId}', ${item.quantity - 1})" style="width: 28px; height: 28px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer;">−</button>
+                                <span>${item.quantity}</span>
+                                <button onclick="window.cartManager.updateQuantity('${item.productId}', '${item.variantId}', ${item.quantity + 1})" style="width: 28px; height: 28px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer;">+</button>
+                                <button onclick="window.cartManager.removeItem('${item.productId}', '${item.variantId}'); renderCartItems(); updateCartBadges();" style="margin-left: 0.5rem; color: #ef4444; background: none; border: none; cursor: pointer;">×</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            }
+
+            if (totalEl) {
+                totalEl.textContent = `$${total.toFixed(2)}`;
+            }
+        }
+
+        // Subscribe to cart changes
+        if (cartManager) {
+            cartManager.subscribe(() => {
+                renderCartItems();
+                updateCartBadges();
+            });
+        }
+
+        // Make renderCartItems globally available
+        window.renderCartItems = renderCartItems;
+    }
+
+    // Add CSS animations and cart overlay styles
     const style = document.createElement('style');
     style.textContent = `
         @keyframes slideInRight {
@@ -299,6 +436,94 @@
                 transform: translateX(100%);
                 opacity: 0;
             }
+        }
+        .cart-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        .cart-sidebar {
+            background: white;
+            width: 100%;
+            max-width: 400px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+            animation: slideInRight 0.3s ease;
+        }
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        .cart-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        .close-cart-btn {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+        .close-cart-btn:hover {
+            background: #f5f5f5;
+        }
+        .cart-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+        .empty-cart-msg {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #999;
+        }
+        .cart-footer {
+            padding: 1.5rem;
+            border-top: 1px solid #eee;
+        }
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+        .checkout-btn {
+            width: 100%;
+            padding: 1rem;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 9999px;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .checkout-btn:hover {
+            background: #1d4ed8;
         }
     `;
     document.head.appendChild(style);
