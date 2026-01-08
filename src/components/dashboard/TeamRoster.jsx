@@ -38,9 +38,9 @@ const TeamRoster = () => {
 
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                <h2 className="text-xl font-black text-gray-900 uppercase">Team Roster</h2>
-                <span className="text-sm font-bold text-gray-500">{roster.length} Athletes</span>
+            <div className="p-4 sm:p-6 border-b border-gray-100 flex justify-between items-center">
+                <h2 className="text-lg sm:text-xl font-black text-gray-900 uppercase">Team Roster</h2>
+                <span className="text-xs sm:text-sm font-bold text-gray-500">{roster.length} Athletes</span>
             </div>
 
             {roster.length === 0 ? (
@@ -54,7 +54,7 @@ const TeamRoster = () => {
                         <div
                             key={player.id}
                             onClick={() => setSelectedPlayer(player)}
-                            className="p-4 hover:bg-blue-50 cursor-pointer transition-all flex items-center justify-between group border-l-4 border-l-transparent hover:border-l-[#0071e3]"
+                            className="p-3 sm:p-4 hover:bg-blue-50 cursor-pointer transition-all duration-200 flex items-center justify-between group border-l-4 border-l-transparent hover:border-l-[#0071e3] hover:shadow-md"
                             role="button"
                             tabIndex={0}
                             onKeyDown={(e) => {
@@ -64,22 +64,22 @@ const TeamRoster = () => {
                                 }
                             }}
                         >
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-500">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="w-12 h-12 sm:w-10 sm:h-10 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-500 text-sm sm:text-base flex-shrink-0">
                                 {player.initials || player.name.substring(0, 2).toUpperCase()}
                             </div>
                             <div>
-                                <h3 className="font-bold text-gray-900">{player.name}</h3>
+                                <h3 className="font-bold text-gray-900 text-sm sm:text-base">{player.name}</h3>
                                 <div className="flex items-center gap-2 mt-1">
-                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${getTierColor(player.tier)}`}>
+                                    <span className={`text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${getTierColor(player.tier)}`}>
                                         {player.tier}
                                     </span>
                                 </div>
                             </div>
                         </div>
-                        <div className="text-right">
-                            <div className="text-lg font-black text-gray-900">{player.avg_grade || player.grade}</div>
-                            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">V2 Score</div>
+                        <div className="text-right flex-shrink-0">
+                            <div className="text-base sm:text-lg font-black text-gray-900">{player.avg_grade || player.grade}</div>
+                            <div className="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider hidden sm:block">V2 Score</div>
                         </div>
                     </div>
                     ))}
@@ -88,7 +88,7 @@ const TeamRoster = () => {
 
             {selectedPlayer && (
                 <div
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn"
                     onClick={(e) => {
                         if (e.target === e.currentTarget) {
                             setSelectedPlayer(null);

@@ -1,6 +1,75 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if user owns the resource
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Parents collection - users can only access their own data
+    match /parents/{parentId} {
+      allow read, write: if isOwner(parentId);
+
+      // Athletes subcollection
+      match /athletes/{athleteId} {
+        allow read, write: if isOwner(parentId);
+      }
+
+      // Stats subcollection
+      match /stats/{statId} {
+        allow read, write: if isOwner(parentId);
+      }
+
+      // Events/Schedule subcollection
+      match /events/{eventId} {
+        allow read, write: if isOwner(parentId);
+      }
+
+      // Messages subcollection
+      match /messages/{messageId} {
+        allow read, write: if isOwner(parentId);
+
+        // Individual message documents in conversation
+        match /conversation/{conversationId} {
+          allow read, write: if isOwner(parentId);
+        }
+      }
+
+      // Media subcollection
+      match /media/{mediaId} {
+        allow read, write: if isOwner(parentId);
+      }
+
+      // Payments subcollection
+      match /payments/{paymentId} {
+        allow read, write: if isOwner(parentId);
+      }
+
+      // Settings document
+      match /settings/{settingId} {
+        allow read, write: if isOwner(parentId);
+      }
+    }
+
+    // Coaches collection - for coach-parent messaging
+    match /coaches/{coachId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Parents can't modify coach data
+    }
+
+    // Global announcements - read-only for all authenticated users
+    match /announcements/{announcementId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    // Deny all other access
     match /{document=**} {
       allow read, write: if false;
     }

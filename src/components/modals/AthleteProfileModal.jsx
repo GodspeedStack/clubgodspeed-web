@@ -64,7 +64,7 @@ const AthleteProfileModal = ({ player, onClose }) => {
 
     return (
         <div
-            className="relative bg-white rounded-[24px] w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl"
+            className="relative bg-white rounded-[24px] w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl animate-slideUp"
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
@@ -83,14 +83,14 @@ const AthleteProfileModal = ({ player, onClose }) => {
                     <div className="flex items-center gap-5">
                         {/* Use Custom Image if available, else Initials */}
                         {player.image ? (
-                            <img src={player.image} alt={player.name} className="w-24 h-24 rounded-full object-cover border-4 border-gray-100 shadow-sm" />
+                            <img src={player.image} alt={player.name} className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-4 border-gray-100 shadow-sm" />
                         ) : (
-                            <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center text-3xl font-bold text-gray-500">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-100 flex items-center justify-center text-2xl sm:text-3xl font-bold text-gray-500">
                                 {player.initials}
                             </div>
                         )}
                         <div>
-                            <h2 id="modal-title" className="text-3xl font-black text-gray-900 tracking-tight uppercase">{player.name}</h2>
+                            <h2 id="modal-title" className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight uppercase">{player.name}</h2>
                             <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide
                 ${player.tier.includes('Elite') ? 'bg-yellow-100 text-yellow-700' :
                                     player.tier.includes('Rotation') ? 'bg-blue-100 text-blue-700' :
@@ -101,26 +101,26 @@ const AthleteProfileModal = ({ player, onClose }) => {
                         </div>
                     </div>
                     <div className="text-right">
-                        <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Current V2 Score</div>
-                        <div className="text-5xl font-black text-gray-900 tracking-tighter">{player.grade || player.avg_grade || "N/A"}</div>
+                        <div className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Current V2 Score</div>
+                        <div className="text-4xl sm:text-5xl font-black text-gray-900 tracking-tighter">{player.grade || player.avg_grade || "N/A"}</div>
 
                     </div>
                 </div>
 
                 {/* STATS ROW (Dynamic from Game Log) */}
                 {playerStats ? (
-                    <div className="grid grid-cols-3 gap-4">
-                        <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-center">
-                            <div className="text-gray-400 text-xs font-bold uppercase">Points</div>
-                            <div className="text-2xl font-black text-gray-900">{playerStats.stats.points || 0}</div>
+                    <div className="grid grid-cols-3 gap-3 sm:gap-4">
+                        <div className="bg-gray-50 p-3 sm:p-4 rounded-2xl border border-gray-100 text-center">
+                            <div className="text-gray-400 text-[10px] sm:text-xs font-bold uppercase">Points</div>
+                            <div className="text-xl sm:text-2xl font-black text-gray-900">{playerStats.stats.points || 0}</div>
                         </div>
-                        <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-center">
-                            <div className="text-gray-400 text-xs font-bold uppercase">Steals</div>
-                            <div className="text-2xl font-black text-gray-900">{playerStats.stats.steals || 0}</div>
+                        <div className="bg-gray-50 p-3 sm:p-4 rounded-2xl border border-gray-100 text-center">
+                            <div className="text-gray-400 text-[10px] sm:text-xs font-bold uppercase">Steals</div>
+                            <div className="text-xl sm:text-2xl font-black text-gray-900">{playerStats.stats.steals || 0}</div>
                         </div>
-                        <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-center">
-                            <div className="text-gray-400 text-xs font-bold uppercase">Rebounds</div>
-                            <div className="text-2xl font-black text-gray-900">{playerStats.stats.rebounds || 0}</div>
+                        <div className="bg-gray-50 p-3 sm:p-4 rounded-2xl border border-gray-100 text-center">
+                            <div className="text-gray-400 text-[10px] sm:text-xs font-bold uppercase">Rebounds</div>
+                            <div className="text-xl sm:text-2xl font-black text-gray-900">{playerStats.stats.rebounds || 0}</div>
                         </div>
                     </div>
                 ) : (

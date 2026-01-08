@@ -20,9 +20,9 @@ const WarRoom = () => {
         .slice(0, 5);
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 p-4 sm:p-6">
             {/* CARD 1: MOMENTUM (Who is hot?) */}
-            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+            <div className="bg-white p-4 sm:p-6 rounded-2xl border border-gray-200 shadow-sm">
                 <div className="flex items-center gap-2 mb-4">
                     <div className="p-2 bg-green-100 rounded-lg"><TrendingUp className="w-5 h-5 text-green-700" /></div>
                     <h2 className="font-bold text-gray-900 uppercase">Momentum Risers</h2>
@@ -47,7 +47,7 @@ const WarRoom = () => {
             </div>
 
             {/* CARD 2: ROTATION GAPS (Liabilities) */}
-            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+            <div className="bg-white p-4 sm:p-6 rounded-2xl border border-gray-200 shadow-sm">
                 <div className="flex items-center gap-2 mb-4">
                     <div className="p-2 bg-red-100 rounded-lg"><AlertTriangle className="w-5 h-5 text-red-700" /></div>
                     <h2 className="font-bold text-gray-900 uppercase">Rotation Risks</h2>
@@ -72,16 +72,16 @@ const WarRoom = () => {
             </div>
 
             {/* CARD 3: TOP 5 LINEUP (Best Lineup by Grade) */}
-            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm md:col-span-2 bg-gradient-to-r from-gray-900 to-gray-800 text-white">
+            <div className="bg-white p-4 sm:p-6 rounded-2xl border border-gray-200 shadow-sm md:col-span-2 bg-gradient-to-r from-gray-900 to-gray-800 text-white">
                 <div className="flex items-center gap-2 mb-4">
                     <div className="p-2 bg-gray-700 rounded-lg"><Shield className="w-5 h-5 text-yellow-400" /></div>
                     <h2 className="font-bold text-yellow-400 uppercase">Top 5 Lineup</h2>
                 </div>
                 {topPlayers.length > 0 ? (
                     <>
-                        <div className="flex flex-wrap gap-4">
+                        <div className="flex flex-wrap gap-2 sm:gap-4">
                             {topPlayers.map(player => (
-                                <div key={player.id} className="px-4 py-2 bg-gray-700 rounded-lg font-bold border border-gray-600 flex items-center gap-2">
+                                <div key={player.id} className="px-3 sm:px-4 py-2 bg-gray-700 rounded-lg font-bold border border-gray-600 flex items-center gap-2 text-sm sm:text-base">
                                     <span>{player.name}</span>
                                     <span className="text-xs text-yellow-400">({player.avg_grade || player.grade})</span>
                                 </div>

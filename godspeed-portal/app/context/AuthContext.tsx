@@ -4,6 +4,8 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { onAuthStateChanged, User, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
+import { trackLogout } from "@/lib/analytics";
+import { setUser as setSentryUser } from "@/lib/sentry";
 
 interface AuthContextType {
     user: User | null;
@@ -31,6 +33,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setUser(user);
             setLoading(false);
+
+            // Set user context for error tracking
+            if (user) {
+                setSentryUser({ id: user.uid });
+            } else {
+                setSentryUser(null);
+            }
         });
 
         return () => unsubscribe();
@@ -40,6 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setLoggingOut(true);
         try {
             await signOut(auth);
+            trackLogout();
             router.push("/");
         } catch (error) {
             console.error("Logout failed:", error);
