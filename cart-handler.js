@@ -19,7 +19,7 @@
         if (!window.cartManager) {
             window.cartManager = {
                 cart: JSON.parse(localStorage.getItem('godspeed_cart') || '[]'),
-                addItem: function(item, variant, qty) {
+                addItem: function (item, variant, qty) {
                     const existingIndex = this.cart.findIndex(
                         cartItem => cartItem.productId === item.id && cartItem.variantId === variant.id
                     );
@@ -40,16 +40,16 @@
                     localStorage.setItem('godspeed_cart', JSON.stringify(this.cart));
                     this.notifyListeners();
                 },
-                getItems: function() { return [...this.cart]; },
-                getItemCount: function() { return this.cart.reduce((sum, item) => sum + item.quantity, 0); },
-                getTotal: function() { return this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0); },
-                clear: function() { this.cart = []; localStorage.removeItem('godspeed_cart'); this.notifyListeners(); },
-                removeItem: function(productId, variantId) {
+                getItems: function () { return [...this.cart]; },
+                getItemCount: function () { return this.cart.reduce((sum, item) => sum + item.quantity, 0); },
+                getTotal: function () { return this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0); },
+                clear: function () { this.cart = []; localStorage.removeItem('godspeed_cart'); this.notifyListeners(); },
+                removeItem: function (productId, variantId) {
                     this.cart = this.cart.filter(item => !(item.productId === productId && item.variantId === variantId));
                     localStorage.setItem('godspeed_cart', JSON.stringify(this.cart));
                     this.notifyListeners();
                 },
-                updateQuantity: function(productId, variantId, qty) {
+                updateQuantity: function (productId, variantId, qty) {
                     const item = this.cart.find(i => i.productId === productId && i.variantId === variantId);
                     if (item) {
                         if (qty <= 0) {
@@ -62,11 +62,11 @@
                     }
                 },
                 listeners: [],
-                subscribe: function(listener) {
+                subscribe: function (listener) {
                     this.listeners.push(listener);
                     return () => { this.listeners = this.listeners.filter(l => l !== listener); };
                 },
-                notifyListeners: function() {
+                notifyListeners: function () {
                     this.listeners.forEach(listener => {
                         try {
                             listener(this.cart, this.getItemCount(), this.getTotal());
@@ -115,7 +115,7 @@
         cartManager.addItem(programItem, variant, 1);
         showCartNotification(`${programName} added to cart`);
         updateCartBadges();
-        
+
         // Also update cart overlay if open
         if (typeof window.renderCartItems === 'function') {
             window.renderCartItems();
@@ -163,7 +163,7 @@
     /**
      * Show cart notification
      */
-    window.showCartNotification = function(message) {
+    window.showCartNotification = function (message) {
         const notification = document.createElement('div');
         notification.className = 'cart-notification';
         notification.textContent = message;
@@ -194,7 +194,7 @@
     /**
      * Update cart badges across the site
      */
-    window.updateCartBadges = function() {
+    window.updateCartBadges = function () {
         if (!cartManager) {
             // Try to initialize if not already done
             initCartManager();
@@ -260,16 +260,14 @@
                 await new Promise(r => setTimeout(r, 1500));
 
                 // Simulation Success
-                godspeedAlert("Checkout Simulation Successful!\n\n(Configure Supabase Function URL in cart-handler.js for real payments)", "Checkout Complete");
-                cartManager.clear();
-                updateCartBadges();
+                godspeedAlert("Checkout Simulation Successful!\n\nRedirecting to success page...", "Checkout Complete");
 
-                // Close cart
-                const overlay = document.getElementById('cart-overlay');
-                if (overlay) overlay.style.display = 'none';
+                setTimeout(() => {
+                    cartManager.clear();
+                    updateCartBadges();
+                    window.location.href = "success.html";
+                }, 1500);
 
-                button.innerText = originalText;
-                button.disabled = false;
                 return;
             }
 
@@ -315,7 +313,7 @@
 
         // Initialize cart manager
         initCartManager();
-        
+
         // Setup cart listeners for badge updates
         setupCartListeners();
 

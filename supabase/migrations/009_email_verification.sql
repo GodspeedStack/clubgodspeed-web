@@ -5,6 +5,22 @@
 -- Features: Email verification tokens, RLS policies, verification tracking
 -- =====================================================
 
+-- Create parent_accounts table if it doesn't exist (for backward compatibility)
+CREATE TABLE IF NOT EXISTS parent_accounts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    phone VARCHAR(50),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create indexes if they don't exist
+CREATE INDEX IF NOT EXISTS idx_parent_accounts_user_id ON parent_accounts(user_id);
+CREATE INDEX IF NOT EXISTS idx_parent_accounts_email ON parent_accounts(email);
+
 -- Add email_verified column to parent_accounts
 ALTER TABLE parent_accounts 
 ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT false,
@@ -73,11 +89,18 @@ BEGIN
     SET used_at = NOW()
     WHERE token = p_token;
     
-    -- Update parent_accounts
+    -- Update parent_accounts (if exists)
     UPDATE parent_accounts
     SET email_verified = true,
         email_verified_at = NOW()
     WHERE user_id = v_user_id AND email = v_email;
+    
+    -- If parent_accounts row doesn't exist, create it
+    INSERT INTO parent_accounts (user_id, email, email_verified, email_verified_at)
+    VALUES (v_user_id, v_email, true, NOW())
+    ON CONFLICT (email) DO UPDATE SET
+        email_verified = true,
+        email_verified_at = NOW();
     
     -- Update auth.users email_confirmed_at via trigger (if needed)
     -- Supabase handles this automatically when email is confirmed

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful | GODSPEED BASKETBALL</title>
+
+    <!-- Resource Hints -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="responsive-nav.css">
+    <link rel="stylesheet" href="animations.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-50 text-black font-sans antialiased flex flex-col min-h-screen">
+
+    <!-- Navigation -->
+    <nav class="navbar light-nav">
+        <div class="logo">GODSPEED<span class="text-blue-600">BASKETBALL</span></div>
+        <div class="hidden md:flex items-center space-x-8">
+            <div class="flex space-x-8 text-sm font-bold uppercase tracking-wide">
+                <a href="index.html" class="text-black">Home</a>
+                <a href="training.html" class="text-black">Training</a>
+                <a href="store.html" class="text-black">Shop</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex items-center justify-center p-6">
+        <div class="max-w-xl w-full text-center">
+
+            <div class="mb-8 scale-in" style="animation-delay: 0.1s;">
+                <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <h1 class="text-4xl md:text-5xl font-black uppercase mb-6 tracking-tight scale-in"
+                style="animation-delay: 0.2s;">
+                PAYMENT SUCCESSFUL
+            </h1>
+
+            <p class="text-gray-600 text-lg mb-10 leading-relaxed fade-in-up" style="animation-delay: 0.3s;">
+                Welcome to the family. Your spot is secured. <br>
+                A confirmation email has been sent to your inbox.
+            </p>
+
+            <div class="flex flex-col md:flex-row gap-4 justify-center fade-in-up" style="animation-delay: 0.4s;">
+                <a href="index.html"
+                    class="px-8 py-4 bg-black text-white font-bold rounded-full hover:bg-gray-900 transition uppercase tracking-wide">
+                    Return Home
+                </a>
+                <a href="training.html"
+                    class="px-8 py-4 border-2 border-gray-200 text-black font-bold rounded-full hover:border-gray-400 transition uppercase tracking-wide bg-white">
+                    View Schedule
+                </a>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Cart Cleanup Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Clear cart on successful payment
+            if (window.cartManager) {
+                window.cartManager.clear();
+            } else {
+                localStorage.removeItem('godspeed_cart');
+            }
+        });
+    </script>
+    <script src="cart-handler.js"></script>
+
+</body>
+
+</html>

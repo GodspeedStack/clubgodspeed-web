@@ -1,0 +1,307 @@
+/**
+ * Godspeed Quote Design System Styles
+ * Beautiful, consistent quote containers with responsive behavior
+ */
+
+/* ============================================
+   Quote Container Base Styles
+   ============================================ */
+
+.godspeed-quote-container {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    margin: 2rem auto;
+    max-width: 600px;
+    background: var(--quote-bg, rgba(37, 99, 235, 0.08));
+    border: 1.5px solid var(--quote-border, rgba(37, 99, 235, 0.3));
+    border-radius: 12px;
+    box-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.04),
+        0 1px 3px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.godspeed-quote-container.quote-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+/* ============================================
+   Quote Decoration (Icon)
+   ============================================ */
+
+.quote-decoration {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+}
+
+.quote-icon {
+    width: 24px;
+    height: 24px;
+    color: var(--quote-accent, #2563eb);
+    opacity: 0.6;
+    transition: all 0.3s ease;
+}
+
+.godspeed-quote-container:hover .quote-icon {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* ============================================
+   Quote Content
+   ============================================ */
+
+.quote-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.quote-text {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--quote-text, #1e293b);
+    font-weight: 500;
+    font-style: italic;
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+.quote-author {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--quote-accent, #2563eb);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.25rem;
+    opacity: 0.8;
+}
+
+/* ============================================
+   Color Theme Variants
+   ============================================ */
+
+.godspeed-quote-container[data-theme="primary"] {
+    --quote-bg: rgba(37, 99, 235, 0.08);
+    --quote-border: rgba(37, 99, 235, 0.3);
+    --quote-accent: #2563eb;
+    --quote-text: #1e293b;
+}
+
+.godspeed-quote-container[data-theme="success"] {
+    --quote-bg: rgba(16, 185, 129, 0.08);
+    --quote-border: rgba(16, 185, 129, 0.3);
+    --quote-accent: #10b981;
+    --quote-text: #065f46;
+}
+
+.godspeed-quote-container[data-theme="warning"] {
+    --quote-bg: rgba(245, 158, 11, 0.08);
+    --quote-border: rgba(245, 158, 11, 0.3);
+    --quote-accent: #f59e0b;
+    --quote-text: #92400e;
+}
+
+.godspeed-quote-container[data-theme="purple"] {
+    --quote-bg: rgba(139, 92, 246, 0.08);
+    --quote-border: rgba(139, 92, 246, 0.3);
+    --quote-accent: #8b5cf6;
+    --quote-text: #5b21b6;
+}
+
+.godspeed-quote-container[data-theme="rose"] {
+    --quote-bg: rgba(244, 63, 94, 0.08);
+    --quote-border: rgba(244, 63, 94, 0.3);
+    --quote-accent: #f43f5e;
+    --quote-text: #9f1239;
+}
+
+/* ============================================
+   Mobile Styles (Reduced, Never Over Photos)
+   ============================================ */
+
+@media (max-width: 767px) {
+    .godspeed-quote-container.quote-mobile {
+        max-width: 100%;
+        padding: 1rem 1.25rem;
+        margin: 1.5rem 0;
+        gap: 0.75rem;
+        border-radius: 10px;
+        /* Ensure quotes never overlap images */
+        position: relative;
+        z-index: 1;
+    }
+    
+    .quote-mobile .quote-decoration {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .quote-mobile .quote-icon {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .quote-mobile .quote-text {
+        font-size: 0.85rem;
+        line-height: 1.5;
+    }
+    
+    .quote-mobile .quote-author {
+        font-size: 0.7rem;
+    }
+    
+    /* Ensure quotes appear immediately on mobile (no scroll delay) */
+    .quote-mobile {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    
+    /* Prevent quotes from appearing over images */
+    .quote-mobile::before {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: -10px;
+        right: -10px;
+        bottom: -10px;
+        z-index: -1;
+        background: inherit;
+        border-radius: inherit;
+    }
+}
+
+/* ============================================
+   Desktop/Web Styles (Scroll Reveal)
+   ============================================ */
+
+@media (min-width: 768px) {
+    .godspeed-quote-container {
+        max-width: 650px;
+        padding: 1.5rem 2rem;
+        margin: 2.5rem auto;
+    }
+    
+    .quote-text {
+        font-size: 1rem;
+    }
+    
+    .quote-author {
+        font-size: 0.8rem;
+    }
+    
+    /* Hover effects (desktop only) */
+    .godspeed-quote-container:hover {
+        transform: translateY(-2px) scale(1.01);
+        box-shadow: 
+            0 4px 16px rgba(0, 0, 0, 0.08),
+            0 2px 6px rgba(0, 0, 0, 0.12),
+            inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        border-color: var(--quote-border);
+    }
+    
+    /* Subtle animation on reveal */
+    @keyframes quoteSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(30px) scale(0.96);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+    
+    .godspeed-quote-container.quote-visible {
+        animation: quoteSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+}
+
+/* ============================================
+   Accessibility & Reduced Motion
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .godspeed-quote-container {
+        transition: opacity 0.3s ease;
+        transform: none;
+    }
+    
+    .godspeed-quote-container.quote-visible {
+        animation: none;
+        transform: none;
+    }
+    
+    .godspeed-quote-container:hover {
+        transform: none;
+    }
+}
+
+/* ============================================
+   Print Styles
+   ============================================ */
+
+@media print {
+    .godspeed-quote-container {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ddd;
+        background: #f9f9f9;
+    }
+}
+
+/* ============================================
+   High Contrast Mode Support
+   ============================================ */
+
+@media (prefers-contrast: high) {
+    .godspeed-quote-container {
+        border-width: 2px;
+        background: rgba(255, 255, 255, 0.95);
+    }
+    
+    .quote-text {
+        color: #000;
+        font-weight: 600;
+    }
+    
+    .quote-author {
+        color: var(--quote-accent);
+        font-weight: 700;
+    }
+}
+
+/* ============================================
+   Dark Mode Support (Future)
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+    .godspeed-quote-container {
+        background: rgba(30, 41, 59, 0.3);
+        border-color: rgba(148, 163, 184, 0.2);
+    }
+    
+    .quote-text {
+        color: #e2e8f0;
+    }
+    
+    .quote-author {
+        color: var(--quote-accent);
+        opacity: 1;
+    }
+}
