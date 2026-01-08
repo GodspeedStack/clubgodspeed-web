@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { Calendar as CalendarIcon, MapPin, Clock, Users, Trophy, Dumbbell, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, Clock, Users, Trophy, Dumbbell, ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { useToast } from "@/app/context/ToastContext";
 
 interface ScheduleEvent {
     id: string;
@@ -19,11 +20,31 @@ interface ScheduleEvent {
 export default function SchedulePage() {
     const { user, loading } = useAuth();
     const router = useRouter();
+    const toast = useToast();
     const [events, setEvents] = useState<ScheduleEvent[]>([]);
     const [dataLoading, setDataLoading] = useState(true);
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [filterType, setFilterType] = useState<"all" | "practice" | "game" | "tournament">("all");
+
+    const handleExportCSV = () => {
+        // Create CSV data
+        const csvData = events.map(e =>
+            `"${e.title}","${e.type}","${e.date.toLocaleDateString()}","${e.time}","${e.location}","${e.status}"`
+        ).join("\n");
+        const csvContent = `Title,Type,Date,Time,Location,Status\n${csvData}`;
+
+        // Create download link
+        const blob = new Blob([csvContent], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "team-schedule.csv";
+        a.click();
+        URL.revokeObjectURL(url);
+
+        toast.success("Schedule exported to CSV!");
+    };
 
     useEffect(() => {
         if (!loading && !user) {
@@ -220,12 +241,21 @@ export default function SchedulePage() {
                 <div className="font-extrabold tracking-widest text-sm sm:text-base md:text-lg">
                     GODSPEED<span className="text-[#0071e3]">SCHEDULE</span>
                 </div>
-                <button
-                    onClick={() => router.push("/dashboard")}
-                    className="text-sm font-semibold text-gray-500 hover:text-black transition-all duration-200 hover:scale-105"
-                >
-                    ← BACK
-                </button>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={handleExportCSV}
+                        className="hidden sm:flex items-center gap-2 px-4 py-2 bg-white border-2 border-[#0071e3] text-[#0071e3] rounded-full font-bold text-xs hover:bg-[#0071e3] hover:text-white transition-all"
+                    >
+                        <Download className="w-4 h-4" />
+                        EXPORT CSV
+                    </button>
+                    <button
+                        onClick={() => router.push("/dashboard")}
+                        className="text-sm font-semibold text-gray-500 hover:text-black transition-all duration-200 hover:scale-105"
+                    >
+                        ← BACK
+                    </button>
+                </div>
             </nav>
 
             {/* Main Content */}

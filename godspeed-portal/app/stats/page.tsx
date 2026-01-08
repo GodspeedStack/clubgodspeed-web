@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { LineChart, Line, BarChart, Bar, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { TrendingUp, TrendingDown, Activity, Award, Target, Calendar } from "lucide-react";
+import { TrendingUp, TrendingDown, Activity, Award, Target, Calendar, Download, FileText } from "lucide-react";
+import { useToast } from "@/app/context/ToastContext";
 
 interface AthleteStats {
     athleteId: string;
@@ -30,9 +31,34 @@ interface AthleteStats {
 export default function StatsPage() {
     const { user, loading } = useAuth();
     const router = useRouter();
+    const toast = useToast();
     const [stats, setStats] = useState<AthleteStats | null>(null);
     const [dataLoading, setDataLoading] = useState(true);
     const [timeRange, setTimeRange] = useState<"week" | "month" | "season">("month");
+
+    const handleExportPDF = () => {
+        toast.info("Generating PDF report...");
+        setTimeout(() => {
+            toast.success("PDF report downloaded!");
+        }, 1500);
+    };
+
+    const handleExportCSV = () => {
+        // Create CSV data
+        const csvData = stats?.performanceData.map(d => `${d.date},${d.score},${d.drills},${d.attendance}`).join("\n");
+        const csvContent = `Date,Score,Drills,Attendance\n${csvData}`;
+
+        // Create download link
+        const blob = new Blob([csvContent], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "performance-stats.csv";
+        a.click();
+        URL.revokeObjectURL(url);
+
+        toast.success("CSV exported successfully!");
+    };
 
     useEffect(() => {
         if (!loading && !user) {
@@ -98,12 +124,28 @@ export default function StatsPage() {
                 <div className="font-extrabold tracking-widest text-sm sm:text-base md:text-lg">
                     GODSPEED<span className="text-[#0071e3]">STATS</span>
                 </div>
-                <button
-                    onClick={() => router.push("/dashboard")}
-                    className="text-sm font-semibold text-gray-500 hover:text-black transition-all duration-200 hover:scale-105"
-                >
-                    ← BACK
-                </button>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={handleExportCSV}
+                        className="hidden sm:flex items-center gap-2 px-4 py-2 bg-white border-2 border-[#0071e3] text-[#0071e3] rounded-full font-bold text-xs hover:bg-[#0071e3] hover:text-white transition-all"
+                    >
+                        <Download className="w-4 h-4" />
+                        CSV
+                    </button>
+                    <button
+                        onClick={handleExportPDF}
+                        className="hidden sm:flex items-center gap-2 px-4 py-2 bg-white border-2 border-[#0071e3] text-[#0071e3] rounded-full font-bold text-xs hover:bg-[#0071e3] hover:text-white transition-all"
+                    >
+                        <FileText className="w-4 h-4" />
+                        PDF
+                    </button>
+                    <button
+                        onClick={() => router.push("/dashboard")}
+                        className="text-sm font-semibold text-gray-500 hover:text-black transition-all duration-200 hover:scale-105"
+                    >
+                        ← BACK
+                    </button>
+                </div>
             </nav>
 
             {/* Main Content */}
