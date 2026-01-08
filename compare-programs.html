@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compare Programs | Godspeed Basketball</title>
+    <meta name="description" content="Compare our training programs and find the perfect fit for your athlete.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="responsive-nav.css">
+    <link rel="stylesheet" href="animations.css">
+    <style>
+        .program-card {
+            transition: all 0.3s ease;
+        }
+        .program-card:hover {
+            transform: translateY(-4px);
+        }
+        .feature-check {
+            color: #2563eb;
+        }
+        .comparison-table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e5e5e7;
+        }
+        .comparison-table th {
+            background: #f5f5f7;
+            font-weight: 700;
+            text-align: left;
+        }
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <nav class="navbar light-nav">
+        <div class="logo">GODSPEED<span class="text-blue-600">BASKETBALL</span></div>
+        <div class="hidden md:flex items-center space-x-8">
+            <div class="flex space-x-8 text-sm font-bold uppercase tracking-wide">
+                <a href="index.html" class="text-black">Home</a>
+                <a href="training.html" class="text-black">Training</a>
+                <a href="aau.html" class="text-black">AAU</a>
+                <div class="relative group opacity-50 cursor-not-allowed">
+                    <span class="text-black">Academy</span>
+                    <span
+                        class="absolute -top-3 -right-6 text-[9px] bg-gray-100 text-gray-500 px-1 rounded border">SOON</span>
+                </div>
+                <a href="store.html" class="text-blue-600">Shop</a>
+                <a href="about.html" class="text-black">About</a>
+            </div>
+            <div class="flex items-center space-x-6">
+                <a href="#" id="cart-btn" class="nav-cart-btn text-black hover:text-blue-600 transition relative"
+                    aria-label="Cart" onclick="openCartOverlay(); return false;">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    <span
+                        class="cart-badge badge-bounce absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1 rounded-full min-w-[18px] text-center">0</span>
+                </a>
+                <div class="nav-login-wrapper relative z-50">
+                    <a href="#" class="nav-cart-btn text-black hover:text-blue-600 transition" aria-label="Sign In">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 4 0 00-7 7h14a7 4 0 00-7-7z" />
+                        </svg>
+                    </a>
+                    <div class="login-dropdown">
+                        <div
+                            style="padding: 8px 16px 4px; font-size: 11px; text-transform: uppercase; color: #86868b; font-weight: 600; letter-spacing: 0.05em;">
+                            Member Access</div>
+                        <a href="parent-portal.html" class="login-option">
+                            <span style="display: flex; align-items: center; gap: 10px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    style="color: #2563eb;">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                                Parents
+                            </span>
+                            <span class="login-arrow">›</span>
+                        </a>
+                        <a href="coach-portal.html" class="login-option">
+                            <span style="display: flex; align-items: center; gap: 10px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    style="color: #2563eb;">
+                                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2">
+                                    </path>
+                                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                                </svg>
+                                Coaches
+                            </span>
+                            <span class="login-arrow">›</span>
+                        </a>
+                    </div>
+                </div>
+                <a href="training.html#signup"
+                    class="px-6 py-2 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition">TRAIN
+                    WITH US</a>
+            </div>
+        </div>
+        <button class="md:hidden text-3xl w-10 h-10 flex items-center justify-center cursor-pointer hover:opacity-70 transition" aria-label="Menu" onclick="openMobileMenu()">☰</button>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-24">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <h1 class="text-5xl md:text-7xl font-black text-white uppercase tracking-tight mb-6">
+                COMPARE PROGRAMS
+            </h1>
+            <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+                Find the perfect training program for your athlete. Compare features, pricing, and focus areas.
+            </p>
+        </div>
+    </header>
+
+    <!-- Comparison Section -->
+    <section class="py-24">
+        <div class="max-w-7xl mx-auto px-6">
+            <!-- Program Cards Grid -->
+            <div class="grid md:grid-cols-3 gap-8 mb-16">
+                <!-- Elite Guard Academy -->
+                <div class="program-card bg-white p-8 rounded-3xl shadow-xl flex flex-col h-full">
+                    <div class="mb-6">
+                        <h3 class="text-2xl font-black uppercase mb-3 text-gray-900">ELITE GUARD ACADEMY</h3>
+                        <p class="text-gray-500 text-sm mb-4 leading-relaxed">Designed for guards who depend on skill, IQ, and movement not height.</p>
+                        <div class="text-3xl font-black text-blue-600 mb-2">$150<span class="text-lg text-gray-500 font-normal">/month</span></div>
+                    </div>
+                    <ul class="space-y-3 text-sm text-gray-800 font-medium mb-8 flex-1">
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 feature-check mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Footwork and separation
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 feature-check mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Advanced finishing
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 feature-check mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Shot creation
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 feature-check mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Defensive manipulation
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 feature-check mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Pace + deception
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 feature-check mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Finishing at multiple angles
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 feature-check mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Footwork systems
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 feature-check mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Shooting mechanics
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 feature-check mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Spacing habits
+                        </li>
+                    </ul>
+                    <button
+                        class="w-full py-4 bg-blue-600 text-white font-bold rounded-full uppercase tracking-wider hover:bg-blue-700 transition select-program-btn add-to-cart-btn"
+                        data-program="guard-academy" data-id="elite-guard-academy" data-price="150"
+                        data-name="Elite Guard Academy">
+                        ADD TO CART
+                    </button>
+                </div>
+
+                <!-- IQ School -->
+                <div class="program-card bg-white p-8 rounded-3xl shadow-xl flex flex-col h-full">
+                    <div class="mb-6">
+                        <h3 class="text-2xl font-black uppercase mb-3 text-gray-900">IQ SCHOOL (HYDRA)</h3>
+                        <p class="text-gray-500 text-sm mb-4 leading-relaxed">Not plays. Patterns. Players learn to read space, manipulate defenders, and make decisions.</p>
+                        <div class="text-3xl font-black text-blue-600 mb-2">$120<span class="text-lg text-gray-500 font-normal">/month</span></div>
+                    </div>
+                    <ul class="space-y-3 text-sm text-gray-800 font-medium mb-8 flex-1">
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 feature-check mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Read space early
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 feature-check mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Manipulate defenders
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 feature-check mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Understand overloads
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 feature-check mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Create advantages
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 feature-check mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Attack contours of a defense
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 feature-check mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Make decisions at live speed
+                        </li>
+                    </ul>
+                    <p class="text-gray-400 text-sm italic mb-4">This is where players become problem-solvers.</p>
+                    <button
+                        class="w-full py-4 bg-blue-600 text-white font-bold rounded-full uppercase tracking-wider hover:bg-blue-700 transition select-program-btn add-to-cart-btn"
+                        data-program="iq-school" data-id="iq-school" data-price="120"
+                        data-name="IQ School (Hydra Principles)">
+                        ADD TO CART
+                    </button>
+                </div>
+
+                <!-- Strength + Movement -->
+                <div class="program-card bg-white p-8 rounded-3xl shadow-xl flex flex-col h-full">
+                    <div class="mb-6">
+                        <h3 class="text-2xl font-black uppercase mb-3 text-gray-900">STRENGTH + MOVEMENT</h3>
+                        <p class="text-gray-500 text-sm mb-4 leading-relaxed">Functional athletic development without the burnout culture.</p>
+                        <div class="text-3xl font-black text-blue-600 mb-2">$100<span class="text-lg text-gray-500 font-normal">/month</span></div>
+                    </div>
+                    <ul class="space-y-3 text-sm text-gray-800 font-medium mb-8 flex-1">
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 feature-check mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Reflexive strength
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 feature-check mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Ground reaction force
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 feature-check mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Plyometric sequencing
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 feature-check mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Balance + posture
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 feature-check mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Speed mechanics
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 feature-check mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Joint stability
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 feature-check mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Low-to-the-ground efficiency
+                        </li>
+                    </ul>
+                    <p class="text-gray-400 text-sm italic mb-4">Athletes move better, last longer, and react faster.</p>
+                    <button
+                        class="w-full py-4 bg-blue-600 text-white font-bold rounded-full uppercase tracking-wider hover:bg-blue-700 transition select-program-btn add-to-cart-btn"
+                        data-program="strength" data-id="strength-movement" data-price="100"
+                        data-name="Strength + Movement">
+                        ADD TO CART
+                    </button>
+                </div>
+            </div>
+
+            <!-- Comparison Table -->
+            <div class="bg-white rounded-3xl shadow-xl p-8 overflow-x-auto">
+                <h3 class="text-2xl font-black uppercase mb-6 text-gray-900">DETAILED COMPARISON</h3>
+                <table class="comparison-table w-full">
+                    <thead>
+                        <tr>
+                            <th class="text-left">Feature</th>
+                            <th>Elite Guard Academy</th>
+                            <th>IQ School (Hydra)</th>
+                            <th>Strength + Movement</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="font-semibold">Price</td>
+                            <td>$150/month</td>
+                            <td>$120/month</td>
+                            <td>$100/month</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Focus</td>
+                            <td>Guard Skills & Finishing</td>
+                            <td>Basketball IQ & Decision Making</td>
+                            <td>Athletic Development</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Best For</td>
+                            <td>Guards who need skill refinement</td>
+                            <td>Players learning to read the game</td>
+                            <td>Athletes needing physical foundation</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Time Commitment</td>
+                            <td>2x per week minimum</td>
+                            <td>2x per week minimum</td>
+                            <td>2x per week minimum</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Skill Level</td>
+                            <td>Intermediate to Advanced</td>
+                            <td>All Levels</td>
+                            <td>All Levels</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-24 bg-gray-900">
+        <div class="max-w-4xl mx-auto px-6 text-center">
+            <h2 class="text-4xl md:text-5xl font-black text-white uppercase tracking-tight mb-6">
+                READY TO GET STARTED?
+            </h2>
+            <p class="text-xl text-gray-300 mb-8">
+                Add programs to your cart and complete enrollment in minutes.
+            </p>
+            <a href="training.html#signup"
+                class="inline-block px-12 py-5 bg-blue-600 text-white font-bold rounded-full uppercase tracking-wider hover:bg-blue-700 transition">
+                VIEW ALL PROGRAMS
+            </a>
+        </div>
+    </section>
+
+    <footer class="bg-gray-50 pt-20 pb-16 border-t border-gray-100">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-12">
+            <div class="md:col-span-4">
+                <div class="text-2xl font-black tracking-tighter mb-6">
+                    GODSPEED<span class="text-blue-600">BASKETBALL</span>
+                </div>
+                <p class="text-gray-500 leading-relaxed max-w-sm text-sm">
+                    Building the future of Denver basketball.<br>
+                    Character. Discipline. Excellence.
+                </p>
+            </div>
+            <div class="md:col-span-8 grid grid-cols-2 md:grid-cols-5 gap-8">
+                <div>
+                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Programs</h4>
+                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
+                        <li><a href="training.html" class="hover:text-blue-600 transition">Training</a></li>
+                        <li><a href="aau.html" class="hover:text-blue-600 transition">AAU Club</a></li>
+                        <li class="text-gray-400 cursor-not-allowed" title="Coming Soon">Academy</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Athletes</h4>
+                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
+                        <li><a href="skill-audit.html" class="hover:text-blue-600 transition">Skill Assessment</a></li>
+                        <li><a href="card-preview.html" class="hover:text-blue-600 transition">Player Card</a></li>
+                        <li class="text-gray-400 cursor-not-allowed" title="Coming Soon">AAU Camps</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Shop</h4>
+                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
+                        <li><a href="store.html?category=all" class="hover:text-blue-600 transition">Apparel</a></li>
+                        <li><a href="store.html?category=performance" class="hover:text-blue-600 transition">Footwear</a></li>
+                        <li><a href="store.html?category=accessories" class="hover:text-blue-600 transition">Accessories</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Parents</h4>
+                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
+                        <li><a href="parent-audit.html" class="hover:text-blue-600 transition">Parent Assessment</a></li>
+                        <li><a href="parent-portal.html" class="hover:text-blue-600 transition">Parent Portal</a></li>
+                        <li><a href="parent-portal.html" class="hover:text-blue-600 transition">Manage Account</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Company</h4>
+                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
+                        <li><a href="about.html" class="hover:text-blue-600 transition">About Us</a></li>
+                        <li><a href="#" onclick="openContactModal(); return false;" class="hover:text-blue-600 transition">Contact</a></li>
+                        <li><a href="coach-portal.html" class="hover:text-blue-600 transition">Coach Portal</a></li>
+                        <li class="text-gray-400 cursor-not-allowed" title="Coming Soon">Careers</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Cart Overlay -->
+    <div id="cart-overlay" class="cart-overlay">
+        <div class="cart-sidebar">
+            <div class="cart-header">
+                <h2>Your Cart</h2>
+                <button id="close-cart" class="close-cart-btn">×</button>
+            </div>
+            <div id="cart-items" class="cart-items">
+                <p class="empty-cart-msg">Your cart is empty.</p>
+            </div>
+            <div class="cart-footer">
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <span id="cart-total-price">$0.00</span>
+                </div>
+                <button class="btn-primary checkout-btn">Checkout</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="branded-modal.js"></script>
+    <script src="mobile-menu.js"></script>
+    <script src="cart-handler.js"></script>
+    <script src="auth.js"></script>
+</body>
+
+</html>

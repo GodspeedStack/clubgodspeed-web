@@ -143,19 +143,22 @@ function startAudit() {
 function renderQuestion() {
     const q = questions[currentQuestion];
 
-    // Update Progress
-    const progress = ((currentQuestion) / questions.length) * 100;
+    // Update Progress (show progress for current question)
+    const progress = ((currentQuestion + 1) / questions.length) * 100;
     document.getElementById('progress-bar').style.width = `${progress}%`;
     document.getElementById('current-question-num').innerText = currentQuestion + 1;
     document.getElementById('total-question-num').innerText = questions.length;
 
-    // Update Text
+    // Update Text with smooth transition
     const textEl = document.getElementById('question-text');
     textEl.style.opacity = 0;
+    textEl.style.transform = 'translateY(10px)';
     setTimeout(() => {
         textEl.innerText = q.text;
         textEl.style.opacity = 1;
-    }, 200);
+        textEl.style.transform = 'translateY(0)';
+        textEl.style.transition = 'all 0.3s ease';
+    }, 150);
 
     // Render Options (Likert 1-5)
     const optionsContainer = document.getElementById('options-container');
@@ -172,10 +175,9 @@ function renderQuestion() {
     likertOptions.forEach(opt => {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
-        // Premium styling for Likert with Number Circle
         btn.innerHTML = `
-            <span class="opt-letter">${opt.val}</span>
-            <span style="font-size: 1.1rem; font-weight: 500;">${opt.text}</span>
+            <span style="font-weight: 700; color: #2563eb; margin-right: 1rem; min-width: 32px;">${opt.val}</span>
+            <span>${opt.text}</span>
         `;
         btn.onclick = () => handleAnswer(opt.val);
         optionsContainer.appendChild(btn);
@@ -186,12 +188,20 @@ function handleAnswer(value) {
     const q = questions[currentQuestion];
     answers[q.id] = value;
 
-    if (currentQuestion < questions.length - 1) {
-        currentQuestion++;
-        renderQuestion();
-    } else {
-        finishAudit();
-    }
+    // Visual feedback
+    const buttons = document.querySelectorAll('.option-btn');
+    buttons.forEach(btn => btn.classList.remove('selected'));
+    event.target.closest('.option-btn').classList.add('selected');
+
+    // Move to next question after brief delay
+    setTimeout(() => {
+        if (currentQuestion < questions.length - 1) {
+            currentQuestion++;
+            renderQuestion();
+        } else {
+            finishAudit();
+        }
+    }, 300);
 }
 
 function finishAudit() {
@@ -264,16 +274,16 @@ function showResult(type, stats) {
     const data = archetypes[type];
     document.getElementById('archetype-title').innerText = data.title;
     document.getElementById('archetype-desc').innerText = data.desc;
-    document.querySelector('.btn-primary').innerText = data.action;
-
-    // Update Score Circle text
-    document.getElementById('final-score').innerText = "?";
-    // Maybe show a graphical icon or just the Initials? 
-    // Let's hide the numeric score elements and just show an Icon
-
-    // Customizing the score circle for this quiz
-    const wrapper = document.querySelector('.score-value-wrapper');
-    wrapper.innerHTML = `<span style="font-size:3rem;">${getIcon(type)}</span>`;
+    
+    // Update the badge and action button
+    const badge = document.getElementById('archetype-badge');
+    badge.innerHTML = `${getIcon(type)} ${data.title}`;
+    
+    // Update action button text
+    const actionBtn = document.querySelector('.result-card a[href*="training"]');
+    if (actionBtn) {
+        actionBtn.innerText = data.action;
+    }
 }
 
 function getIcon(type) {

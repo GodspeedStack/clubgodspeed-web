@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="responsive-nav.css">
+    <script src="branded-modal.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -497,6 +498,7 @@
     <script src="button-states.js" defer></script>
     <script src="cart-handler.js" defer></script>
 
+    <script src="branded-modal.js"></script>
     <script src="script.js"></script>
     <script type="module" src="backend.js"></script>
     <script src="schedule-data.js"></script>
@@ -515,14 +517,14 @@
             // Mobile Check (exclude tablets approx 768px+)
             if (window.innerWidth < 768) {
                 // Keep mobile users on List view
-                alert("Mobile View: The calendar is best viewed as a list on this device. Keeping you here!");
+                godspeedAlert("The calendar is best viewed as a list on this device. Keeping you here!", "Mobile View");
                 return;
             }
 
             if (isLoggedIn()) {
                 window.location.href = 'calendar-grid.html';
             } else {
-                alert("🔒 MEMBER ONLY CONTENT\n\nPlease log in to the Parent or Coach portal to view the full calendar grid.");
+                godspeedAlert("Please log in to the Parent or Coach portal to view the full calendar grid.", "🔒 MEMBER ONLY CONTENT");
             }
         }
 

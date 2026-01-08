@@ -228,7 +228,7 @@ if (standardBars.length > 0) {
 }
 
 // Card Expansion Logic
-const featureCards = document.querySelectorAll('.feature-card'); // Target ALL feature cards (philosophy + club)
+const featureCards = document.querySelectorAll('.feature-card, .stagger-item'); // Target ALL feature cards (philosophy + club)
 const backdrop = document.createElement('div');
 backdrop.className = 'card-backdrop';
 document.body.appendChild(backdrop);

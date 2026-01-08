@@ -23,12 +23,12 @@ export async function submitContactForm(event) {
     try {
         if (db) {
             await addDoc(collection(db, "contacts"), data);
-            alert("Message sent securely! We will be in touch.");
+            godspeedAlert("Message sent securely! We will be in touch.", "GODSPEED BASKETBALL");
         } else {
             // Fallback for simulation/no-keys
             console.log("Simulated Backend Submission:", data);
             await new Promise(r => setTimeout(r, 1000));
-            alert("Message sent! (Simulation Mode)");
+            godspeedAlert("Message sent! (Simulation Mode)", "GODSPEED BASKETBALL");
         }
 
         form.reset();
@@ -36,7 +36,7 @@ export async function submitContactForm(event) {
 
     } catch (e) {
         console.error("Error sending message: ", e);
-        alert("Error sending message. Please email us directly.");
+        godspeedAlert("Error sending message. Please email us directly.", "Error");
     } finally {
         submitBtn.innerText = originalText;
         submitBtn.disabled = false;

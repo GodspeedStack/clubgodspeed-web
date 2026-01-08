@@ -380,7 +380,7 @@
             <div class="product-section">
                 <div class="section-label">
                     <span>Select Size</span>
-                    <a href="#" class="size-guide-link" onclick="alert('Size guide coming soon'); return false;">Size Guide</a>
+                    <a href="#" class="size-guide-link" onclick="godspeedAlert('Size guide coming soon', 'Size Guide'); return false;">Size Guide</a>
                 </div>
                 <div class="size-grid" id="size-grid">
                     <!-- Sizes injected by JS -->
@@ -415,7 +415,7 @@
         <button id="mobile-add-to-cart-btn" class="add-to-cart-btn" disabled>
             Add to Cart
         </button>
-    </div>
+                </div>
 
     <!-- Cart Overlay -->
     <div id="cart-overlay" class="cart-overlay">
@@ -426,7 +426,7 @@
             </div>
             <div id="cart-items" class="cart-items">
                 <p class="empty-cart-msg">Your cart is empty.</p>
-            </div>
+                </div>
             <div class="cart-footer">
                 <div class="cart-total">
                     <span>Total:</span>
@@ -643,7 +643,7 @@
                 if (typeof showCartNotification === 'function') {
                     showCartNotification(`${currentProduct.title} (${selectedSize}) added to cart`);
                 } else {
-                    alert(`${currentProduct.title} (${selectedSize}) added to cart!`);
+                    godspeedAlert(`${currentProduct.title} (${selectedSize}) added to cart!`, 'Added to Cart');
                 }
 
                 // Update badges
@@ -661,7 +661,7 @@
                     }, 1500);
                 }, 500);
             } else {
-                alert('Cart system not loaded. Please refresh the page.');
+                godspeedAlert('Cart system not loaded. Please refresh the page.', 'Error');
                 button.disabled = false;
                 button.textContent = originalText;
                 button.classList.remove('adding');
@@ -676,6 +676,7 @@
         loadProduct();
     </script>
 
+    <script src="branded-modal.js"></script>
     <script src="mobile-menu.js"></script>
     <script src="cart-handler.js"></script>
 </body>

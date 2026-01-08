@@ -93,7 +93,7 @@
         if (!cartManager) {
             if (!initCartManager()) {
                 // Fallback: show alert
-                alert(`Added ${programName} to cart!`);
+                godspeedAlert(`${programName} added to cart!`, 'Added to Cart');
                 return;
             }
         }
@@ -139,7 +139,7 @@
 
         if (!cartManager) {
             if (!initCartManager()) {
-                alert(`Added ${productName} to cart!`);
+                godspeedAlert(`${productName} added to cart!`, 'Added to Cart');
                 return;
             }
         }
@@ -237,7 +237,7 @@
      */
     async function handleCheckout(button) {
         if (!cartManager || cartManager.getItemCount() === 0) {
-            alert("Your cart is empty!");
+            godspeedAlert("Your cart is empty!", "Cart");
             return;
         }
 
@@ -260,7 +260,7 @@
                 await new Promise(r => setTimeout(r, 1500));
 
                 // Simulation Success
-                alert("Checkout Simulation Successful!\n(Configure Supabase Function URL in cart-handler.js for real payments)");
+                godspeedAlert("Checkout Simulation Successful!\n\n(Configure Supabase Function URL in cart-handler.js for real payments)", "Checkout Complete");
                 cartManager.clear();
                 updateCartBadges();
 
@@ -297,7 +297,7 @@
 
         } catch (error) {
             console.error("Checkout Error:", error);
-            alert("Checkout failed: " + error.message);
+            godspeedAlert("Checkout failed: " + error.message, "Error");
             button.innerText = originalText;
             button.disabled = false;
         }
@@ -550,3 +550,10 @@
     // Initialize
     init();
 })();
+
+// Load branded modal system if not already loaded
+if (typeof window.godspeedAlert === 'undefined') {
+    const script = document.createElement('script');
+    script.src = 'branded-modal.js';
+    document.head.appendChild(script);
+}

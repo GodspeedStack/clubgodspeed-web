@@ -18,7 +18,7 @@ window.generateReceiptPDF = async function(receiptId) {
     const parentEmail = localStorage.getItem('gba_user_email');
     
     if (!parentEmail) {
-        alert('Please log in to view receipts');
+        godspeedAlert('Please log in to view receipts', 'GODSPEED BASKETBALL');
         return;
     }
 
@@ -64,7 +64,7 @@ window.generateReceiptPDF = async function(receiptId) {
     }
 
     if (!receiptData) {
-        alert('Receipt not found');
+        godspeedAlert('Receipt not found', 'Error');
         return;
     }
 
@@ -82,7 +82,7 @@ window.generateInvoicePDF = async function(invoiceNumber) {
     const parentEmail = localStorage.getItem('gba_user_email');
     
     if (!parentEmail) {
-        alert('Please log in to view invoices');
+        godspeedAlert('Please log in to view invoices', 'GODSPEED BASKETBALL');
         return;
     }
 
@@ -113,7 +113,7 @@ window.generateInvoicePDF = async function(invoiceNumber) {
     }
 
     if (!invoiceData) {
-        alert('Invoice not found');
+        godspeedAlert('Invoice not found', 'Error');
         return;
     }
 
@@ -136,7 +136,7 @@ function generateReceiptPDFDocument(receipt) {
             if (typeof window.jspdf !== 'undefined') {
                 generateReceiptPDFDocument(receipt);
             } else {
-                alert('PDF library not loaded. Please refresh the page.');
+        godspeedAlert('PDF library not loaded. Please refresh the page.', 'Error');
             }
         };
         document.head.appendChild(script);
@@ -168,7 +168,7 @@ function generateReceiptPDFDocument(receipt) {
     doc.setFontSize(10);
     doc.setTextColor(0, 0, 0);
     doc.setFont(undefined, 'normal');
-    
+
     // Receipt number
     doc.setFont(undefined, 'bold');
     doc.text('Receipt Number:', margin, yPos);
@@ -256,7 +256,7 @@ function generateInvoicePDFDocument(invoice) {
             if (typeof window.jspdf !== 'undefined') {
                 generateInvoicePDFDocument(invoice);
             } else {
-                alert('PDF library not loaded. Please refresh the page.');
+        godspeedAlert('PDF library not loaded. Please refresh the page.', 'Error');
             }
         };
         document.head.appendChild(script);
@@ -288,7 +288,7 @@ function generateInvoicePDFDocument(invoice) {
     doc.setFontSize(10);
     doc.setTextColor(0, 0, 0);
     doc.setFont(undefined, 'normal');
-    
+
     // Invoice number
     doc.setFont(undefined, 'bold');
     doc.text('Invoice Number:', margin, yPos);

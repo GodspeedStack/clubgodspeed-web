@@ -115,7 +115,7 @@ window.handleCoachLogin = function () {
         } else if (hash === coachHash) {
             role = 'coach';
         } else {
-            alert("Access Denied. Invalid Code.");
+            godspeedAlert("Access Denied. Invalid Code.", "GODSPEED BASKETBALL");
             if (codeInput) {
                 codeInput.value = '';
                 codeInput.focus();
@@ -365,7 +365,7 @@ function loadTeamRoster(teamId, navItem) {
                 <!-- Badges -->
                 <div style="display: flex; align-items: center; gap: 12px; margin-right: 16px;">
                     <span style="font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.5px; ${getTierBadgeStyle(athlete.tier)}">
-                        ${athlete.tier}
+                        ${safeTier}
                     </span>
                     <div style="padding: 6px; background: #f9fafb; border-radius: 8px;">
                         ${getTrendIcon(athlete.trend)}
@@ -390,7 +390,7 @@ function saveFocusFromTable(athleteId, input) {
 
     // Validation: Max 50 Chars (approx 2 distinct items)
     if (finalVal.length > 50) {
-        alert("Please keep Focus items concise (max 50 chars). Example: 'Box Out, Move Feet'");
+        godspeedAlert("Please keep Focus items concise (max 50 chars). Example: 'Box Out, Move Feet'", "Validation");
         // Revert to original or trim
         input.value = originalValue;
         return;
@@ -445,6 +445,14 @@ function viewPlayerReport(athleteId) {
     else if ((athlete.tier || "").includes("Rotation")) { tierBg = "#eff6ff"; tierText = "#1d4ed8"; }
     else if ((athlete.tier || "").includes("Limited")) { tierBg = "#fef2f2"; tierText = "#b91c1c"; }
 
+    // Sanitize all athlete data before building HTML
+    const safeAthleteId = escapeHTML(String(athleteId || ''));
+    const safeInitials = escapeHTML(String(athlete.initials || athlete.name.substring(0, 2).toUpperCase() || ''));
+    const safeName = escapeHTML(String(athlete.name || ''));
+    const safeTier = escapeHTML(String(athlete.tier || ''));
+    const safeNotes = escapeHTML(String(athlete.notes || 'Focus on consistency.'));
+    const safeCurrentAvg = escapeHTML(String(currentAvg || '0'));
+
     // 2. Build Modal HTML (User's Design)
     const html = `
     <!-- MODAL CARD CONTAINER -->
@@ -460,25 +468,25 @@ function viewPlayerReport(athleteId) {
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; margin-top: 10px;">
             <div style="display: flex; align-items: center; gap: 20px;">
                 <div style="width: 80px; height: 80px; background: #f3f4f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 700; color: #6b7280;">
-                    ${athlete.initials || athlete.name.substring(0, 2).toUpperCase()}
+                    ${safeInitials}
                 </div>
                 <div>
-                    <h2 style="margin: 0; font-size: 30px; font-weight: 900; color: #111827; letter-spacing: -0.02em; text-transform: uppercase;">${athlete.name}</h2>
+                    <h2 style="margin: 0; font-size: 30px; font-weight: 900; color: #111827; letter-spacing: -0.02em; text-transform: uppercase;">${safeName}</h2>
                     <span style="display: inline-block; margin-top: 8px; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; text-transform: uppercase; background: ${tierBg}; color: ${tierText};">
-                        ${athlete.tier}
+                        ${safeTier}
                     </span>
                 </div>
             </div>
             <div style="text-align: right;">
                 <div style="font-size: 12px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Current V2 Score</div>
-                <div style="font-size: 48px; font-weight: 900; color: #111827; letter-spacing: -0.05em; line-height: 1;">${currentAvg}</div>
+                <div style="font-size: 48px; font-weight: 900; color: #111827; letter-spacing: -0.05em; line-height: 1;">${safeCurrentAvg}</div>
             </div>
         </div>
 
         <!-- COACH FOCUS -->
         <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 24px; border-radius: 0 12px 12px 0; margin-bottom: 32px;">
             <h3 style="margin: 0 0 8px 0; color: #1e3a8a; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Coach's Focus Area</h3>
-            <p style="margin: 0; color: #1d4ed8; font-size: 18px; font-weight: 500; font-style: italic;">"${athlete.notes || 'Focus on consistency.'}"</p>
+            <p style="margin: 0; color: #1d4ed8; font-size: 18px; font-weight: 500; font-style: italic;">"${safeNotes}"</p>
         </div>
 
         <!-- GRAPH SECTION -->
@@ -587,7 +595,7 @@ function validateFocusInput(input) {
 
 
     if (val.length > 50) {
-        alert("Focus must be concise (max 50 chars). Example: 'Defensive Slides, Motor'.");
+        godspeedAlert("Focus must be concise (max 50 chars). Example: 'Defensive Slides, Motor'.", "Validation");
         // Trim to 50
         input.value = val.substring(0, 50);
     }
@@ -598,7 +606,7 @@ function savePlayerReport() {
     const athleteId = modal.dataset.activeAthleteId;
 
     if (!athleteId) {
-        alert("Error: No athlete selected.");
+        godspeedAlert("Error: No athlete selected.", "Error");
         return;
     }
 
@@ -623,7 +631,7 @@ function savePlayerReport() {
 
     saveDB(db);
 
-    alert('Report updated successfully!');
+    godspeedAlert('Report updated successfully!', 'Success');
     closeReportModal();
 
     // Refresh table to show updated Focus/Trend/etc
@@ -646,7 +654,7 @@ function shareSingleReport(athleteId, athleteName) {
     setTimeout(() => {
         document.body.style.cursor = 'default';
         // Minimal Toast or Alert
-        alert(`Report for ${athleteName} shared with parents! 📤`);
+        godspeedAlert(`Report for ${athleteName} shared with parents! 📤`, 'Success');
     }, 400);
 }
 
@@ -679,14 +687,14 @@ function openShareSheet() {
 function executeShareEmail() {
     const athleteName = document.getElementById('report-athlete-name').textContent.replace(' Report', '');
     // Simulate Email API
-    alert(`📧 Report for ${athleteName} sent to parents via Email!`);
+    godspeedAlert(`📧 Report for ${athleteName} sent to parents via Email!`, 'Success');
     document.getElementById('share-sheet-modal').style.display = 'none';
 }
 
 function executeSharePush() {
     const athleteName = document.getElementById('report-athlete-name').textContent.replace(' Report', '');
     // Simulate Push API
-    alert(`📲 Report for ${athleteName} pushed to Parent Portal!`);
+    godspeedAlert(`📲 Report for ${athleteName} pushed to Parent Portal!`, 'Success');
     document.getElementById('share-sheet-modal').style.display = 'none';
 }
 
@@ -727,7 +735,7 @@ function saveGrade() {
     };
 
     if (!date) {
-        alert('Please select a date');
+        godspeedAlert('Please select a date', 'Validation');
         return;
     }
 
@@ -745,7 +753,7 @@ function saveGrade() {
     db.grades.push(newGrade);
     saveDB(db);
 
-    alert('Grade Saved!');
+    godspeedAlert('Grade Saved!', 'Success');
     closeGradingModal();
 }
 
@@ -762,7 +770,7 @@ function closeBulkModal() {
 function processBulkText() {
     const text = document.getElementById('bulk-text').value;
     if (!text) {
-        alert('Please paste some data first.');
+        godspeedAlert('Please paste some data first.', 'Validation');
         return;
     }
     parseAndSaveCSV(text);
@@ -776,7 +784,7 @@ function parseAndSaveCSV(csvText) {
     // Simple CSV Parser (Assumes comma delimiter, no quoted newlines)
     const lines = csvText.split('\n');
     if (lines.length < 2) {
-        alert('CSV appears empty or invalid.');
+        godspeedAlert('CSV appears empty or invalid.', 'Error');
         return;
     }
 
@@ -842,11 +850,11 @@ function parseAndSaveCSV(csvText) {
 
     if (importedCount > 0) {
         saveDB(db);
-        alert(`Successfully imported ${importedCount} grades.\n\nErrors: \n${errors.slice(0, 5).join('\n')}`);
+        godspeedAlert(`Successfully imported ${importedCount} grades.\n\nErrors: \n${errors.slice(0, 5).join('\n')}`, 'Import Complete');
         // Refresh view if on a team
         loadTeamRoster();
     } else {
-        alert('No grades imported. Please check CSV format:\nAthleteID, Date, Focus, Hustle, Skill, IQ, Notes');
+        godspeedAlert('No grades imported. Please check CSV format:\nAthleteID, Date, Focus, Hustle, Skill, IQ, Notes', 'Import Error');
     }
 }
 
@@ -961,11 +969,19 @@ function renderCoachAccounts() {
         html += `<div style="padding: 24px; text-align: center; color: #888;">No accounts found.</div>`;
     } else {
         accounts.forEach(acc => {
-            // Find athlete names
+            // Find athlete names and sanitize
             const athleteNames = (acc.athletes || []).map(id => {
                 const a = db.roster.find(r => r.athleteId === id);
-                return a ? a.name : id;
+                return a ? escapeHTML(String(a.name || '')) : escapeHTML(String(id || ''));
             }).join(', ');
+
+            // Sanitize all account data
+            const safeParentName = escapeHTML(String(acc.parentName || ''));
+            const safeId = escapeHTML(String(acc.id || ''));
+            const safeEmail = escapeHTML(String(acc.email || ''));
+            const safePhone = escapeHTML(String(acc.phone || ''));
+            const safeStatus = escapeHTML(String(acc.status || ''));
+            const safeBalance = escapeHTML(String(acc.balance || '$0.00'));
 
             // Status Badge
             let statusColor = '#34C759'; // Green
@@ -976,23 +992,23 @@ function renderCoachAccounts() {
             html += `
                 <div class="group" style="display: flex; align-items: center; padding: 16px 24px; border-bottom: 1px solid #f3f4f6; transition: background 0.2s;" onmouseover="this.style.background='rgba(59, 130, 246, 0.03)'" onmouseout="this.style.background='white'">
                     <div style="flex: 2;">
-                        <div style="font-weight: 600; color: #111;">${acc.parentName}</div>
-                        <div style="font-size: 12px; color: #888;">ID: ${acc.id}</div>
+                        <div style="font-weight: 600; color: #111;">${safeParentName}</div>
+                        <div style="font-size: 12px; color: #888;">ID: ${safeId}</div>
                     </div>
                     <div style="flex: 2;">
-                        <div style="font-size: 14px; color: #333;">${acc.email}</div>
-                        <div style="font-size: 12px; color: #888;">${acc.phone}</div>
+                        <div style="font-size: 14px; color: #333;">${safeEmail}</div>
+                        <div style="font-size: 12px; color: #888;">${safePhone}</div>
                     </div>
                     <div style="flex: 2; font-size: 14px; color: #111;">
                         ${athleteNames}
                     </div>
                     <div style="flex: 1;">
                         <span style="font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: ${statusBg}; color: ${statusColor}; border: 1px solid ${statusBg};">
-                            ${acc.status}
+                            ${safeStatus}
                         </span>
                     </div>
                     <div style="flex: 1; text-align: right; font-weight: 600; font-family: monospace; font-size: 14px;">
-                        ${acc.balance || '$0.00'}
+                        ${safeBalance}
                     </div>
                     <div style="flex: 0 0 40px; text-align: right; color: #ccc;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
@@ -1092,7 +1108,7 @@ function saveBoxScore() {
     const gameId = document.getElementById('postgame-select').value;
 
     if (!gameId) {
-        alert('Please select a game first.');
+        godspeedAlert('Please select a game first.', 'Validation');
         return;
     }
 
@@ -1121,7 +1137,7 @@ function saveBoxScore() {
     });
 
     saveDB(db);
-    alert('Game Stats Published to Database!');
+    godspeedAlert('Game Stats Published to Database!', 'Success');
 }
 
 // --- LOGISTICS MANAGER ---
@@ -1182,7 +1198,7 @@ function saveTrip() {
     db.trips.push(newTrip);
     saveDB(db);
     renderAdminTrips();
-    alert('Event saved successfully!');
+    godspeedAlert('Event saved successfully!', 'Success');
 
     // Clear form
     document.getElementById('trip-name').value = '';
@@ -2133,21 +2149,28 @@ function renderLifetimeStats() {
             Roster Scouting Report
         </div>
         <div style="background: white; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.03); margin-bottom: 24px;">
-            ${playerPerformance.map((p, i) => `
+            ${playerPerformance.map((p, i) => {
+                // Sanitize player performance data
+                const safeName = escapeHTML(String(p.name || ''));
+                const safeHighlight = escapeHTML(String(p.highlight || ''));
+                const safeNotes = escapeHTML(String(p.notes || ''));
+                const safeInitial = safeName.charAt(0) || '';
+                return `
                 <div style="padding: 14px 16px; display: flex; align-items: flex-start; gap: 14px; ${i !== playerPerformance.length - 1 ? 'border-bottom: 1px solid #E5E5EA; margin-left: 16px; padding-left: 0;' : ''}">
                     <!-- Avatar/Initial -->
                     <div style="width: 36px; height: 36px; background: #F2F2F7; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; color: #8E8E93; flex-shrink: 0;">
-                        ${p.name.charAt(0)}
+                        ${safeInitial}
                     </div>
                     <div style="flex: 1;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                            <div style="font-weight: 600; color: #000; font-size: 0.95rem;">${p.name}</div>
-                            <span style="font-size: 0.75rem; color: #FF9500; font-weight: 600; background: #FFF8E1; padding: 2px 6px; border-radius: 6px;">${p.highlight}</span>
+                            <div style="font-weight: 600; color: #000; font-size: 0.95rem;">${safeName}</div>
+                            <span style="font-size: 0.75rem; color: #FF9500; font-weight: 600; background: #FFF8E1; padding: 2px 6px; border-radius: 6px;">${safeHighlight}</span>
                         </div>
-                        <div style="font-size: 0.9rem; color: #3C3C4399; line-height: 1.4;">${p.notes}</div>
+                        <div style="font-size: 0.9rem; color: #3C3C4399; line-height: 1.4;">${safeNotes}</div>
                     </div>
                 </div>
-            `).join('')}
+            `;
+            }).join('')}
         </div>
 
         <!-- 3. Game History (Table Card) -->
@@ -2245,7 +2268,7 @@ window.switchWarRoomTab = function (tabName) {
  */
 window.sendTrainingReportEmail = async function(athleteId) {
     if (!window.coachEmailService) {
-        alert('Email service not loaded. Please refresh the page.');
+        godspeedAlert('Email service not loaded. Please refresh the page.', 'Error');
         return;
     }
     
@@ -2294,7 +2317,7 @@ window.sendTrainingReportEmail = async function(athleteId) {
  */
 window.sendPracticeInfoEmail = async function(athleteId) {
     if (!window.coachEmailService) {
-        alert('Email service not loaded. Please refresh the page.');
+        godspeedAlert('Email service not loaded. Please refresh the page.', 'Error');
         return;
     }
     
@@ -2340,9 +2363,18 @@ window.sendPracticeInfoEmail = async function(athleteId) {
 async function sendEmailViaResend(emailData) {
     // Check if Resend API key is available
     // Try multiple ways to get the key
-    const resendKey = window.VITE_RESEND_API_KEY || 
-                     (typeof import !== 'undefined' && import.meta?.env?.VITE_RESEND_API_KEY) ||
-                     '';
+    let resendKey = window.VITE_RESEND_API_KEY || '';
+    // Check for Vite environment variable (only in module context)
+    try {
+        if (typeof import !== 'undefined' && typeof import.meta !== 'undefined') {
+            const metaEnv = import.meta.env;
+            if (metaEnv && metaEnv.VITE_RESEND_API_KEY) {
+                resendKey = metaEnv.VITE_RESEND_API_KEY;
+            }
+        }
+    } catch (e) {
+        // Not in module context, ignore
+    }
     
     if (!resendKey) {
         // Show helpful error with instructions
@@ -2503,11 +2535,12 @@ if (typeof document !== 'undefined' && !document.getElementById('email-spin-styl
  */
 window.sendBulkTrainingReports = async function() {
     if (!window.coachEmailService) {
-        alert('Email service not loaded. Please refresh the page.');
+        godspeedAlert('Email service not loaded. Please refresh the page.', 'Error');
         return;
     }
     
-    if (!confirm('Send training reports to ALL parents? This may take a few minutes.')) {
+    const confirmed = await godspeedConfirm('Send training reports to ALL parents? This may take a few minutes.', 'Confirm Action');
+    if (!confirmed) {
         return;
     }
     
@@ -2561,11 +2594,12 @@ window.sendBulkTrainingReports = async function() {
  */
 window.sendBulkPracticeInfo = async function() {
     if (!window.coachEmailService) {
-        alert('Email service not loaded. Please refresh the page.');
+        godspeedAlert('Email service not loaded. Please refresh the page.', 'Error');
         return;
     }
     
-    if (!confirm('Send practice info to ALL parents? This may take a few minutes.')) {
+    const confirmed = await godspeedConfirm('Send practice info to ALL parents? This may take a few minutes.', 'Confirm Action');
+    if (!confirmed) {
         return;
     }
     

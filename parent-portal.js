@@ -560,7 +560,7 @@ function initSignaturePad() {
             setTimeout(() => {
                 markDocumentSigned(currentDocType);
                 closeDocModal();
-                alert(getTitleFromType(currentDocType) + ' Signed Successfully!');
+                godspeedAlert(getTitleFromType(currentDocType) + ' Signed Successfully!', 'Success');
             }, 1000);
         });
     }
@@ -708,7 +708,7 @@ function handleSettingsSave() {
     const cDob = document.getElementById('settings-athlete-dob').value;
 
     if (!email) {
-        alert('Error: No email found. Please sign in again.');
+        godspeedAlert('Error: No email found. Please sign in again.', 'Error');
         return;
     }
 
@@ -778,7 +778,7 @@ function handleSettingsSave() {
 window.submitGearOrder = function () {
     const email = document.getElementById('settings-parent-email').value || localStorage.getItem('gba_user_email');
     if (!email) {
-        alert("Please sign in to submit an order.");
+        godspeedAlert("Please sign in to submit an order.", "GODSPEED BASKETBALL");
         return;
     }
 
@@ -834,7 +834,7 @@ window.submitGearOrder = function () {
 
     // Sanitize email before displaying in alert
     const safeEmail = escapeHTML(email || '');
-    alert(`Order for ${safeEmail} has been submitted to the team admin.`);
+    godspeedAlert(`Order for ${safeEmail} has been submitted to the team admin.`, 'Order Submitted');
 
     setTimeout(() => {
         btn.innerText = originalText;
@@ -1239,7 +1239,7 @@ async function loadTrainingHours(parentEmail) {
                     linkEl.textContent = 'View PDF';
                     linkEl.onclick = (e) => {
                         e.preventDefault();
-                        alert('Receipt View Placeholder');
+                        godspeedAlert('Receipt View Placeholder', 'Info');
                         return false;
                     };
                     
@@ -1826,7 +1826,7 @@ function viewTrainingStatement(email) {
     const record = db.trainingRecords ? db.trainingRecords[email] : null;
 
     if (!record) {
-        alert('No training record found for this user.');
+        godspeedAlert('No training record found for this user.', 'Info');
         return;
     }
 

@@ -664,6 +664,7 @@
 
     <!-- Embedded Calendar Mode: Footer Removed -->
 
+    <script src="branded-modal.js"></script>
     <script src="script.js"></script>
     <script type="module" src="backend.js"></script>
     <script>
@@ -864,7 +865,7 @@
         function filterEventsByEnrollment(events) {
             // If no filter is set, show all events
             if (!filterAthleteId && enrolledPrograms.length === 0) {
-                return events;
+            return events;
             }
 
             // If filter is set but no enrolled programs, show nothing
@@ -907,7 +908,7 @@
 
             const grid = document.getElementById('calendarGridBody');
             const listContainer = document.getElementById('calendarListBody');
-            
+
             // Stats Calculation (Season Total)
             const stats = calculateSeasonStats(year, month);
             document.getElementById('calculated-hours').innerHTML = `
@@ -1147,7 +1148,7 @@
             closeSyncModal();
 
             if (platform === 'google') {
-                alert("File downloaded! To finish syncing with Google Calendar:\n1. Open Google Calendar on your computer.\n2. Go to Settings > Import & Export.\n3. Upload the 'godspeed-season.ics' file.");
+                godspeedAlert("File downloaded! To finish syncing with Google Calendar:\n\n1. Open Google Calendar on your computer.\n2. Go to Settings > Import & Export.\n3. Upload the 'godspeed-season.ics' file.", "Calendar Sync");
             }
         }
 
@@ -1221,6 +1222,7 @@
         // Init
         document.addEventListener('DOMContentLoaded', renderCalendar);
     </script>
+    <script src="branded-modal.js"></script>
     <script src="auth.js"></script>
 </body>
 

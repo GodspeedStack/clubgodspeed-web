@@ -421,12 +421,12 @@
 /* ===========================
    Button Enhancements
    =========================== */
-@keyframes btn-glow {
+@keyframes btn-pulse {
     0%, 100% {
-        box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4);
+        transform: scale(1);
     }
     50% {
-        box-shadow: 0 0 20px 4px rgba(37, 99, 235, 0.3);
+        transform: scale(1.015);
     }
 }
 
@@ -451,7 +451,8 @@
 }
 
 .btn-glow {
-    animation: btn-glow 2s ease-in-out infinite;
+    animation: btn-pulse 3s ease-in-out infinite;
+    transform-origin: center;
 }
 
 .btn-ripple {

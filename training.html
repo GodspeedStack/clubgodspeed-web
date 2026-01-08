@@ -170,10 +170,8 @@
                         <li class="flex items-center"><span
                                 class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Spacing habits</li>
                     </ul>
-                    <button
-                        class="w-full py-4 bg-blue-600 text-white font-bold rounded-full uppercase tracking-wider hover:bg-blue-700 transition shadow-lg shadow-blue-600/20 select-program-btn add-to-cart-btn"
-                        data-program="guard-academy" data-id="elite-guard-academy" data-price="150"
-                        data-name="Elite Guard Academy">SELECT PROGRAM</button>
+                    <a href="compare-programs.html"
+                        class="w-full py-4 bg-blue-600 text-white font-bold rounded-full uppercase tracking-wider hover:bg-blue-700 transition shadow-lg shadow-blue-600/20 text-center block">SELECT PROGRAM</a>
                 </div>
 
                 <div
@@ -196,10 +194,8 @@
                             decisions at live speed</li>
                     </ul>
                     <p class="text-gray-400 text-sm italic mb-4">This is where players become problem-solvers.</p>
-                    <button
-                        class="w-full py-4 bg-blue-600 text-white font-bold rounded-full uppercase tracking-wider hover:bg-blue-700 transition shadow-lg shadow-blue-600/20 select-program-btn add-to-cart-btn"
-                        data-program="iq-school" data-id="iq-school" data-price="120"
-                        data-name="IQ School (Hydra Principles)">SELECT PROGRAM</button>
+                    <a href="compare-programs.html"
+                        class="w-full py-4 bg-blue-600 text-white font-bold rounded-full uppercase tracking-wider hover:bg-blue-700 transition shadow-lg shadow-blue-600/20 text-center block">SELECT PROGRAM</a>
                 </div>
 
                 <div
@@ -225,10 +221,8 @@
                     </ul>
                     <p class="text-gray-400 text-sm italic mb-4">Athletes move better, last longer, and react faster.
                     </p>
-                    <button
-                        class="w-full py-4 bg-blue-600 text-white font-bold rounded-full uppercase tracking-wider hover:bg-blue-700 transition shadow-lg shadow-blue-600/20 select-program-btn add-to-cart-btn"
-                        data-program="strength" data-id="strength-movement" data-price="100"
-                        data-name="Strength + Movement">SELECT PROGRAM</button>
+                    <a href="compare-programs.html"
+                        class="w-full py-4 bg-blue-600 text-white font-bold rounded-full uppercase tracking-wider hover:bg-blue-700 transition shadow-lg shadow-blue-600/20 text-center block">SELECT PROGRAM</a>
                 </div>
             </div>
         </div>
@@ -388,7 +382,7 @@
                 <!-- Right: Form Side -->
                 <div class="p-12">
                     <form
-                        onsubmit="event.preventDefault(); alert('Message sent! We will reach out shortly.'); closeContactModal();"
+                        onsubmit="event.preventDefault(); godspeedAlert('We will reach out shortly.', 'Message Sent'); closeContactModal();"
                         class="space-y-6">
                         <div class="grid grid-cols-2 gap-4">
                             <div>
@@ -567,6 +561,7 @@
         });
     </script>
 
+    <script src="branded-modal.js"></script>
     <script src="mobile-menu.js"></script>
     <script src="script.js"></script>
     <script src="cart-handler.js"></script>
