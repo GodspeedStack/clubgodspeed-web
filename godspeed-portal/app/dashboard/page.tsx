@@ -6,6 +6,7 @@ import { db } from "@/lib/firebase";
 import { collection, getDocs } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import AthleteTradingCard from "@/app/components/AthleteTradingCard";
+import { AthleteDashboardSkeleton } from "@/app/components/Skeleton";
 
 interface Athlete {
     id: string;
@@ -61,14 +62,7 @@ export default function DashboardPage() {
     };
 
     if (loading || dataLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-[#f5f5f7]">
-                <div className="text-center">
-                    <div className="animate-pulse text-[#0071e3] font-bold text-xl mb-2">Loading Dashboard...</div>
-                    <p className="text-gray-500 text-sm">Fetching your athlete data</p>
-                </div>
-            </div>
-        );
+        return <AthleteDashboardSkeleton />;
     }
 
     if (error) {
