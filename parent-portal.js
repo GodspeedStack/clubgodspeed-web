@@ -2202,3 +2202,198 @@ function viewTrainingStatement(email) {
     `);
     w.document.close();
 }
+
+/**
+ * Toggle Calendar View (Team vs Season)
+ */
+window.toggleCalendarView = function(viewType) {
+    const iframe = document.getElementById('main-calendar-iframe');
+    const btnTeam = document.getElementById('btn-cal-team');
+    const btnSeason = document.getElementById('btn-cal-season');
+
+    // Update Button Styles
+    if (viewType === 'season') {
+        if (btnTeam) { btnTeam.classList.remove('active'); btnTeam.style.background = 'transparent'; btnTeam.style.color = '#6b7280'; }
+        if (btnSeason) { btnSeason.classList.add('active'); btnSeason.style.background = '#2563eb'; btnSeason.style.color = 'white'; }
+    } else {
+        if (btnSeason) { btnSeason.classList.remove('active'); btnSeason.style.background = 'transparent'; btnSeason.style.color = '#6b7280'; }
+        if (btnTeam) { btnTeam.classList.add('active'); btnTeam.style.background = '#2563eb'; btnTeam.style.color = 'white'; }
+    }
+
+    // Post message to iframe
+    if (iframe && iframe.contentWindow) {
+        // If 'season', we want to show all events. If 'team', we want to filter restricted to user's team.
+        // Since we don't have a backend filter, we send a flag.
+        const filterId = viewType === 'season' ? 'ALL_SEASONS' : (window.currentAthleteId || null);
+        iframe.contentWindow.postMessage({
+            type: 'filterByAthlete',
+            athleteId: filterId
+        }, '*');
+    }
+}
+
+/**
+ * Initiate Training Payment
+ */
+window.initiateTrainingPayment = function(plan) {
+    let title = '';
+    let amount = '';
+    
+    if (plan === 1) { title = 'Single Session'; amount = '5.00'; }
+    else if (plan === 5) { title = '5-Pack Bundle'; amount = '00.00'; }
+    else if (plan === 10) { title = '10-Pack Bundle'; amount = '50.00'; }
+    else if (plan === 'unlimited') { title = 'Unlimited Monthly'; amount = '50.00'; }
+    
+    // Simulate Payment Flow
+    godspeedAlert(`Initiating secure checkout for ${title} (${amount})...`, 'Processing');
+    
+    setTimeout(() => {
+        godspeedAlert(`Payment Successful! ${title} have been added to your account.`, 'Success');
+        // Update mock data?
+        // Refresh dashboard?
+        // In a real app, this would redirect to Stripe
+    }, 1500);
+}
+
+/**
+ * Render Billing Dashboard
+ */
+window.renderBilling = function(email) {
+    const container = document.getElementById('billing-invoices-list');
+    const totalDueEl = document.getElementById('billing-total-due');
+    const statusTextEl = document.getElementById('billing-status-text');
+    const statusCard = document.getElementById('billing-status-card');
+    const tripsContainer = document.getElementById('parent-trips-container');
+    
+    if (!container) return;
+    
+    // Mock Data for Invoices
+    const invoices = [
+        // { id: 'INV-001', title: 'October Tuition', amount: 250, due: '2025-10-01', status: 'paid' },
+        // { id: 'INV-002', title: 'November Tuition', amount: 250, due: '2025-11-01', status: 'overdue' }
+    ];
+    
+    // For demo, let's say "November Tuition" is overdue if date > Nov 1
+    // But let's keep it "Good Standing" by default unless we want to demo overdue
+    // Let's add one "Due Soon" invoice
+    const upcomingInvoice = { 
+        id: 'INV-2025-12', 
+        title: 'December Tuition', 
+        amount: 250.00, 
+        due: '2025-12-01', 
+        status: 'due' 
+    };
+    
+    // Check if we already rendered
+    container.innerHTML = '';
+    
+    // Render Invoices
+    if (invoices.length === 0 && !upcomingInvoice) {
+        container.innerHTML = '<div style="text-align: center; padding: 20px; background: rgba(255,255,255,0.5); border-radius: 12px; color: #888; font-size: 0.9rem;">All caught up! No open invoices.</div>';
+    } else {
+        // Add upcoming
+        const inv = upcomingInvoice;
+        const div = document.createElement('div');
+        div.style.background = 'white';
+        div.style.padding = '16px';
+        div.style.borderRadius = '12px';
+        div.style.display = 'flex';
+        div.style.justifyContent = 'space-between';
+        div.style.alignItems = 'center';
+        div.style.borderLeft = '4px solid #f59e0b'; // Amber for Due
+        div.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
+        
+        div.innerHTML = `
+            <div>
+                <div style="font-weight: 700; font-size: 1rem;">${inv.title}</div>
+                <div style="font-size: 0.8rem; color: #666;">Due: ${new Date(inv.due).toLocaleDateString()}</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-weight: 700; font-size: 1rem;">$${inv.amount.toFixed(2)}</div>
+                <button class="btn-text" style="color: #2563eb; font-size: 0.8rem; font-weight: 600;" onclick="godspeedAlert('Processing Payment...', 'Info')">Pay Now</button>
+            </div>
+        `;
+        container.appendChild(div);
+    }
+    
+    // Update Total Due
+    if (totalDueEl) totalDueEl.textContent = '50.00';
+    if (statusTextEl && statusCard) {
+        statusTextEl.textContent = '● Payment Due Soon';
+        statusTextEl.style.color = '#f59e0b'; // Amber
+        statusCard.style.borderLeftColor = '#f59e0b';
+    }
+    
+    // Render Trips (Reuse logic from Portal Data but here)
+    if (tripsContainer) {
+       // Mock Trips
+       // ... existing logic mock ...
+       // For now, clear it to avoid duplicate if called multiple times, or copy logic from older renderParentTrips
+    }
+}
+
+/**
+ * Check and Send Notifications
+ */
+window.checkPaymentReminders = function(email) {
+    const notifyPayment = localStorage.getItem('gba_notify_payment') !== 'false'; // Default true
+    const notifyOverdue = localStorage.getItem('gba_notify_overdue') !== 'false';
+    
+    if (notifyPayment) {
+        console.log('Checking for payment reminders for ' + email + '...');
+        // Mock logic: If date is near 1st, send reminder
+        // For demo:
+        // alert('REMINDER: December Tuition is due soon.');
+        // We won't alert to avoid annoying user, just log
+    }
+}
+
+/**
+ * Save Settings
+ */
+window.handleSettingsSave = function() {
+    const pName = document.getElementById('settings-parent-name').value;
+    const pPhone = document.getElementById('settings-parent-phone').value;
+    const notifyPayment = document.getElementById('settings-notify-payment').checked;
+    const notifyOverdue = document.getElementById('settings-notify-overdue').checked;
+
+    if (pName) localStorage.setItem('gba_parent_name', pName);
+    if (pPhone) localStorage.setItem('gba_parent_phone', pPhone);
+    localStorage.setItem('gba_notify_payment', notifyPayment);
+    localStorage.setItem('gba_notify_overdue', notifyOverdue);
+
+    godspeedAlert('Settings saved successfully.', 'Success');
+}
+
+/**
+ * Render Sidebar Stats
+ */
+window.renderSidebarStats = function(email) {
+    const div = document.getElementById('sidebar-player-stats');
+    if (!div) return;
+    
+    // Show container
+    div.style.display = 'block';
+    
+    // Mock Data or fetch from DB
+    // For demo, we use hardcoded or random stats
+    const gp = document.getElementById('sidebar-stat-gp');
+    const ppg = document.getElementById('sidebar-stat-ppg');
+    
+    if (gp) gp.textContent = '12';
+    if (ppg) ppg.textContent = '14.5';
+}
+
+// Hook into initPortal
+const originalInitPortal = window.initPortal;
+window.initPortal = function() {
+    if (originalInitPortal) originalInitPortal();
+    
+    const email = localStorage.getItem('gba_user_email');
+    if (email) {
+        renderBilling(email);
+        checkPaymentReminders(email);
+        renderSidebarStats(email);
+    }
+}
+
