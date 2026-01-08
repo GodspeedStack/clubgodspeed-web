@@ -110,8 +110,21 @@ export default function DashboardPage() {
             {/* Main Content */}
             <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 max-w-5xl">
                 <header className="mb-8 sm:mb-12">
-                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold uppercase tracking-tight mb-2">Welcome, <span className="text-[#0071e3]">Parent</span></h1>
-                    <p className="text-sm sm:text-base text-gray-500">Manage your athlete's performance and schedule.</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                        <div>
+                            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold uppercase tracking-tight mb-2">Welcome, <span className="text-[#0071e3]">Parent</span></h1>
+                            <p className="text-sm sm:text-base text-gray-500">Manage your athlete's performance and schedule.</p>
+                        </div>
+                        <button
+                            onClick={() => router.push("/stats")}
+                            className="bg-[#0071e3] text-white px-6 py-3 rounded-full font-bold text-sm hover:bg-[#005bb5] hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2 self-start sm:self-auto"
+                        >
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                            VIEW STATS
+                        </button>
+                    </div>
                 </header>
 
                 <section>
