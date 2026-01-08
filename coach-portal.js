@@ -80,6 +80,12 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             handleCoachLogin();
         });
+        const codeInput = document.getElementById('coach-code');
+        if (codeInput) {
+            codeInput.addEventListener('input', () => {
+                setCoachLoginStatus('');
+            });
+        }
     } else {
         console.error("Login form not found");
     }
@@ -88,15 +94,39 @@ document.addEventListener('DOMContentLoaded', () => {
 // Global State for Analytics
 window.currentRosterState = { data: [] };
 
+function setCoachLoginStatus(message, type = 'error') {
+    const statusEl = document.querySelector('#staff-login-form .login-error');
+    if (!statusEl) return;
+    if (!message) {
+        statusEl.style.display = 'none';
+        statusEl.textContent = '';
+        return;
+    }
+    const palette = {
+        error: { bg: '#fee2e2', color: '#b91c1c' },
+        info: { bg: '#dbeafe', color: '#1d4ed8' },
+        success: { bg: '#dcfce7', color: '#166534' }
+    };
+    const style = palette[type] || palette.error;
+    statusEl.style.display = 'block';
+    statusEl.style.background = style.bg;
+    statusEl.style.color = style.color;
+    statusEl.textContent = message;
+}
+
 // 1. Auth Logic - Enhanced with Supabase Auth support
 window.handleCoachLogin = async function () {
     console.log("Login Attempt Started - handleCoachLogin called");
 
     const codeInput = document.getElementById('coach-code');
     const code = codeInput ? codeInput.value.trim() : '';
+    const submitBtn = document.querySelector('#staff-login-form button[type="submit"]');
+
+    setCoachLoginStatus('');
 
     if (!code) {
         godspeedAlert("Please enter an access code.", "GODSPEED BASKETBALL");
+        setCoachLoginStatus('Please enter an access code to continue.');
         return;
     }
 
@@ -115,12 +145,21 @@ window.handleCoachLogin = async function () {
     const isEmailFormat = code.includes('@');
     if (isEmailFormat && window.auth && window.auth.isSupabaseAvailable && window.auth.isSupabaseAvailable()) {
         try {
+            if (submitBtn) {
+                submitBtn.textContent = 'Signing In...';
+                submitBtn.disabled = true;
+            }
             // For Supabase, we need email + password
             // If code is email, prompt for password
             const password = prompt('Enter your password:');
             if (!password) {
                 if (window.Security && window.Security.RateLimiter) {
                     window.Security.RateLimiter.reset('coach_login', code);
+                }
+                setCoachLoginStatus('Sign-in canceled. Enter your password to continue.', 'info');
+                if (submitBtn) {
+                    submitBtn.textContent = 'Enter Portal';
+                    submitBtn.disabled = false;
                 }
                 return;
             }
@@ -177,11 +216,18 @@ window.handleCoachLogin = async function () {
                     dashboardView.style.display = 'flex';
                     initDashboard();
                 }
+                setCoachLoginStatus('', 'success');
                 return;
             }
         } catch (error) {
             console.error('Supabase auth failed, trying fallback:', error);
+            setCoachLoginStatus(error.message || 'Unable to sign in with Supabase. Please try again or use your access code.');
             // Fall through to hash-based fallback
+        } finally {
+            if (submitBtn) {
+                submitBtn.textContent = 'Enter Portal';
+                submitBtn.disabled = false;
+            }
         }
     }
 
@@ -205,6 +251,7 @@ window.handleCoachLogin = async function () {
         role = 'coach';
     } else {
         godspeedAlert("Access Denied. Invalid Code.", "GODSPEED BASKETBALL");
+        setCoachLoginStatus('Access denied. Please check your access code and try again.');
         if (codeInput) {
             codeInput.value = '';
             codeInput.focus();
@@ -232,8 +279,10 @@ window.handleCoachLogin = async function () {
         loginView.style.display = 'none';
         dashboardView.style.display = 'flex';
         initDashboard();
+        setCoachLoginStatus('');
     } else {
         godspeedAlert("Critical Error: Dashboard views not found.", "Error");
+        setCoachLoginStatus('Login failed due to a missing dashboard view. Please reload the page.');
     }
 }
 

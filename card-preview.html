@@ -36,17 +36,137 @@
         .gloss-animate {
             animation: shine 3s infinite linear;
         }
+
+        .aurora {
+            background: radial-gradient(circle at top, rgba(59, 130, 246, 0.25), transparent 55%),
+                radial-gradient(circle at 20% 20%, rgba(236, 72, 153, 0.25), transparent 45%),
+                radial-gradient(circle at 80% 10%, rgba(16, 185, 129, 0.2), transparent 50%);
+        }
+
+        .grid-overlay {
+            background-image: linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 48px 48px;
+        }
+
+        .glow-ring {
+            box-shadow: 0 0 35px rgba(37, 99, 235, 0.35), 0 0 100px rgba(76, 201, 240, 0.15);
+        }
     </style>
     <link rel="stylesheet" href="mobile-fixes.css">
 </head>
 
 <body class="flex flex-col items-center min-h-screen p-8 bg-[#050505]">
 
-    <div class="mb-12 text-center">
-        <h1 class="text-4xl font-black text-white uppercase tracking-tighter mb-2">GODSPEED <span
-                class="text-[#2563eb]">VAULT</span></h1>
-        <p class="text-gray-500 text-sm">Tap a card to flip. Click 'Download' to save.</p>
+    <div class="absolute inset-0 -z-10 aurora"></div>
+    <div class="absolute inset-0 -z-20 grid-overlay opacity-40"></div>
+
+    <div class="w-full max-w-7xl">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 mb-12">
+            <div>
+                <div class="inline-flex items-center gap-2 text-xs uppercase tracking-[0.35em] text-blue-400 font-bold mb-3">
+                    <span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+                    Vault Live Feed
+                </div>
+                <h1 class="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-3">GODSPEED <span
+                        class="text-[#2563eb]">VAULT</span></h1>
+                <p class="text-gray-400 text-sm md:text-base max-w-xl">
+                    Best-in-class trading card experience with cinematic visuals, live intel, and instant downloads.
+                    Tap a card to flip or compare your top performers.
+                </p>
+            </div>
+            <div class="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col gap-4 w-full lg:w-[360px] backdrop-blur-lg">
+                <div class="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-gray-400 font-bold">
+                    <span>Vault Status</span>
+                    <span class="text-emerald-300">Synced</span>
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="bg-black/40 rounded-xl p-3 text-center">
+                        <div class="text-2xl font-black text-white">24</div>
+                        <div class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Cards</div>
+                    </div>
+                    <div class="bg-black/40 rounded-xl p-3 text-center">
+                        <div class="text-2xl font-black text-white">6</div>
+                        <div class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Mythic</div>
+                    </div>
+                    <div class="bg-black/40 rounded-xl p-3 text-center">
+                        <div class="text-2xl font-black text-white">98%</div>
+                        <div class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Claim Rate</div>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <button class="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 rounded-lg uppercase tracking-widest transition">View Collection</button>
+                    <button class="flex-1 border border-white/20 text-white text-xs font-bold py-2 rounded-lg uppercase tracking-widest hover:border-blue-400 transition">Mint New</button>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <section class="w-full max-w-7xl mb-12">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="lg:col-span-7 bg-gradient-to-br from-white/5 via-white/5 to-transparent border border-white/10 rounded-2xl p-6 backdrop-blur-lg">
+                <div class="flex items-center justify-between mb-5">
+                    <div class="text-xs uppercase tracking-[0.35em] text-blue-300 font-bold">Vault Insights</div>
+                    <div class="text-xs text-gray-500 font-semibold">Updated 2 mins ago</div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-black/50 rounded-xl p-4">
+                        <div class="text-sm text-gray-400 uppercase tracking-[0.3em]">Fan Score</div>
+                        <div class="text-3xl font-black text-white mt-2">9.6</div>
+                        <div class="text-xs text-emerald-400 font-semibold">▲ +0.4</div>
+                    </div>
+                    <div class="bg-black/50 rounded-xl p-4">
+                        <div class="text-sm text-gray-400 uppercase tracking-[0.3em]">Avg OVR</div>
+                        <div class="text-3xl font-black text-white mt-2">87</div>
+                        <div class="text-xs text-blue-300 font-semibold">Top 5%</div>
+                    </div>
+                    <div class="bg-black/50 rounded-xl p-4">
+                        <div class="text-sm text-gray-400 uppercase tracking-[0.3em]">Momentum</div>
+                        <div class="text-3xl font-black text-white mt-2">+14%</div>
+                        <div class="text-xs text-fuchsia-300 font-semibold">Last 7 days</div>
+                    </div>
+                    <div class="bg-black/50 rounded-xl p-4">
+                        <div class="text-sm text-gray-400 uppercase tracking-[0.3em]">Collector Rank</div>
+                        <div class="text-3xl font-black text-white mt-2">#2</div>
+                        <div class="text-xs text-amber-300 font-semibold">Statewide</div>
+                    </div>
+                </div>
+            </div>
+            <div class="lg:col-span-5 bg-black/60 border border-white/10 rounded-2xl p-6 backdrop-blur-lg">
+                <div class="text-xs uppercase tracking-[0.35em] text-gray-400 font-bold mb-4">Quick Filters</div>
+                <div class="flex flex-wrap gap-3">
+                    <button class="px-4 py-2 text-xs font-bold uppercase tracking-widest text-white bg-blue-600 rounded-full">All Cards</button>
+                    <button class="px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-300 border border-white/20 rounded-full hover:border-blue-400">Mythic</button>
+                    <button class="px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-300 border border-white/20 rounded-full hover:border-blue-400">Signed</button>
+                    <button class="px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-300 border border-white/20 rounded-full hover:border-blue-400">Top Movers</button>
+                </div>
+                <div class="mt-6 flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+                    <div>
+                        <div class="text-xs text-gray-400 uppercase tracking-[0.3em]">Playback</div>
+                        <div class="text-lg font-bold text-white">Hype Reel Mode</div>
+                    </div>
+                    <button class="bg-emerald-500/20 text-emerald-300 text-xs font-bold px-3 py-2 rounded-full uppercase tracking-widest">On</button>
+                </div>
+                <div class="mt-6 text-xs text-gray-500 leading-relaxed">
+                    Powered by live stat feeds, AI scouting notes, and cinematic renders to keep your athletes in the spotlight.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="w-full max-w-7xl mb-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <div class="text-xs uppercase tracking-[0.35em] text-gray-400 font-bold mb-2">All Versions</div>
+                <h2 class="text-2xl md:text-3xl font-black text-white">Collect every drop, compare every cut.</h2>
+            </div>
+            <div class="flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-gray-400 font-bold">
+                <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-blue-400"></span>Legend</span>
+                <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-fuchsia-400"></span>Mythic</span>
+                <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-amber-400"></span>Prime</span>
+            </div>
+        </div>
+    </section>
 
     <!-- Grid Container for Cards -->
     <div id="cards-grid" class="flex flex-wrap justify-center gap-12 w-full max-w-7xl">
@@ -86,11 +206,24 @@
                 lastname: 'Scott',
                 image: 'src/assets/athletes/quest_scott_monster.png',
                 number: '4',
+                position: 'PG',
+                height: "5'6\"",
+                weight: '128 lb',
+                classYear: '2028',
+                hometown: 'Denver, CO',
+                archetype: 'Lightning Creator',
+                badges: ['Speed Burst', 'Clutch Shot', 'Pickpocket'],
+                signature: 'Euro-step finish',
                 stats: { s1: '5.0', l1: 'PPG', s2: '3.0', l2: 'SPG', s3: '4.0', l3: 'DPG', s4: '8.8', l4: 'GRD' },
                 games: [
                     { opp: 'vs. Weeks', stat: '5 PTS, 3 STL' },
                     { opp: '@ Practice', stat: 'High Motor' },
                     { opp: 'Trend', stat: 'Rising' }
+                ],
+                versions: [
+                    { tag: 'Legend', rating: '88', accent: 'from-blue-400 to-sky-500', chip: 'bg-blue-500/20 text-blue-200' },
+                    { tag: 'Mythic', rating: '92', accent: 'from-fuchsia-400 to-pink-500', chip: 'bg-fuchsia-500/20 text-fuchsia-200' },
+                    { tag: 'Prime', rating: '95', accent: 'from-amber-300 to-orange-400', chip: 'bg-amber-500/20 text-amber-200' }
                 ]
             },
             {
@@ -99,11 +232,24 @@
                 lastname: 'Bowman',
                 image: 'src/assets/athletes/ashton_comic.jpg',
                 number: '2',
+                position: 'SG',
+                height: "5'5\"",
+                weight: '124 lb',
+                classYear: '2029',
+                hometown: 'Aurora, CO',
+                archetype: 'Two-Way Sniper',
+                badges: ['Lockdown', 'Quick Release', 'Floor General'],
+                signature: 'Corner pull-up',
                 stats: { s1: '3.0', l1: 'PPG', s2: '1.0', l2: 'STL', s3: '1.0', l3: 'REB', s4: '7.6', l4: 'V2 RATING' },
                 games: [
                     { opp: 'vs. Weeks', stat: '3 PTS, 100% FT' },
                     { opp: '@ Practice 5', stat: 'Defensive Anchor' },
                     { opp: 'Trend', stat: 'Steady Growth' }
+                ],
+                versions: [
+                    { tag: 'Legend', rating: '86', accent: 'from-blue-400 to-sky-500', chip: 'bg-blue-500/20 text-blue-200' },
+                    { tag: 'Mythic', rating: '89', accent: 'from-fuchsia-400 to-pink-500', chip: 'bg-fuchsia-500/20 text-fuchsia-200' },
+                    { tag: 'Prime', rating: '91', accent: 'from-amber-300 to-orange-400', chip: 'bg-amber-500/20 text-amber-200' }
                 ]
             }
         ];
@@ -113,21 +259,29 @@
             let html = '';
 
             playerList.forEach(p => {
-                html += `
+                p.versions.forEach((version, index) => {
+                    const versionId = `${p.id}-${version.tag.toLowerCase()}-${index}`;
+                    html += `
                 <div class="card-container relative w-[320px] h-[450px] group perspective-1000 cursor-pointer" onclick="this.classList.toggle('is-flipped')">
-                    <div id="card-inner-${p.id}" class="card-inner relative w-full h-full transition-transform duration-700 transform-style-3d shadow-2xl rounded-xl">
+                    <div id="card-inner-${versionId}" class="card-inner relative w-full h-full transition-transform duration-700 transform-style-3d shadow-2xl rounded-xl glow-ring">
                         <!-- FRONT -->
                         <div class="absolute inset-0 w-full h-full backface-hidden bg-black rounded-xl overflow-hidden border border-white/20">
                             <div class="absolute inset-0 z-0">
                                 <img src="${p.image}" class="w-full h-full object-cover object-top opacity-100 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-1">
                             </div>
                             <div class="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/80 to-transparent z-0"></div>
+                            <div class="absolute inset-x-0 top-0 h-24 bg-gradient-to-b ${version.accent} opacity-40"></div>
                             
                             <div class="relative z-10 flex flex-col h-full p-4 justify-between">
                                 <div class="flex justify-between items-center mb-2">
                                     <div class="bg-black/40 backdrop-blur-xl border border-white/20 rounded-lg px-3 py-1.5 shadow-[0_0_15px_rgba(76,201,240,0.3)]">
                                         <div class="text-[9px] font-black tracking-[0.25em] text-[#4cc9f0] uppercase mb-0.5 drop-shadow-lg">Godspeed</div>
-                                        <div class="text-[10px] font-bold text-white uppercase tracking-wider">Mythic</div>
+                                        <div class="text-[10px] font-bold text-white uppercase tracking-wider">${version.tag}</div>
+                                    </div>
+                                    <div class="flex flex-col items-end gap-1">
+                                        <div class="text-[9px] text-gray-300 uppercase tracking-widest font-bold">${p.position}</div>
+                                        <div class="text-xs text-white font-semibold">OVR ${version.rating}</div>
+                                        <span class="px-2 py-0.5 rounded-full text-[8px] uppercase tracking-[0.3em] font-bold ${version.chip}">Drop ${index + 1}</span>
                                     </div>
                                     <div class="relative">
                                         <div class="text-6xl font-black italic text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400"
@@ -144,6 +298,20 @@
                                             ${p.name}<br>
                                             <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#4cc9f0] to-[#f72585]">${p.lastname}</span>
                                         </h2>
+                                    </div>
+                                    <div class="flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.25em] text-gray-400 font-semibold">
+                                        <span>${p.height}</span>
+                                        <span>•</span>
+                                        <span>${p.weight}</span>
+                                        <span>•</span>
+                                        <span>Class ${p.classYear}</span>
+                                    </div>
+                                    <div class="mt-3 flex flex-wrap gap-2">
+                                        ${p.badges.map(badge => `
+                                            <span class="px-2 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest bg-white/10 text-white/80 border border-white/10">
+                                                ${badge}
+                                            </span>
+                                        `).join('')}
                                     </div>
                                     <div class="text-center mt-4">
                                         <span class="text-[9px] font-bold text-white/50 uppercase tracking-widest border border-white/10 px-3 py-1 rounded-full backdrop-blur-md flex items-center justify-center gap-2">
@@ -163,7 +331,10 @@
                              
                              <div class="relative z-10 flex flex-col h-full">
                                 <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
-                                    <div class="text-xl font-black text-white italic uppercase">Season Stats</div>
+                                    <div>
+                                        <div class="text-xl font-black text-white italic uppercase">Season Stats</div>
+                                        <div class="text-xs text-gray-400 tracking-[0.25em] uppercase">${p.archetype}</div>
+                                    </div>
                                     <div class="text-[#4cc9f0] text-xs font-bold tracking-widest">2024-25</div>
                                 </div>
                                 <div class="grid grid-cols-2 gap-4 mb-6">
@@ -184,6 +355,16 @@
                                         <div class="text-[9px] text-gray-400 uppercase tracking-widest font-bold">${p.stats.l4}</div>
                                     </div>
                                 </div>
+                                <div class="grid grid-cols-2 gap-3 mb-5">
+                                    <div class="bg-white/5 rounded-lg p-3 border border-white/5">
+                                        <div class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">Signature</div>
+                                        <div class="text-sm text-white font-semibold">${p.signature}</div>
+                                    </div>
+                                    <div class="bg-white/5 rounded-lg p-3 border border-white/5">
+                                        <div class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">Hometown</div>
+                                        <div class="text-sm text-white font-semibold">${p.hometown}</div>
+                                    </div>
+                                </div>
                                 <div class="flex-grow">
                                     <div class="text-[10px] text-gray-500 uppercase font-bold mb-2">Last 3 Games</div>
                                     <div class="space-y-2">
@@ -195,7 +376,17 @@
                                         `).join('')}
                                     </div>
                                 </div>
-                                <button onclick="event.stopPropagation(); downloadCard('${p.id}', event)" class="mt-4 w-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white py-2 rounded font-bold text-xs tracking-wide transition-colors">
+                                <div class="mt-4 grid grid-cols-2 gap-2 text-[10px] uppercase tracking-[0.3em] text-gray-400">
+                                    <div class="bg-black/40 rounded-lg p-2 text-center">
+                                        <div class="text-white text-lg font-black">A+</div>
+                                        <div>Hustle</div>
+                                    </div>
+                                    <div class="bg-black/40 rounded-lg p-2 text-center">
+                                        <div class="text-white text-lg font-black">9.4</div>
+                                        <div>Clutch</div>
+                                    </div>
+                                </div>
+                                <button onclick="event.stopPropagation(); downloadCard('${versionId}', event)" class="mt-4 w-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white py-2 rounded font-bold text-xs tracking-wide transition-colors">
                                     DOWNLOAD CARD
                                 </button>
                              </div>
@@ -203,6 +394,7 @@
                     </div>
                 </div>
                 `;
+                });
             });
             grid.innerHTML = html;
         }
@@ -245,6 +437,21 @@
         // Init
         window.onload = renderCards;
     </script>
+    <section class="w-full max-w-7xl mt-16 mb-20">
+        <div class="bg-gradient-to-br from-white/10 via-black/80 to-black border border-white/10 rounded-3xl p-8 md:p-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+            <div>
+                <div class="text-xs uppercase tracking-[0.35em] text-blue-300 font-bold mb-3">Collector Upgrade</div>
+                <h3 class="text-3xl md:text-4xl font-black text-white mb-3">Unlock cinematic card drops, scouting notes, and real-time boosts.</h3>
+                <p class="text-gray-400 text-sm md:text-base max-w-2xl">
+                    Premium members get auto-generated highlights, AI scouting insights, and priority minting for the next generation of Godspeed athletes.
+                </p>
+            </div>
+            <div class="flex gap-4">
+                <button class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold px-6 py-3 rounded-xl uppercase tracking-widest">Upgrade Now</button>
+                <button class="border border-white/20 text-white text-sm font-bold px-6 py-3 rounded-xl uppercase tracking-widest hover:border-blue-400">View Perks</button>
+            </div>
+        </div>
+    </section>
     <footer class="bg-gray-50 pt-20 pb-16 border-t border-gray-100">
         <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-12">
             <div class="md:col-span-4">
