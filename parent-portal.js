@@ -34,6 +34,16 @@ function validateURL(url) {
     return null;
 }
 
+function getElement(id) {
+    return document.getElementById(id);
+}
+
+function setDisplay(element, value) {
+    if (element) {
+        element.style.display = value;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // Security: Check permissions before allowing access
     if (window.Security && window.Security.RBAC) {
@@ -89,8 +99,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // --- Authentication Logic ---
 
 async function handleLogin() {
-    const emailInput = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
+    const emailInput = getElement('email');
+    const passwordInput = getElement('password');
     const email = emailInput ? emailInput.value.trim() : '';
     const password = passwordInput ? passwordInput.value : '';
     const btn = document.querySelector('.login-form button[type="submit"]');
@@ -136,8 +146,10 @@ async function handleLogin() {
         }
     }
 
-    btn.innerHTML = 'Signing In...';
-    btn.disabled = true;
+    if (btn) {
+        btn.innerHTML = 'Signing In...';
+        btn.disabled = true;
+    }
 
     try {
         // Use secure auth with rate limiting and email verification
@@ -168,16 +180,16 @@ async function handleLogin() {
                 // Set role
                 window.Security.RBAC.setRole(window.Security.RBAC.roles.PARENT);
                 
-                document.getElementById('portal-login').style.display = 'none';
-                document.getElementById('portal-dashboard').style.display = 'flex';
+                setDisplay(getElement('portal-login'), 'none');
+                setDisplay(getElement('portal-dashboard'), 'flex');
                 updateDashboardProfile(email);
             }
         } else if (window.auth && typeof window.auth.login === 'function') {
             // Fallback to original auth
             const success = await window.auth.login(email, password);
             if (success) {
-                document.getElementById('portal-login').style.display = 'none';
-                document.getElementById('portal-dashboard').style.display = 'flex';
+                setDisplay(getElement('portal-login'), 'none');
+                setDisplay(getElement('portal-dashboard'), 'flex');
                 updateDashboardProfile(email);
             } else {
                 throw new Error('Login failed');
@@ -187,8 +199,8 @@ async function handleLogin() {
             localStorage.setItem('gba_parent_auth_token', 'valid_token_' + Date.now());
             localStorage.setItem('gba_user_email', email);
             setTimeout(() => {
-                document.getElementById('portal-login').style.display = 'none';
-                document.getElementById('portal-dashboard').style.display = 'flex';
+                setDisplay(getElement('portal-login'), 'none');
+                setDisplay(getElement('portal-dashboard'), 'flex');
                 updateDashboardProfile(email);
             }, 800);
         }
@@ -209,9 +221,16 @@ async function handleLogin() {
 
 // Handle 2FA submission
 window.submit2FA = async function() {
-    const code = document.getElementById('two-factor-code').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
+    const codeInput = getElement('two-factor-code');
+    const emailInput = getElement('email');
+    const passwordInput = getElement('password');
+    if (!codeInput || !emailInput || !passwordInput) {
+        godspeedAlert('Missing login fields. Please refresh and try again.', 'Error');
+        return;
+    }
+    const code = codeInput.value.trim();
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
     
     if (!code || code.length !== 6) {
         godspeedAlert('Please enter a valid 6-digit code', 'Invalid Code');
@@ -222,10 +241,10 @@ window.submit2FA = async function() {
         const result = await window.Security.SecureAuth.login(email, password, code);
         if (result.success) {
             window.Security.RBAC.setRole(window.Security.RBAC.roles.PARENT);
-            document.getElementById('portal-login').style.display = 'none';
-            document.getElementById('portal-dashboard').style.display = 'flex';
+            setDisplay(getElement('portal-login'), 'none');
+            setDisplay(getElement('portal-dashboard'), 'flex');
             updateDashboardProfile(email);
-            const twoFactorDiv = document.getElementById('two-factor-input');
+            const twoFactorDiv = getElement('two-factor-input');
             if (twoFactorDiv) twoFactorDiv.remove();
         }
     } catch (error) {
@@ -263,11 +282,14 @@ function updateDashboardProfile(email) {
 
 function handleLogout() {
     if (window.auth) window.auth.logout();
-    document.getElementById('portal-dashboard').style.display = 'none';
-    document.getElementById('portal-login').style.display = 'flex';
-    document.querySelector('.login-form').reset();
-    document.querySelector('.login-form button[type="submit"]').innerHTML = 'Sign In';
-    document.getElementById('login-greeting').textContent = 'Guest';
+    setDisplay(getElement('portal-dashboard'), 'none');
+    setDisplay(getElement('portal-login'), 'flex');
+    const loginForm = document.querySelector('.login-form');
+    if (loginForm) loginForm.reset();
+    const loginButton = document.querySelector('.login-form button[type="submit"]');
+    if (loginButton) loginButton.innerHTML = 'Sign In';
+    const greeting = getElement('login-greeting');
+    if (greeting) greeting.textContent = 'Guest';
 }
 
 // --- Navigation Logic (V3 Side Panel) ---
@@ -489,7 +511,14 @@ let currentDocType = null;
 
 window.openDocModal = function (type) {
     currentDocType = type;
-    document.getElementById('modal-title').textContent = getTitleFromType(type);
+    const modalTitle = getElement('modal-title');
+    const modalContent = getElement('modal-content');
+    const overlay = getElement('doc-modal-overlay');
+    if (!modalTitle || !modalContent || !overlay) {
+        console.warn('Document modal elements missing.');
+        return;
+    }
+    modalTitle.textContent = getTitleFromType(type);
 
     // Inject Dynamic Data
     const pName = localStorage.getItem('gba_parent_name') || 'Parent Name';
@@ -498,14 +527,15 @@ window.openDocModal = function (type) {
     let content = DOCUMENT_TEMPLATE[type];
     content = content.replace(/{parent_name}/g, pName).replace(/{child_name}/g, cName);
 
-    document.getElementById('modal-content').innerHTML = content;
+    modalContent.innerHTML = content;
 
-    const overlay = document.getElementById('doc-modal-overlay');
     overlay.style.display = 'flex';
     document.body.style.overflow = 'hidden';
 
     // Resize canvas
-    setTimeout(resizeCanvas, 100);
+    if (typeof resizeCanvas === 'function') {
+        setTimeout(resizeCanvas, 100);
+    }
 
     // Add Overlay Click Listener (One-time or check uniqueness)
     overlay.onclick = function (e) {
@@ -523,7 +553,10 @@ window.openDocModal = function (type) {
 }
 
 window.closeDocModal = function () {
-    document.getElementById('doc-modal-overlay').style.display = 'none';
+    const overlay = getElement('doc-modal-overlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
     document.body.style.overflow = '';
     document.onkeydown = null; // Clean up listener
     if (window.resetSignature) window.resetSignature();
@@ -624,6 +657,7 @@ function initSignaturePad() {
     }
 
     function updateSubmitState() {
+        if (!submitBtn || !agreeCheck) return;
         if (hasSigned && agreeCheck.checked) {
             submitBtn.disabled = false;
         } else {

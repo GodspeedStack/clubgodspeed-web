@@ -72,6 +72,16 @@ function setSafeText(element, text) {
     element.textContent = text === null || text === undefined ? '' : String(text);
 }
 
+function getElement(id) {
+    return document.getElementById(id);
+}
+
+function setDisplay(element, value) {
+    if (element) {
+        element.style.display = value;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // Attach Login Listener
     const loginForm = document.getElementById('staff-login-form');
@@ -248,11 +258,11 @@ async function logoutCoach() {
     localStorage.removeItem('gba_user_email');
     localStorage.removeItem('gba_user_id');
     
-    document.getElementById('coach-dashboard').style.display = 'none';
-    document.getElementById('coach-login').style.display = 'flex';
+    setDisplay(getElement('coach-dashboard'), 'none');
+    setDisplay(getElement('coach-login'), 'flex');
     
     // Clear code input
-    const codeInput = document.getElementById('coach-code');
+    const codeInput = getElement('coach-code');
     if (codeInput) codeInput.value = '';
 }
 
@@ -804,62 +814,77 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function closeReportModal() {
-    document.getElementById('report-modal').style.display = 'none';
+    setDisplay(getElement('report-modal'), 'none');
 }
 
 function openShareSheet() {
     // Open the new share options modal
-    document.getElementById('share-sheet-modal').style.display = 'flex';
+    setDisplay(getElement('share-sheet-modal'), 'flex');
 }
 
 function executeShareEmail() {
-    const athleteName = document.getElementById('report-athlete-name').textContent.replace(' Report', '');
+    const athleteNameEl = getElement('report-athlete-name');
+    if (!athleteNameEl) return;
+    const athleteName = athleteNameEl.textContent.replace(' Report', '');
     // Simulate Email API
     godspeedAlert(`📧 Report for ${athleteName} sent to parents via Email!`, 'Success');
-    document.getElementById('share-sheet-modal').style.display = 'none';
+    setDisplay(getElement('share-sheet-modal'), 'none');
 }
 
 function executeSharePush() {
-    const athleteName = document.getElementById('report-athlete-name').textContent.replace(' Report', '');
+    const athleteNameEl = getElement('report-athlete-name');
+    if (!athleteNameEl) return;
+    const athleteName = athleteNameEl.textContent.replace(' Report', '');
     // Simulate Push API
     godspeedAlert(`📲 Report for ${athleteName} pushed to Parent Portal!`, 'Success');
-    document.getElementById('share-sheet-modal').style.display = 'none';
+    setDisplay(getElement('share-sheet-modal'), 'none');
 }
 
 
 function closeGradingModal() {
-    document.getElementById('grading-modal').style.display = 'none';
+    setDisplay(getElement('grading-modal'), 'none');
 }
 // 5. Grading Logic
 function openGradingModal(athleteId, name) {
-    document.getElementById('grading-athlete-name').textContent = name;
-    document.getElementById('grading-athlete-id').value = athleteId;
+    const nameEl = getElement('grading-athlete-name');
+    const idEl = getElement('grading-athlete-id');
+    const dateEl = getElement('grade-date');
+    const notesEl = getElement('grade-notes');
+    const modal = getElement('grading-modal');
+    if (!nameEl || !idEl || !dateEl || !notesEl || !modal) return;
+    nameEl.textContent = name;
+    idEl.value = athleteId;
 
     // Set default date to today
-    document.getElementById('grade-date').valueAsDate = new Date();
+    dateEl.valueAsDate = new Date();
 
     // Clear inputs
     ['focus', 'hustle', 'skill', 'iq'].forEach(k => {
         const input = document.getElementById(`score-${k}`);
         if (input) input.value = '';
     });
-    document.getElementById('grade-notes').value = '';
+    notesEl.value = '';
 
-    document.getElementById('grading-modal').style.display = 'flex';
+    modal.style.display = 'flex';
 }
 
 function saveGrade() {
-    const athleteId = document.getElementById('grading-athlete-id').value;
-    const type = document.getElementById('grade-type').value;
-    const date = document.getElementById('grade-date').value;
-    const notes = document.getElementById('grade-notes').value;
+    const athleteIdEl = getElement('grading-athlete-id');
+    const typeEl = getElement('grade-type');
+    const dateEl = getElement('grade-date');
+    const notesEl = getElement('grade-notes');
+    if (!athleteIdEl || !typeEl || !dateEl || !notesEl) return;
+    const athleteId = athleteIdEl.value;
+    const type = typeEl.value;
+    const date = dateEl.value;
+    const notes = notesEl.value;
 
     // Gather Scores
     const scores = {
-        focus: parseInt(document.getElementById('score-focus').value) || 0,
-        hustle: parseInt(document.getElementById('score-hustle').value) || 0,
-        skill: parseInt(document.getElementById('score-skill').value) || 0,
-        iq: parseInt(document.getElementById('score-iq').value) || 0
+        focus: parseInt(getElement('score-focus')?.value, 10) || 0,
+        hustle: parseInt(getElement('score-hustle')?.value, 10) || 0,
+        skill: parseInt(getElement('score-skill')?.value, 10) || 0,
+        iq: parseInt(getElement('score-iq')?.value, 10) || 0
     };
 
     if (!date) {
@@ -887,16 +912,19 @@ function saveGrade() {
 
 // 5. Bulk Upload (Copy/Paste)
 function showBulkUpload() {
-    document.getElementById('bulk-modal').style.display = 'flex';
-    document.getElementById('bulk-text').value = ''; // specific focus
+    setDisplay(getElement('bulk-modal'), 'flex');
+    const bulkText = getElement('bulk-text');
+    if (bulkText) bulkText.value = ''; // specific focus
 }
 
 function closeBulkModal() {
-    document.getElementById('bulk-modal').style.display = 'none';
+    setDisplay(getElement('bulk-modal'), 'none');
 }
 
 function processBulkText() {
-    const text = document.getElementById('bulk-text').value;
+    const bulkText = getElement('bulk-text');
+    if (!bulkText) return;
+    const text = bulkText.value;
     if (!text) {
         godspeedAlert('Please paste some data first.', 'Validation');
         return;

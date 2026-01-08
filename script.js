@@ -211,7 +211,12 @@ if (standardBars.length > 0) {
             if (entry.isIntersecting) {
                 const bar = entry.target;
                 const fill = bar.querySelector('.bar-fill');
-                const value = bar.querySelector('.bar-value').innerText;
+                const valueEl = bar.querySelector('.bar-value');
+                if (!fill || !valueEl) {
+                    barObserver.unobserve(bar);
+                    return;
+                }
+                const value = valueEl.innerText;
 
                 let width = value;
                 if (value === '1') width = '100%';
@@ -491,6 +496,7 @@ if (loginForm) {
 
         // Simulate API Call / Login Delay
         const btn = loginForm.querySelector('button');
+        if (!btn || !loginSection || !dashboardSection) return;
         const originalText = btn.innerText;
         btn.innerText = "Logging in...";
 
@@ -515,15 +521,16 @@ if (loginForm) {
 // Logout Handler
 if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
-        dashboardSection.style.display = 'none';
-        loginSection.style.display = 'flex';
-        loginForm.reset();
+        if (dashboardSection) dashboardSection.style.display = 'none';
+        if (loginSection) loginSection.style.display = 'flex';
+        if (loginForm) loginForm.reset();
     });
 }
 
 // Render Messages
 function renderMessages() {
     const container = document.getElementById('messages-container');
+    if (!container) return;
     container.innerHTML = '';
 
     mockParentData.messages.forEach(msg => {
@@ -556,6 +563,8 @@ window.markAsRead = function (id) {
 function renderGrades() {
     // Game Grades
     const gameBody = document.getElementById('game-grades-body');
+    const practiceBody = document.getElementById('practice-grades-body');
+    if (!gameBody || !practiceBody) return;
     gameBody.innerHTML = '';
     mockParentData.gameGrades.forEach(g => {
         const row = document.createElement('tr');
@@ -569,7 +578,6 @@ function renderGrades() {
     });
 
     // Practice Grades
-    const practiceBody = document.getElementById('practice-grades-body');
     practiceBody.innerHTML = '';
     mockParentData.practiceGrades.forEach(p => {
         const row = document.createElement('tr');
