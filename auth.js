@@ -12,56 +12,64 @@
     // Check if Supabase auth is available (loaded via auth-supabase.js)
     const useSupabase = typeof window.auth !== 'undefined' && window.auth.isSupabaseAvailable && window.auth.isSupabaseAvailable();
 
-    // Expose Auth API globally
-    window.auth = window.auth || {
-        login: async function (email, password) {
-            if (useSupabase && password) {
-                // Use Supabase auth
-                try {
-                    return await window.auth.login(email, password);
-                } catch (error) {
-                    console.error('Supabase login failed, using fallback');
-                    // Fall through to fallback
+    // Expose Auth API globally (only if auth-supabase.js hasn't already defined it)
+    if (!window.auth || !window.auth.isSupabaseAvailable || !window.auth.isSupabaseAvailable()) {
+        // Store reference to original auth if it exists
+        const originalAuth = window.auth;
+        
+        window.auth = window.auth || {
+            login: async function (email, password) {
+                // If Supabase auth is available, use it
+                if (originalAuth && originalAuth.login && typeof originalAuth.login === 'function') {
+                    try {
+                        return await originalAuth.login(email, password);
+                    } catch (error) {
+                        console.error('Supabase login failed, using fallback');
+                        // Fall through to fallback
+                    }
                 }
-            }
-            
-            // Fallback: localStorage mock (for development/testing)
-            localStorage.setItem(AUTH_KEY, 'valid_token_' + Date.now());
-            localStorage.setItem('gba_user_email', email);
-            updateUI(true);
-            return true;
-        },
+                
+                // Fallback: localStorage mock (for development/testing)
+                localStorage.setItem(AUTH_KEY, 'valid_token_' + Date.now());
+                localStorage.setItem('gba_user_email', email);
+                updateUI(true);
+                return true;
+            },
 
-        logout: async function () {
-            if (useSupabase) {
-                await window.auth.logout();
-                return;
-            }
-            
-            localStorage.removeItem(AUTH_KEY);
-            localStorage.removeItem('gba_user_email');
-            localStorage.removeItem('gba_user_id');
-            updateUI(false);
-            window.location.href = 'index.html';
-        },
+            logout: async function () {
+                // If Supabase auth is available, use it
+                if (originalAuth && originalAuth.logout && typeof originalAuth.logout === 'function') {
+                    await originalAuth.logout();
+                    return;
+                }
+                
+                localStorage.removeItem(AUTH_KEY);
+                localStorage.removeItem('gba_user_email');
+                localStorage.removeItem('gba_user_id');
+                updateUI(false);
+                window.location.href = 'index.html';
+            },
 
-        isLoggedIn: function () {
-            if (useSupabase) {
-                return window.auth.isLoggedIn();
-            }
-            return !!localStorage.getItem(AUTH_KEY);
-        },
+            isLoggedIn: function () {
+                // If Supabase auth is available, use it
+                if (originalAuth && originalAuth.isLoggedIn && typeof originalAuth.isLoggedIn === 'function') {
+                    return originalAuth.isLoggedIn();
+                }
+                return !!localStorage.getItem(AUTH_KEY);
+            },
 
-        init: async function () {
-            if (useSupabase) {
-                await window.auth.init();
-                return;
+            init: async function () {
+                // If Supabase auth is available, use it
+                if (originalAuth && originalAuth.init && typeof originalAuth.init === 'function') {
+                    await originalAuth.init();
+                    return;
+                }
+                
+                const isLoggedIn = !!localStorage.getItem(AUTH_KEY);
+                updateUI(isLoggedIn);
             }
-            
-            const isLoggedIn = !!localStorage.getItem(AUTH_KEY);
-            updateUI(isLoggedIn);
-        }
-    };
+        };
+    }
 
     function updateUI(isLoggedIn) {
         if (isLoggedIn) {

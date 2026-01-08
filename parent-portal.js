@@ -19,15 +19,15 @@ function escapeHTML(str) {
 function validateURL(url) {
     if (typeof url !== 'string') return null;
     const trimmed = url.trim();
-    if (trimmed.toLowerCase().startsWith('javascript:') || 
+    if (trimmed.toLowerCase().startsWith('javascript:') ||
         trimmed.toLowerCase().startsWith('data:')) {
         return null;
     }
-    if (trimmed.startsWith('http://') || 
-        trimmed.startsWith('https://') || 
-        trimmed.startsWith('mailto:') || 
-        trimmed.startsWith('tel:') || 
-        trimmed.startsWith('/') || 
+    if (trimmed.startsWith('http://') ||
+        trimmed.startsWith('https://') ||
+        trimmed.startsWith('mailto:') ||
+        trimmed.startsWith('tel:') ||
+        trimmed.startsWith('/') ||
         trimmed.startsWith('#')) {
         return escapeHTML(trimmed);
     }
@@ -45,13 +45,18 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 // Not authorized - redirect to login
                 if (!window.Security.RBAC.hasPermission('view_parent_portal')) {
-                    window.location.href = 'parent-portal.html';
+                    console.log('User not authenticated, showing login view');
+                    // Ensure login view is shown
+                    const loginView = document.getElementById('portal-login');
+                    const dashboardView = document.getElementById('portal-dashboard');
+                    if (loginView) loginView.style.display = 'block';
+                    if (dashboardView) dashboardView.style.display = 'none';
                     return;
                 }
             }
         }, 100);
     }
-    
+
     initSignaturePad();
     initPortalNav();
 
@@ -84,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const passwordInput = document.getElementById('password');
     const eyeIcon = document.getElementById('eye-icon');
     const eyeOffIcon = document.getElementById('eye-off-icon');
-    
+
     if (togglePasswordBtn && passwordInput && eyeIcon && eyeOffIcon) {
         togglePasswordBtn.addEventListener('click', () => {
             const isPassword = passwordInput.type === 'password';
@@ -162,7 +167,7 @@ async function handleLogin() {
         if (window.auth && typeof window.auth.login === 'function') {
             try {
                 const result = await window.auth.login(email, password);
-                
+
                 // Handle 2FA requirement
                 if (result && result.requires2FA) {
                     const twoFactorDiv = document.createElement('div');
@@ -173,18 +178,27 @@ async function handleLogin() {
                         <input type="text" id="two-factor-code" placeholder="000000" maxlength="6" 
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600"
                             pattern="[0-9]{6}">
-                        <button type="button" onclick="submit2FA()" 
+                        <button type="button" id="submit-2fa-btn-1"
                             class="mt-2 w-full py-3 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition">
                             Verify 2FA Code
                         </button>
                     `;
                     const form = document.querySelector('.login-form');
-                    if (form) form.appendChild(twoFactorDiv);
+                    if (form) {
+                        form.appendChild(twoFactorDiv);
+                        // Attach event listener instead of inline onclick
+                        const submitBtn = document.getElementById('submit-2fa-btn-1');
+                        if (submitBtn) {
+                            submitBtn.addEventListener('click', () => {
+                                if (window.submit2FA) window.submit2FA();
+                            });
+                        }
+                    }
                     btn.innerHTML = 'Sign In';
                     btn.disabled = false;
                     return;
                 }
-                
+
                 // Check if login was successful
                 if (result === true || (result && result.success !== false)) {
                     loginSuccess = true;
@@ -194,7 +208,7 @@ async function handleLogin() {
             } catch (authError) {
                 console.error('Auth login error:', authError);
                 errorMessage = authError.message || errorMessage;
-                
+
                 // Provide specific error messages
                 if (authError.message && authError.message.includes('Invalid login credentials')) {
                     errorMessage = 'Invalid email or password. Please check your credentials and try again.';
@@ -205,12 +219,12 @@ async function handleLogin() {
                 }
             }
         }
-        
+
         // If Supabase auth not available or failed, try SecureAuth
         if (!loginSuccess && window.Security && window.Security.SecureAuth) {
             try {
                 const result = await window.Security.SecureAuth.login(email, password);
-                
+
                 if (result && result.requires2FA) {
                     const twoFactorDiv = document.createElement('div');
                     twoFactorDiv.id = 'two-factor-input';
@@ -220,18 +234,27 @@ async function handleLogin() {
                         <input type="text" id="two-factor-code" placeholder="000000" maxlength="6" 
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600"
                             pattern="[0-9]{6}">
-                        <button type="button" onclick="submit2FA()" 
+                        <button type="button" id="submit-2fa-btn-2"
                             class="mt-2 w-full py-3 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition">
                             Verify 2FA Code
                         </button>
                     `;
                     const form = document.querySelector('.login-form');
-                    if (form) form.appendChild(twoFactorDiv);
+                    if (form) {
+                        form.appendChild(twoFactorDiv);
+                        // Attach event listener instead of inline onclick
+                        const submitBtn = document.getElementById('submit-2fa-btn-2');
+                        if (submitBtn) {
+                            submitBtn.addEventListener('click', () => {
+                                if (window.submit2FA) window.submit2FA();
+                            });
+                        }
+                    }
                     btn.innerHTML = 'Sign In';
                     btn.disabled = false;
                     return;
                 }
-                
+
                 if (result && result.success) {
                     loginSuccess = true;
                     if (window.Security && window.Security.RBAC) {
@@ -245,7 +268,7 @@ async function handleLogin() {
                 errorMessage = secureAuthError.message || errorMessage;
             }
         }
-        
+
         // Development fallback (only if no auth system available)
         if (!loginSuccess && !window.auth && !window.Security) {
             console.warn('No auth system available, using development fallback');
@@ -253,13 +276,13 @@ async function handleLogin() {
             localStorage.setItem('gba_user_email', email);
             loginSuccess = true;
         }
-        
+
         // Handle successful login
         if (loginSuccess) {
             document.getElementById('portal-login').style.display = 'none';
             document.getElementById('portal-dashboard').style.display = 'flex';
             updateDashboardProfile(email);
-            
+
             // Clear any error messages
             if (errorMsg) {
                 errorMsg.style.display = 'none';
@@ -270,7 +293,7 @@ async function handleLogin() {
             if (errorMsg) {
                 errorMsg.textContent = errorMessage;
                 errorMsg.style.display = 'block';
-                
+
                 // Add shake animation to form
                 const form = document.querySelector('.login-form');
                 if (form) {
@@ -285,7 +308,7 @@ async function handleLogin() {
         console.error('Login error:', error);
         if (errorMsg) {
             let userFriendlyMessage = 'An unexpected error occurred. Please try again.';
-            
+
             if (error.message) {
                 if (error.message.includes('Invalid login credentials') || error.message.includes('Invalid password')) {
                     userFriendlyMessage = 'Invalid email or password. Please check your credentials and try again.';
@@ -297,10 +320,10 @@ async function handleLogin() {
                     userFriendlyMessage = error.message;
                 }
             }
-            
+
             errorMsg.textContent = userFriendlyMessage;
             errorMsg.style.display = 'block';
-            
+
             // Add shake animation
             const form = document.querySelector('.login-form');
             if (form) {
@@ -314,16 +337,27 @@ async function handleLogin() {
 }
 
 // Handle 2FA submission
-window.submit2FA = async function() {
-    const code = document.getElementById('two-factor-code').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    
+window.submit2FA = async function () {
+    const codeInput = document.getElementById('two-factor-code');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+
+    if (!codeInput || !emailInput || !passwordInput) {
+        if (window.godspeedAlert) {
+            godspeedAlert('2FA form elements not found. Please refresh the page.', 'Error');
+        }
+        return;
+    }
+
+    const code = codeInput.value.trim();
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
     if (!code || code.length !== 6) {
         godspeedAlert('Please enter a valid 6-digit code', 'Invalid Code');
         return;
     }
-    
+
     try {
         const result = await window.Security.SecureAuth.login(email, password, code);
         if (result.success) {
@@ -368,12 +402,20 @@ function updateDashboardProfile(email) {
 }
 
 function handleLogout() {
-    if (window.auth) window.auth.logout();
-    document.getElementById('portal-dashboard').style.display = 'none';
-    document.getElementById('portal-login').style.display = 'flex';
-    document.querySelector('.login-form').reset();
-    document.querySelector('.login-form button[type="submit"]').innerHTML = 'Sign In';
-    document.getElementById('login-greeting').textContent = 'Guest';
+    if (window.auth && window.auth.logout) {
+        window.auth.logout();
+    }
+    const dashboard = document.getElementById('portal-dashboard');
+    const login = document.getElementById('portal-login');
+    const loginForm = document.querySelector('.login-form');
+    const submitBtn = document.querySelector('.login-form button[type="submit"]');
+    const greeting = document.getElementById('login-greeting');
+
+    if (dashboard) dashboard.style.display = 'none';
+    if (login) login.style.display = 'flex';
+    if (loginForm) loginForm.reset();
+    if (submitBtn) submitBtn.textContent = 'Sign In';
+    if (greeting) greeting.textContent = 'Guest';
 }
 
 // --- Navigation Logic (V3 Side Panel) ---
@@ -411,7 +453,7 @@ window.switchPortalView = function (viewName, linkElement) {
     if (viewName === 'tuition') {
         renderParentTrips();
     }
-    
+
     if (viewName === 'training') {
         renderTrainingDashboard();
     }
@@ -595,7 +637,8 @@ let currentDocType = null;
 
 window.openDocModal = function (type) {
     currentDocType = type;
-    document.getElementById('modal-title').textContent = getTitleFromType(type);
+    const modalTitle = document.getElementById('modal-title');
+    if (modalTitle) modalTitle.textContent = getTitleFromType(type);
 
     // Inject Dynamic Data
     const pName = localStorage.getItem('gba_parent_name') || 'Parent Name';
@@ -604,7 +647,8 @@ window.openDocModal = function (type) {
     let content = DOCUMENT_TEMPLATE[type];
     content = content.replace(/{parent_name}/g, pName).replace(/{child_name}/g, cName);
 
-    document.getElementById('modal-content').innerHTML = content;
+    const modalContent = document.getElementById('modal-content');
+    if (modalContent) modalContent.innerHTML = content;
 
     const overlay = document.getElementById('doc-modal-overlay');
     overlay.style.display = 'flex';
@@ -845,19 +889,19 @@ function loadPerformance(parentEmail) {
 
 // Hook into View Switching to load data when tab is clicked
 (function () {
-const originalSwitch = window.switchPortalView;
+    const originalSwitch = window.switchPortalView;
     if (originalSwitch) {
-window.switchPortalView = function (viewName, linkElement) {
+        window.switchPortalView = function (viewName, linkElement) {
             originalSwitch.call(this, viewName, linkElement);
             const email = document.getElementById('email')?.value || localStorage.getItem('gba_user_email'); // Fallback to stored
 
-    if (viewName === 'performance') {
-        if (email) loadPerformance(email);
-    } else if (viewName === 'settings') {
-        loadSettings(email);
-    }
+            if (viewName === 'performance') {
+                if (email) loadPerformance(email);
+            } else if (viewName === 'settings') {
+                loadSettings(email);
+            }
         };
-}
+    }
 })();
 
 // --- Settings Logic ---
@@ -872,19 +916,26 @@ function loadSettings(email) {
 
     // 3. Populate Form
     // Parent Info (LocalStorage mostly, as we don't have a separate 'users' table in this mock)
-    document.getElementById('settings-parent-name').value = localStorage.getItem('gba_parent_name') || '';
-    document.getElementById('settings-parent-email').value = email || '';
-    document.getElementById('settings-parent-phone').value = localStorage.getItem('gba_parent_phone') || '';
+    const parentNameEl = document.getElementById('settings-parent-name');
+    const parentEmailEl = document.getElementById('settings-parent-email');
+    const parentPhoneEl = document.getElementById('settings-parent-phone');
+    const athleteNameEl = document.getElementById('settings-athlete-name');
+    const athleteTeamEl = document.getElementById('settings-athlete-team');
+    const athleteDobEl = document.getElementById('settings-athlete-dob');
+
+    if (parentNameEl) parentNameEl.value = localStorage.getItem('gba_parent_name') || '';
+    if (parentEmailEl) parentEmailEl.value = email || '';
+    if (parentPhoneEl) parentPhoneEl.value = localStorage.getItem('gba_parent_phone') || '';
 
     // Athlete Info (From DB if linked, else LocalStorage fallback)
     if (linkedAthlete) {
-        document.getElementById('settings-athlete-name').value = linkedAthlete.name;
-        document.getElementById('settings-athlete-team').value = linkedAthlete.teamId;
-        document.getElementById('settings-athlete-dob').value = linkedAthlete.dob || '';
+        if (athleteNameEl) athleteNameEl.value = linkedAthlete.name || '';
+        if (athleteTeamEl) athleteTeamEl.value = linkedAthlete.teamId || '';
+        if (athleteDobEl) athleteDobEl.value = linkedAthlete.dob || '';
     } else {
-        document.getElementById('settings-athlete-name').value = localStorage.getItem('gba_child_name') || '';
-        document.getElementById('settings-athlete-team').value = localStorage.getItem('gba_child_team') || '';
-        document.getElementById('settings-athlete-dob').value = localStorage.getItem('gba_child_dob') || '';
+        if (athleteNameEl) athleteNameEl.value = localStorage.getItem('gba_child_name') || '';
+        if (athleteTeamEl) athleteTeamEl.value = localStorage.getItem('gba_child_team') || '';
+        if (athleteDobEl) athleteDobEl.value = localStorage.getItem('gba_child_dob') || '';
     }
 }
 
@@ -1118,7 +1169,7 @@ async function renderTrainingDashboard() {
                 const safeDate = escapeHTML(new Date(log.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }));
                 const safeNotes = escapeHTML(log.notes || '');
                 const safeTime = escapeHTML(log.time || '');
-                
+
                 return `
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#fff; border-radius:8px; margin-bottom:8px; border:1px solid #eee;">
                      <div>
@@ -1147,7 +1198,7 @@ async function renderTrainingDashboard() {
             const safeCoach = escapeHTML(prog.coach || '');
             const isActive = prog.status === 'Active';
             const safeFocus = prog.focus ? prog.focus.map(f => escapeHTML(f)) : [];
-            
+
             return `
             <div class="program-card" style="padding:16px; border:1px solid #eee; border-radius:10px; margin-bottom:12px; background:white; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
                 <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
@@ -1191,7 +1242,7 @@ async function renderTrainingDashboard() {
                 const safeAmount = escapeHTML(p.amount || '');
                 const safeStatus = escapeHTML(p.status || '');
                 const safeEmail = escapeHTML(parentEmail || '');
-                
+
                 return `
                 <div class="doc-item" style="display:flex; align-items:center; gap:12px; padding:12px; border-bottom:1px solid #f0f0f0; background:#f0fdf4;">
                     <div style="background:#166534; color:#fff; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:6px; font-size:14px; font-weight:700;">$</div>
@@ -1199,7 +1250,7 @@ async function renderTrainingDashboard() {
                         <div style="font-size:13px; font-weight:600;">Receipt: ${safeItem}</div>
                         <div style="font-size:11px; color:#166534;">${safeDate} • ${safeAmount} • ${safeStatus}</div>
                     </div>
-                    <button onclick="viewTrainingStatement('${safeEmail}')" class="btn-primary" style="padding: 6px 12px; font-size: 10px; width: auto; display: inline-block; text-decoration: none; line-height:1.2; border:none; cursor:pointer;">View Receipt</button>
+                    <button data-email="${escapeHTML(safeEmail)}" class="btn-primary view-receipt-btn" style="padding: 6px 12px; font-size: 10px; width: auto; display: inline-block; text-decoration: none; line-height:1.2; border:none; cursor:pointer;">View Receipt</button>
                 </div>
             `;
             }).join('');
@@ -1211,7 +1262,7 @@ async function renderTrainingDashboard() {
             const safeTitle = escapeHTML(doc.title || '');
             const safeDate = escapeHTML(doc.date || '');
             const safeLink = validateURL(doc.link) || '#';
-            
+
             return `
             <div class="doc-item" style="display:flex; align-items:center; gap:12px; padding:12px; border-bottom:1px solid #f0f0f0;">
                 <div style="background:#fee2e2; color:#991b1b; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:6px; font-size:10px; font-weight:700;">PDF</div>
@@ -1233,10 +1284,10 @@ async function renderTrainingDashboard() {
 async function calculateRemainingHours(parentEmail) {
     const supabase = window.auth?.getSupabaseClient?.();
     const db = getDB();
-    
+
     let totalPurchased = 0;
     let totalUsed = 0;
-    
+
     // Check Supabase first
     if (supabase && window.auth?.isSupabaseAvailable?.()) {
         try {
@@ -1245,7 +1296,7 @@ async function calculateRemainingHours(parentEmail) {
                 .select('id')
                 .eq('email', parentEmail)
                 .single();
-            
+
             if (accountError) {
                 console.error('Error fetching parent account:', accountError);
                 // Fall through to mock data
@@ -1255,7 +1306,7 @@ async function calculateRemainingHours(parentEmail) {
                     .select('hours_purchased, hours_used')
                     .eq('parent_id', parentAccount.id)
                     .eq('status', 'active');
-                
+
                 if (purchasesError) {
                     console.error('Error fetching purchases:', purchasesError);
                     // Fall through to mock data
@@ -1264,7 +1315,7 @@ async function calculateRemainingHours(parentEmail) {
                     totalUsed = purchases.reduce((sum, p) => sum + (parseFloat(p.hours_used) || 0), 0);
                 }
             }
-        } catch (e) { 
+        } catch (e) {
             console.error('Error calculating remaining hours:', e);
             // Fall through to mock data
         }
@@ -1275,10 +1326,10 @@ async function calculateRemainingHours(parentEmail) {
         totalPurchased = db.training.hours.totalPurchased;
         totalUsed = db.training.hours.used;
     }
-    
+
     const remaining = totalPurchased - totalUsed;
     const progressPercent = totalPurchased > 0 ? (totalUsed / totalPurchased) * 100 : 0;
-    
+
     return {
         purchased: totalPurchased,
         used: totalUsed,
@@ -1292,13 +1343,13 @@ async function calculateRemainingHours(parentEmail) {
  */
 async function loadTrainingHours(parentEmail) {
     const hoursData = await calculateRemainingHours(parentEmail);
-    
+
     // Update hours display
     const hoursRemainingEl = document.getElementById('hours-remaining');
     const hoursPurchasedEl = document.getElementById('hours-purchased');
     const hoursUsedEl = document.getElementById('hours-used');
     const progressFillEl = document.getElementById('hours-progress-fill');
-    
+
     if (hoursRemainingEl) {
         hoursRemainingEl.textContent = hoursData.remaining.toFixed(1);
 
@@ -1315,8 +1366,9 @@ async function loadTrainingHours(parentEmail) {
             if (document.getElementById('training-hours-display')) {
                 document.getElementById('training-hours-display').textContent = userRecords.hours.remaining.toFixed(1);
             }
-            if (document.getElementById('training-utilized-display')) {
-                document.getElementById('training-utilized-display').textContent = userRecords.hours.used.toFixed(1);
+            const utilizedDisplay = document.getElementById('training-utilized-display');
+            if (utilizedDisplay) {
+                utilizedDisplay.textContent = userRecords.hours.used.toFixed(1);
             }
 
             // Create Log Container if not exists (Training View)
@@ -1336,12 +1388,12 @@ async function loadTrainingHours(parentEmail) {
                 header.style.color = '#444';
                 header.textContent = 'Session History';
                 logDiv.appendChild(header);
-                
+
                 userRecords.logs.forEach(log => {
                     const safeActivity = escapeHTML(log.activity || '');
                     const safeDate = escapeHTML(log.date || '');
                     const safeTime = escapeHTML(log.time || '');
-                    
+
                     const logItem = document.createElement('div');
                     logItem.style.display = 'flex';
                     logItem.style.justifyContent = 'space-between';
@@ -1350,7 +1402,7 @@ async function loadTrainingHours(parentEmail) {
                     logItem.style.border = '1px solid #eee';
                     logItem.style.borderRadius = '8px';
                     logItem.style.marginBottom = '8px';
-                    
+
                     const leftDiv = document.createElement('div');
                     const activityDiv = document.createElement('div');
                     activityDiv.style.fontWeight = '600';
@@ -1362,12 +1414,12 @@ async function loadTrainingHours(parentEmail) {
                     dateDiv.textContent = safeDate;
                     leftDiv.appendChild(activityDiv);
                     leftDiv.appendChild(dateDiv);
-                    
+
                     const timeDiv = document.createElement('div');
                     timeDiv.style.fontWeight = '600';
                     timeDiv.style.color = '#444';
                     timeDiv.textContent = safeTime;
-                    
+
                     logItem.appendChild(leftDiv);
                     logItem.appendChild(timeDiv);
                     logDiv.appendChild(logItem);
@@ -1385,7 +1437,7 @@ async function loadTrainingHours(parentEmail) {
                     const safeAmount = escapeHTML(p.amount || '');
                     const safeStatus = escapeHTML(p.status || '');
                     const safeLink = validateURL(p.link) || '#';
-                    
+
                     const purchaseDiv = document.createElement('div');
                     purchaseDiv.className = 'doc-item';
                     purchaseDiv.style.display = 'flex';
@@ -1394,7 +1446,7 @@ async function loadTrainingHours(parentEmail) {
                     purchaseDiv.style.padding = '12px';
                     purchaseDiv.style.borderBottom = '1px solid #f0f0f0';
                     purchaseDiv.style.background = '#f9fafb';
-                    
+
                     const iconDiv = document.createElement('div');
                     iconDiv.style.background = '#dcfce7';
                     iconDiv.style.color = '#166534';
@@ -1407,7 +1459,7 @@ async function loadTrainingHours(parentEmail) {
                     iconDiv.style.fontSize = '14px';
                     iconDiv.style.fontWeight = '700';
                     iconDiv.textContent = '$';
-                    
+
                     const contentDiv = document.createElement('div');
                     contentDiv.style.flex = '1';
                     const itemDiv = document.createElement('div');
@@ -1420,7 +1472,7 @@ async function loadTrainingHours(parentEmail) {
                     detailsDiv.textContent = `${safeDate} • ${safeAmount} • ${safeStatus}`;
                     contentDiv.appendChild(itemDiv);
                     contentDiv.appendChild(detailsDiv);
-                    
+
                     const linkEl = document.createElement('a');
                     linkEl.href = safeLink;
                     linkEl.style.fontSize = '11px';
@@ -1433,7 +1485,7 @@ async function loadTrainingHours(parentEmail) {
                         godspeedAlert('Receipt View Placeholder', 'Info');
                         return false;
                     };
-                    
+
                     purchaseDiv.appendChild(iconDiv);
                     purchaseDiv.appendChild(contentDiv);
                     purchaseDiv.appendChild(linkEl);
@@ -1441,13 +1493,13 @@ async function loadTrainingHours(parentEmail) {
                 });
             }
         }
-        
+
         // Add warning class if low hours
         if (hoursData.remaining < 5) {
             hoursRemainingEl.parentElement.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
         }
     }
-    
+
     if (hoursPurchasedEl) hoursPurchasedEl.textContent = hoursData.purchased.toFixed(1);
     if (hoursUsedEl) hoursUsedEl.textContent = hoursData.used.toFixed(1);
     if (progressFillEl) progressFillEl.style.width = `${hoursData.progressPercent}%`;
@@ -1458,93 +1510,94 @@ async function loadTrainingHours(parentEmail) {
  */
 async function loadSessionCounts(parentEmail) {
     try {
-    const supabase = window.auth?.getSupabaseClient?.();
-    const db = getDB();
-    
-    const athletes = (db.roster || []).filter(a => a.parentId === parentEmail);
-    let completedCount = 0;
-    let upcomingCount = 0;
-    
-    if (supabase && window.auth?.isSupabaseAvailable?.()) {
-        try {
+        const supabase = window.auth?.getSupabaseClient?.();
+        const db = getDB();
+
+        const athletes = (db.roster || []).filter(a => a.parentId === parentEmail);
+        let completedCount = 0;
+        let upcomingCount = 0;
+
+        if (supabase && window.auth?.isSupabaseAvailable?.()) {
+            try {
                 const { data: parentAccount, error: accountError } = await supabase
-                .from('parent_accounts')
-                .select('id')
-                .eq('email', parentEmail)
-                .single();
-            
+                    .from('parent_accounts')
+                    .select('id')
+                    .eq('email', parentEmail)
+                    .single();
+
                 if (accountError) {
                     console.error('Error fetching parent account for session counts:', accountError);
                     // Fall through to use default counts (0)
                 } else if (parentAccount) {
-                const athleteIds = athletes.map(a => a.athleteId);
-                
-                // Get completed sessions (attendance records)
+                    const athleteIds = athletes.map(a => a.athleteId);
+
+                    // Get completed sessions (attendance records)
                     const { data: purchases, error: purchasesError } = await supabase
-                    .from('training_purchases')
-                    .select('id')
-                    .eq('parent_id', parentAccount.id)
-                    .in('athlete_id', athleteIds);
-                
+                        .from('training_purchases')
+                        .select('id')
+                        .eq('parent_id', parentAccount.id)
+                        .in('athlete_id', athleteIds);
+
                     if (purchasesError) {
                         console.error('Error fetching purchases for session counts:', purchasesError);
                     } else if (purchases && purchases.length > 0) {
-                    const purchaseIds = purchases.map(p => p.id);
+                        const purchaseIds = purchases.map(p => p.id);
                         const { data: attendance, error: attendanceError } = await supabase
-                        .from('training_attendance')
-                        .select('id')
-                        .in('purchase_id', purchaseIds);
-                    
+                            .from('training_attendance')
+                            .select('id')
+                            .in('purchase_id', purchaseIds);
+
                         if (attendanceError) {
                             console.error('Error fetching attendance:', attendanceError);
                         } else {
-                    completedCount = attendance ? attendance.length : 0;
+                            completedCount = attendance ? attendance.length : 0;
                         }
-                }
-                
-                // Get upcoming sessions
+                    }
+
+                    // Get upcoming sessions
                     const { data: enrollments, error: enrollmentsError } = await supabase
-                    .from('player_enrollments')
-                    .select('program_id')
-                    .eq('parent_id', parentAccount.id)
-                    .in('athlete_id', athleteIds)
-                    .eq('status', 'active');
-                
+                        .from('player_enrollments')
+                        .select('program_id')
+                        .eq('parent_id', parentAccount.id)
+                        .in('athlete_id', athleteIds)
+                        .eq('status', 'active');
+
                     if (enrollmentsError) {
                         console.error('Error fetching enrollments:', enrollmentsError);
                     } else if (enrollments && enrollments.length > 0) {
-                    const programIds = enrollments.map(e => e.program_id);
-                    const today = new Date().toISOString().split('T')[0];
+                        const programIds = enrollments.map(e => e.program_id);
+                        const today = new Date().toISOString().split('T')[0];
                         const { data: sessions, error: sessionsError } = await supabase
-                        .from('training_sessions')
-                        .select('id')
-                        .in('program_id', programIds)
-                        .gte('session_date', today)
-                        .eq('status', 'scheduled');
-                    
+                            .from('training_sessions')
+                            .select('id')
+                            .in('program_id', programIds)
+                            .gte('session_date', today)
+                            .eq('status', 'scheduled');
+
                         if (sessionsError) {
                             console.error('Error fetching sessions:', sessionsError);
                         } else {
-                    upcomingCount = sessions ? sessions.length : 0;
+                            upcomingCount = sessions ? sessions.length : 0;
                         }
+                    }
                 }
-            }
-        } catch (error) {
-            console.error('Error loading session counts:', error);
+            } catch (error) {
+                console.error('Error loading session counts:', error);
                 // Fall through to use default counts
+            }
         }
-    }
-    
+
         // 1. Update Top Stats
-    const completedEl = document.getElementById('sessions-completed');
-    const upcomingEl = document.getElementById('sessions-upcoming');
-    
+        const completedEl = document.getElementById('sessions-completed');
+        const upcomingEl = document.getElementById('sessions-upcoming');
+
         // Get user record for completed count
-        const db = getDB();
+        // Reuse existing db instance
+        // const db = getDB(); // Already declared above
         const userRecord = db.trainingRecords ? db.trainingRecords[parentEmail] : null;
 
         if (completedEl) completedEl.textContent = (userRecord && userRecord.logs) ? userRecord.logs.length : completedCount;
-    if (upcomingEl) upcomingEl.textContent = upcomingCount;
+        if (upcomingEl) upcomingEl.textContent = upcomingCount;
     } catch (error) {
         console.error('Error in loadSessionCounts:', error);
         // Set default values on error
@@ -1560,74 +1613,74 @@ async function loadSessionCounts(parentEmail) {
  */
 async function loadTrainingCalendar(parentEmail) {
     try {
-    const db = getDB();
-    const supabase = window.auth?.getSupabaseClient?.();
-    
-    // Get athlete enrollments
-    const athletes = (db.roster || []).filter(a => a.parentId === parentEmail);
-    
-    // Populate athlete select
-    const athleteSelect = document.getElementById('training-athlete-select');
-    if (athleteSelect) {
-        athleteSelect.innerHTML = '<option value="">All Athletes</option>';
-        athletes.forEach(athlete => {
-            const option = document.createElement('option');
+        const db = getDB();
+        const supabase = window.auth?.getSupabaseClient?.();
+
+        // Get athlete enrollments
+        const athletes = (db.roster || []).filter(a => a.parentId === parentEmail);
+
+        // Populate athlete select
+        const athleteSelect = document.getElementById('training-athlete-select');
+        if (athleteSelect) {
+            athleteSelect.innerHTML = '<option value="">All Athletes</option>';
+            athletes.forEach(athlete => {
+                const option = document.createElement('option');
                 option.value = escapeHTML(athlete.athleteId || '');
                 option.textContent = escapeHTML(athlete.name || '');
-            athleteSelect.appendChild(option);
-        });
-        
-        athleteSelect.addEventListener('change', (e) => {
-            filterCalendarByAthlete(e.target.value);
-        });
-    }
-    
-    // Load enrollments to filter calendar
-    let enrolledPrograms = [];
-    if (supabase && window.auth?.isSupabaseAvailable?.()) {
-        try {
+                athleteSelect.appendChild(option);
+            });
+
+            athleteSelect.addEventListener('change', (e) => {
+                filterCalendarByAthlete(e.target.value);
+            });
+        }
+
+        // Load enrollments to filter calendar
+        let enrolledPrograms = [];
+        if (supabase && window.auth?.isSupabaseAvailable?.()) {
+            try {
                 const { data: parentAccount, error: accountError } = await supabase
-                .from('parent_accounts')
-                .select('id')
-                .eq('email', parentEmail)
-                .single();
-            
+                    .from('parent_accounts')
+                    .select('id')
+                    .eq('email', parentEmail)
+                    .single();
+
                 if (accountError) {
                     console.error('Error fetching parent account for calendar:', accountError);
                     // Fall through to roster fallback
                 } else if (parentAccount) {
-                const athleteIds = athletes.map(a => a.athleteId);
+                    const athleteIds = athletes.map(a => a.athleteId);
                     const { data: enrollments, error: enrollmentsError } = await supabase
-                    .from('player_enrollments')
-                    .select('program_id, enrolled_sessions')
-                    .eq('parent_id', parentAccount.id)
-                    .in('athlete_id', athleteIds)
-                    .eq('status', 'active');
-                
+                        .from('player_enrollments')
+                        .select('program_id, enrolled_sessions')
+                        .eq('parent_id', parentAccount.id)
+                        .in('athlete_id', athleteIds)
+                        .eq('status', 'active');
+
                     if (enrollmentsError) {
                         console.error('Error fetching enrollments for calendar:', enrollmentsError);
                         // Fall through to roster fallback
                     } else if (enrollments) {
-                    enrolledPrograms = enrollments.map(e => e.program_id);
+                        enrolledPrograms = enrollments.map(e => e.program_id);
+                    }
                 }
-            }
-        } catch (error) {
-            console.error('Error loading enrollments:', error);
+            } catch (error) {
+                console.error('Error loading enrollments:', error);
                 // Fall through to roster fallback
+            }
         }
-        }
-        
+
         // Fallback: get from roster active_enrollments
         if (enrolledPrograms.length === 0) {
-        athletes.forEach(athlete => {
-            if (athlete.active_enrollments) {
-                enrolledPrograms.push(...athlete.active_enrollments);
-            }
-        });
-    }
-    
-    // Store enrolled programs for calendar filtering
-    window.trainingEnrolledPrograms = enrolledPrograms;
+            athletes.forEach(athlete => {
+                if (athlete.active_enrollments) {
+                    enrolledPrograms.push(...athlete.active_enrollments);
+                }
+            });
+        }
+
+        // Store enrolled programs for calendar filtering
+        window.trainingEnrolledPrograms = enrolledPrograms;
     } catch (error) {
         console.error('Error in loadTrainingCalendar:', error);
         // Initialize empty array on error
@@ -1655,86 +1708,86 @@ function filterCalendarByAthlete(athleteId) {
  */
 async function loadSkillsPrograms(parentEmail) {
     try {
-    const db = getDB();
-    const supabase = window.auth?.getSupabaseClient?.();
-    const container = document.getElementById('skills-programs-list');
-    
-    if (!container) return;
-    
-    const athletes = (db.roster || []).filter(a => a.parentId === parentEmail);
-    let programs = [];
-    
-    if (supabase && window.auth?.isSupabaseAvailable?.()) {
-        try {
+        const db = getDB();
+        const supabase = window.auth?.getSupabaseClient?.();
+        const container = document.getElementById('skills-programs-list');
+
+        if (!container) return;
+
+        const athletes = (db.roster || []).filter(a => a.parentId === parentEmail);
+        let programs = [];
+
+        if (supabase && window.auth?.isSupabaseAvailable?.()) {
+            try {
                 const { data: parentAccount, error: accountError } = await supabase
-                .from('parent_accounts')
-                .select('id')
-                .eq('email', parentEmail)
-                .single();
-            
+                    .from('parent_accounts')
+                    .select('id')
+                    .eq('email', parentEmail)
+                    .single();
+
                 if (accountError) {
                     console.error('Error fetching parent account for skills programs:', accountError);
                     // Fall through to roster fallback
                 } else if (parentAccount) {
-                const athleteIds = athletes.map(a => a.athleteId);
+                    const athleteIds = athletes.map(a => a.athleteId);
                     const { data: enrollments, error: enrollmentsError } = await supabase
-                    .from('player_enrollments')
-                    .select('*, training_packages(name, description, program_type)')
-                    .eq('parent_id', parentAccount.id)
-                    .in('athlete_id', athleteIds)
-                    .eq('status', 'active');
-                
+                        .from('player_enrollments')
+                        .select('*, training_packages(name, description, program_type)')
+                        .eq('parent_id', parentAccount.id)
+                        .in('athlete_id', athleteIds)
+                        .eq('status', 'active');
+
                     if (enrollmentsError) {
                         console.error('Error fetching enrollments for skills programs:', enrollmentsError);
                         // Fall through to roster fallback
                     } else if (enrollments) {
-                    programs = enrollments;
+                        programs = enrollments;
+                    }
                 }
-            }
-        } catch (error) {
-            console.error('Error loading skills programs:', error);
+            } catch (error) {
+                console.error('Error loading skills programs:', error);
                 // Fall through to roster fallback
-        }
-    }
-    
-    // Fallback: get from roster
-    if (programs.length === 0) {
-        athletes.forEach(athlete => {
-            if (athlete.active_enrollments && athlete.active_enrollments.length > 0) {
-                athlete.active_enrollments.forEach(programId => {
-                    programs.push({
-                        program_id: programId,
-                        program_name: programId,
-                        athlete_id: athlete.athleteId,
-                        athlete_name: athlete.name
-                    });
-                });
             }
-        });
-    }
-    
-    // Render programs
-    if (programs.length === 0) {
-        const emptyDiv = document.createElement('div');
-        emptyDiv.style.textAlign = 'center';
-        emptyDiv.style.padding = '40px';
-        emptyDiv.style.color = '#888';
-        const p = document.createElement('p');
-        p.textContent = 'No active skills programs found.';
-        emptyDiv.appendChild(p);
-        container.appendChild(emptyDiv);
-        return;
-    }
-    
-    let html = '';
-    programs.forEach(program => {
-        const athlete = athletes.find(a => a.athleteId === program.athlete_id);
-        // Sanitize program data
-        const safeProgramName = escapeHTML(program.program_name || program.program_id || '');
-        const safeAthleteName = escapeHTML(athlete ? athlete.name : 'Unknown Athlete');
-        const safeStartDate = program.start_date ? new Date(program.start_date).toLocaleDateString() : '';
-        
-        html += `
+        }
+
+        // Fallback: get from roster
+        if (programs.length === 0) {
+            athletes.forEach(athlete => {
+                if (athlete.active_enrollments && athlete.active_enrollments.length > 0) {
+                    athlete.active_enrollments.forEach(programId => {
+                        programs.push({
+                            program_id: programId,
+                            program_name: programId,
+                            athlete_id: athlete.athleteId,
+                            athlete_name: athlete.name
+                        });
+                    });
+                }
+            });
+        }
+
+        // Render programs
+        if (programs.length === 0) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.style.textAlign = 'center';
+            emptyDiv.style.padding = '40px';
+            emptyDiv.style.color = '#888';
+            const p = document.createElement('p');
+            p.textContent = 'No active skills programs found.';
+            emptyDiv.appendChild(p);
+            container.appendChild(emptyDiv);
+            return;
+        }
+
+        let html = '';
+        programs.forEach(program => {
+            const athlete = athletes.find(a => a.athleteId === program.athlete_id);
+            // Sanitize program data
+            const safeProgramName = escapeHTML(program.program_name || program.program_id || '');
+            const safeAthleteName = escapeHTML(athlete ? athlete.name : 'Unknown Athlete');
+            const safeStartDate = program.start_date ? new Date(program.start_date).toLocaleDateString() : '';
+
+            html += `
             <div style="background: #f9f9f9; border-radius: 12px; padding: 20px; margin-bottom: 16px;">
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
                     <div>
@@ -1746,13 +1799,16 @@ async function loadSkillsPrograms(parentEmail) {
                 ${safeStartDate ? `<div style="font-size: 14px; color: #666; margin-top: 8px;">Started: ${escapeHTML(safeStartDate)}</div>` : ''}
             </div>
         `;
-    });
-    
-    container.innerHTML = html;
-    
-    // Update active programs count
-    const activeProgramsEl = document.getElementById('active-programs');
-    if (activeProgramsEl) activeProgramsEl.textContent = programs.length;
+        });
+
+        container.innerHTML = html;
+
+        // Update active programs count
+        const activeProgramsEl = document.getElementById('active-programs');
+        if (activeProgramsEl) activeProgramsEl.textContent = programs.length;
+    } catch (error) {
+        console.error('Error in loadSkillsPrograms:', error);
+    }
 }
 
 /**
@@ -1760,118 +1816,121 @@ async function loadSkillsPrograms(parentEmail) {
  */
 async function loadReceipts(parentEmail) {
     try {
-    const supabase = window.auth?.getSupabaseClient?.();
-    const container = document.getElementById('receipts-list');
-    
-    if (!container) return;
-    
-    let receipts = [];
-    
-    if (supabase && window.auth?.isSupabaseAvailable?.()) {
-        try {
+        const supabase = window.auth?.getSupabaseClient?.();
+        const container = document.getElementById('receipts-list');
+
+        if (!container) return;
+
+        let receipts = [];
+
+        if (supabase && window.auth?.isSupabaseAvailable?.()) {
+            try {
                 const { data: parentAccount, error: accountError } = await supabase
-                .from('parent_accounts')
-                .select('id')
-                .eq('email', parentEmail)
-                .single();
-            
+                    .from('parent_accounts')
+                    .select('id')
+                    .eq('email', parentEmail)
+                    .single();
+
                 if (accountError) {
                     console.error('Error fetching parent account for receipts:', accountError);
                     // Fall through to transactions fallback
                 } else if (parentAccount) {
                     const { data, error: receiptsError } = await supabase
-                    .from('receipts')
-                    .select('*')
-                    .eq('parent_id', parentAccount.id)
-                    .order('payment_date', { ascending: false })
-                    .limit(5);
-                
+                        .from('receipts')
+                        .select('*')
+                        .eq('parent_id', parentAccount.id)
+                        .order('payment_date', { ascending: false })
+                        .limit(5);
+
                     if (receiptsError) {
                         console.error('Error fetching receipts:', receiptsError);
                         // Fall through to transactions fallback
                     } else if (data) {
                         receipts = data;
                     }
-            }
-        } catch (error) {
-            console.error('Error loading receipts:', error);
+                }
+            } catch (error) {
+                console.error('Error loading receipts:', error);
                 // Fall through to transactions fallback
+            }
         }
+
+        // Fallback: get from transactions
+        if (receipts.length === 0) {
+            const db = getDB();
+            const transactions = (db.transactions || []).filter(t =>
+                t.parentId === parentEmail && t.status === 'PAID'
+            ).slice(0, 5);
+
+            receipts = transactions.map(txn => ({
+                receipt_number: txn.id,
+                amount: txn.amount,
+                payment_date: txn.date,
+                transaction_id: txn.id
+            }));
+        }
+
+        if (receipts.length === 0) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.style.textAlign = 'center';
+            emptyDiv.style.padding = '20px';
+            emptyDiv.style.color = '#888';
+            const p = document.createElement('p');
+            p.textContent = 'No receipts found.';
+            emptyDiv.appendChild(p);
+            container.appendChild(emptyDiv);
+            return;
+        }
+
+        receipts.forEach(receipt => {
+            // Sanitize receipt data
+            const safeReceiptNumber = escapeHTML(String(receipt.receipt_number || receipt.transaction_id || ''));
+            const safeDate = escapeHTML(new Date(receipt.payment_date).toLocaleDateString());
+            const safeAmount = escapeHTML(parseFloat(receipt.amount || 0).toFixed(2));
+
+            const receiptDiv = document.createElement('div');
+            receiptDiv.style.display = 'flex';
+            receiptDiv.style.justifyContent = 'space-between';
+            receiptDiv.style.alignItems = 'center';
+            receiptDiv.style.padding = '16px';
+            receiptDiv.style.background = '#f9f9f9';
+            receiptDiv.style.borderRadius = '8px';
+            receiptDiv.style.marginBottom = '8px';
+
+            const leftDiv = document.createElement('div');
+            const receiptNum = document.createElement('div');
+            receiptNum.style.fontWeight = '600';
+            receiptNum.style.marginBottom = '4px';
+            receiptNum.textContent = `Receipt #${safeReceiptNumber}`;
+            const dateDiv = document.createElement('div');
+            dateDiv.style.fontSize = '14px';
+            dateDiv.style.color = '#666';
+            dateDiv.textContent = safeDate;
+            leftDiv.appendChild(receiptNum);
+            leftDiv.appendChild(dateDiv);
+
+            const rightDiv = document.createElement('div');
+            rightDiv.style.textAlign = 'right';
+            const amountDiv = document.createElement('div');
+            amountDiv.style.fontWeight = '600';
+            amountDiv.style.marginBottom = '4px';
+            amountDiv.textContent = `$${safeAmount}`;
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'btn-text';
+            downloadBtn.style.fontSize = '12px';
+            downloadBtn.style.color = '#2563eb';
+            downloadBtn.textContent = 'Download';
+            downloadBtn.onclick = () => generateReceiptPDF(safeReceiptNumber);
+            rightDiv.appendChild(amountDiv);
+            rightDiv.appendChild(downloadBtn);
+
+            receiptDiv.appendChild(leftDiv);
+            receiptDiv.appendChild(rightDiv);
+            container.appendChild(receiptDiv);
+        });
+    } catch (error) {
+        console.error('Error loading receipts:', error);
     }
-    
-    // Fallback: get from transactions
-    if (receipts.length === 0) {
-        const db = getDB();
-        const transactions = (db.transactions || []).filter(t => 
-            t.parentId === parentEmail && t.status === 'PAID'
-        ).slice(0, 5);
-        
-        receipts = transactions.map(txn => ({
-            receipt_number: txn.id,
-            amount: txn.amount,
-            payment_date: txn.date,
-            transaction_id: txn.id
-        }));
-    }
-    
-    if (receipts.length === 0) {
-        const emptyDiv = document.createElement('div');
-        emptyDiv.style.textAlign = 'center';
-        emptyDiv.style.padding = '20px';
-        emptyDiv.style.color = '#888';
-        const p = document.createElement('p');
-        p.textContent = 'No receipts found.';
-        emptyDiv.appendChild(p);
-        container.appendChild(emptyDiv);
-        return;
-    }
-    
-    receipts.forEach(receipt => {
-        // Sanitize receipt data
-        const safeReceiptNumber = escapeHTML(String(receipt.receipt_number || receipt.transaction_id || ''));
-        const safeDate = escapeHTML(new Date(receipt.payment_date).toLocaleDateString());
-        const safeAmount = escapeHTML(parseFloat(receipt.amount || 0).toFixed(2));
-        
-        const receiptDiv = document.createElement('div');
-        receiptDiv.style.display = 'flex';
-        receiptDiv.style.justifyContent = 'space-between';
-        receiptDiv.style.alignItems = 'center';
-        receiptDiv.style.padding = '16px';
-        receiptDiv.style.background = '#f9f9f9';
-        receiptDiv.style.borderRadius = '8px';
-        receiptDiv.style.marginBottom = '8px';
-        
-        const leftDiv = document.createElement('div');
-        const receiptNum = document.createElement('div');
-        receiptNum.style.fontWeight = '600';
-        receiptNum.style.marginBottom = '4px';
-        receiptNum.textContent = `Receipt #${safeReceiptNumber}`;
-        const dateDiv = document.createElement('div');
-        dateDiv.style.fontSize = '14px';
-        dateDiv.style.color = '#666';
-        dateDiv.textContent = safeDate;
-        leftDiv.appendChild(receiptNum);
-        leftDiv.appendChild(dateDiv);
-        
-        const rightDiv = document.createElement('div');
-        rightDiv.style.textAlign = 'right';
-        const amountDiv = document.createElement('div');
-        amountDiv.style.fontWeight = '600';
-        amountDiv.style.marginBottom = '4px';
-        amountDiv.textContent = `$${safeAmount}`;
-        const downloadBtn = document.createElement('button');
-        downloadBtn.className = 'btn-text';
-        downloadBtn.style.fontSize = '12px';
-        downloadBtn.style.color = '#2563eb';
-        downloadBtn.textContent = 'Download';
-        downloadBtn.onclick = () => generateReceiptPDF(safeReceiptNumber);
-        rightDiv.appendChild(amountDiv);
-        rightDiv.appendChild(downloadBtn);
-        
-        receiptDiv.appendChild(leftDiv);
-        receiptDiv.appendChild(rightDiv);
-        container.appendChild(receiptDiv);
-    });
 }
 
 /**
@@ -1879,119 +1938,122 @@ async function loadReceipts(parentEmail) {
  */
 async function loadInvoices(parentEmail) {
     try {
-    const supabase = window.auth?.getSupabaseClient?.();
-    const container = document.getElementById('invoices-list');
-    
-    if (!container) return;
-    
-    let invoices = [];
-    
-    if (supabase && window.auth?.isSupabaseAvailable?.()) {
-        try {
+        const supabase = window.auth?.getSupabaseClient?.();
+        const container = document.getElementById('invoices-list');
+
+        if (!container) return;
+
+        let invoices = [];
+
+        if (supabase && window.auth?.isSupabaseAvailable?.()) {
+            try {
                 const { data: parentAccount, error: accountError } = await supabase
-                .from('parent_accounts')
-                .select('id')
-                .eq('email', parentEmail)
-                .single();
-            
+                    .from('parent_accounts')
+                    .select('id')
+                    .eq('email', parentEmail)
+                    .single();
+
                 if (accountError) {
                     console.error('Error fetching parent account for invoices:', accountError);
                     // No fallback for invoices, just return empty
                 } else if (parentAccount) {
                     const { data, error: invoicesError } = await supabase
-                    .from('invoices')
-                    .select('*')
-                    .eq('parent_id', parentAccount.id)
-                    .order('issue_date', { ascending: false })
-                    .limit(5);
-                
+                        .from('invoices')
+                        .select('*')
+                        .eq('parent_id', parentAccount.id)
+                        .order('issue_date', { ascending: false })
+                        .limit(5);
+
                     if (invoicesError) {
                         console.error('Error fetching invoices:', invoicesError);
                         // Return empty array
                     } else if (data) {
                         invoices = data;
                     }
-            }
-        } catch (error) {
-            console.error('Error loading invoices:', error);
+                }
+            } catch (error) {
+                console.error('Error loading invoices:', error);
                 // Return empty array
+            }
         }
+
+        if (invoices.length === 0) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.style.textAlign = 'center';
+            emptyDiv.style.padding = '20px';
+            emptyDiv.style.color = '#888';
+            const p = document.createElement('p');
+            p.textContent = 'No invoices found.';
+            emptyDiv.appendChild(p);
+            container.appendChild(emptyDiv);
+            return;
+        }
+
+        invoices.forEach(invoice => {
+            // Sanitize invoice data
+            const safeInvoiceNumber = escapeHTML(String(invoice.invoice_number || ''));
+            const safeDueDate = escapeHTML(new Date(invoice.due_date).toLocaleDateString());
+            const safeAmount = escapeHTML(parseFloat(invoice.total_amount || 0).toFixed(2));
+            const safeStatus = escapeHTML(String(invoice.status || '').toUpperCase());
+            const statusColor = invoice.status === 'paid' ? '#10b981' : invoice.status === 'overdue' ? '#ef4444' : '#f59e0b';
+
+            const invoiceDiv = document.createElement('div');
+            invoiceDiv.style.display = 'flex';
+            invoiceDiv.style.justifyContent = 'space-between';
+            invoiceDiv.style.alignItems = 'center';
+            invoiceDiv.style.padding = '16px';
+            invoiceDiv.style.background = '#f9f9f9';
+            invoiceDiv.style.borderRadius = '8px';
+            invoiceDiv.style.marginBottom = '8px';
+
+            const leftDiv = document.createElement('div');
+            const invoiceNum = document.createElement('div');
+            invoiceNum.style.fontWeight = '600';
+            invoiceNum.style.marginBottom = '4px';
+            invoiceNum.textContent = `Invoice #${safeInvoiceNumber}`;
+            const dueDateDiv = document.createElement('div');
+            dueDateDiv.style.fontSize = '14px';
+            dueDateDiv.style.color = '#666';
+            dueDateDiv.textContent = `Due: ${safeDueDate}`;
+            leftDiv.appendChild(invoiceNum);
+            leftDiv.appendChild(dueDateDiv);
+
+            const rightDiv = document.createElement('div');
+            rightDiv.style.textAlign = 'right';
+            const amountDiv = document.createElement('div');
+            amountDiv.style.fontWeight = '600';
+            amountDiv.style.marginBottom = '4px';
+            amountDiv.textContent = `$${safeAmount}`;
+            const statusContainer = document.createElement('div');
+            statusContainer.style.display = 'flex';
+            statusContainer.style.gap = '8px';
+            statusContainer.style.alignItems = 'center';
+            const statusSpan = document.createElement('span');
+            statusSpan.style.background = statusColor;
+            statusSpan.style.color = 'white';
+            statusSpan.style.padding = '2px 8px';
+            statusSpan.style.borderRadius = '12px';
+            statusSpan.style.fontSize = '11px';
+            statusSpan.style.fontWeight = '600';
+            statusSpan.textContent = safeStatus;
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'btn-text';
+            downloadBtn.style.fontSize = '12px';
+            downloadBtn.style.color = '#2563eb';
+            downloadBtn.textContent = 'Download';
+            downloadBtn.onclick = () => generateInvoicePDF(safeInvoiceNumber);
+            statusContainer.appendChild(statusSpan);
+            statusContainer.appendChild(downloadBtn);
+            rightDiv.appendChild(amountDiv);
+            rightDiv.appendChild(statusContainer);
+
+            invoiceDiv.appendChild(leftDiv);
+            invoiceDiv.appendChild(rightDiv);
+            container.appendChild(invoiceDiv);
+        });
+    } catch (error) {
+        console.error('Error loading invoices:', error);
     }
-    
-    if (invoices.length === 0) {
-        const emptyDiv = document.createElement('div');
-        emptyDiv.style.textAlign = 'center';
-        emptyDiv.style.padding = '20px';
-        emptyDiv.style.color = '#888';
-        const p = document.createElement('p');
-        p.textContent = 'No invoices found.';
-        emptyDiv.appendChild(p);
-        container.appendChild(emptyDiv);
-        return;
-    }
-    
-    invoices.forEach(invoice => {
-        // Sanitize invoice data
-        const safeInvoiceNumber = escapeHTML(String(invoice.invoice_number || ''));
-        const safeDueDate = escapeHTML(new Date(invoice.due_date).toLocaleDateString());
-        const safeAmount = escapeHTML(parseFloat(invoice.total_amount || 0).toFixed(2));
-        const safeStatus = escapeHTML(String(invoice.status || '').toUpperCase());
-        const statusColor = invoice.status === 'paid' ? '#10b981' : invoice.status === 'overdue' ? '#ef4444' : '#f59e0b';
-        
-        const invoiceDiv = document.createElement('div');
-        invoiceDiv.style.display = 'flex';
-        invoiceDiv.style.justifyContent = 'space-between';
-        invoiceDiv.style.alignItems = 'center';
-        invoiceDiv.style.padding = '16px';
-        invoiceDiv.style.background = '#f9f9f9';
-        invoiceDiv.style.borderRadius = '8px';
-        invoiceDiv.style.marginBottom = '8px';
-        
-        const leftDiv = document.createElement('div');
-        const invoiceNum = document.createElement('div');
-        invoiceNum.style.fontWeight = '600';
-        invoiceNum.style.marginBottom = '4px';
-        invoiceNum.textContent = `Invoice #${safeInvoiceNumber}`;
-        const dueDateDiv = document.createElement('div');
-        dueDateDiv.style.fontSize = '14px';
-        dueDateDiv.style.color = '#666';
-        dueDateDiv.textContent = `Due: ${safeDueDate}`;
-        leftDiv.appendChild(invoiceNum);
-        leftDiv.appendChild(dueDateDiv);
-        
-        const rightDiv = document.createElement('div');
-        rightDiv.style.textAlign = 'right';
-        const amountDiv = document.createElement('div');
-        amountDiv.style.fontWeight = '600';
-        amountDiv.style.marginBottom = '4px';
-        amountDiv.textContent = `$${safeAmount}`;
-        const statusContainer = document.createElement('div');
-        statusContainer.style.display = 'flex';
-        statusContainer.style.gap = '8px';
-        statusContainer.style.alignItems = 'center';
-        const statusSpan = document.createElement('span');
-        statusSpan.style.background = statusColor;
-        statusSpan.style.color = 'white';
-        statusSpan.style.padding = '2px 8px';
-        statusSpan.style.borderRadius = '12px';
-        statusSpan.style.fontSize = '11px';
-        statusSpan.style.fontWeight = '600';
-        statusSpan.textContent = safeStatus;
-        const downloadBtn = document.createElement('button');
-        downloadBtn.className = 'btn-text';
-        downloadBtn.style.fontSize = '12px';
-        downloadBtn.style.color = '#2563eb';
-        downloadBtn.textContent = 'Download';
-        downloadBtn.onclick = () => generateInvoicePDF(safeInvoiceNumber);
-        statusContainer.appendChild(statusSpan);
-        statusContainer.appendChild(downloadBtn);
-        rightDiv.appendChild(amountDiv);
-        rightDiv.appendChild(statusContainer);
-        
-        invoiceDiv.appendChild(leftDiv);
-        invoiceDiv.appendChild(rightDiv);
-        container.appendChild(invoiceDiv);
-    });
 }
 
 /**

@@ -508,19 +508,19 @@
         function isLoggedIn() {
             // Check for either Coach or Parent login tokens
             const hasCoachAuth = localStorage.getItem('isCoachLoggedIn') === 'true';
-            const hasParentAuth = localStorage.getItem('isParentLoggedIn') === 'true' || 
-                                 localStorage.getItem('gba_parent_auth_token');
-            
+            const hasParentAuth = localStorage.getItem('isParentLoggedIn') === 'true' ||
+                localStorage.getItem('gba_parent_auth_token');
+
             // Also check RBAC if available
             if (window.Security && window.Security.RBAC) {
                 const role = window.Security.RBAC.getRole();
-                return hasCoachAuth || hasParentAuth || 
-                       (role === 'coach' || role === 'parent' || role === 'admin');
+                return hasCoachAuth || hasParentAuth ||
+                    (role === 'coach' || role === 'parent' || role === 'admin');
             }
-            
+
             return hasCoachAuth || hasParentAuth;
         }
-        
+
         // Permission check for calendar access
         function hasCalendarAccess() {
             if (!window.Security || !window.Security.RBAC) {

@@ -1006,7 +1006,6 @@ function exportData() {
 // 7. View Switching (Segmented Control)
 // 7. View Switching (Segmented Control)
 window.switchTeamView = function (viewName, btnElement) {
-    console.log("Rendering Nav Items", viewName); // Debug
     const views = {
         'roster': document.getElementById('roster-view'),
         'analytics': document.getElementById('analytics-view'),
