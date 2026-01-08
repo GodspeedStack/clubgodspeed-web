@@ -92,9 +92,10 @@
 </head>
 
 <body class="bg-gray-50 text-black font-sans antialiased">
-    <nav class="navbar light-nav">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <nav class="navbar light-nav" aria-label="Primary">
         <div class="logo">GODSPEED<span class="text-blue-600">BASKETBALL</span></div>
-        <div class="hidden md:flex items-center space-x-8">
+        <div class="hidden md:flex items-center space-x-8" id="primary-navigation">
             <div class="flex space-x-8 text-sm font-bold uppercase tracking-wide">
                 <a href="index.html" class="text-black">Home</a>
                 <a href="training.html" class="text-black">Training</a>
@@ -125,7 +126,7 @@
 
                 <!-- Member Login Dropdown -->
                 <div class="nav-login-wrapper relative z-50">
-                    <a href="#" class="nav-cart-btn login-icon-delight icon-delight text-black hover:text-blue-600 transition" aria-label="Sign In">
+                    <a href="#" class="nav-cart-btn login-icon-delight icon-delight text-black hover:text-blue-600 transition" aria-label="Sign In" aria-haspopup="true" aria-controls="member-access-menu">
                         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 4 0 00-7 7h14a7 4 0 00-7-7z" />
@@ -133,7 +134,7 @@
                     </a>
 
                     <!-- Dropdown Menu -->
-                    <div class="login-dropdown">
+                    <div class="login-dropdown" id="member-access-menu" aria-label="Member access">
                         <div
                             style="padding: 8px 16px 4px; font-size: 11px; text-transform: uppercase; color: #86868b; font-weight: 600; letter-spacing: 0.05em;">
                             Member Access</div>
@@ -176,7 +177,8 @@
         </div>
         <button class="md:hidden text-3xl w-10 h-10 flex items-center justify-center cursor-pointer hover:opacity-70 transition" aria-label="Menu" onclick="openMobileMenu()">☰</button>
     </nav>
-    <header class="hero-section-light">
+    <main id="main-content">
+        <header class="hero-section-light">
         <div class="hero-bg"></div>
         <div class="hero-overlay-light"></div>
         <div class="hero-content relative z-10 pl-6 md:pl-20 max-w-4xl pt-20">
@@ -196,7 +198,7 @@
                     CLUB GODSPEED</a>
             </div>
         </div>
-    </header>
+        </header>
     <section class="py-24 bg-gray-50">
         <div class="max-w-7xl mx-auto px-6">
             <div class="text-center mb-16">
@@ -469,6 +471,7 @@
             </div>
         </div>
     </section>
+    </main>
     <footer class="bg-gray-50 pt-20 pb-16 border-t border-gray-100">
         <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-12">
             <div class="md:col-span-4">

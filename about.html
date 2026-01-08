@@ -35,9 +35,10 @@
 </head>
 
 <body>
-    <nav class="navbar light-nav">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <nav class="navbar light-nav" aria-label="Primary">
         <div class="logo">GODSPEED<span class="text-blue-600">BASKETBALL</span></div>
-        <div class="hidden md:flex items-center space-x-8">
+        <div class="hidden md:flex items-center space-x-8" id="primary-navigation">
             <div class="flex space-x-8 text-sm font-bold uppercase tracking-wide">
                 <a href="index.html" class="text-black">Home</a>
                 <a href="training.html" class="text-black">Training</a>
@@ -54,11 +55,12 @@
                 class="ml-4 px-6 py-2 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition">TRAIN
                 WITH US</a>
         </div>
-        <button class="md:hidden text-2xl">☰</button>
+        <button class="md:hidden text-2xl" aria-label="Menu">☰</button>
     </nav>
 
-    <!-- Hero Section -->
-    <header class="relative bg-black min-h-[60vh] flex items-center justify-center overflow-hidden">
+    <main id="main-content">
+        <!-- Hero Section -->
+        <header class="relative bg-black min-h-[60vh] flex items-center justify-center overflow-hidden">
         <!-- Background Overlay -->
         <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent z-10"></div>
         <div class="absolute inset-0 opacity-40">
@@ -249,6 +251,7 @@
 
 
 
+    </main>
     <footer class="bg-gray-50 pt-20 pb-16 border-t border-gray-100">
         <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-12">
             <div class="md:col-span-4">
@@ -308,11 +311,11 @@
     </footer>
 
     <!-- Cart Overlay -->
-    <div id="cart-overlay" class="cart-overlay">
+    <div id="cart-overlay" class="cart-overlay" role="dialog" aria-modal="true" aria-labelledby="cart-title" aria-hidden="true">
         <div class="cart-sidebar">
             <div class="cart-header">
-                <h2>Your Cart</h2>
-                <button id="close-cart" class="close-cart-btn">×</button>
+                <h2 id="cart-title">Your Cart</h2>
+                <button id="close-cart" class="close-cart-btn" aria-label="Close cart">×</button>
             </div>
             <div id="cart-items" class="cart-items">
                 <!-- Cart items will be injected here -->
