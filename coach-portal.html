@@ -1049,6 +1049,9 @@
                 <p style="color: #666; margin-top: 8px;">Access grading and roster management.</p>
             </div>
             <form class="login-form" id="staff-login-form" onsubmit="event.preventDefault(); handleCoachLogin();">
+                <div class="login-error"
+                    style="display: none; color: #b91c1c; font-size: 14px; margin-bottom: 12px; padding: 12px; background: #fee2e2; border-radius: 10px;">
+                </div>
                 <div class="form-group">
                     <input type="password" id="coach-code" placeholder="Enter Access Code" required>
                 </div>
