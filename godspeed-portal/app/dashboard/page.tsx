@@ -26,27 +26,30 @@ export default function DashboardPage() {
     const [dataLoading, setDataLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    const fetchAthletes = async () => {
+        if (!user) return;
+
+        try {
+            const athletesRef = collection(db, "parents", user.uid, "athletes");
+            const querySnapshot = await getDocs(athletesRef);
+            const athletesList: Athlete[] = [];
+            querySnapshot.forEach((doc) => {
+                athletesList.push({ id: doc.id, ...doc.data() } as Athlete);
+            });
+            setAthletes(athletesList);
+            setError(null);
+        } catch (error) {
+            console.error("Error fetching athletes:", error);
+            setError("Failed to load athletes. Please try again.");
+        } finally {
+            setDataLoading(false);
+        }
+    };
+
     useEffect(() => {
         if (!loading && !user) {
             router.push("/");
         } else if (user) {
-            const fetchAthletes = async () => {
-                try {
-                    const athletesRef = collection(db, "parents", user.uid, "athletes");
-                    const querySnapshot = await getDocs(athletesRef);
-                    const athletesList: Athlete[] = [];
-                    querySnapshot.forEach((doc) => {
-                        athletesList.push({ id: doc.id, ...doc.data() } as Athlete);
-                    });
-                    setAthletes(athletesList);
-                    setError(null);
-                } catch (error) {
-                    console.error("Error fetching athletes:", error);
-                    setError("Failed to load athletes. Please try again.");
-                } finally {
-                    setDataLoading(false);
-                }
-            };
             fetchAthletes();
         }
     }, [user, loading, router]);
@@ -54,26 +57,7 @@ export default function DashboardPage() {
     const retryFetch = () => {
         setDataLoading(true);
         setError(null);
-        if (user) {
-            const fetchAthletes = async () => {
-                try {
-                    const athletesRef = collection(db, "parents", user.uid, "athletes");
-                    const querySnapshot = await getDocs(athletesRef);
-                    const athletesList: Athlete[] = [];
-                    querySnapshot.forEach((doc) => {
-                        athletesList.push({ id: doc.id, ...doc.data() } as Athlete);
-                    });
-                    setAthletes(athletesList);
-                    setError(null);
-                } catch (error) {
-                    console.error("Error fetching athletes:", error);
-                    setError("Failed to load athletes. Please try again.");
-                } finally {
-                    setDataLoading(false);
-                }
-            };
-            fetchAthletes();
-        }
+        fetchAthletes();
     };
 
     if (loading || dataLoading) {
@@ -168,10 +152,11 @@ export default function DashboardPage() {
                                         <AthleteTradingCard
                                             name={athlete.name}
                                             team={athlete.team}
-                                            number={athlete.number || "00"} // Default or fetch from DB
+                                            number={athlete.number || "00"}
                                             position={athlete.position || "ATH"}
                                             height={athlete.height || "N/A"}
                                             gradYear={athlete.gradYear || "20??"}
+                                            photoUrl={athlete.photoUrl}
                                         />
                                     </div>
                                 </div>
