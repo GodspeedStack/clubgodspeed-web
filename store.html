@@ -56,6 +56,74 @@
             padding: 40px 5%;
         }
 
+        .store-benefits {
+            padding: 24px 5% 0;
+        }
+
+        .store-benefits-grid {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+
+        .store-benefit-card {
+            background: #0c0c0c;
+            border: 1px solid #1f1f1f;
+            border-radius: 8px;
+            padding: 18px 20px;
+        }
+
+        .store-benefit-card h3 {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #fff;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+
+        .store-benefit-card p {
+            font-size: 13px;
+            color: #9ca3af;
+        }
+
+        .store-utility {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .store-count {
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #9ca3af;
+        }
+
+        .store-search,
+        .store-sort {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .store-search input,
+        .store-sort select {
+            background: #0f0f0f;
+            border: 1px solid #222;
+            color: #fff;
+            padding: 10px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .store-search input::placeholder {
+            color: #6b7280;
+        }
+
         @media (min-width: 768px) {
             .products-grid {
                 grid-template-columns: repeat(3, 1fr);
@@ -69,6 +137,8 @@
             overflow: hidden;
             transition: transform 0.3s ease;
             border: 1px solid #222;
+            display: flex;
+            flex-direction: column;
         }
 
         .product-card:hover {
@@ -83,6 +153,12 @@
             overflow: hidden;
         }
 
+        .product-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
         .product-image {
             position: absolute;
             top: 0;
@@ -95,6 +171,21 @@
 
         .product-card:hover .product-image {
             transform: scale(1.05);
+        }
+
+        .product-badge {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: rgba(0, 0, 0, 0.75);
+            border: 1px solid #2f2f2f;
+            color: #fff;
+            padding: 6px 10px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            border-radius: 999px;
+            z-index: 2;
         }
 
         .product-overlay {
@@ -152,10 +243,75 @@
             font-size: 14px;
             color: #999;
         }
+
+        .product-meta {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .product-actions {
+            margin-top: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .product-actions .add-to-cart-btn {
+            background: #fff;
+            color: #000;
+            border-radius: 999px;
+            padding: 10px 16px;
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .product-actions .details-link {
+            border: 1px solid #2f2f2f;
+            color: #fff;
+            border-radius: 999px;
+            padding: 10px 16px;
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: border-color 0.2s ease, color 0.2s ease;
+        }
+
+        .product-actions .details-link:hover {
+            border-color: #fff;
+            color: #fff;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: #9ca3af;
+            padding: 40px 0;
+            border: 1px dashed #2f2f2f;
+            border-radius: 8px;
+        }
     </style>
 </head>
 
 <body class="bg-black text-white font-sans antialiased">
+    <a href="#products-grid" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:bg-white focus:text-black focus:px-4 focus:py-2 focus:rounded-full">Skip to products</a>
     <nav
         class="navbar dark-nav bg-black/90 backdrop-blur-md border-b border-gray-800 flex justify-between items-center px-8 py-5 sticky top-0 z-[1000] w-full">
         <div class="logo text-white">GODSPEED<span class="text-blue-600">BASKETBALL</span></div>
@@ -245,12 +401,45 @@
         </div>
     </header>
 
+    <section class="store-benefits">
+        <div class="store-benefits-grid">
+            <div class="store-benefit-card">
+                <h3>Fast Drop Alerts</h3>
+                <p>New releases surface here first. Limited runs, no restocks.</p>
+            </div>
+            <div class="store-benefit-card">
+                <h3>Performance Guarantee</h3>
+                <p>Engineered fabrics tested by athletes. Comfort you can feel every rep.</p>
+            </div>
+            <div class="store-benefit-card">
+                <h3>Secure Checkout</h3>
+                <p>Protected payments with live inventory checks at checkout.</p>
+            </div>
+        </div>
+    </section>
+
     <div class="store-filters">
         <div class="filter-group">
             <button class="filter-btn active" data-category="all">All</button>
             <button class="filter-btn" data-category="performance">Performance</button>
             <button class="filter-btn" data-category="lifestyle">Lifestyle</button>
             <button class="filter-btn" data-category="accessories">Accessories</button>
+        </div>
+        <div class="store-utility">
+            <div class="store-count"><span id="results-count">0</span> Items</div>
+            <label class="store-search">
+                <span class="sr-only">Search products</span>
+                <input id="store-search" type="search" placeholder="Search gear" autocomplete="off">
+            </label>
+            <label class="store-sort">
+                <span class="sr-only">Sort products</span>
+                <select id="store-sort">
+                    <option value="featured">Featured</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="name">Name: A to Z</option>
+                </select>
+            </label>
         </div>
     </div>
 
@@ -327,7 +516,9 @@
                 image: 'assets/godspeed-shorts.png',
                 category: 'performance',
                 description: 'High-performance basketball shorts with sweat-wicking technology.',
-                url: '/store.html'
+                url: '/store.html',
+                tag: 'Best Seller',
+                meta: 'Breathable mesh · 7" inseam'
             },
             {
                 id: 'godspeed-croptop',
@@ -336,7 +527,9 @@
                 image: 'assets/godspeed-croptop.png',
                 category: 'performance',
                 description: 'Athletic fit crop top designed for high-intensity training.',
-                url: '/store.html'
+                url: '/store.html',
+                tag: 'New Drop',
+                meta: 'Second-skin stretch'
             },
             {
                 id: 'godspeed-hoodie',
@@ -345,7 +538,9 @@
                 image: 'assets/godspeed-hoodie.png',
                 category: 'lifestyle',
                 description: 'Premium heavyweight cotton hoodie for court and street.',
-                url: '/store.html'
+                url: '/store.html',
+                tag: 'Limited',
+                meta: 'Heavyweight fleece'
             },
             {
                 id: 'godspeed-tshirt',
@@ -354,7 +549,9 @@
                 image: 'assets/godspeed-tshirt.png',
                 category: 'lifestyle',
                 description: 'Classic fit cotton tee with signature Godspeed branding.',
-                url: '/store.html'
+                url: '/store.html',
+                tag: 'Core',
+                meta: 'Everyday fit'
             },
 
             {
@@ -364,38 +561,97 @@
                 image: 'assets/godspeed-socks.png',
                 category: 'performance',
                 description: 'Cushioned performance socks with arch support.',
-                url: '/store.html'
+                url: '/store.html',
+                tag: 'Essential',
+                meta: 'Reinforced arch'
             }
         ];
 
         let selectedCategory = 'all';
+        let searchTerm = '';
+        let sortOrder = 'featured';
 
         function loadProducts() {
+            const params = new URLSearchParams(window.location.search);
+            const categoryParam = params.get('category');
+            if (categoryParam) {
+                selectedCategory = categoryParam;
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.category === categoryParam);
+                });
+            }
             renderProducts();
         }
 
         function renderProducts() {
             const grid = document.getElementById('products-grid');
-            const filteredProducts = selectedCategory === 'all'
-                ? products
+            let filteredProducts = selectedCategory === 'all'
+                ? [...products]
                 : products.filter(p => p.category === selectedCategory);
 
+            if (searchTerm.trim()) {
+                const term = searchTerm.trim().toLowerCase();
+                filteredProducts = filteredProducts.filter(product =>
+                    product.title.toLowerCase().includes(term) ||
+                    product.description.toLowerCase().includes(term)
+                );
+            }
+
+            filteredProducts = sortProducts(filteredProducts);
+            updateResultsCount(filteredProducts.length);
+
+            if (!filteredProducts.length) {
+                grid.innerHTML = `<div class="no-results">No gear found. Try a new search or filter.</div>`;
+                return;
+            }
+
             grid.innerHTML = filteredProducts.map(product => `
-                <a href="product.html?id=${product.id}" class="product-card" style="text-decoration: none; color: inherit;">
-                    <div class="product-image-container">
-                        <img src="${product.image}" alt="${product.title}" class="product-image">
-                        <div class="product-overlay">
-                            <div class="add-to-cart-btn" style="pointer-events: none;">
-                                View Details
+                <div class="product-card">
+                    <a href="product.html?id=${product.id}" class="product-link">
+                        <div class="product-image-container">
+                            <span class="product-badge">${product.tag}</span>
+                            <img src="${product.image}" alt="${product.title}" class="product-image" loading="lazy">
+                            <div class="product-overlay">
+                                <div class="add-to-cart-btn" style="pointer-events: none;">
+                                    View Details
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </a>
                     <div class="product-info">
-                        <h3 class="product-title">${product.title}</h3>
+                        <a href="product.html?id=${product.id}" class="product-link">
+                            <h3 class="product-title">${product.title}</h3>
+                        </a>
                         <div class="product-price">$${(product.price / 100).toFixed(2)}</div>
+                        <div class="product-meta">${product.meta}</div>
+                        <div class="product-actions">
+                            <button class="add-to-cart-btn" data-id="${product.id}" data-name="${product.title}" data-price="${(product.price / 100).toFixed(2)}">
+                                Quick Add
+                            </button>
+                            <a class="details-link" href="product.html?id=${product.id}">View Details</a>
+                        </div>
                     </div>
-                </a>
+                </div>
             `).join('');
+        }
+
+        function sortProducts(items) {
+            const sorted = [...items];
+            if (sortOrder === 'price-low') {
+                sorted.sort((a, b) => a.price - b.price);
+            } else if (sortOrder === 'price-high') {
+                sorted.sort((a, b) => b.price - a.price);
+            } else if (sortOrder === 'name') {
+                sorted.sort((a, b) => a.title.localeCompare(b.title));
+            }
+            return sorted;
+        }
+
+        function updateResultsCount(count) {
+            const resultsCount = document.getElementById('results-count');
+            if (resultsCount) {
+                resultsCount.textContent = count;
+            }
         }
 
         // Filter buttons
@@ -407,6 +663,22 @@
                 renderProducts();
             });
         });
+
+        const searchInput = document.getElementById('store-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', (event) => {
+                searchTerm = event.target.value;
+                renderProducts();
+            });
+        }
+
+        const sortSelect = document.getElementById('store-sort');
+        if (sortSelect) {
+            sortSelect.addEventListener('change', (event) => {
+                sortOrder = event.target.value;
+                renderProducts();
+            });
+        }
 
         loadProducts();
     </script>
