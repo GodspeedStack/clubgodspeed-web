@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 // @ts-ignore - User needs to install types: npm i --save-dev @types/html2canvas
 import html2canvas from "html2canvas";
+import { trackCardShare, trackCardDownload } from "@/lib/analytics";
 
 interface AthleteTradingCardProps {
     name: string;
@@ -61,6 +62,7 @@ export default function AthleteTradingCard({
                             text: `Check out my athlete profile on Godspeed!`,
                             files: [file],
                         });
+                        trackCardShare(name);
                         setShareSuccess(true);
                         setTimeout(() => setShareSuccess(false), 3000);
                     } catch (e) {
@@ -92,6 +94,7 @@ export default function AthleteTradingCard({
         link.download = `${name.replace(/\s+/g, '_')}_GodspeedCard.png`;
         link.href = canvas.toDataURL("image/png");
         link.click();
+        trackCardDownload(name);
     };
 
     return (

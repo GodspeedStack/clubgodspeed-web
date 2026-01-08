@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
+import { trackLogin, trackPasswordReset, trackError } from "@/lib/analytics";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -21,6 +22,7 @@ export default function LoginPage() {
 
         try {
             await signInWithEmailAndPassword(auth, email, password);
+            trackLogin("email");
             router.push("/dashboard");
         } catch (err: unknown) {
             const error = err as { code?: string };
@@ -34,6 +36,7 @@ export default function LoginPage() {
                 setError("Login failed. Please try again.");
             }
             console.error(err);
+            trackError(`Login failed: ${error.code || "unknown"}`);
         } finally {
             setLoading(false);
         }
@@ -51,6 +54,7 @@ export default function LoginPage() {
         try {
             await sendPasswordResetEmail(auth, email);
             setResetEmailSent(true);
+            trackPasswordReset(true);
         } catch (err: unknown) {
             const error = err as { code?: string };
             if (error.code === "auth/user-not-found") {
@@ -60,6 +64,7 @@ export default function LoginPage() {
             } else {
                 setError("Failed to send reset email. Please try again.");
             }
+            trackPasswordReset(false);
         } finally {
             setLoading(false);
         }
