@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { AuthProvider } from "./context/AuthContext";
+import { ToastProvider } from "./context/ToastContext";
+import ToastContainer from "./components/ToastContainer";
 import { GA_TRACKING_ID } from "@/lib/analytics";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -74,7 +76,10 @@ export default function RootLayout({
                 )}
             </head>
             <body className={inter.className}>
-                <AuthProvider>{children}</AuthProvider>
+                <ToastProvider>
+                    <AuthProvider>{children}</AuthProvider>
+                    <ToastContainer />
+                </ToastProvider>
             </body>
         </html>
     );

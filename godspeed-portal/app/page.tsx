@@ -5,35 +5,35 @@ import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/aut
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { trackLogin, trackPasswordReset, trackError } from "@/lib/analytics";
+import { useToast } from "@/app/context/ToastContext";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const [resetEmailSent, setResetEmailSent] = useState(false);
     const router = useRouter();
+    const toast = useToast();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError("");
         setLoading(true);
 
         try {
             await signInWithEmailAndPassword(auth, email, password);
             trackLogin("email");
+            toast.success("Login successful! Redirecting...");
             router.push("/dashboard");
         } catch (err: unknown) {
             const error = err as { code?: string };
             if (error.code === "auth/invalid-credential" || error.code === "auth/wrong-password" || error.code === "auth/user-not-found") {
-                setError("Invalid email or password. Please try again.");
+                toast.error("Invalid email or password. Please try again.");
             } else if (error.code === "auth/too-many-requests") {
-                setError("Too many failed attempts. Please try again later.");
+                toast.error("Too many failed attempts. Please try again later.");
             } else if (error.code === "auth/network-request-failed") {
-                setError("Network error. Please check your connection.");
+                toast.error("Network error. Please check your connection.");
             } else {
-                setError("Login failed. Please try again.");
+                toast.error("Login failed. Please try again.");
             }
             console.error(err);
             trackError(`Login failed: ${error.code || "unknown"}`);
@@ -44,25 +44,24 @@ export default function LoginPage() {
 
     const handlePasswordReset = async () => {
         if (!email) {
-            setError("Please enter your email address first.");
+            toast.warning("Please enter your email address first.");
             return;
         }
 
-        setError("");
         setLoading(true);
 
         try {
             await sendPasswordResetEmail(auth, email);
-            setResetEmailSent(true);
+            toast.success("Password reset email sent! Check your inbox.");
             trackPasswordReset(true);
         } catch (err: unknown) {
             const error = err as { code?: string };
             if (error.code === "auth/user-not-found") {
-                setError("No account found with this email.");
+                toast.error("No account found with this email.");
             } else if (error.code === "auth/invalid-email") {
-                setError("Please enter a valid email address.");
+                toast.error("Please enter a valid email address.");
             } else {
-                setError("Failed to send reset email. Please try again.");
+                toast.error("Failed to send reset email. Please try again.");
             }
             trackPasswordReset(false);
         } finally {
@@ -76,19 +75,13 @@ export default function LoginPage() {
                 <h2 className="text-3xl font-bold mb-2 text-center uppercase tracking-tight">Parent <span className="text-[#0071e3]">Login</span></h2>
                 <p className="text-center text-gray-500 mb-8">Access your athlete's performance data.</p>
 
-                {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
-                {resetEmailSent && <p className="text-green-600 text-sm mb-4 text-center">Password reset email sent! Check your inbox.</p>}
-
                 <form onSubmit={handleLogin} className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-600 mb-1">Email Address</label>
                         <input
                             type="email"
                             value={email}
-                            onChange={(e) => {
-                                setEmail(e.target.value);
-                                setResetEmailSent(false);
-                            }}
+                            onChange={(e) => setEmail(e.target.value)}
                             className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-black focus:outline-none focus:border-[#0071e3] focus:ring-2 focus:ring-[#0071e3] focus:ring-opacity-20 transition-colors"
                             required
                             disabled={loading}

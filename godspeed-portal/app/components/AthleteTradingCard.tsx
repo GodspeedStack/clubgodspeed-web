@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 // @ts-ignore - User needs to install types: npm i --save-dev @types/html2canvas
 import html2canvas from "html2canvas";
 import { trackCardShare, trackCardDownload } from "@/lib/analytics";
+import { useToast } from "@/app/context/ToastContext";
 
 interface AthleteTradingCardProps {
     name: string;
@@ -26,14 +27,11 @@ export default function AthleteTradingCard({
 }: AthleteTradingCardProps) {
     const cardRef = useRef<HTMLDivElement>(null);
     const [isSharing, setIsSharing] = useState(false);
-    const [shareSuccess, setShareSuccess] = useState(false);
-    const [shareError, setShareError] = useState<string | null>(null);
+    const toast = useToast();
 
     const handleShare = async () => {
         if (!cardRef.current) return;
         setIsSharing(true);
-        setShareError(null);
-        setShareSuccess(false);
 
         try {
             // Small timeout to ensure styles are stable
@@ -48,7 +46,7 @@ export default function AthleteTradingCard({
             // Convert to blob and download/share
             canvas.toBlob(async (blob) => {
                 if (!blob) {
-                    setShareError("Failed to generate card image. Please try again.");
+                    toast.error("Failed to generate card image. Please try again.");
                     setIsSharing(false);
                     return;
                 }
@@ -63,28 +61,25 @@ export default function AthleteTradingCard({
                             files: [file],
                         });
                         trackCardShare(name);
-                        setShareSuccess(true);
-                        setTimeout(() => setShareSuccess(false), 3000);
+                        toast.success("Card shared successfully!");
                     } catch (e) {
                         const error = e as { name?: string };
                         // Only download as fallback if share wasn't cancelled
                         if (error.name !== "AbortError") {
                             downloadImage(canvas);
-                            setShareSuccess(true);
-                            setTimeout(() => setShareSuccess(false), 3000);
+                            toast.success("Card downloaded successfully!");
                         }
                     }
                 } else {
                     // Desktop Fallback
                     downloadImage(canvas);
-                    setShareSuccess(true);
-                    setTimeout(() => setShareSuccess(false), 3000);
+                    toast.success("Card downloaded successfully!");
                 }
                 setIsSharing(false);
             });
         } catch (err) {
             console.error("Card generation failed:", err);
-            setShareError("Failed to create card. Please try again.");
+            toast.error("Failed to create card. Please try again.");
             setIsSharing(false);
         }
     };
@@ -178,10 +173,6 @@ export default function AthleteTradingCard({
                         </svg>
                         GENERATING...
                     </>
-                ) : shareSuccess ? (
-                    <>
-                        <span>✓ SAVED!</span>
-                    </>
                 ) : (
                     <>
                         <span>SHARE CARD</span>
@@ -189,18 +180,6 @@ export default function AthleteTradingCard({
                     </>
                 )}
             </button>
-
-            {/* Feedback Messages */}
-            {shareError && (
-                <p className="mt-2 text-xs text-red-500 w-full text-center px-4">
-                    {shareError}
-                </p>
-            )}
-            {shareSuccess && (
-                <p className="mt-2 text-xs text-green-600 w-full text-center px-4">
-                    Card saved successfully!
-                </p>
-            )}
         </div>
     );
 }
