@@ -64,7 +64,7 @@ const AthleteProfileModal = ({ player, onClose }) => {
 
     return (
         <div
-            className="relative bg-white rounded-[24px] w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl"
+            className="relative bg-white rounded-[24px] w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl animate-slideUp"
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"

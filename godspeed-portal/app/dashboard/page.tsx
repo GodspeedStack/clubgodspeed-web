@@ -74,7 +74,7 @@ export default function DashboardPage() {
                     <p className="text-gray-600 mb-6">{error}</p>
                     <button
                         onClick={retryFetch}
-                        className="bg-[#0071e3] text-white px-6 py-2 rounded-full font-bold hover:bg-[#0077ed] transition-colors"
+                        className="bg-[#0071e3] text-white px-6 py-2 rounded-full font-bold hover:bg-[#0077ed] hover:scale-105 active:scale-95 transition-all duration-200"
                     >
                         Try Again
                     </button>
@@ -84,14 +84,14 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#f5f5f7] font-sans text-[#1d1d1f]">
+        <div className="min-h-screen bg-[#f5f5f7] font-sans text-[#1d1d1f] animate-fadeIn">
             {/* Navbar */}
-            <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100 px-4 sm:px-6 py-4 flex justify-between items-center">
+            <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100 px-4 sm:px-6 py-4 flex justify-between items-center transition-all duration-200">
                 <div className="font-extrabold tracking-widest text-sm sm:text-base md:text-lg">GODSPEED<span className="text-[#0071e3]">PORTAL</span></div>
                 <button
                     onClick={logout}
                     disabled={loggingOut}
-                    className="text-sm font-semibold text-gray-500 hover:text-black disabled:text-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                    className="text-sm font-semibold text-gray-500 hover:text-black disabled:text-gray-300 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105 active:scale-95 flex items-center gap-2"
                 >
                     {loggingOut ? (
                         <>
@@ -118,17 +118,21 @@ export default function DashboardPage() {
                     <h3 className="text-lg sm:text-xl font-bold uppercase mb-4 sm:mb-6 tracking-wide text-gray-800">Your Athletes</h3>
 
                     {athletes.length === 0 ? (
-                        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 text-center shadow-sm">
-                            <div className="text-gray-300 text-6xl mb-4">👤</div>
+                        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 text-center shadow-sm animate-slideUp">
+                            <div className="text-gray-300 text-6xl mb-4 animate-bounce">👤</div>
                             <h3 className="text-lg font-bold text-gray-900 mb-2">No Athletes Yet</h3>
                             <p className="text-gray-500 mb-4">No athletes are linked to this account. Contact your coach to get started.</p>
                         </div>
                     ) : (
                         <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-                            {athletes.map((athlete) => (
-                                <div key={athlete.id} className="flex flex-col gap-4 sm:gap-6">
+                            {athletes.map((athlete, index) => (
+                                <div
+                                    key={athlete.id}
+                                    className="flex flex-col gap-4 sm:gap-6 animate-slideUp"
+                                    style={{ animationDelay: `${index * 100}ms` }}
+                                >
                                     {/* Standard Info Card */}
-                                    <div className="bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow group">
+                                    <div className="bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
                                         <div className="flex justify-between items-start">
                                             <div>
                                                 <h4 className="text-xl sm:text-2xl font-bold uppercase group-hover:text-[#0071e3] transition-colors">{athlete.name}</h4>

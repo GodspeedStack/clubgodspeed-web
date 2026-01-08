@@ -54,7 +54,7 @@ const TeamRoster = () => {
                         <div
                             key={player.id}
                             onClick={() => setSelectedPlayer(player)}
-                            className="p-3 sm:p-4 hover:bg-blue-50 cursor-pointer transition-all flex items-center justify-between group border-l-4 border-l-transparent hover:border-l-[#0071e3]"
+                            className="p-3 sm:p-4 hover:bg-blue-50 cursor-pointer transition-all duration-200 flex items-center justify-between group border-l-4 border-l-transparent hover:border-l-[#0071e3] hover:shadow-md"
                             role="button"
                             tabIndex={0}
                             onKeyDown={(e) => {
@@ -88,7 +88,7 @@ const TeamRoster = () => {
 
             {selectedPlayer && (
                 <div
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn"
                     onClick={(e) => {
                         if (e.target === e.currentTarget) {
                             setSelectedPlayer(null);

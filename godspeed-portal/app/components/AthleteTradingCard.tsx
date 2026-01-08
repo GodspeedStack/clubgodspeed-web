@@ -102,7 +102,7 @@ export default function AthleteTradingCard({
             {/* Card Container - The part that gets screenshotted */}
             <div
                 ref={cardRef}
-                className="relative w-full max-w-[320px] h-[450px] bg-black rounded-xl overflow-hidden shadow-2xl transition-transform hover:scale-[1.02]"
+                className="relative w-full max-w-[320px] h-[450px] bg-black rounded-xl overflow-hidden shadow-2xl transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_40px_rgba(0,113,227,0.5)]"
                 style={{
                     boxShadow: "0 0 30px rgba(0, 113, 227, 0.4)",
                     border: "1px solid rgba(255, 255, 255, 0.2)"
@@ -168,7 +168,7 @@ export default function AthleteTradingCard({
             <button
                 onClick={handleShare}
                 disabled={isSharing}
-                className="mt-4 sm:mt-6 bg-[#0071e3] hover:bg-[#005bb5] disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-full font-bold text-sm tracking-wide shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 w-full"
+                className="mt-4 sm:mt-6 bg-[#0071e3] hover:bg-[#005bb5] disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-full font-bold text-sm tracking-wide shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 w-full"
             >
                 {isSharing ? (
                     <>

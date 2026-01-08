@@ -71,8 +71,8 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center p-4 font-sans text-[#1d1d1f]">
-            <div className="bg-white p-8 rounded-3xl shadow-lg w-full max-w-md border border-gray-200">
+        <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center p-4 font-sans text-[#1d1d1f] animate-fadeIn">
+            <div className="bg-white p-8 rounded-3xl shadow-lg w-full max-w-md border border-gray-200 animate-slideUp">
                 <h2 className="text-3xl font-bold mb-2 text-center uppercase tracking-tight">Parent <span className="text-[#0071e3]">Login</span></h2>
                 <p className="text-center text-gray-500 mb-8">Access your athlete's performance data.</p>
 
@@ -118,7 +118,7 @@ export default function LoginPage() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-[#0071e3] text-white font-bold py-3 rounded-full hover:bg-[#0077ed] disabled:bg-gray-400 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                        className="w-full bg-[#0071e3] text-white font-bold py-3 rounded-full hover:bg-[#0077ed] disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
                     >
                         {loading ? (
                             <>
