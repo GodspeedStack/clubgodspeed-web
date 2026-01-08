@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { db } from "@/lib/firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { Bell, Mail, MessageSquare, Calendar, DollarSign, User, Shield, Moon, Sun, Globe } from "lucide-react";
 import { useToast } from "@/app/context/ToastContext";
 
@@ -54,17 +56,43 @@ export default function SettingsPage() {
     useEffect(() => {
         if (!loading && !user) {
             router.push("/");
+        } else if (user) {
+            fetchSettings();
         }
     }, [user, loading, router]);
 
+    const fetchSettings = async () => {
+        if (!user) return;
+
+        try {
+            const settingsRef = doc(db, "parents", user.uid, "settings", "preferences");
+            const settingsDoc = await getDoc(settingsRef);
+
+            if (settingsDoc.exists()) {
+                setSettings(settingsDoc.data() as NotificationSettings);
+            }
+            // If no settings exist, keep default state
+        } catch (error) {
+            console.error("Error fetching settings:", error);
+            toast.error("Failed to load settings. Using defaults.");
+        }
+    };
+
     const handleSave = async () => {
+        if (!user) return;
+
         setSaving(true);
 
-        // Simulate saving - In production, save to Firestore
-        setTimeout(() => {
-            setSaving(false);
+        try {
+            const settingsRef = doc(db, "parents", user.uid, "settings", "preferences");
+            await setDoc(settingsRef, settings);
             toast.success("Settings saved successfully!");
-        }, 1000);
+        } catch (error) {
+            console.error("Error saving settings:", error);
+            toast.error("Failed to save settings. Please try again.");
+        } finally {
+            setSaving(false);
+        }
     };
 
     const toggleEmailNotification = (key: keyof NotificationSettings["emailNotifications"]) => {

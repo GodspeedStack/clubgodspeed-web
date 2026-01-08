@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, updateDoc, doc, Timestamp } from "firebase/firestore";
 import { CreditCard, DollarSign, Receipt, CheckCircle, Clock, AlertCircle, Download, ShoppingBag } from "lucide-react";
 import { useToast } from "@/app/context/ToastContext";
 
@@ -40,8 +42,31 @@ export default function PaymentsPage() {
         if (!loading && !user) {
             router.push("/");
         } else if (user) {
-            // Simulate loading payments - In production, fetch from Firestore
-            setTimeout(() => {
+            fetchPayments();
+        }
+    }, [user, loading, router]);
+
+    const fetchPayments = async () => {
+        if (!user) return;
+
+        setDataLoading(true);
+        try {
+            const paymentsRef = collection(db, "parents", user.uid, "payments");
+            const paymentsSnapshot = await getDocs(paymentsRef);
+
+            if (!paymentsSnapshot.empty) {
+                const paymentsList: Payment[] = paymentsSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        ...data,
+                        dueDate: data.dueDate instanceof Timestamp ? data.dueDate.toDate() : new Date(data.dueDate),
+                        paidDate: data.paidDate ? (data.paidDate instanceof Timestamp ? data.paidDate.toDate() : new Date(data.paidDate)) : undefined,
+                    } as Payment;
+                });
+                setPayments(paymentsList);
+            } else {
+                toast.info("No payments found. Showing demo data.");
                 const mockPayments: Payment[] = [
                     {
                         id: "1",
@@ -114,24 +139,43 @@ export default function PaymentsPage() {
 
                 setPayments(mockPayments);
                 setMerchandise(mockMerchandise);
-                setDataLoading(false);
-            }, 800);
+            }
+        } catch (error) {
+            console.error("Error fetching payments:", error);
+            toast.error("Failed to load payments. Please try again.");
+        } finally {
+            setDataLoading(false);
         }
-    }, [user, loading, router]);
+    };
 
     const handlePayment = async (paymentId: string) => {
+        if (!user) return;
+
         setProcessingPayment(paymentId);
 
-        // Simulate Stripe payment - In production, use Stripe API
-        setTimeout(() => {
+        try {
+            // Update payment in Firestore
+            const paymentRef = doc(db, "parents", user.uid, "payments", paymentId);
+            await updateDoc(paymentRef, {
+                status: "paid",
+                paidDate: Timestamp.now(),
+                receiptUrl: "#", // In production, generate actual receipt URL
+            });
+
+            // Update local state
             setPayments(payments.map(p =>
                 p.id === paymentId
-                    ? { ...p, status: "paid", paidDate: new Date(), receiptUrl: "#" }
+                    ? { ...p, status: "paid" as const, paidDate: new Date(), receiptUrl: "#" }
                     : p
             ));
-            setProcessingPayment(null);
+
             toast.success("Payment processed successfully!");
-        }, 2000);
+        } catch (error) {
+            console.error("Error processing payment:", error);
+            toast.error("Payment failed. Please try again.");
+        } finally {
+            setProcessingPayment(null);
+        }
     };
 
     const handleMerchandisePurchase = async (itemId: string) => {

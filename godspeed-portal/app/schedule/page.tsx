@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, query, orderBy, Timestamp } from "firebase/firestore";
 import { Calendar as CalendarIcon, MapPin, Clock, Users, Trophy, Dumbbell, ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { useToast } from "@/app/context/ToastContext";
 
@@ -50,8 +52,33 @@ export default function SchedulePage() {
         if (!loading && !user) {
             router.push("/");
         } else if (user) {
-            // Simulate loading events - In production, fetch from Firestore
-            setTimeout(() => {
+            fetchEvents();
+        }
+    }, [user, loading, router]);
+
+    const fetchEvents = async () => {
+        if (!user) return;
+
+        setDataLoading(true);
+        try {
+            // Fetch events from Firestore
+            const eventsRef = collection(db, "parents", user.uid, "events");
+            const eventsQuery = query(eventsRef, orderBy("date", "asc"));
+            const eventsSnapshot = await getDocs(eventsQuery);
+
+            if (!eventsSnapshot.empty) {
+                const eventsList: ScheduleEvent[] = eventsSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        ...data,
+                        date: data.date instanceof Timestamp ? data.date.toDate() : new Date(data.date),
+                    } as ScheduleEvent;
+                });
+                setEvents(eventsList);
+            } else {
+                // No events found - set demo data
+                toast.info("No events found. Showing demo schedule.");
                 const mockEvents: ScheduleEvent[] = [
                     {
                         id: "1",
@@ -105,10 +132,14 @@ export default function SchedulePage() {
                     },
                 ];
                 setEvents(mockEvents);
-                setDataLoading(false);
-            }, 800);
+            }
+        } catch (error) {
+            console.error("Error fetching events:", error);
+            toast.error("Failed to load schedule. Please try again.");
+        } finally {
+            setDataLoading(false);
         }
-    }, [user, loading, router]);
+    };
 
     const getDaysInMonth = (date: Date) => {
         const year = date.getFullYear();

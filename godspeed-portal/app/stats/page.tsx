@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
 import { LineChart, Line, BarChart, Bar, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { TrendingUp, TrendingDown, Activity, Award, Target, Calendar, Download, FileText } from "lucide-react";
 import { useToast } from "@/app/context/ToastContext";
@@ -64,11 +66,30 @@ export default function StatsPage() {
         if (!loading && !user) {
             router.push("/");
         } else if (user) {
-            // Simulate loading stats - In production, fetch from Firestore
-            setTimeout(() => {
+            fetchStats();
+        }
+    }, [user, loading, router, timeRange]);
+
+    const fetchStats = async () => {
+        if (!user) return;
+
+        setDataLoading(true);
+        try {
+            // Fetch stats from Firestore
+            const statsRef = collection(db, "parents", user.uid, "stats");
+            const statsQuery = query(statsRef, limit(1));
+            const statsSnapshot = await getDocs(statsQuery);
+
+            if (!statsSnapshot.empty) {
+                const statDoc = statsSnapshot.docs[0];
+                const statData = statDoc.data() as AthleteStats;
+                setStats(statData);
+            } else {
+                // No stats found - set demo data or empty state
+                toast.info("No stats data found. Showing demo data.");
                 setStats({
-                    athleteId: "athlete1",
-                    athleteName: "John Smith",
+                    athleteId: "demo",
+                    athleteName: "Your Athlete",
                     performanceData: [
                         { date: "Jan 1", score: 7.2, drills: 12, attendance: 100 },
                         { date: "Jan 8", score: 7.5, drills: 14, attendance: 100 },
@@ -94,10 +115,14 @@ export default function StatsPage() {
                         topSkill: "Hustle",
                     },
                 });
-                setDataLoading(false);
-            }, 800);
+            }
+        } catch (error) {
+            console.error("Error fetching stats:", error);
+            toast.error("Failed to load stats. Please try again.");
+        } finally {
+            setDataLoading(false);
         }
-    }, [user, loading, router]);
+    };
 
     if (loading || dataLoading) {
         return (

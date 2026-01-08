@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, addDoc, onSnapshot, query, orderBy, Timestamp, doc, updateDoc } from "firebase/firestore";
 import { Send, MessageCircle, User, Clock, Search } from "lucide-react";
 import { useToast } from "@/app/context/ToastContext";
 
@@ -38,10 +40,50 @@ export default function MessagesPage() {
     useEffect(() => {
         if (!loading && !user) {
             router.push("/");
-        } else if (user) {
-            // Simulate loading conversations - In production, fetch from Firestore
-            setTimeout(() => {
-                const mockConversations: Conversation[] = [
+            return;
+        }
+
+        if (user) {
+            // Set up real-time listener for conversations
+            const conversationsRef = collection(db, "parents", user.uid, "messages");
+            const unsubscribe = onSnapshot(conversationsRef,
+                async (snapshot) => {
+                    if (!snapshot.empty) {
+                        const conversationsList: Conversation[] = [];
+
+                        for (const docSnap of snapshot.docs) {
+                            const data = docSnap.data();
+
+                            // Fetch messages for this conversation
+                            const messagesRef = collection(db, "parents", user.uid, "messages", docSnap.id, "conversation");
+                            const messagesQuery = query(messagesRef, orderBy("timestamp", "asc"));
+                            const messagesSnapshot = await getDocs(messagesQuery);
+
+                            const messages: Message[] = messagesSnapshot.docs.map(msgDoc => {
+                                const msgData = msgDoc.data();
+                                return {
+                                    id: msgDoc.id,
+                                    ...msgData,
+                                    timestamp: msgData.timestamp instanceof Timestamp ? msgData.timestamp.toDate() : new Date(msgData.timestamp),
+                                } as Message;
+                            });
+
+                            conversationsList.push({
+                                id: docSnap.id,
+                                ...data,
+                                lastMessageTime: data.lastMessageTime instanceof Timestamp ? data.lastMessageTime.toDate() : new Date(data.lastMessageTime),
+                                messages,
+                            } as Conversation);
+                        }
+
+                        setConversations(conversationsList);
+                        if (!selectedConversation && conversationsList.length > 0) {
+                            setSelectedConversation(conversationsList[0]);
+                        }
+                    } else {
+                        // No conversations found - set demo data
+                        toast.info("No messages found. Showing demo conversations.");
+                        const mockConversations: Conversation[] = [
                     {
                         id: "1",
                         coachName: "Coach Johnson",
@@ -92,45 +134,57 @@ export default function MessagesPage() {
                             },
                         ],
                     },
-                ];
-                setConversations(mockConversations);
-                setSelectedConversation(mockConversations[0]);
-                setDataLoading(false);
-            }, 800);
+                        ];
+                        setConversations(mockConversations);
+                        setSelectedConversation(mockConversations[0]);
+                    }
+                    setDataLoading(false);
+                },
+                (error) => {
+                    console.error("Error fetching conversations:", error);
+                    toast.error("Failed to load messages. Please try again.");
+                    setDataLoading(false);
+                }
+            );
+
+            // Cleanup listener on unmount
+            return () => unsubscribe();
         }
     }, [user, loading, router]);
 
     const handleSendMessage = async () => {
-        if (!newMessage.trim() || !selectedConversation || isSending) return;
+        if (!newMessage.trim() || !selectedConversation || isSending || !user) return;
 
         setIsSending(true);
 
-        // Simulate sending message
-        setTimeout(() => {
-            const message: Message = {
-                id: `m${Date.now()}`,
+        try {
+            const messageData = {
                 from: "parent",
-                fromName: "Parent",
+                fromName: user.displayName || "Parent",
                 content: newMessage,
-                timestamp: new Date(),
+                timestamp: Timestamp.now(),
                 read: true,
             };
 
-            const updatedConversation = {
-                ...selectedConversation,
-                messages: [...selectedConversation.messages, message],
-                lastMessage: newMessage,
-                lastMessageTime: new Date(),
-            };
+            // Add message to Firestore
+            const messagesRef = collection(db, "parents", user.uid, "messages", selectedConversation.id, "conversation");
+            await addDoc(messagesRef, messageData);
 
-            setSelectedConversation(updatedConversation);
-            setConversations(
-                conversations.map((conv) => (conv.id === selectedConversation.id ? updatedConversation : conv))
-            );
+            // Update conversation's lastMessage
+            const conversationRef = doc(db, "parents", user.uid, "messages", selectedConversation.id);
+            await updateDoc(conversationRef, {
+                lastMessage: newMessage,
+                lastMessageTime: Timestamp.now(),
+            });
+
             setNewMessage("");
             toast.success("Message sent!");
+        } catch (error) {
+            console.error("Error sending message:", error);
+            toast.error("Failed to send message. Please try again.");
+        } finally {
             setIsSending(false);
-        }, 500);
+        }
     };
 
     const filteredConversations = conversations.filter((conv) =>

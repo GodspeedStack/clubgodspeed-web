@@ -3,6 +3,9 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { db, storage } from "@/lib/firebase";
+import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc, Timestamp } from "firebase/firestore";
+import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import { Upload, Image as ImageIcon, Video, X, Download, Star, Trash2, Play } from "lucide-react";
 import { useToast } from "@/app/context/ToastContext";
 
@@ -35,8 +38,30 @@ export default function MediaPage() {
         if (!loading && !user) {
             router.push("/");
         } else if (user) {
-            // Simulate loading media - In production, fetch from Firebase Storage
-            setTimeout(() => {
+            fetchMedia();
+        }
+    }, [user, loading, router]);
+
+    const fetchMedia = async () => {
+        if (!user) return;
+
+        setDataLoading(true);
+        try {
+            const mediaRef = collection(db, "parents", user.uid, "media");
+            const mediaSnapshot = await getDocs(mediaRef);
+
+            if (!mediaSnapshot.empty) {
+                const mediaList: MediaItem[] = mediaSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        ...data,
+                        uploadDate: data.uploadDate instanceof Timestamp ? data.uploadDate.toDate() : new Date(data.uploadDate),
+                    } as MediaItem;
+                });
+                setMediaItems(mediaList);
+            } else {
+                toast.info("No media found. Upload your first photo or video!");
                 const mockMedia: MediaItem[] = [
                     {
                         id: "1",
@@ -72,45 +97,105 @@ export default function MediaPage() {
                     },
                 ];
                 setMediaItems(mockMedia);
-                setDataLoading(false);
-            }, 800);
+            }
+        } catch (error) {
+            console.error("Error fetching media:", error);
+            toast.error("Failed to load media. Please try again.");
+        } finally {
+            setDataLoading(false);
         }
-    }, [user, loading, router]);
+    };
 
     const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
-        if (!files || files.length === 0) return;
+        if (!files || files.length === 0 || !user) return;
 
         setUploading(true);
 
-        // Simulate upload - In production, upload to Firebase Storage
-        setTimeout(() => {
-            const newItems: MediaItem[] = Array.from(files).map((file, index) => ({
-                id: `new-${Date.now()}-${index}`,
-                type: file.type.startsWith("image/") ? "image" : "video",
-                url: URL.createObjectURL(file),
-                uploadDate: new Date(),
-                size: file.size,
-                name: file.name,
-                isFeatured: false,
-            }));
+        try {
+            const uploadPromises = Array.from(files).map(async (file) => {
+                // Create storage reference
+                const storageRef = ref(storage, `parents/${user.uid}/media/${Date.now()}-${file.name}`);
 
+                // Upload file
+                const uploadTask = uploadBytesResumable(storageRef, file);
+
+                // Wait for upload to complete
+                await new Promise<void>((resolve, reject) => {
+                    uploadTask.on(
+                        "state_changed",
+                        null,
+                        (error) => reject(error),
+                        () => resolve()
+                    );
+                });
+
+                // Get download URL
+                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+
+                // Save metadata to Firestore
+                const mediaRef = collection(db, "parents", user.uid, "media");
+                const mediaData = {
+                    type: file.type.startsWith("image/") ? "image" : "video",
+                    url: downloadURL,
+                    storagePath: uploadTask.snapshot.ref.fullPath,
+                    uploadDate: Timestamp.now(),
+                    size: file.size,
+                    name: file.name,
+                    isFeatured: false,
+                };
+
+                const docRef = await addDoc(mediaRef, mediaData);
+
+                return {
+                    id: docRef.id,
+                    ...mediaData,
+                    uploadDate: new Date(),
+                } as MediaItem;
+            });
+
+            const newItems = await Promise.all(uploadPromises);
             setMediaItems([...newItems, ...mediaItems]);
-            setUploading(false);
             toast.success(`${files.length} file(s) uploaded successfully!`);
+        } catch (error) {
+            console.error("Error uploading media:", error);
+            toast.error("Failed to upload files. Please try again.");
+        } finally {
+            setUploading(false);
 
             // Reset input
             if (fileInputRef.current) {
                 fileInputRef.current.value = "";
             }
-        }, 1500);
+        }
     };
 
-    const handleDelete = (id: string) => {
-        setMediaItems(mediaItems.filter(item => item.id !== id));
-        toast.success("Media deleted successfully");
-        if (selectedMedia?.id === id) {
-            setSelectedMedia(null);
+    const handleDelete = async (id: string) => {
+        if (!user) return;
+
+        try {
+            const mediaItem = mediaItems.find(item => item.id === id);
+            if (!mediaItem) return;
+
+            // Delete from Firestore
+            const mediaDocRef = doc(db, "parents", user.uid, "media", id);
+            await deleteDoc(mediaDocRef);
+
+            // Delete from Storage if storagePath exists
+            if ('storagePath' in mediaItem && mediaItem.storagePath) {
+                const storageRef = ref(storage, mediaItem.storagePath as string);
+                await deleteObject(storageRef);
+            }
+
+            setMediaItems(mediaItems.filter(item => item.id !== id));
+            toast.success("Media deleted successfully");
+
+            if (selectedMedia?.id === id) {
+                setSelectedMedia(null);
+            }
+        } catch (error) {
+            console.error("Error deleting media:", error);
+            toast.error("Failed to delete media. Please try again.");
         }
     };
 
