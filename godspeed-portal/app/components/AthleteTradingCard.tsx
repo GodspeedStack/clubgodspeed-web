@@ -102,7 +102,7 @@ export default function AthleteTradingCard({
             {/* Card Container - The part that gets screenshotted */}
             <div
                 ref={cardRef}
-                className="relative w-[320px] h-[450px] bg-black rounded-xl overflow-hidden shadow-2xl transition-transform hover:scale-[1.02]"
+                className="relative w-full max-w-[320px] h-[450px] bg-black rounded-xl overflow-hidden shadow-2xl transition-transform hover:scale-[1.02]"
                 style={{
                     boxShadow: "0 0 30px rgba(0, 113, 227, 0.4)",
                     border: "1px solid rgba(255, 255, 255, 0.2)"
@@ -168,7 +168,7 @@ export default function AthleteTradingCard({
             <button
                 onClick={handleShare}
                 disabled={isSharing}
-                className="mt-6 bg-[#0071e3] hover:bg-[#005bb5] disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-full font-bold text-sm tracking-wide shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 w-full max-w-[320px]"
+                className="mt-4 sm:mt-6 bg-[#0071e3] hover:bg-[#005bb5] disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-full font-bold text-sm tracking-wide shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 w-full"
             >
                 {isSharing ? (
                     <>
@@ -192,12 +192,12 @@ export default function AthleteTradingCard({
 
             {/* Feedback Messages */}
             {shareError && (
-                <p className="mt-2 text-xs text-red-500 max-w-[320px] text-center">
+                <p className="mt-2 text-xs text-red-500 w-full text-center px-4">
                     {shareError}
                 </p>
             )}
             {shareSuccess && (
-                <p className="mt-2 text-xs text-green-600 max-w-[320px] text-center">
+                <p className="mt-2 text-xs text-green-600 w-full text-center px-4">
                     Card saved successfully!
                 </p>
             )}
