@@ -79,6 +79,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Password visibility toggle
+    const togglePasswordBtn = document.getElementById('toggle-password');
+    const passwordInput = document.getElementById('password');
+    const eyeIcon = document.getElementById('eye-icon');
+    const eyeOffIcon = document.getElementById('eye-off-icon');
+    
+    if (togglePasswordBtn && passwordInput && eyeIcon && eyeOffIcon) {
+        togglePasswordBtn.addEventListener('click', () => {
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            eyeIcon.style.display = isPassword ? 'none' : 'block';
+            eyeOffIcon.style.display = isPassword ? 'block' : 'none';
+        });
+    }
+
     // Check for existing session
     if (window.auth && window.auth.isLoggedIn()) {
         const savedEmail = localStorage.getItem('gba_user_email');
@@ -140,70 +155,161 @@ async function handleLogin() {
     btn.disabled = true;
 
     try {
-        // Use secure auth with rate limiting and email verification
-        if (window.Security && window.Security.SecureAuth) {
-            const result = await window.Security.SecureAuth.login(email, password);
-            
-            if (result.requires2FA) {
-                // Show 2FA input
-                const twoFactorDiv = document.createElement('div');
-                twoFactorDiv.id = 'two-factor-input';
-                twoFactorDiv.className = 'mt-4';
-                twoFactorDiv.innerHTML = `
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Enter 2FA Code</label>
-                    <input type="text" id="two-factor-code" placeholder="000000" maxlength="6" 
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600"
-                        pattern="[0-9]{6}">
-                    <button type="button" onclick="submit2FA()" 
-                        class="mt-2 w-full py-3 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition">
-                        Verify 2FA Code
-                    </button>
-                `;
-                const form = document.querySelector('.login-form');
-                if (form) form.appendChild(twoFactorDiv);
-                return;
-            }
-            
-            if (result.success) {
-                // Set role
-                window.Security.RBAC.setRole(window.Security.RBAC.roles.PARENT);
+        let loginSuccess = false;
+        let errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+
+        // Try Supabase auth first (real backend)
+        if (window.auth && typeof window.auth.login === 'function') {
+            try {
+                const result = await window.auth.login(email, password);
                 
-                document.getElementById('portal-login').style.display = 'none';
-                document.getElementById('portal-dashboard').style.display = 'flex';
-                updateDashboardProfile(email);
+                // Handle 2FA requirement
+                if (result && result.requires2FA) {
+                    const twoFactorDiv = document.createElement('div');
+                    twoFactorDiv.id = 'two-factor-input';
+                    twoFactorDiv.className = 'mt-4';
+                    twoFactorDiv.innerHTML = `
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Enter 2FA Code</label>
+                        <input type="text" id="two-factor-code" placeholder="000000" maxlength="6" 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600"
+                            pattern="[0-9]{6}">
+                        <button type="button" onclick="submit2FA()" 
+                            class="mt-2 w-full py-3 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition">
+                            Verify 2FA Code
+                        </button>
+                    `;
+                    const form = document.querySelector('.login-form');
+                    if (form) form.appendChild(twoFactorDiv);
+                    btn.innerHTML = 'Sign In';
+                    btn.disabled = false;
+                    return;
+                }
+                
+                // Check if login was successful
+                if (result === true || (result && result.success !== false)) {
+                    loginSuccess = true;
+                } else {
+                    errorMessage = result?.error || result?.message || errorMessage;
+                }
+            } catch (authError) {
+                console.error('Auth login error:', authError);
+                errorMessage = authError.message || errorMessage;
+                
+                // Provide specific error messages
+                if (authError.message && authError.message.includes('Invalid login credentials')) {
+                    errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+                } else if (authError.message && authError.message.includes('Email not confirmed')) {
+                    errorMessage = 'Please verify your email address before logging in. Check your inbox for the verification link.';
+                } else if (authError.message && authError.message.includes('Too many requests')) {
+                    errorMessage = 'Too many login attempts. Please wait a few minutes and try again.';
+                }
             }
-        } else if (window.auth && typeof window.auth.login === 'function') {
-            // Fallback to original auth
-            const success = await window.auth.login(email, password);
-            if (success) {
-                document.getElementById('portal-login').style.display = 'none';
-                document.getElementById('portal-dashboard').style.display = 'flex';
-                updateDashboardProfile(email);
-            } else {
-                throw new Error('Login failed');
+        }
+        
+        // If Supabase auth not available or failed, try SecureAuth
+        if (!loginSuccess && window.Security && window.Security.SecureAuth) {
+            try {
+                const result = await window.Security.SecureAuth.login(email, password);
+                
+                if (result && result.requires2FA) {
+                    const twoFactorDiv = document.createElement('div');
+                    twoFactorDiv.id = 'two-factor-input';
+                    twoFactorDiv.className = 'mt-4';
+                    twoFactorDiv.innerHTML = `
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Enter 2FA Code</label>
+                        <input type="text" id="two-factor-code" placeholder="000000" maxlength="6" 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600"
+                            pattern="[0-9]{6}">
+                        <button type="button" onclick="submit2FA()" 
+                            class="mt-2 w-full py-3 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition">
+                            Verify 2FA Code
+                        </button>
+                    `;
+                    const form = document.querySelector('.login-form');
+                    if (form) form.appendChild(twoFactorDiv);
+                    btn.innerHTML = 'Sign In';
+                    btn.disabled = false;
+                    return;
+                }
+                
+                if (result && result.success) {
+                    loginSuccess = true;
+                    if (window.Security && window.Security.RBAC) {
+                        window.Security.RBAC.setRole(window.Security.RBAC.roles.PARENT);
+                    }
+                } else {
+                    errorMessage = result?.error || result?.message || errorMessage;
+                }
+            } catch (secureAuthError) {
+                console.error('SecureAuth error:', secureAuthError);
+                errorMessage = secureAuthError.message || errorMessage;
             }
-        } else {
-            // Fallback for development
+        }
+        
+        // Development fallback (only if no auth system available)
+        if (!loginSuccess && !window.auth && !window.Security) {
+            console.warn('No auth system available, using development fallback');
             localStorage.setItem('gba_parent_auth_token', 'valid_token_' + Date.now());
             localStorage.setItem('gba_user_email', email);
-            setTimeout(() => {
-                document.getElementById('portal-login').style.display = 'none';
-                document.getElementById('portal-dashboard').style.display = 'flex';
-                updateDashboardProfile(email);
-            }, 800);
+            loginSuccess = true;
+        }
+        
+        // Handle successful login
+        if (loginSuccess) {
+            document.getElementById('portal-login').style.display = 'none';
+            document.getElementById('portal-dashboard').style.display = 'flex';
+            updateDashboardProfile(email);
+            
+            // Clear any error messages
+            if (errorMsg) {
+                errorMsg.style.display = 'none';
+                errorMsg.textContent = '';
+            }
+        } else {
+            // Show error message
+            if (errorMsg) {
+                errorMsg.textContent = errorMessage;
+                errorMsg.style.display = 'block';
+                
+                // Add shake animation to form
+                const form = document.querySelector('.login-form');
+                if (form) {
+                    form.classList.add('shake');
+                    setTimeout(() => form.classList.remove('shake'), 500);
+                }
+            }
+            btn.innerHTML = 'Sign In';
+            btn.disabled = false;
         }
     } catch (error) {
         console.error('Login error:', error);
         if (errorMsg) {
-            // Don't expose sensitive error details to users
-            const userFriendlyMessage = error.message || 'Login failed. Please check your credentials and try again.';
+            let userFriendlyMessage = 'An unexpected error occurred. Please try again.';
+            
+            if (error.message) {
+                if (error.message.includes('Invalid login credentials') || error.message.includes('Invalid password')) {
+                    userFriendlyMessage = 'Invalid email or password. Please check your credentials and try again.';
+                } else if (error.message.includes('Email not confirmed')) {
+                    userFriendlyMessage = 'Please verify your email address before logging in. Check your inbox for the verification link.';
+                } else if (error.message.includes('Too many requests')) {
+                    userFriendlyMessage = 'Too many login attempts. Please wait a few minutes and try again.';
+                } else {
+                    userFriendlyMessage = error.message;
+                }
+            }
+            
             errorMsg.textContent = userFriendlyMessage;
             errorMsg.style.display = 'block';
+            
+            // Add shake animation
+            const form = document.querySelector('.login-form');
+            if (form) {
+                form.classList.add('shake');
+                setTimeout(() => form.classList.remove('shake'), 500);
+            }
         }
-        if (btn) {
-            btn.textContent = 'Sign In';
+        btn.innerHTML = 'Sign In';
         btn.disabled = false;
-        }
     }
 }
 
