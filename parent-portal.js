@@ -78,6 +78,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+    if (emailInput) {
+        emailInput.addEventListener('input', () => setLoginStatus(''));
+    }
+    const passwordInput = document.getElementById('password');
+    if (passwordInput) {
+        passwordInput.addEventListener('input', () => setLoginStatus(''));
+    }
 
     // Check for existing session
     if (window.auth && window.auth.isLoggedIn()) {
@@ -88,39 +95,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // --- Authentication Logic ---
 
+function setLoginStatus(message, type = 'error') {
+    const errorMsg = document.querySelector('.login-error');
+    if (!errorMsg) return;
+    if (!message) {
+        errorMsg.textContent = '';
+        errorMsg.style.display = 'none';
+        return;
+    }
+    const palette = {
+        error: { bg: '#fee2e2', color: '#b91c1c' },
+        info: { bg: '#dbeafe', color: '#1d4ed8' },
+        success: { bg: '#dcfce7', color: '#166534' }
+    };
+    const style = palette[type] || palette.error;
+    errorMsg.textContent = message;
+    errorMsg.style.display = 'block';
+    errorMsg.style.background = style.bg;
+    errorMsg.style.color = style.color;
+}
+
 async function handleLogin() {
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
     const email = emailInput ? emailInput.value.trim() : '';
     const password = passwordInput ? passwordInput.value : '';
     const btn = document.querySelector('.login-form button[type="submit"]');
-    const errorMsg = document.querySelector('.login-error');
+
+    setLoginStatus('');
 
     // Input validation
     if (!email || !password) {
-        if (errorMsg) {
-            errorMsg.textContent = 'Please enter both email and password';
-            errorMsg.style.display = 'block';
-        }
+        setLoginStatus('Please enter both email and password');
         return;
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-        if (errorMsg) {
-            errorMsg.textContent = 'Please enter a valid email address';
-            errorMsg.style.display = 'block';
-        }
+        setLoginStatus('Please enter a valid email address');
         return;
     }
 
     // Basic password validation (minimum length)
     if (password.length < 6) {
-        if (errorMsg) {
-            errorMsg.textContent = 'Password must be at least 6 characters';
-            errorMsg.style.display = 'block';
-        }
+        setLoginStatus('Password must be at least 6 characters');
         return;
     }
 
@@ -128,16 +147,15 @@ async function handleLogin() {
     if (window.Security && window.Security.RateLimiter) {
         const rateCheck = window.Security.RateLimiter.check('login', email);
         if (!rateCheck.allowed) {
-            if (errorMsg) {
-                errorMsg.textContent = rateCheck.message || 'Too many login attempts. Please try again later.';
-                errorMsg.style.display = 'block';
-            }
+            setLoginStatus(rateCheck.message || 'Too many login attempts. Please try again later.');
             return;
         }
     }
 
-    btn.innerHTML = 'Signing In...';
-    btn.disabled = true;
+    if (btn) {
+        btn.textContent = 'Signing In...';
+        btn.disabled = true;
+    }
 
     try {
         // Use secure auth with rate limiting and email verification
@@ -161,6 +179,11 @@ async function handleLogin() {
                 `;
                 const form = document.querySelector('.login-form');
                 if (form) form.appendChild(twoFactorDiv);
+                setLoginStatus('Enter your 6-digit 2FA code to finish signing in.', 'info');
+                if (btn) {
+                    btn.textContent = 'Sign In';
+                    btn.disabled = false;
+                }
                 return;
             }
             
@@ -194,15 +217,12 @@ async function handleLogin() {
         }
     } catch (error) {
         console.error('Login error:', error);
-        if (errorMsg) {
-            // Don't expose sensitive error details to users
-            const userFriendlyMessage = error.message || 'Login failed. Please check your credentials and try again.';
-            errorMsg.textContent = userFriendlyMessage;
-            errorMsg.style.display = 'block';
-        }
+        // Don't expose sensitive error details to users
+        const userFriendlyMessage = error.message || 'Login failed. Please check your credentials and try again.';
+        setLoginStatus(userFriendlyMessage);
         if (btn) {
             btn.textContent = 'Sign In';
-        btn.disabled = false;
+            btn.disabled = false;
         }
     }
 }
@@ -212,13 +232,19 @@ window.submit2FA = async function() {
     const code = document.getElementById('two-factor-code').value.trim();
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
+    const submitBtn = document.querySelector('#two-factor-input button');
     
     if (!code || code.length !== 6) {
         godspeedAlert('Please enter a valid 6-digit code', 'Invalid Code');
+        setLoginStatus('Enter the 6-digit 2FA code from your authenticator app.', 'info');
         return;
     }
     
     try {
+        if (submitBtn) {
+            submitBtn.textContent = 'Verifying...';
+            submitBtn.disabled = true;
+        }
         const result = await window.Security.SecureAuth.login(email, password, code);
         if (result.success) {
             window.Security.RBAC.setRole(window.Security.RBAC.roles.PARENT);
@@ -227,9 +253,16 @@ window.submit2FA = async function() {
             updateDashboardProfile(email);
             const twoFactorDiv = document.getElementById('two-factor-input');
             if (twoFactorDiv) twoFactorDiv.remove();
+            setLoginStatus('');
         }
     } catch (error) {
         godspeedAlert(error.message || '2FA verification failed', 'Verification Error');
+        setLoginStatus(error.message || '2FA verification failed. Please try again.');
+    } finally {
+        if (submitBtn) {
+            submitBtn.textContent = 'Verify 2FA Code';
+            submitBtn.disabled = false;
+        }
     }
 };
 

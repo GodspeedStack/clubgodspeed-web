@@ -90,7 +90,7 @@
     <script src="security.js"></script>
     <script type="module">
         // Import email verification service
-        import { verifyEmailToken, isEmailVerified } from './src/lib/emailVerification.js';
+        import { verifyEmailToken } from './src/lib/emailVerification.js';
 
         // Get token and email from URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -137,9 +137,10 @@
             statusIcon.textContent = '✗';
             title.textContent = 'Verification Failed';
             message.textContent = errorMessage;
+            const supportLink = `<a href="contact.html" class="btn" style="background: #6b7280; margin-left: 10px;">Contact Support</a>`;
             actions.innerHTML = `
                 <a href="parent-portal.html" class="btn">Go to Portal</a>
-                <a href="resend-verification.html?email=${encodeURIComponent(email || '')}" class="btn" style="background: #6b7280; margin-left: 10px;">Resend Verification</a>
+                ${supportLink}
             `;
             actions.style.display = 'block';
         }
