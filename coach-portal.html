@@ -1010,30 +1010,13 @@
             color: #666;
         }
 
-        /* Navbar Override */
-        .navbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            padding: 30px 48px;
-            /* Increased padding per user request */
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(245, 245, 247, 0.8);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            z-index: 2000;
-            /* Above sidebar */
-        }
     </style>
     <link rel="stylesheet" href="mobile-fixes.css">
 </head>
 
 <body>
     <!-- Navbar -->
-    <nav class="navbar">
+    <nav class="navbar glass-nav is-fixed">
         <div class="logo">GODSPEED <span class="accent">COACH</span></div>
         <div class="nav-links">
             <a href="index.html">Main Site</a>

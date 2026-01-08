@@ -21,6 +21,11 @@
     --transition: all 0.2s ease;
     --transition-fast: all 0.15s ease;
     --transition-slow: all 0.3s ease;
+    --page-padding: clamp(1rem, 3vw, 2.5rem);
+    --section-padding: clamp(3rem, 6vw, 6rem);
+    --nav-padding-y: 1.25rem;
+    --nav-padding-x: 2rem;
+    --nav-min-height: 72px;
 }
 
 body {
@@ -36,7 +41,7 @@ body {
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 var(--page-padding);
 }
 
 img {
@@ -303,13 +308,17 @@ ul {
     flex-wrap: wrap;
 }
 
-.btn {
-    display: inline-block;
-    padding: 1rem 2rem;
+.btn,
+.btn-primary,
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.85rem 1.75rem;
     border-radius: 9999px;
-    font-weight: bold;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.05em;
     cursor: pointer;
     border: none;
     transition: var(--transition);
@@ -318,7 +327,6 @@ ul {
 .btn-primary {
     background-color: var(--brand-blue);
     color: var(--text-light);
-    border-radius: 9999px;
 }
 
 .btn-primary:hover {
@@ -331,7 +339,6 @@ ul {
     background-color: transparent;
     color: var(--text-light);
     border: 2px solid var(--brand-blue);
-    border-radius: 9999px;
 }
 
 .btn-secondary:hover {
@@ -1098,22 +1105,67 @@ ul {
    Navbar Layout Consistency
    =========================== */
 /* Enforce consistent padding and sizing across all pages */
-/* Enforce consistent padding and sizing across all pages */
 .navbar {
-    display: flex; /* Ensure flex layout */
-    justify-content: space-between; /* Push Logo and Nav to edges */
-    align-items: center; /* Vertically align */
-    gap: 3rem; /* Minimum 3rem separation between Logo and Nav */
-    padding: 30px 48px !important;
-    /* Matches premium Coach Portal standard per user request */
-    min-height: 100px;
-    /* Ensure visual height consistency */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    padding: var(--nav-padding-y) var(--nav-padding-x);
+    min-height: var(--nav-min-height);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    width: 100%;
+}
+
+.navbar.light-nav {
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.navbar.border-nav {
+    border-bottom: 1px solid #d2d2d7;
+}
+
+.navbar.glass-nav {
+    background: rgba(245, 245, 247, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+.navbar.is-fixed {
+    position: fixed;
+    left: 0;
+    z-index: 2000;
 }
 
 /* Ensure logo positioning matches */
 .navbar .logo {
     display: flex;
     align-items: center;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    list-style: none;
+}
+
+.nav-links a,
+.nav-links span {
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #111111;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.nav-links a:hover {
+    color: var(--brand-blue);
 }
 
 /* Enforce CTA Typography in Navbar */
