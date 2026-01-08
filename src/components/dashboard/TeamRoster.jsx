@@ -2,9 +2,33 @@ import React, { useState } from 'react';
 import AthleteProfileModal from '../../components/modals/AthleteProfileModal';
 import { roster } from '../../data/seed_godspeed_data';
 
+/**
+ * @typedef {Object} Player
+ * @property {string} id - Player ID
+ * @property {string} name - Player name
+ * @property {string} tier - Player tier
+ * @property {string} initials - Player initials
+ * @property {number} [avg_grade] - Average grade
+ * @property {number} [grade] - Grade
+ * @property {string} [trend] - Trend indicator
+ * @property {string} [notes] - Additional notes
+ * @property {string} [image] - Player image URL
+ * @property {Array<string>} [highlights] - Player highlights
+ */
+
+/**
+ * TeamRoster component displays the team roster with player details
+ * @returns {JSX.Element} The TeamRoster component
+ */
 const TeamRoster = () => {
+    /** @type {[Player | null, React.Dispatch<React.SetStateAction<Player | null>>]} */
     const [selectedPlayer, setSelectedPlayer] = useState(null);
 
+    /**
+     * Get the appropriate color class based on player tier
+     * @param {string} tier - The player's tier
+     * @returns {string} Tailwind CSS classes for the tier badge
+     */
     const getTierColor = (tier) => {
         if (tier.includes('Elite')) return 'bg-yellow-100 text-yellow-800';
         if (tier.includes('Rotation')) return 'bg-blue-100 text-blue-800';
@@ -19,13 +43,27 @@ const TeamRoster = () => {
                 <span className="text-sm font-bold text-gray-500">{roster.length} Athletes</span>
             </div>
 
-            <div className="divide-y divide-gray-100">
-                {roster.map(player => (
-                    <div
-                        key={player.id}
-                        onClick={() => setSelectedPlayer(player)}
-                        className="p-4 hover:bg-gray-50 cursor-pointer transition-colors flex items-center justify-between group"
-                    >
+            {roster.length === 0 ? (
+                <div className="p-8 text-center">
+                    <div className="text-gray-300 text-5xl mb-3">👥</div>
+                    <p className="text-gray-500">No players in roster</p>
+                </div>
+            ) : (
+                <div className="divide-y divide-gray-100">
+                    {roster.map(player => (
+                        <div
+                            key={player.id}
+                            onClick={() => setSelectedPlayer(player)}
+                            className="p-4 hover:bg-blue-50 cursor-pointer transition-all flex items-center justify-between group border-l-4 border-l-transparent hover:border-l-[#0071e3]"
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    setSelectedPlayer(player);
+                                }
+                            }}
+                        >
                         <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-500">
                                 {player.initials || player.name.substring(0, 2).toUpperCase()}
@@ -44,11 +82,19 @@ const TeamRoster = () => {
                             <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">V2 Score</div>
                         </div>
                     </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            )}
 
             {selectedPlayer && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                <div
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget) {
+                            setSelectedPlayer(null);
+                        }
+                    }}
+                >
                     <div className="w-full max-w-3xl">
                         <AthleteProfileModal player={selectedPlayer} onClose={() => setSelectedPlayer(null)} />
                     </div>

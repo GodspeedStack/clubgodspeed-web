@@ -25,10 +25,14 @@ export default function AthleteTradingCard({
 }: AthleteTradingCardProps) {
     const cardRef = useRef<HTMLDivElement>(null);
     const [isSharing, setIsSharing] = useState(false);
+    const [shareSuccess, setShareSuccess] = useState(false);
+    const [shareError, setShareError] = useState<string | null>(null);
 
     const handleShare = async () => {
         if (!cardRef.current) return;
         setIsSharing(true);
+        setShareError(null);
+        setShareSuccess(false);
 
         try {
             // Small timeout to ensure styles are stable
@@ -42,7 +46,11 @@ export default function AthleteTradingCard({
 
             // Convert to blob and download/share
             canvas.toBlob(async (blob) => {
-                if (!blob) return;
+                if (!blob) {
+                    setShareError("Failed to generate card image. Please try again.");
+                    setIsSharing(false);
+                    return;
+                }
 
                 // Web Share API if supported (Mobile)
                 if (navigator.share) {
@@ -53,18 +61,28 @@ export default function AthleteTradingCard({
                             text: `Check out my athlete profile on Godspeed!`,
                             files: [file],
                         });
+                        setShareSuccess(true);
+                        setTimeout(() => setShareSuccess(false), 3000);
                     } catch (e) {
-                        console.log("Share failed or cancelled", e);
-                        downloadImage(canvas); // Fallback
+                        const error = e as { name?: string };
+                        // Only download as fallback if share wasn't cancelled
+                        if (error.name !== "AbortError") {
+                            downloadImage(canvas);
+                            setShareSuccess(true);
+                            setTimeout(() => setShareSuccess(false), 3000);
+                        }
                     }
                 } else {
                     // Desktop Fallback
                     downloadImage(canvas);
+                    setShareSuccess(true);
+                    setTimeout(() => setShareSuccess(false), 3000);
                 }
+                setIsSharing(false);
             });
         } catch (err) {
             console.error("Card generation failed:", err);
-        } finally {
+            setShareError("Failed to create card. Please try again.");
             setIsSharing(false);
         }
     };
@@ -147,7 +165,7 @@ export default function AthleteTradingCard({
             <button
                 onClick={handleShare}
                 disabled={isSharing}
-                className="mt-6 bg-[#0071e3] hover:bg-[#005bb5] text-white px-6 py-2.5 rounded-full font-bold text-sm tracking-wide shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
+                className="mt-6 bg-[#0071e3] hover:bg-[#005bb5] disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-full font-bold text-sm tracking-wide shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 w-full max-w-[320px]"
             >
                 {isSharing ? (
                     <>
@@ -157,6 +175,10 @@ export default function AthleteTradingCard({
                         </svg>
                         GENERATING...
                     </>
+                ) : shareSuccess ? (
+                    <>
+                        <span>✓ SAVED!</span>
+                    </>
                 ) : (
                     <>
                         <span>SHARE CARD</span>
@@ -164,9 +186,18 @@ export default function AthleteTradingCard({
                     </>
                 )}
             </button>
-            <p className="mt-2 text-[10px] text-gray-400 max-w-[320px] text-center">
-                Requires <code>npm install html2canvas</code> to work.
-            </p>
+
+            {/* Feedback Messages */}
+            {shareError && (
+                <p className="mt-2 text-xs text-red-500 max-w-[320px] text-center">
+                    {shareError}
+                </p>
+            )}
+            {shareSuccess && (
+                <p className="mt-2 text-xs text-green-600 max-w-[320px] text-center">
+                    Card saved successfully!
+                </p>
+            )}
         </div>
     );
 }

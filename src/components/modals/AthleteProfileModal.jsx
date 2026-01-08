@@ -3,8 +3,47 @@ import { X, Share, Save, Trophy, Activity, Quote } from 'lucide-react'; // Added
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { practiceHistory, gameLog } from '../../data/seed_godspeed_data'; // IMPORT GAMELOG
 
+/**
+ * @typedef {Object} Player
+ * @property {string} id - Player ID
+ * @property {string} name - Player name
+ * @property {string} tier - Player tier
+ * @property {string} initials - Player initials
+ * @property {number} [avg_grade] - Average grade
+ * @property {number} [grade] - Grade
+ * @property {string} [image] - Player image URL
+ * @property {Array<string>} [highlights] - Player highlights
+ */
+
+/**
+ * @typedef {Object} PlayerStats
+ * @property {string} playerId - Player ID
+ * @property {Object} stats - Player statistics
+ * @property {number} [stats.points] - Points scored
+ * @property {number} [stats.steals] - Steals
+ * @property {number} [stats.rebounds] - Rebounds
+ */
+
+/**
+ * AthleteProfileModal component displays detailed player information
+ * @param {Object} props - Component props
+ * @param {Player | null} props.player - The player object to display
+ * @param {() => void} props.onClose - Callback function to close the modal
+ * @returns {JSX.Element | null} The modal component or null if no player
+ */
 const AthleteProfileModal = ({ player, onClose }) => {
     if (!player) return null;
+
+    // Handle ESC key press
+    React.useEffect(() => {
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                onClose();
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [onClose]);
 
     // 1. GET GRAPH DATA (Last 9 Sessions)
     const graphData = practiceHistory
@@ -24,8 +63,17 @@ const AthleteProfileModal = ({ player, onClose }) => {
     const playerStats = latestGame?.standouts?.find(s => s.playerId === player.id);
 
     return (
-        <div className="relative bg-white rounded-[24px] w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl">
-            <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors z-10">
+        <div
+            className="relative bg-white rounded-[24px] w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-title"
+        >
+            <button
+                onClick={onClose}
+                className="absolute top-4 right-4 p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors z-10 focus:outline-none focus:ring-2 focus:ring-[#0071e3]"
+                aria-label="Close modal"
+            >
                 <X className="w-5 h-5 text-gray-500" />
             </button>
 
@@ -42,7 +90,7 @@ const AthleteProfileModal = ({ player, onClose }) => {
                             </div>
                         )}
                         <div>
-                            <h2 className="text-3xl font-black text-gray-900 tracking-tight uppercase">{player.name}</h2>
+                            <h2 id="modal-title" className="text-3xl font-black text-gray-900 tracking-tight uppercase">{player.name}</h2>
                             <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide
                 ${player.tier.includes('Elite') ? 'bg-yellow-100 text-yellow-700' :
                                     player.tier.includes('Rotation') ? 'bg-blue-100 text-blue-700' :
@@ -60,7 +108,7 @@ const AthleteProfileModal = ({ player, onClose }) => {
                 </div>
 
                 {/* STATS ROW (Dynamic from Game Log) */}
-                {playerStats && (
+                {playerStats ? (
                     <div className="grid grid-cols-3 gap-4">
                         <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-center">
                             <div className="text-gray-400 text-xs font-bold uppercase">Points</div>
@@ -74,6 +122,10 @@ const AthleteProfileModal = ({ player, onClose }) => {
                             <div className="text-gray-400 text-xs font-bold uppercase">Rebounds</div>
                             <div className="text-2xl font-black text-gray-900">{playerStats.stats.rebounds || 0}</div>
                         </div>
+                    </div>
+                ) : (
+                    <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-center">
+                        <p className="text-gray-500 text-sm">No recent game stats available</p>
                     </div>
                 )}
 
