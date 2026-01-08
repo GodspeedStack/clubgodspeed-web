@@ -19,6 +19,7 @@
     <!-- Critical CSS -->
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-nav.css">
+    <link rel="stylesheet" href="easter-eggs.css">
 
     <!-- Fonts (async load) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet"
@@ -195,7 +196,7 @@
                 Travel Teams. National Schedule.<br>The next generation of Denver basketball.
             </p>
             <a href="training.html?interest=aau#signup" 
-                class="hero-cta-animate btn-glow inline-block px-12 py-5 bg-white text-black text-sm font-bold rounded-full uppercase tracking-wider hover:bg-gray-200 transition-all duration-200">
+                class="hero-cta-animate btn-glow btn-delight inline-block px-12 py-5 bg-white text-black text-sm font-bold rounded-full uppercase tracking-wider hover:bg-gray-200 transition-all duration-200">
                 REQUEST ROSTER SPOT
             </a>
         </div>
@@ -210,7 +211,7 @@
                 <p class="text-gray-600 font-bold text-xs uppercase tracking-widest mt-4 md:mt-0">2024 / 2025 SEASON</p>
             </div>
 
-            <div class="grid md:grid-cols-3 gap-10">
+            <div class="grid md:grid-cols-3 gap-10 stagger-children">
                 <!-- 10U Card -->
                 <div
                     class="card-spring-hover bg-gray-900 border border-gray-800 rounded-2xl p-12 hover:border-gray-700 transition-all duration-500 group">
@@ -257,11 +258,11 @@
 
             <div class="grid md:grid-cols-2 gap-20 mb-24 max-w-6xl mx-auto">
                 <div>
-                    <p class="text-5xl font-black leading-tight text-gray-900">
+                    <p class="scroll-reveal-parallax text-5xl font-black leading-tight text-gray-900">
                         Honoring the game.<br>Elevating the player.
                     </p>
                 </div>
-                <div class="text-lg text-gray-600 leading-relaxed space-y-7">
+                <div class="scroll-reveal-stagger text-lg text-gray-600 leading-relaxed space-y-7">
                     <p>
                         We believe basketball is more than a sport—it's an education. Club Godspeed exists to provide an
                         environment where players can learn the game and be challenged with age appropriate material.
@@ -308,7 +309,7 @@
                 to excellence on and off the court.
                 </p>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10 stagger-children">
                 <!-- Card 1: Mentorship -->
                 <div
                     class="stagger-item bg-white border border-gray-200 rounded-lg overflow-hidden group hover:border-blue-600 transition duration-200">
@@ -461,12 +462,15 @@
 
     <!-- Scripts with defer for parallel loading -->
     <script src="branded-modal.js"></script>
+    <script src="security.js"></script>
     <script src="mobile-menu.js"></script>
     <script src="script.js" defer></script>
     <script src="performance.js" defer></script>
     <script src="button-states.js" defer></script>
     <script src="scroll-reveal.js" defer></script>
     <script src="count-up.js" defer></script>
+    <script src="inspirational-quotes.js" defer></script>
+    <script src="easter-eggs.js" defer></script>
     <script src="cart-handler.js" defer></script>
 </body>
 

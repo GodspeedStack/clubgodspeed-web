@@ -499,15 +499,39 @@
     <script src="cart-handler.js" defer></script>
 
     <script src="branded-modal.js"></script>
+    <script src="security.js"></script>
     <script src="script.js"></script>
     <script type="module" src="backend.js"></script>
     <script src="schedule-data.js"></script>
     <script>
-        // AUTHENTICATION CHECK
+        // AUTHENTICATION CHECK with RBAC
         function isLoggedIn() {
             // Check for either Coach or Parent login tokens
-            return localStorage.getItem('isCoachLoggedIn') === 'true' ||
-                localStorage.getItem('isParentLoggedIn') === 'true';
+            const hasCoachAuth = localStorage.getItem('isCoachLoggedIn') === 'true';
+            const hasParentAuth = localStorage.getItem('isParentLoggedIn') === 'true' || 
+                                 localStorage.getItem('gba_parent_auth_token');
+            
+            // Also check RBAC if available
+            if (window.Security && window.Security.RBAC) {
+                const role = window.Security.RBAC.getRole();
+                return hasCoachAuth || hasParentAuth || 
+                       (role === 'coach' || role === 'parent' || role === 'admin');
+            }
+            
+            return hasCoachAuth || hasParentAuth;
+        }
+        
+        // Permission check for calendar access
+        function hasCalendarAccess() {
+            if (!window.Security || !window.Security.RBAC) {
+                return isLoggedIn();
+            }
+            return window.Security.RBAC.hasAnyPermission([
+                'view_schedules',
+                'view_coach_portal',
+                'view_parent_portal',
+                'view_all_portals'
+            ]);
         }
 
         // GRID ACCESS HANDLER
@@ -521,7 +545,7 @@
                 return;
             }
 
-            if (isLoggedIn()) {
+            if (hasCalendarAccess()) {
                 window.location.href = 'calendar-grid.html';
             } else {
                 godspeedAlert("Please log in to the Parent or Coach portal to view the full calendar grid.", "🔒 MEMBER ONLY CONTENT");

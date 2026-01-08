@@ -35,6 +35,23 @@ function validateURL(url) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Security: Check permissions before allowing access
+    if (window.Security && window.Security.RBAC) {
+        // Wait for security system to load
+        setTimeout(() => {
+            try {
+                // Require parent permission to view portal
+                window.Security.RBAC.requirePermission('view_parent_portal');
+            } catch (error) {
+                // Not authorized - redirect to login
+                if (!window.Security.RBAC.hasPermission('view_parent_portal')) {
+                    window.location.href = 'parent-portal.html';
+                    return;
+                }
+            }
+        }, 100);
+    }
+    
     initSignaturePad();
     initPortalNav();
 
@@ -107,12 +124,56 @@ async function handleLogin() {
         return;
     }
 
+    // Check rate limiting if Security system is available
+    if (window.Security && window.Security.RateLimiter) {
+        const rateCheck = window.Security.RateLimiter.check('login', email);
+        if (!rateCheck.allowed) {
+            if (errorMsg) {
+                errorMsg.textContent = rateCheck.message || 'Too many login attempts. Please try again later.';
+                errorMsg.style.display = 'block';
+            }
+            return;
+        }
+    }
+
     btn.innerHTML = 'Signing In...';
     btn.disabled = true;
 
     try {
-        // Use Supabase auth if available, otherwise fallback
-        if (window.auth && typeof window.auth.login === 'function') {
+        // Use secure auth with rate limiting and email verification
+        if (window.Security && window.Security.SecureAuth) {
+            const result = await window.Security.SecureAuth.login(email, password);
+            
+            if (result.requires2FA) {
+                // Show 2FA input
+                const twoFactorDiv = document.createElement('div');
+                twoFactorDiv.id = 'two-factor-input';
+                twoFactorDiv.className = 'mt-4';
+                twoFactorDiv.innerHTML = `
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Enter 2FA Code</label>
+                    <input type="text" id="two-factor-code" placeholder="000000" maxlength="6" 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600"
+                        pattern="[0-9]{6}">
+                    <button type="button" onclick="submit2FA()" 
+                        class="mt-2 w-full py-3 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition">
+                        Verify 2FA Code
+                    </button>
+                `;
+                const form = document.querySelector('.login-form');
+                if (form) form.appendChild(twoFactorDiv);
+                return;
+            }
+            
+            if (result.success) {
+                // Set role
+                window.Security.RBAC.setRole(window.Security.RBAC.roles.PARENT);
+                
+                document.getElementById('portal-login').style.display = 'none';
+                document.getElementById('portal-dashboard').style.display = 'flex';
+                updateDashboardProfile(email);
+            }
+        } else if (window.auth && typeof window.auth.login === 'function') {
+            // Fallback to original auth
             const success = await window.auth.login(email, password);
             if (success) {
                 document.getElementById('portal-login').style.display = 'none';
@@ -135,18 +196,42 @@ async function handleLogin() {
         console.error('Login error:', error);
         if (errorMsg) {
             // Don't expose sensitive error details to users
-            const userFriendlyMessage = error.message && error.message.includes('Invalid login') 
-                ? 'Invalid email or password. Please try again.' 
-                : 'Login failed. Please check your credentials and try again.';
+            const userFriendlyMessage = error.message || 'Login failed. Please check your credentials and try again.';
             errorMsg.textContent = userFriendlyMessage;
             errorMsg.style.display = 'block';
         }
         if (btn) {
             btn.textContent = 'Sign In';
-            btn.disabled = false;
+        btn.disabled = false;
         }
     }
 }
+
+// Handle 2FA submission
+window.submit2FA = async function() {
+    const code = document.getElementById('two-factor-code').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    
+    if (!code || code.length !== 6) {
+        godspeedAlert('Please enter a valid 6-digit code', 'Invalid Code');
+        return;
+    }
+    
+    try {
+        const result = await window.Security.SecureAuth.login(email, password, code);
+        if (result.success) {
+            window.Security.RBAC.setRole(window.Security.RBAC.roles.PARENT);
+            document.getElementById('portal-login').style.display = 'none';
+            document.getElementById('portal-dashboard').style.display = 'flex';
+            updateDashboardProfile(email);
+            const twoFactorDiv = document.getElementById('two-factor-input');
+            if (twoFactorDiv) twoFactorDiv.remove();
+        }
+    } catch (error) {
+        godspeedAlert(error.message || '2FA verification failed', 'Verification Error');
+    }
+};
 
 function updateDashboardProfile(email) {
     const namePart = email.split('@')[0];
@@ -220,7 +305,7 @@ window.switchPortalView = function (viewName, linkElement) {
     if (viewName === 'tuition') {
         renderParentTrips();
     }
-
+    
     if (viewName === 'training') {
         renderTrainingDashboard();
     }
@@ -308,7 +393,7 @@ function renderParentTrips() {
         const safeFee = escapeHTML(String(trip.fee || '0'));
         const safeLocation = escapeHTML(trip.location || 'Details pending...');
         const safePaymentLink = validateURL(trip.paymentLink) || '#';
-        
+
         card.innerHTML = `
             <h3 style="font-size: 18px; margin-bottom: 16px;">${safeName}</h3>
             
@@ -654,19 +739,19 @@ function loadPerformance(parentEmail) {
 
 // Hook into View Switching to load data when tab is clicked
 (function () {
-    const originalSwitch = window.switchPortalView;
+const originalSwitch = window.switchPortalView;
     if (originalSwitch) {
-        window.switchPortalView = function (viewName, linkElement) {
+window.switchPortalView = function (viewName, linkElement) {
             originalSwitch.call(this, viewName, linkElement);
             const email = document.getElementById('email')?.value || localStorage.getItem('gba_user_email'); // Fallback to stored
 
-            if (viewName === 'performance') {
-                if (email) loadPerformance(email);
-            } else if (viewName === 'settings') {
-                loadSettings(email);
-            }
-        };
+    if (viewName === 'performance') {
+        if (email) loadPerformance(email);
+    } else if (viewName === 'settings') {
+        loadSettings(email);
     }
+        };
+}
 })();
 
 // --- Settings Logic ---
@@ -857,7 +942,7 @@ window.submitGearOrder = function () {
 async function renderTrainingDashboard() {
     const parentEmail = localStorage.getItem('gba_user_email');
     /* if (!parentEmail) {
-         console.warn('No parent email found');
+        console.warn('No parent email found');
          return;
      } */
     // For demo "tomorrow", even if no email, show mock data
@@ -1042,10 +1127,10 @@ async function renderTrainingDashboard() {
 async function calculateRemainingHours(parentEmail) {
     const supabase = window.auth?.getSupabaseClient?.();
     const db = getDB();
-
+    
     let totalPurchased = 0;
     let totalUsed = 0;
-
+    
     // Check Supabase first
     if (supabase && window.auth?.isSupabaseAvailable?.()) {
         try {
@@ -1084,10 +1169,10 @@ async function calculateRemainingHours(parentEmail) {
         totalPurchased = db.training.hours.totalPurchased;
         totalUsed = db.training.hours.used;
     }
-
+    
     const remaining = totalPurchased - totalUsed;
     const progressPercent = totalPurchased > 0 ? (totalUsed / totalPurchased) * 100 : 0;
-
+    
     return {
         purchased: totalPurchased,
         used: totalUsed,
@@ -1101,13 +1186,13 @@ async function calculateRemainingHours(parentEmail) {
  */
 async function loadTrainingHours(parentEmail) {
     const hoursData = await calculateRemainingHours(parentEmail);
-
+    
     // Update hours display
     const hoursRemainingEl = document.getElementById('hours-remaining');
     const hoursPurchasedEl = document.getElementById('hours-purchased');
     const hoursUsedEl = document.getElementById('hours-used');
     const progressFillEl = document.getElementById('hours-progress-fill');
-
+    
     if (hoursRemainingEl) {
         hoursRemainingEl.textContent = hoursData.remaining.toFixed(1);
 
@@ -1250,13 +1335,13 @@ async function loadTrainingHours(parentEmail) {
                 });
             }
         }
-
+        
         // Add warning class if low hours
         if (hoursData.remaining < 5) {
             hoursRemainingEl.parentElement.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
         }
     }
-
+    
     if (hoursPurchasedEl) hoursPurchasedEl.textContent = hoursData.purchased.toFixed(1);
     if (hoursUsedEl) hoursUsedEl.textContent = hoursData.used.toFixed(1);
     if (progressFillEl) progressFillEl.style.width = `${hoursData.progressPercent}%`;
@@ -1267,93 +1352,93 @@ async function loadTrainingHours(parentEmail) {
  */
 async function loadSessionCounts(parentEmail) {
     try {
-        const supabase = window.auth?.getSupabaseClient?.();
-        const db = getDB();
-
-        const athletes = (db.roster || []).filter(a => a.parentId === parentEmail);
-        let completedCount = 0;
-        let upcomingCount = 0;
-
-        if (supabase && window.auth?.isSupabaseAvailable?.()) {
-            try {
+    const supabase = window.auth?.getSupabaseClient?.();
+    const db = getDB();
+    
+    const athletes = (db.roster || []).filter(a => a.parentId === parentEmail);
+    let completedCount = 0;
+    let upcomingCount = 0;
+    
+    if (supabase && window.auth?.isSupabaseAvailable?.()) {
+        try {
                 const { data: parentAccount, error: accountError } = await supabase
-                    .from('parent_accounts')
-                    .select('id')
-                    .eq('email', parentEmail)
-                    .single();
-
+                .from('parent_accounts')
+                .select('id')
+                .eq('email', parentEmail)
+                .single();
+            
                 if (accountError) {
                     console.error('Error fetching parent account for session counts:', accountError);
                     // Fall through to use default counts (0)
                 } else if (parentAccount) {
-                    const athleteIds = athletes.map(a => a.athleteId);
-
-                    // Get completed sessions (attendance records)
+                const athleteIds = athletes.map(a => a.athleteId);
+                
+                // Get completed sessions (attendance records)
                     const { data: purchases, error: purchasesError } = await supabase
-                        .from('training_purchases')
-                        .select('id')
-                        .eq('parent_id', parentAccount.id)
-                        .in('athlete_id', athleteIds);
-
+                    .from('training_purchases')
+                    .select('id')
+                    .eq('parent_id', parentAccount.id)
+                    .in('athlete_id', athleteIds);
+                
                     if (purchasesError) {
                         console.error('Error fetching purchases for session counts:', purchasesError);
                     } else if (purchases && purchases.length > 0) {
-                        const purchaseIds = purchases.map(p => p.id);
+                    const purchaseIds = purchases.map(p => p.id);
                         const { data: attendance, error: attendanceError } = await supabase
-                            .from('training_attendance')
-                            .select('id')
-                            .in('purchase_id', purchaseIds);
-
+                        .from('training_attendance')
+                        .select('id')
+                        .in('purchase_id', purchaseIds);
+                    
                         if (attendanceError) {
                             console.error('Error fetching attendance:', attendanceError);
                         } else {
-                            completedCount = attendance ? attendance.length : 0;
+                    completedCount = attendance ? attendance.length : 0;
                         }
-                    }
-
-                    // Get upcoming sessions
+                }
+                
+                // Get upcoming sessions
                     const { data: enrollments, error: enrollmentsError } = await supabase
-                        .from('player_enrollments')
-                        .select('program_id')
-                        .eq('parent_id', parentAccount.id)
-                        .in('athlete_id', athleteIds)
-                        .eq('status', 'active');
-
+                    .from('player_enrollments')
+                    .select('program_id')
+                    .eq('parent_id', parentAccount.id)
+                    .in('athlete_id', athleteIds)
+                    .eq('status', 'active');
+                
                     if (enrollmentsError) {
                         console.error('Error fetching enrollments:', enrollmentsError);
                     } else if (enrollments && enrollments.length > 0) {
-                        const programIds = enrollments.map(e => e.program_id);
-                        const today = new Date().toISOString().split('T')[0];
+                    const programIds = enrollments.map(e => e.program_id);
+                    const today = new Date().toISOString().split('T')[0];
                         const { data: sessions, error: sessionsError } = await supabase
-                            .from('training_sessions')
-                            .select('id')
-                            .in('program_id', programIds)
-                            .gte('session_date', today)
-                            .eq('status', 'scheduled');
-
+                        .from('training_sessions')
+                        .select('id')
+                        .in('program_id', programIds)
+                        .gte('session_date', today)
+                        .eq('status', 'scheduled');
+                    
                         if (sessionsError) {
                             console.error('Error fetching sessions:', sessionsError);
                         } else {
-                            upcomingCount = sessions ? sessions.length : 0;
+                    upcomingCount = sessions ? sessions.length : 0;
                         }
-                    }
                 }
-            } catch (error) {
-                console.error('Error loading session counts:', error);
-                // Fall through to use default counts
             }
+        } catch (error) {
+            console.error('Error loading session counts:', error);
+                // Fall through to use default counts
         }
-
+    }
+    
         // 1. Update Top Stats
-        const completedEl = document.getElementById('sessions-completed');
-        const upcomingEl = document.getElementById('sessions-upcoming');
-
+    const completedEl = document.getElementById('sessions-completed');
+    const upcomingEl = document.getElementById('sessions-upcoming');
+    
         // Get user record for completed count
         const db = getDB();
         const userRecord = db.trainingRecords ? db.trainingRecords[parentEmail] : null;
 
         if (completedEl) completedEl.textContent = (userRecord && userRecord.logs) ? userRecord.logs.length : completedCount;
-        if (upcomingEl) upcomingEl.textContent = upcomingCount;
+    if (upcomingEl) upcomingEl.textContent = upcomingCount;
     } catch (error) {
         console.error('Error in loadSessionCounts:', error);
         // Set default values on error
@@ -1369,74 +1454,74 @@ async function loadSessionCounts(parentEmail) {
  */
 async function loadTrainingCalendar(parentEmail) {
     try {
-        const db = getDB();
-        const supabase = window.auth?.getSupabaseClient?.();
-
-        // Get athlete enrollments
-        const athletes = (db.roster || []).filter(a => a.parentId === parentEmail);
-
-        // Populate athlete select
-        const athleteSelect = document.getElementById('training-athlete-select');
-        if (athleteSelect) {
-            athleteSelect.innerHTML = '<option value="">All Athletes</option>';
-            athletes.forEach(athlete => {
-                const option = document.createElement('option');
+    const db = getDB();
+    const supabase = window.auth?.getSupabaseClient?.();
+    
+    // Get athlete enrollments
+    const athletes = (db.roster || []).filter(a => a.parentId === parentEmail);
+    
+    // Populate athlete select
+    const athleteSelect = document.getElementById('training-athlete-select');
+    if (athleteSelect) {
+        athleteSelect.innerHTML = '<option value="">All Athletes</option>';
+        athletes.forEach(athlete => {
+            const option = document.createElement('option');
                 option.value = escapeHTML(athlete.athleteId || '');
                 option.textContent = escapeHTML(athlete.name || '');
-                athleteSelect.appendChild(option);
-            });
-
-            athleteSelect.addEventListener('change', (e) => {
-                filterCalendarByAthlete(e.target.value);
-            });
-        }
-
-        // Load enrollments to filter calendar
-        let enrolledPrograms = [];
-        if (supabase && window.auth?.isSupabaseAvailable?.()) {
-            try {
+            athleteSelect.appendChild(option);
+        });
+        
+        athleteSelect.addEventListener('change', (e) => {
+            filterCalendarByAthlete(e.target.value);
+        });
+    }
+    
+    // Load enrollments to filter calendar
+    let enrolledPrograms = [];
+    if (supabase && window.auth?.isSupabaseAvailable?.()) {
+        try {
                 const { data: parentAccount, error: accountError } = await supabase
-                    .from('parent_accounts')
-                    .select('id')
-                    .eq('email', parentEmail)
-                    .single();
-
+                .from('parent_accounts')
+                .select('id')
+                .eq('email', parentEmail)
+                .single();
+            
                 if (accountError) {
                     console.error('Error fetching parent account for calendar:', accountError);
                     // Fall through to roster fallback
                 } else if (parentAccount) {
-                    const athleteIds = athletes.map(a => a.athleteId);
+                const athleteIds = athletes.map(a => a.athleteId);
                     const { data: enrollments, error: enrollmentsError } = await supabase
-                        .from('player_enrollments')
-                        .select('program_id, enrolled_sessions')
-                        .eq('parent_id', parentAccount.id)
-                        .in('athlete_id', athleteIds)
-                        .eq('status', 'active');
-
+                    .from('player_enrollments')
+                    .select('program_id, enrolled_sessions')
+                    .eq('parent_id', parentAccount.id)
+                    .in('athlete_id', athleteIds)
+                    .eq('status', 'active');
+                
                     if (enrollmentsError) {
                         console.error('Error fetching enrollments for calendar:', enrollmentsError);
                         // Fall through to roster fallback
                     } else if (enrollments) {
-                        enrolledPrograms = enrollments.map(e => e.program_id);
-                    }
+                    enrolledPrograms = enrollments.map(e => e.program_id);
                 }
-            } catch (error) {
-                console.error('Error loading enrollments:', error);
-                // Fall through to roster fallback
             }
+        } catch (error) {
+            console.error('Error loading enrollments:', error);
+                // Fall through to roster fallback
+        }
         }
         
         // Fallback: get from roster active_enrollments
         if (enrolledPrograms.length === 0) {
-            athletes.forEach(athlete => {
-                if (athlete.active_enrollments) {
-                    enrolledPrograms.push(...athlete.active_enrollments);
-                }
-            });
-        }
-
-        // Store enrolled programs for calendar filtering
-        window.trainingEnrolledPrograms = enrolledPrograms;
+        athletes.forEach(athlete => {
+            if (athlete.active_enrollments) {
+                enrolledPrograms.push(...athlete.active_enrollments);
+            }
+        });
+    }
+    
+    // Store enrolled programs for calendar filtering
+    window.trainingEnrolledPrograms = enrolledPrograms;
     } catch (error) {
         console.error('Error in loadTrainingCalendar:', error);
         // Initialize empty array on error
@@ -1464,48 +1549,48 @@ function filterCalendarByAthlete(athleteId) {
  */
 async function loadSkillsPrograms(parentEmail) {
     try {
-        const db = getDB();
-        const supabase = window.auth?.getSupabaseClient?.();
-        const container = document.getElementById('skills-programs-list');
-
-        if (!container) return;
-
-        const athletes = (db.roster || []).filter(a => a.parentId === parentEmail);
-        let programs = [];
-
-        if (supabase && window.auth?.isSupabaseAvailable?.()) {
-            try {
+    const db = getDB();
+    const supabase = window.auth?.getSupabaseClient?.();
+    const container = document.getElementById('skills-programs-list');
+    
+    if (!container) return;
+    
+    const athletes = (db.roster || []).filter(a => a.parentId === parentEmail);
+    let programs = [];
+    
+    if (supabase && window.auth?.isSupabaseAvailable?.()) {
+        try {
                 const { data: parentAccount, error: accountError } = await supabase
-                    .from('parent_accounts')
-                    .select('id')
-                    .eq('email', parentEmail)
-                    .single();
-
+                .from('parent_accounts')
+                .select('id')
+                .eq('email', parentEmail)
+                .single();
+            
                 if (accountError) {
                     console.error('Error fetching parent account for skills programs:', accountError);
                     // Fall through to roster fallback
                 } else if (parentAccount) {
-                    const athleteIds = athletes.map(a => a.athleteId);
+                const athleteIds = athletes.map(a => a.athleteId);
                     const { data: enrollments, error: enrollmentsError } = await supabase
-                        .from('player_enrollments')
-                        .select('*, training_packages(name, description, program_type)')
-                        .eq('parent_id', parentAccount.id)
-                        .in('athlete_id', athleteIds)
-                        .eq('status', 'active');
-
+                    .from('player_enrollments')
+                    .select('*, training_packages(name, description, program_type)')
+                    .eq('parent_id', parentAccount.id)
+                    .in('athlete_id', athleteIds)
+                    .eq('status', 'active');
+                
                     if (enrollmentsError) {
                         console.error('Error fetching enrollments for skills programs:', enrollmentsError);
                         // Fall through to roster fallback
                     } else if (enrollments) {
-                        programs = enrollments;
-                    }
+                    programs = enrollments;
                 }
-            } catch (error) {
-                console.error('Error loading skills programs:', error);
-                // Fall through to roster fallback
             }
+        } catch (error) {
+            console.error('Error loading skills programs:', error);
+                // Fall through to roster fallback
         }
-
+    }
+    
     // Fallback: get from roster
     if (programs.length === 0) {
         athletes.forEach(athlete => {
@@ -1521,7 +1606,7 @@ async function loadSkillsPrograms(parentEmail) {
             }
         });
     }
-
+    
     // Render programs
     if (programs.length === 0) {
         const emptyDiv = document.createElement('div');
@@ -1534,7 +1619,7 @@ async function loadSkillsPrograms(parentEmail) {
         container.appendChild(emptyDiv);
         return;
     }
-
+    
     let html = '';
     programs.forEach(program => {
         const athlete = athletes.find(a => a.athleteId === program.athlete_id);
@@ -1556,9 +1641,9 @@ async function loadSkillsPrograms(parentEmail) {
             </div>
         `;
     });
-
+    
     container.innerHTML = html;
-
+    
     // Update active programs count
     const activeProgramsEl = document.getElementById('active-programs');
     if (activeProgramsEl) activeProgramsEl.textContent = programs.length;
@@ -1569,52 +1654,52 @@ async function loadSkillsPrograms(parentEmail) {
  */
 async function loadReceipts(parentEmail) {
     try {
-        const supabase = window.auth?.getSupabaseClient?.();
-        const container = document.getElementById('receipts-list');
-
-        if (!container) return;
-
-        let receipts = [];
-
-        if (supabase && window.auth?.isSupabaseAvailable?.()) {
-            try {
+    const supabase = window.auth?.getSupabaseClient?.();
+    const container = document.getElementById('receipts-list');
+    
+    if (!container) return;
+    
+    let receipts = [];
+    
+    if (supabase && window.auth?.isSupabaseAvailable?.()) {
+        try {
                 const { data: parentAccount, error: accountError } = await supabase
-                    .from('parent_accounts')
-                    .select('id')
-                    .eq('email', parentEmail)
-                    .single();
-
+                .from('parent_accounts')
+                .select('id')
+                .eq('email', parentEmail)
+                .single();
+            
                 if (accountError) {
                     console.error('Error fetching parent account for receipts:', accountError);
                     // Fall through to transactions fallback
                 } else if (parentAccount) {
                     const { data, error: receiptsError } = await supabase
-                        .from('receipts')
-                        .select('*')
-                        .eq('parent_id', parentAccount.id)
-                        .order('payment_date', { ascending: false })
-                        .limit(5);
-
+                    .from('receipts')
+                    .select('*')
+                    .eq('parent_id', parentAccount.id)
+                    .order('payment_date', { ascending: false })
+                    .limit(5);
+                
                     if (receiptsError) {
                         console.error('Error fetching receipts:', receiptsError);
                         // Fall through to transactions fallback
                     } else if (data) {
                         receipts = data;
                     }
-                }
-            } catch (error) {
-                console.error('Error loading receipts:', error);
-                // Fall through to transactions fallback
             }
+        } catch (error) {
+            console.error('Error loading receipts:', error);
+                // Fall through to transactions fallback
         }
-
+    }
+    
     // Fallback: get from transactions
     if (receipts.length === 0) {
         const db = getDB();
-        const transactions = (db.transactions || []).filter(t =>
+        const transactions = (db.transactions || []).filter(t => 
             t.parentId === parentEmail && t.status === 'PAID'
         ).slice(0, 5);
-
+        
         receipts = transactions.map(txn => ({
             receipt_number: txn.id,
             amount: txn.amount,
@@ -1622,7 +1707,7 @@ async function loadReceipts(parentEmail) {
             transaction_id: txn.id
         }));
     }
-
+    
     if (receipts.length === 0) {
         const emptyDiv = document.createElement('div');
         emptyDiv.style.textAlign = 'center';
@@ -1634,7 +1719,7 @@ async function loadReceipts(parentEmail) {
         container.appendChild(emptyDiv);
         return;
     }
-
+    
     receipts.forEach(receipt => {
         // Sanitize receipt data
         const safeReceiptNumber = escapeHTML(String(receipt.receipt_number || receipt.transaction_id || ''));
@@ -1688,45 +1773,45 @@ async function loadReceipts(parentEmail) {
  */
 async function loadInvoices(parentEmail) {
     try {
-        const supabase = window.auth?.getSupabaseClient?.();
-        const container = document.getElementById('invoices-list');
-
-        if (!container) return;
-
-        let invoices = [];
-
-        if (supabase && window.auth?.isSupabaseAvailable?.()) {
-            try {
+    const supabase = window.auth?.getSupabaseClient?.();
+    const container = document.getElementById('invoices-list');
+    
+    if (!container) return;
+    
+    let invoices = [];
+    
+    if (supabase && window.auth?.isSupabaseAvailable?.()) {
+        try {
                 const { data: parentAccount, error: accountError } = await supabase
-                    .from('parent_accounts')
-                    .select('id')
-                    .eq('email', parentEmail)
-                    .single();
-
+                .from('parent_accounts')
+                .select('id')
+                .eq('email', parentEmail)
+                .single();
+            
                 if (accountError) {
                     console.error('Error fetching parent account for invoices:', accountError);
                     // No fallback for invoices, just return empty
                 } else if (parentAccount) {
                     const { data, error: invoicesError } = await supabase
-                        .from('invoices')
-                        .select('*')
-                        .eq('parent_id', parentAccount.id)
-                        .order('issue_date', { ascending: false })
-                        .limit(5);
-
+                    .from('invoices')
+                    .select('*')
+                    .eq('parent_id', parentAccount.id)
+                    .order('issue_date', { ascending: false })
+                    .limit(5);
+                
                     if (invoicesError) {
                         console.error('Error fetching invoices:', invoicesError);
                         // Return empty array
                     } else if (data) {
                         invoices = data;
                     }
-                }
-            } catch (error) {
-                console.error('Error loading invoices:', error);
-                // Return empty array
             }
+        } catch (error) {
+            console.error('Error loading invoices:', error);
+                // Return empty array
         }
-
+    }
+    
     if (invoices.length === 0) {
         const emptyDiv = document.createElement('div');
         emptyDiv.style.textAlign = 'center';
@@ -1738,7 +1823,7 @@ async function loadInvoices(parentEmail) {
         container.appendChild(emptyDiv);
         return;
     }
-
+    
     invoices.forEach(invoice => {
         // Sanitize invoice data
         const safeInvoiceNumber = escapeHTML(String(invoice.invoice_number || ''));

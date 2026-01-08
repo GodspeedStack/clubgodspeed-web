@@ -14,6 +14,7 @@
     <!-- Critical CSS loaded first -->
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-nav.css">
+    <link rel="stylesheet" href="easter-eggs.css">
 
     <!-- Google Fonts (async load) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet"
@@ -112,7 +113,7 @@
             <!-- Right Side Icons -->
             <div class="flex items-center space-x-6">
                 <!-- Cart Icon -->
-                <a href="#" id="cart-btn" class="nav-cart-btn text-black hover:text-blue-600 transition relative"
+                <a href="#" id="cart-btn" class="nav-cart-btn cart-icon-delight icon-delight text-black hover:text-blue-600 transition relative"
                     aria-label="Cart">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -124,7 +125,7 @@
 
                 <!-- Member Login Dropdown -->
                 <div class="nav-login-wrapper relative z-50">
-                    <a href="#" class="nav-cart-btn text-black hover:text-blue-600 transition" aria-label="Sign In">
+                    <a href="#" class="nav-cart-btn login-icon-delight icon-delight text-black hover:text-blue-600 transition" aria-label="Sign In">
                         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 4 0 00-7 7h14a7 4 0 00-7-7z" />
@@ -188,10 +189,10 @@
             </p>
             <div class="flex flex-col md:flex-row gap-4">
                 <a href="training.html#signup"
-                    class="hero-cta-animate btn-glow px-8 py-4 bg-blue-600 text-white font-bold rounded-full text-center hover:bg-blue-700 transition">TRAIN
+                    class="hero-cta-animate btn-glow btn-delight px-8 py-4 bg-blue-600 text-white font-bold rounded-full text-center hover:bg-blue-700 transition">TRAIN
                     WITH GODSPEED</a>
                 <a href="#club"
-                    class="hero-cta-animate hero-cta-animate-delay px-8 py-4 bg-white text-black font-bold rounded-full text-center border-2 border-gray-100 hover:border-gray-300 transition">JOIN
+                    class="hero-cta-animate hero-cta-animate-delay btn-delight px-8 py-4 bg-white text-black font-bold rounded-full text-center border-2 border-gray-100 hover:border-gray-300 transition">JOIN
                     CLUB GODSPEED</a>
             </div>
         </div>
@@ -200,13 +201,13 @@
         <div class="max-w-7xl mx-auto px-6">
             <div class="text-center mb-16">
                 <h2 class="scroll-reveal text-5xl font-black uppercase mb-6 tracking-tight text-gray-900">WHAT WE STAND FOR</h2>
-                <p class="text-gray-600 text-lg max-w-3xl mx-auto leading-relaxed">
+                <p class="scroll-reveal-stagger text-gray-600 text-lg max-w-3xl mx-auto leading-relaxed">
                     Godspeed is a performance-driven basketball program committed to developing technically sound,
                     mentally sharp, and purpose-led athletes.
                 </p>
             </div>
 
-            <div class="grid md:grid-cols-3 gap-8">
+            <div class="grid md:grid-cols-3 gap-8 stagger-children">
                 <div
                     class="stagger-item feature-card bg-white rounded-3xl shadow-xl overflow-hidden group hover:ring-2 hover:ring-blue-600 transition-all duration-200 transform hover:-translate-y-1 cursor-pointer">
                     <div class="h-64 relative bg-gray-200">
@@ -461,7 +462,7 @@
                         Our roster spots are earned, not bought. If you are ready to work, we are ready to build.
                     </p>
                     <a href="aau.html"
-                        class="btn-glow inline-block px-12 py-5 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition transform hover:-translate-y-1 uppercase tracking-widest text-sm">
+                        class="btn-glow btn-delight inline-block px-12 py-5 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition transform hover:-translate-y-1 uppercase tracking-widest text-sm">
                         APPLY FOR AAU
                     </a>
                 </div>
@@ -527,10 +528,13 @@
     </footer>
     <!-- Scripts with defer for parallel loading -->
     <script src="branded-modal.js"></script>
+    <script src="security.js"></script>
     <script src="performance.js" defer></script>
     <script src="button-states.js" defer></script>
     <script src="scroll-reveal.js" defer></script>
     <script src="count-up.js" defer></script>
+    <script src="inspirational-quotes.js" defer></script>
+    <script src="easter-eggs.js" defer></script>
     <script src="cart-handler.js" defer></script>
 </body>
 

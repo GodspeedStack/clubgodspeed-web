@@ -28,7 +28,10 @@
         'scroll-reveal-left': 'slide-in-left',
         'scroll-reveal-right': 'slide-in-right',
         'scroll-reveal-scale': 'scale-in',
-        'scroll-reveal-fade': 'fade-in'
+        'scroll-reveal-fade': 'fade-in',
+        'scroll-reveal-parallax': 'parallax-fade',
+        'scroll-reveal-stagger': 'slide-up-stagger',
+        'scroll-reveal-rotate': 'scale-in-rotate'
     };
 
     // Create Intersection Observer
@@ -57,6 +60,23 @@
         });
     }, defaultOptions);
 
+    // Handle stagger children
+    function handleStaggerChildren() {
+        const staggerParents = document.querySelectorAll('.stagger-children');
+        const staggerObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('revealed');
+                    staggerObserver.unobserve(entry.target);
+                }
+            });
+        }, defaultOptions);
+
+        staggerParents.forEach(parent => {
+            staggerObserver.observe(parent);
+        });
+    }
+
     // Observe all elements with scroll-reveal classes
     function initScrollReveal() {
         const elements = document.querySelectorAll('[class*="scroll-reveal"]');
@@ -65,6 +85,9 @@
             el.style.opacity = '0';
             observer.observe(el);
         });
+        
+        // Handle stagger children
+        handleStaggerChildren();
     }
 
     // Initialize on DOM ready

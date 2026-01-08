@@ -410,10 +410,6 @@
 
         loadProducts();
     </script>
-    <script src="branded-modal.js"></script>
-    <script src="mobile-menu.js"></script>
-    <script src="cart-handler.js"></script>
-    
     <!-- Cart Overlay -->
     <div id="cart-overlay" class="cart-overlay">
         <div class="cart-sidebar">
@@ -433,8 +429,14 @@
             </div>
         </div>
     </div>
-</body>
-</html>
+    <script src="branded-modal.js"></script>
+    <script src="security.js"></script>
+    <script src="mobile-menu.js"></script>
+    <script src="cart-handler.js"></script>
+    <script>
+        (function() {
+            // Snipcart initialization
+            const snipcartDiv = document.getElementById('snipcart');
             if (snipcartDiv) {
                 // Get from window config or environment variable
                 const apiKey = window.SNIPCART_API_KEY || '';

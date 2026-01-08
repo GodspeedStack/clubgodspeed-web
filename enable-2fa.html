@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enable 2FA - Godspeed Basketball</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .mfa-card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        .mfa-card h1 {
+            color: #111827;
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            text-align: center;
+        }
+        .mfa-card p {
+            color: #6b7280;
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+        .qr-code {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .qr-code img {
+            max-width: 250px;
+            border: 4px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+        }
+        .input-group {
+            margin: 20px 0;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 600;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            text-align: center;
+            letter-spacing: 4px;
+            font-family: monospace;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            background: #2563eb;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .btn:hover {
+            background: #1d4ed8;
+        }
+        .btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .backup-codes {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .backup-codes h3 {
+            margin: 0 0 10px 0;
+            color: #111827;
+            font-size: 16px;
+        }
+        .backup-codes p {
+            color: #6b7280;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        .code-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .code-item {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            text-align: center;
+            font-weight: 600;
+            color: #111827;
+            border: 1px solid #e5e7eb;
+        }
+        .step {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        .step h3 {
+            margin: 0 0 10px 0;
+            color: #111827;
+        }
+        .step ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .step li {
+            margin: 8px 0;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="mfa-card">
+        <h1>Enable Two-Factor Authentication</h1>
+        
+        <div id="setup-step">
+            <div class="step">
+                <h3>Step 1: Scan QR Code</h3>
+                <p>Open your authenticator app (Google Authenticator, Authy, etc.) and scan this QR code:</p>
+                <div class="qr-code" id="qr-code-container">
+                    <p>Loading QR code...</p>
+                </div>
+            </div>
+
+            <div class="step">
+                <h3>Step 2: Enter Verification Code</h3>
+                <p>Enter the 6-digit code from your authenticator app to verify setup:</p>
+                <div class="input-group">
+                    <label for="verification-code">Verification Code</label>
+                    <input 
+                        type="text" 
+                        id="verification-code" 
+                        maxlength="6" 
+                        pattern="[0-9]{6}"
+                        placeholder="000000"
+                        autocomplete="off"
+                    >
+                </div>
+                <button class="btn" id="verify-btn" onclick="verifyAndEnable()">Verify and Enable</button>
+            </div>
+        </div>
+
+        <div id="success-step" style="display: none;">
+            <div style="text-align: center;">
+                <div style="width: 80px; height: 80px; margin: 0 auto 20px; background: #d1fae5; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; color: #059669;">
+                    ✓
+                </div>
+                <h2 style="color: #111827; margin: 0 0 10px 0;">2FA Enabled Successfully!</h2>
+                <p>Your account is now protected with two-factor authentication.</p>
+            </div>
+
+            <div class="backup-codes" id="backup-codes-container">
+                <h3>⚠️ Save These Backup Codes</h3>
+                <p>These codes can be used to access your account if you lose your authenticator device. Save them in a safe place!</p>
+                <div class="code-list" id="backup-codes-list"></div>
+            </div>
+
+            <button class="btn" onclick="window.location.href='parent-portal.html'">Continue to Portal</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth-supabase.js"></script>
+    <script src="security.js"></script>
+    <script type="module" src="src/lib/exposeServices.js"></script>
+    <script type="module">
+        import { generateMFASecret, enableMFA } from './src/lib/mfaService.js';
+
+        let mfaSecret = null;
+        let userId = null;
+
+        async function init() {
+            // Get current user
+            if (window.auth && window.auth.getCurrentUser) {
+                const user = await window.auth.getCurrentUser();
+                if (!user || !user.id) {
+                    alert('Please log in first');
+                    window.location.href = 'parent-portal.html';
+                    return;
+                }
+                userId = user.id;
+            } else {
+                userId = localStorage.getItem('gba_user_id');
+                if (!userId) {
+                    alert('Please log in first');
+                    window.location.href = 'parent-portal.html';
+                    return;
+                }
+            }
+
+            // Generate MFA secret and QR code
+            try {
+                const result = await generateMFASecret(userId, localStorage.getItem('gba_user_email') || 'user@example.com');
+                mfaSecret = result.secret;
+
+                // Display QR code
+                const qrContainer = document.getElementById('qr-code-container');
+                qrContainer.innerHTML = `<img src="${result.qrCodeDataUrl}" alt="QR Code">`;
+
+                // Make verify function available globally
+                window.verifyAndEnable = async function() {
+                    const codeInput = document.getElementById('verification-code');
+                    const code = codeInput.value.trim();
+
+                    if (code.length !== 6 || !/^\d{6}$/.test(code)) {
+                        alert('Please enter a valid 6-digit code');
+                        return;
+                    }
+
+                    const verifyBtn = document.getElementById('verify-btn');
+                    verifyBtn.disabled = true;
+                    verifyBtn.textContent = 'Verifying...';
+
+                    try {
+                        const result = await enableMFA(userId, code);
+                        
+                        if (result.success) {
+                            // Show success step
+                            document.getElementById('setup-step').style.display = 'none';
+                            document.getElementById('success-step').style.display = 'block';
+
+                            // Display backup codes
+                            if (result.backupCodes && result.backupCodes.length > 0) {
+                                const codesList = document.getElementById('backup-codes-list');
+                                codesList.innerHTML = result.backupCodes.map(code => 
+                                    `<div class="code-item">${code}</div>`
+                                ).join('');
+                            } else {
+                                document.getElementById('backup-codes-container').style.display = 'none';
+                            }
+                        } else {
+                            alert('Invalid verification code. Please try again.');
+                            verifyBtn.disabled = false;
+                            verifyBtn.textContent = 'Verify and Enable';
+                        }
+                    } catch (error) {
+                        console.error('Failed to enable MFA:', error);
+                        alert('Failed to enable 2FA: ' + error.message);
+                        verifyBtn.disabled = false;
+                        verifyBtn.textContent = 'Verify and Enable';
+                    }
+                };
+            } catch (error) {
+                console.error('Failed to generate MFA secret:', error);
+                alert('Failed to initialize 2FA setup. Please try again.');
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -35,7 +35,7 @@ export const isCoach = async () => {
     if (!user) return false;
 
     const { data, error } = await supabase
-        .from('profiles')
+        .from('user_profiles')
         .select('role')
         .eq('id', user.id)
         .single();
@@ -52,7 +52,7 @@ export const isParent = async () => {
     if (!user) return false;
 
     const { data, error } = await supabase
-        .from('profiles')
+        .from('user_profiles')
         .select('role')
         .eq('id', user.id)
         .single();

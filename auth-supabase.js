@@ -56,14 +56,32 @@
     // Expose Auth API globally
     window.auth = {
         /**
-         * Login with email and password
+         * Login with email and password (with security features)
          * @param {string} email - User email
          * @param {string} password - User password
-         * @returns {Promise<boolean>} Success status
+         * @param {string} twoFactorToken - Optional 2FA token
+         * @returns {Promise<Object>} { success: boolean, requires2FA?: boolean, userId?: string }
          */
-        login: async function (email, password) {
+        login: async function (email, password, twoFactorToken = null) {
+            // Use SecureAuth wrapper if available (integrates rate limiting, email verification, 2FA)
+            if (window.Security && window.Security.SecureAuth) {
+                try {
+                    return await window.Security.SecureAuth.login(email, password, twoFactorToken);
+                } catch (error) {
+                    // If SecureAuth fails, fall through to basic auth
+                    console.warn('SecureAuth failed, using basic auth:', error);
+                }
+            }
+
+            // Basic Supabase auth (fallback)
             if (isSupabaseAvailable && supabaseClient) {
                 try {
+                    // Check email verification if required
+                    const { data: { user: existingUser } } = await supabaseClient.auth.getUser();
+                    if (existingUser && !existingUser.email_confirmed_at) {
+                        throw new Error('Please verify your email before logging in. Check your inbox for the verification link.');
+                    }
+
                     const { data, error } = await supabaseClient.auth.signInWithPassword({
                         email: email,
                         password: password
@@ -75,16 +93,37 @@
                     }
 
                     if (data.session) {
+                        const userId = data.user.id;
+                        
+                        // Check if 2FA is required
+                        if (window.Security && window.Security.TwoFactorAuth) {
+                            const mfaEnabled = window.Security.TwoFactorAuth.isEnabled(userId);
+                            if (mfaEnabled && !twoFactorToken) {
+                                return { requires2FA: true, userId };
+                            }
+                            
+                            if (mfaEnabled && twoFactorToken) {
+                                const mfaValid = window.Security.TwoFactorAuth.verifyToken(userId, twoFactorToken);
+                                if (!mfaValid) {
+                                    throw new Error('Invalid 2FA code');
+                                }
+                            }
+                        }
+
                         // Store session info
                         localStorage.setItem(AUTH_KEY, 'supabase_session');
                         localStorage.setItem('gba_user_email', email);
-                        localStorage.setItem('gba_user_id', data.user.id);
+                        localStorage.setItem('gba_user_id', userId);
+                        
+                        // Set role from user metadata
+                        const role = data.user.user_metadata?.role || 'parent';
+                        localStorage.setItem('gba_user_role', role);
                         
                         // Create or update parent account
-                        await this.ensureParentAccount(data.user.id, email);
+                        await this.ensureParentAccount(userId, email);
                         
                         updateUI(true);
-                        return true;
+                        return { success: true };
                     }
                 } catch (error) {
                     console.error('Supabase login failed:', error);
@@ -96,7 +135,7 @@
                 localStorage.setItem(AUTH_KEY, 'valid_token_' + Date.now());
                 localStorage.setItem('gba_user_email', email);
                 updateUI(true);
-                return true;
+                return { success: true };
             }
         },
 
@@ -197,6 +236,28 @@
                         console.error('Failed to create parent account:', error);
                     }
                 }
+
+                // Ensure user profile exists (for unified role system)
+                const { data: profile } = await supabaseClient
+                    .from('user_profiles')
+                    .select('id')
+                    .eq('id', userId)
+                    .single();
+
+                if (!profile) {
+                    // Profile will be created by trigger, but ensure it exists
+                    const { error: profileError } = await supabaseClient
+                        .from('user_profiles')
+                        .insert({
+                            id: userId,
+                            email: email,
+                            role: 'parent'
+                        });
+
+                    if (profileError && !profileError.message.includes('duplicate')) {
+                        console.error('Failed to create user profile:', profileError);
+                    }
+                }
             } catch (error) {
                 console.error('Error ensuring parent account:', error);
             }
@@ -252,6 +313,51 @@
          */
         isSupabaseAvailable: function () {
             return isSupabaseAvailable;
+        },
+
+        /**
+         * Sign up new user with email verification
+         * @param {string} email - User email
+         * @param {string} password - User password
+         * @param {Object} metadata - Additional user metadata
+         * @returns {Promise<Object>} { success: boolean, requiresVerification: boolean }
+         */
+        signup: async function (email, password, metadata = {}) {
+            if (isSupabaseAvailable && supabaseClient) {
+                try {
+                    // Use SecureAuth wrapper if available
+                    if (window.Security && window.Security.SecureAuth) {
+                        return await window.Security.SecureAuth.signup(email, password, metadata);
+                    }
+
+                    // Basic signup
+                    const { data, error } = await supabaseClient.auth.signUp({
+                        email: email,
+                        password: password,
+                        options: {
+                            data: metadata,
+                            emailRedirectTo: `${window.location.origin}/verify-email.html`
+                        }
+                    });
+
+                    if (error) {
+                        throw new Error(error.message);
+                    }
+
+                    if (data.user) {
+                        // User profile will be created by trigger
+                        return { 
+                            success: true, 
+                            requiresVerification: true,
+                            userId: data.user.id
+                        };
+                    }
+                } catch (error) {
+                    console.error('Signup failed:', error);
+                    throw error;
+                }
+            }
+            throw new Error('Supabase not available');
         }
     };
 

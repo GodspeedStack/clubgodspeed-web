@@ -88,16 +88,104 @@ document.addEventListener('DOMContentLoaded', () => {
 // Global State for Analytics
 window.currentRosterState = { data: [] };
 
-// 1. Auth Logic
-window.handleCoachLogin = function () {
+// 1. Auth Logic - Enhanced with Supabase Auth support
+window.handleCoachLogin = async function () {
     console.log("Login Attempt Started - handleCoachLogin called");
 
     const codeInput = document.getElementById('coach-code');
     const code = codeInput ? codeInput.value.trim() : '';
 
-    // Secure Access Check (Hash-based)
-    // Production Note: This is client-side hashing (Obfuscation), NOT true server-side security.
-    // It prevents casual reading of passwords from source code.
+    if (!code) {
+        godspeedAlert("Please enter an access code.", "GODSPEED BASKETBALL");
+        return;
+    }
+
+    // Check rate limiting
+    if (window.Security && window.Security.RateLimiter) {
+        const identifier = code || 'unknown';
+        const rateCheck = window.Security.RateLimiter.check('coach_login', identifier);
+        if (!rateCheck.allowed) {
+            godspeedAlert(rateCheck.message || "Too many attempts. Please try again later.", "GODSPEED BASKETBALL");
+            return;
+        }
+        window.Security.RateLimiter.recordAttempt('coach_login', identifier);
+    }
+
+    // Try Supabase Auth first (if available and code looks like email)
+    const isEmailFormat = code.includes('@');
+    if (isEmailFormat && window.auth && window.auth.isSupabaseAvailable && window.auth.isSupabaseAvailable()) {
+        try {
+            // For Supabase, we need email + password
+            // If code is email, prompt for password
+            const password = prompt('Enter your password:');
+            if (!password) {
+                if (window.Security && window.Security.RateLimiter) {
+                    window.Security.RateLimiter.reset('coach_login', code);
+                }
+                return;
+            }
+
+            // Use SecureAuth if available
+            let result;
+            if (window.Security && window.Security.SecureAuth) {
+                result = await window.Security.SecureAuth.login(code, password);
+            } else {
+                const success = await window.auth.login(code, password);
+                result = { success };
+            }
+
+            if (result.requires2FA) {
+                const twoFactorCode = prompt('Enter 6-digit 2FA code:');
+                if (twoFactorCode) {
+                    result = await window.Security.SecureAuth.login(code, password, twoFactorCode);
+                } else {
+                    throw new Error('2FA code required');
+                }
+            }
+
+            if (result.success) {
+                // Get user role
+                const user = await window.auth.getCurrentUser();
+                const role = user?.user_metadata?.role || 'coach';
+
+                // Verify role is coach or admin
+                if (role !== 'coach' && role !== 'admin') {
+                    await window.auth.logout();
+                    throw new Error('Access denied. Coach or admin role required.');
+                }
+
+                // Store role
+                if (window.Security && window.Security.RBAC) {
+                    window.Security.RBAC.setRole(role);
+                } else {
+                    localStorage.setItem('gba_user_role', role);
+                }
+                localStorage.setItem('isCoachLoggedIn', 'true');
+                localStorage.setItem('gba_user_email', code);
+                localStorage.setItem('gba_user_id', user?.id || '');
+
+                // Reset rate limit
+                if (window.Security && window.Security.RateLimiter) {
+                    window.Security.RateLimiter.reset('coach_login', code);
+                }
+
+                // Show dashboard
+                const loginView = document.getElementById('coach-login');
+                const dashboardView = document.getElementById('coach-dashboard');
+                if (loginView && dashboardView) {
+                    loginView.style.display = 'none';
+                    dashboardView.style.display = 'flex';
+                    initDashboard();
+                }
+                return;
+            }
+        } catch (error) {
+            console.error('Supabase auth failed, trying fallback:', error);
+            // Fall through to hash-based fallback
+        }
+    }
+
+    // Fallback: Hash-based authentication (backward compatibility)
     async function sha256(message) {
         const msgBuffer = new TextEncoder().encode(message);
         const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -108,49 +196,89 @@ window.handleCoachLogin = function () {
     const adminHash = "e5792d476100987627a696348842af5832a87383a152da862db8068755034371"; // G0DSP33D_ADMIN!
     const coachHash = "c7d74026858a7065971488c9ae8729577782b534b829af4666f777176461ba16"; // G0DSP33D_EL1T3!
 
-    sha256(code).then(hash => {
-        let role = null;
-        if (hash === adminHash) {
-            role = 'admin';
-        } else if (hash === coachHash) {
-            role = 'coach';
-        } else {
-            godspeedAlert("Access Denied. Invalid Code.", "GODSPEED BASKETBALL");
-            if (codeInput) {
-                codeInput.value = '';
-                codeInput.focus();
-            }
-            return;
+    const hash = await sha256(code);
+    let role = null;
+    
+    if (hash === adminHash) {
+        role = 'admin';
+    } else if (hash === coachHash) {
+        role = 'coach';
+    } else {
+        godspeedAlert("Access Denied. Invalid Code.", "GODSPEED BASKETBALL");
+        if (codeInput) {
+            codeInput.value = '';
+            codeInput.focus();
         }
+        return;
+    }
 
-        // Store Role
+    // Store Role with RBAC
+    if (window.Security && window.Security.RBAC) {
+        window.Security.RBAC.setRole(role);
+    } else {
         localStorage.setItem('gba_user_role', role);
-        localStorage.setItem('isCoachLoggedIn', 'true'); // Add specific auth flag
+    }
+    localStorage.setItem('isCoachLoggedIn', 'true');
 
-        const loginView = document.getElementById('coach-login');
-        const dashboardView = document.getElementById('coach-dashboard');
+    // Reset rate limit on success
+    if (window.Security && window.Security.RateLimiter) {
+        window.Security.RateLimiter.reset('coach_login', code);
+    }
 
-        if (loginView && dashboardView) {
-            loginView.style.display = 'none';
-            dashboardView.style.display = 'flex'; // Important: flex to maintain layout
-            initDashboard();
-        } else {
-            alert("Critical Error: Dashboard views not found.");
-        }
-    });
+    const loginView = document.getElementById('coach-login');
+    const dashboardView = document.getElementById('coach-dashboard');
+
+    if (loginView && dashboardView) {
+        loginView.style.display = 'none';
+        dashboardView.style.display = 'flex';
+        initDashboard();
+    } else {
+        godspeedAlert("Critical Error: Dashboard views not found.", "Error");
+    }
 }
 
-function logoutCoach() {
+async function logoutCoach() {
+    // Logout from Supabase if available
+    if (window.auth && window.auth.logout) {
+        await window.auth.logout();
+    }
+    
     localStorage.removeItem('gba_user_role');
     localStorage.removeItem('isCoachLoggedIn');
+    localStorage.removeItem('gba_user_email');
+    localStorage.removeItem('gba_user_id');
+    
     document.getElementById('coach-dashboard').style.display = 'none';
     document.getElementById('coach-login').style.display = 'flex';
+    
+    // Clear code input
+    const codeInput = document.getElementById('coach-code');
+    if (codeInput) codeInput.value = '';
 }
 
 
 
 // 2. Dashboard Init
+// Security: Check permissions before allowing dashboard access
+function checkCoachPermissions() {
+    if (window.Security && window.Security.RBAC) {
+        try {
+            window.Security.RBAC.requirePermission('view_coach_portal');
+            return true;
+        } catch (error) {
+            godspeedAlert('You do not have permission to access the coach portal.', 'Access Denied');
+            logoutCoach();
+            return false;
+        }
+    }
+    return true; // Allow if security system not loaded
+}
+
 function initDashboard() {
+    // Check permissions before initializing
+    if (!checkCoachPermissions()) {
+        return;
+    }
     const db = getDB(); // From portal-data.js
     const list = document.getElementById('team-list');
     const userRole = localStorage.getItem('gba_user_role') || 'coach';
