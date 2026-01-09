@@ -450,8 +450,13 @@ window.switchPortalView = function (viewName, linkElement) {
         sidebar.classList.remove('open');
     }
 
-    if (viewName === 'tuition') {
-        renderParentTrips();
+    if (viewName === 'tuition' || viewName === 'billing') {
+        const email = localStorage.getItem('gba_user_email');
+        if (window.renderBilling) {
+            window.renderBilling(email);
+        } else {
+            renderParentTrips();
+        }
     }
 
     if (viewName === 'training') {
@@ -2206,7 +2211,7 @@ function viewTrainingStatement(email) {
 /**
  * Toggle Calendar View (Team vs Season)
  */
-window.toggleCalendarView = function(viewType) {
+window.toggleCalendarView = function (viewType) {
     const iframe = document.getElementById('main-calendar-iframe');
     const btnTeam = document.getElementById('btn-cal-team');
     const btnSeason = document.getElementById('btn-cal-season');
@@ -2235,18 +2240,18 @@ window.toggleCalendarView = function(viewType) {
 /**
  * Initiate Training Payment
  */
-window.initiateTrainingPayment = function(plan) {
+window.initiateTrainingPayment = function (plan) {
     let title = '';
     let amount = '';
-    
-    if (plan === 1) { title = 'Single Session'; amount = '5.00'; }
-    else if (plan === 5) { title = '5-Pack Bundle'; amount = '00.00'; }
-    else if (plan === 10) { title = '10-Pack Bundle'; amount = '50.00'; }
-    else if (plan === 'unlimited') { title = 'Unlimited Monthly'; amount = '50.00'; }
-    
+
+    if (plan === 1) { title = 'Single Session'; amount = '$45.00'; }
+    else if (plan === 5) { title = '5-Pack Bundle'; amount = '$200.00'; }
+    else if (plan === 10) { title = '10-Pack Bundle'; amount = '$350.00'; }
+    else if (plan === 'unlimited') { title = 'Unlimited Monthly'; amount = '$250.00'; }
+
     // Simulate Payment Flow
     godspeedAlert(`Initiating secure checkout for ${title} (${amount})...`, 'Processing');
-    
+
     setTimeout(() => {
         godspeedAlert(`Payment Successful! ${title} have been added to your account.`, 'Success');
         // Update mock data?
@@ -2258,35 +2263,35 @@ window.initiateTrainingPayment = function(plan) {
 /**
  * Render Billing Dashboard
  */
-window.renderBilling = function(email) {
+window.renderBilling = function (email) {
     const container = document.getElementById('billing-invoices-list');
     const totalDueEl = document.getElementById('billing-total-due');
     const statusTextEl = document.getElementById('billing-status-text');
     const statusCard = document.getElementById('billing-status-card');
     const tripsContainer = document.getElementById('parent-trips-container');
-    
+
     if (!container) return;
-    
+
     // Mock Data for Invoices
     const invoices = [
         // { id: 'INV-001', title: 'October Tuition', amount: 250, due: '2025-10-01', status: 'paid' },
         // { id: 'INV-002', title: 'November Tuition', amount: 250, due: '2025-11-01', status: 'overdue' }
     ];
-    
+
     // For demo, let's say "November Tuition" is overdue if date > Nov 1
     // But let's keep it "Good Standing" by default unless we want to demo overdue
     // Let's add one "Due Soon" invoice
-    const upcomingInvoice = { 
-        id: 'INV-2025-12', 
-        title: 'December Tuition', 
-        amount: 250.00, 
-        due: '2025-12-01', 
-        status: 'due' 
+    const upcomingInvoice = {
+        id: 'INV-2025-12',
+        title: 'December Tuition',
+        amount: 250.00,
+        due: '2025-12-01',
+        status: 'due'
     };
-    
+
     // Check if we already rendered
     container.innerHTML = '';
-    
+
     // Render Invoices
     if (invoices.length === 0 && !upcomingInvoice) {
         container.innerHTML = '<div style="text-align: center; padding: 20px; background: rgba(255,255,255,0.5); border-radius: 12px; color: #888; font-size: 0.9rem;">All caught up! No open invoices.</div>';
@@ -2302,7 +2307,7 @@ window.renderBilling = function(email) {
         div.style.alignItems = 'center';
         div.style.borderLeft = '4px solid #f59e0b'; // Amber for Due
         div.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
-        
+
         div.innerHTML = `
             <div>
                 <div style="font-weight: 700; font-size: 1rem;">${inv.title}</div>
@@ -2315,30 +2320,30 @@ window.renderBilling = function(email) {
         `;
         container.appendChild(div);
     }
-    
+
     // Update Total Due
-    if (totalDueEl) totalDueEl.textContent = '50.00';
+    if (totalDueEl) totalDueEl.textContent = '$250.00';
     if (statusTextEl && statusCard) {
         statusTextEl.textContent = '● Payment Due Soon';
         statusTextEl.style.color = '#f59e0b'; // Amber
         statusCard.style.borderLeftColor = '#f59e0b';
     }
-    
+
     // Render Trips (Reuse logic from Portal Data but here)
     if (tripsContainer) {
-       // Mock Trips
-       // ... existing logic mock ...
-       // For now, clear it to avoid duplicate if called multiple times, or copy logic from older renderParentTrips
+        // Mock Trips
+        // ... existing logic mock ...
+        // For now, clear it to avoid duplicate if called multiple times, or copy logic from older renderParentTrips
     }
 }
 
 /**
  * Check and Send Notifications
  */
-window.checkPaymentReminders = function(email) {
+window.checkPaymentReminders = function (email) {
     const notifyPayment = localStorage.getItem('gba_notify_payment') !== 'false'; // Default true
     const notifyOverdue = localStorage.getItem('gba_notify_overdue') !== 'false';
-    
+
     if (notifyPayment) {
         console.log('Checking for payment reminders for ' + email + '...');
         // Mock logic: If date is near 1st, send reminder
@@ -2351,7 +2356,7 @@ window.checkPaymentReminders = function(email) {
 /**
  * Save Settings
  */
-window.handleSettingsSave = function() {
+window.handleSettingsSave = function () {
     const pName = document.getElementById('settings-parent-name').value;
     const pPhone = document.getElementById('settings-parent-phone').value;
     const notifyPayment = document.getElementById('settings-notify-payment').checked;
@@ -2368,32 +2373,42 @@ window.handleSettingsSave = function() {
 /**
  * Render Sidebar Stats
  */
-window.renderSidebarStats = function(email) {
+window.renderSidebarStats = function (email) {
     const div = document.getElementById('sidebar-player-stats');
     if (!div) return;
-    
+
     // Show container
     div.style.display = 'block';
-    
+
     // Mock Data or fetch from DB
     // For demo, we use hardcoded or random stats
     const gp = document.getElementById('sidebar-stat-gp');
     const ppg = document.getElementById('sidebar-stat-ppg');
-    
+
     if (gp) gp.textContent = '12';
     if (ppg) ppg.textContent = '14.5';
+
+    const att = document.getElementById('sidebar-stat-attendance');
+    const attBar = document.getElementById('sidebar-stat-attendance-bar');
+
+    if (att) att.textContent = '92%';
+    if (attBar) setTimeout(() => attBar.style.width = '92%', 100);
 }
 
 // Hook into initPortal
+// Hook into initPortal
 const originalInitPortal = window.initPortal;
-window.initPortal = function() {
+window.initPortal = function () {
     if (originalInitPortal) originalInitPortal();
-    
+
     const email = localStorage.getItem('gba_user_email');
+
+    // Always try to render stats for demo/preview
+    renderSidebarStats(email || 'demo@user.com');
+
     if (email) {
         renderBilling(email);
         checkPaymentReminders(email);
-        renderSidebarStats(email);
     }
 }
 
