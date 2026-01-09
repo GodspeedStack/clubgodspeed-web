@@ -130,7 +130,7 @@ const GODSPEED_DATA = {
             { id: "sess_103", date: "2026-01-12", time: "6:00 PM", program: "Elite Guard Academy", location: "Main Court", topic: "Mid-Range Scoring" }
         ],
         documents: [
-            { id: "doc_1", title: "Guard Academy Syllabus", date: "2025-01-01", type: "PDF", link: "#" }
+            { id: "doc_1", title: "Guard Academy Syllabus", date: "2025-01-01", type: "PDF", link: "Parent_Access_Workflow_and_Template.pdf" }
         ]
     },
 
