@@ -279,7 +279,7 @@
                 },
                 body: JSON.stringify({
                     items: items,
-                    success_url: window.location.origin + "/success.html",
+                    success_url: 'https://clubgodspeed.com/success.html',
                     cancel_url: window.location.href
                 })
             });

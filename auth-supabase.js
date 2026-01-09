@@ -336,7 +336,7 @@
                         password: password,
                         options: {
                             data: metadata,
-                            emailRedirectTo: `${window.location.origin}/verify-email.html`
+                            emailRedirectTo: 'https://clubgodspeed.com/verify-email.html'
                         }
                     });
 

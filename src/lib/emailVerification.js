@@ -36,7 +36,7 @@ export async function generateAndSendVerificationToken(userId, email) {
         const token = data;
 
         // Send verification email via Resend (if available) or Supabase Auth
-        const verificationUrl = `${window.location.origin}/verify-email.html?token=${token}&email=${encodeURIComponent(email)}`;
+        const verificationUrl = `https://clubgodspeed.com/verify-email.html?token=${token}&email=${encodeURIComponent(email)}`;
         
         // Try Resend first
         const sendEmailFn = await getSendEmail();

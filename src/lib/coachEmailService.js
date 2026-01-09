@@ -252,7 +252,7 @@ function generateTrainingReportEmail(playerName, trainingData, coachNotes = '') 
                             
                             <!-- CTA Button -->
                             <div style="text-align: center; margin-top: 40px;">
-                                <a href="${window.location.origin}/parent-portal.html" style="display: inline-block; background-color: #2563eb; color: #ffffff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px;">View Full Report in Parent Portal</a>
+                                <a href="https://clubgodspeed.com/parent-portal.html" style="display: inline-block; background-color: #2563eb; color: #ffffff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px;">View Full Report in Parent Portal</a>
                             </div>
                         </td>
                     </tr>
@@ -356,7 +356,7 @@ function generatePracticeInfoEmail(playerName, practiceData) {
                             
                             <!-- CTA Button -->
                             <div style="text-align: center; margin-top: 40px;">
-                                <a href="${window.location.origin}/parent-portal.html" style="display: inline-block; background-color: #2563eb; color: #ffffff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px;">View Full Practice History</a>
+                                <a href="https://clubgodspeed.com/parent-portal.html" style="display: inline-block; background-color: #2563eb; color: #ffffff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px;">View Full Practice History</a>
                             </div>
                         </td>
                     </tr>
