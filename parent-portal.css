@@ -3,54 +3,9 @@
    =========================== */
 
 /* --- Navigation Fixes --- */
-.navbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.25rem 2rem;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    background: white;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    width: 100%;
-}
-
-.logo {
-    font-size: 1.5rem;
-    font-weight: 900;
-    font-family: 'Inter', sans-serif;
-    letter-spacing: -0.03em;
-    color: #000;
-    line-height: 1;
-}
-
 .logo .accent {
     color: #2563eb;
     /* Brand Blue */
-}
-
-.nav-links {
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-    list-style: none;
-}
-
-.nav-links a,
-.nav-links span {
-    font-size: 0.9rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #111;
-    text-decoration: none;
-    cursor: pointer;
-    transition: color 0.2s ease;
-}
-
-.nav-links a:hover {
-    color: #2563eb;
 }
 
 /* Fix oversized cart icon */
@@ -79,22 +34,6 @@
     text-transform: uppercase;
     font-weight: 700;
     letter-spacing: 0;
-}
-
-.btn-primary {
-    background-color: #2563eb;
-    color: white !important;
-    padding: 0.75rem 1.5rem;
-    border-radius: 9999px;
-    font-weight: 700;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-    border: none;
-    /* Fix: Remove default button border */
-}
-
-.btn-primary:hover {
-    background-color: #1d4ed8;
-    transform: translateY(-1px);
 }
 
 .mobile-menu-btn {
