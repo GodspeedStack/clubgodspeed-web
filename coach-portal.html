@@ -5,6 +5,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Coach Portal | Godspeed</title>
+    <script>
+        (async () => {
+            if (!window.supabase || !window.supabase.auth || !window.supabase.auth.getSession) {
+                window.location.replace('login.html');
+                return;
+            }
+
+            const { data } = await window.supabase.auth.getSession();
+
+            if (!data || !data.session) {
+                window.location.replace('login.html');
+            }
+        })();
+    </script>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-nav.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
