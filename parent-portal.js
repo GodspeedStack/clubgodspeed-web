@@ -86,6 +86,22 @@ document.addEventListener('DOMContentLoaded', () => {
         passwordInput.addEventListener('input', () => setLoginStatus(''));
     }
 
+    const togglePasswordBtn = document.querySelector('.toggle-password');
+    if (togglePasswordBtn && passwordInput) {
+        togglePasswordBtn.addEventListener('click', () => {
+            const isVisible = passwordInput.type === 'text';
+            passwordInput.type = isVisible ? 'password' : 'text';
+            togglePasswordBtn.classList.toggle('is-visible', !isVisible);
+            togglePasswordBtn.setAttribute('aria-pressed', String(!isVisible));
+            togglePasswordBtn.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');
+        });
+    }
+
+    const googleButton = document.querySelector('.google-btn');
+    if (googleButton) {
+        googleButton.addEventListener('click', handleGoogleLogin);
+    }
+
     // Check for existing session
     if (window.auth && window.auth.isLoggedIn()) {
         const savedEmail = localStorage.getItem('gba_user_email');
@@ -223,6 +239,42 @@ async function handleLogin() {
         if (btn) {
             btn.textContent = 'Sign In';
             btn.disabled = false;
+        }
+    }
+}
+
+async function handleGoogleLogin() {
+    const googleButton = document.querySelector('.google-btn');
+    const label = googleButton ? googleButton.querySelector('.google-label') : null;
+    const originalLabel = label ? label.textContent : '';
+
+    setLoginStatus('');
+
+    if (!googleButton) {
+        return;
+    }
+
+    if (!window.auth || typeof window.auth.loginWithGoogle !== 'function') {
+        setLoginStatus('Google sign-in is not configured yet. Please use email and password for now.');
+        return;
+    }
+
+    try {
+        googleButton.disabled = true;
+        if (label) {
+            label.textContent = 'Connecting to Google...';
+        }
+        const result = await window.auth.loginWithGoogle();
+        if (result && result.success) {
+            setLoginStatus('Redirecting to Google sign-in...', 'info');
+        }
+    } catch (error) {
+        console.error('Google login error:', error);
+        setLoginStatus(error.message || 'Google sign-in is unavailable. Please try again.');
+    } finally {
+        googleButton.disabled = false;
+        if (label) {
+            label.textContent = originalLabel;
         }
     }
 }

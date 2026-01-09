@@ -140,6 +140,31 @@
         },
 
         /**
+         * Login with Google OAuth
+         * @returns {Promise<Object>} { success: boolean }
+         */
+        loginWithGoogle: async function () {
+            if (isSupabaseAvailable && supabaseClient) {
+                const redirectTo = window.location.href;
+                const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: { redirectTo }
+                });
+
+                if (error) {
+                    console.error('Google OAuth error:', error);
+                    throw new Error(error.message || 'Unable to sign in with Google.');
+                }
+
+                if (data) {
+                    return { success: true };
+                }
+            }
+
+            throw new Error('Google sign-in requires Supabase configuration.');
+        },
+
+        /**
          * Logout current user
          */
         logout: async function () {

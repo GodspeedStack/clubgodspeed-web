@@ -89,7 +89,25 @@
                     </div>
                     <div class="form-group">
                         <label for="password">Password</label>
-                        <input type="password" id="password" placeholder="••••••••" required>
+                        <div class="password-field">
+                            <input type="password" id="password" placeholder="••••••••" required>
+                            <button type="button" class="toggle-password" aria-label="Show password" aria-pressed="false">
+                                <span class="eye-icon eye-show" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M1.5 12s4-7 10.5-7 10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"></path>
+                                        <circle cx="12" cy="12" r="3.5"></circle>
+                                    </svg>
+                                </span>
+                                <span class="eye-icon eye-hide" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M2 2l20 20"></path>
+                                        <path d="M5.5 5.5C3.3 7.1 1.5 9.5 1.5 12c0 0 4 7 10.5 7 2.1 0 3.9-.7 5.4-1.7"></path>
+                                        <path d="M9.5 9.5a3.5 3.5 0 0 0 4.9 4.9"></path>
+                                        <path d="M12 5c6.5 0 10.5 7 10.5 7a17.6 17.6 0 0 1-4.4 5.2"></path>
+                                    </svg>
+                                </span>
+                            </button>
+                        </div>
                         <a href="contact.html" class="forgot-link">Forgot?</a>
                     </div>
                     <button type="submit" class="btn-primary full-width">Sign In</button>
@@ -109,7 +127,7 @@
                                     d="M -14.754 43.739 C -12.984 43.739 -11.424 44.349 -10.174 45.549 L -6.714 42.089 C -8.804 40.139 -11.514 38.989 -14.754 38.989 C -19.444 38.989 -23.494 41.689 -25.464 45.619 L -21.484 48.709 C -20.534 45.859 -17.884 43.739 -14.754 43.739 Z" />
                             </g>
                         </svg>
-                        Continue with Google
+                        <span class="google-label">Continue with Google</span>
                     </button>
 
                     <p class="login-footer">Don't have an account? <a href="training.html#signup">Apply to Join</a></p>
