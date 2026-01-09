@@ -19,8 +19,9 @@ function escapeHTML(str) {
 function validateURL(url) {
     if (typeof url !== 'string') return null;
     const trimmed = url.trim();
-    if (trimmed.toLowerCase().startsWith('javascript:') || 
-        trimmed.toLowerCase().startsWith('data:')) {
+    const lower = trimmed.toLowerCase();
+    if (lower.startsWith('javascript:') || 
+        lower.startsWith('data:')) {
         return null;
     }
     if (trimmed.startsWith('http://') || 
@@ -28,7 +29,12 @@ function validateURL(url) {
         trimmed.startsWith('mailto:') || 
         trimmed.startsWith('tel:') || 
         trimmed.startsWith('/') || 
+        trimmed.startsWith('./') || 
+        trimmed.startsWith('../') || 
         trimmed.startsWith('#')) {
+        return escapeHTML(trimmed);
+    }
+    if (!trimmed.includes(':') && !trimmed.startsWith('//')) {
         return escapeHTML(trimmed);
     }
     return null;
@@ -1146,7 +1152,7 @@ async function renderTrainingDashboard() {
                     <div style="font-size:13px; font-weight:600;">${safeTitle}</div>
                     <div style="font-size:11px; color:#888;">Added ${safeDate}</div>
                 </div>
-                <a href="${safeLink}" class="btn-primary" style="padding: 6px 12px; font-size: 10px; width: auto; display: inline-block; text-decoration: none; line-height:1.2;">Download</a>
+                <a href="${safeLink}" class="btn-primary" download style="padding: 6px 12px; font-size: 10px; width: auto; display: inline-block; text-decoration: none; line-height:1.2;">Download</a>
             </div>
         `;
         }).join('');
