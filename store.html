@@ -332,7 +332,7 @@
 
             <div class="flex items-center space-x-6">
                 <!-- Cart Icon -->
-                <a href="#" id="cart-btn" class="nav-cart-btn text-gray-400 hover:text-white transition relative"
+                <a href="#" id="nav-cart-btn" class="nav-cart-btn text-gray-400 hover:text-white transition relative"
                     aria-label="Cart">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -705,6 +705,25 @@
     <script src="security.js"></script>
     <script src="mobile-menu.js"></script>
     <script src="cart-handler.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navCartBtn = document.getElementById('nav-cart-btn');
+            if (!navCartBtn) return;
+
+            navCartBtn.addEventListener('click', (event) => {
+                event.preventDefault();
+                const overlay = document.getElementById('cart-overlay');
+                if (!overlay) return;
+
+                const isOpen = overlay.style.display === 'flex';
+                overlay.style.display = isOpen ? 'none' : 'flex';
+
+                if (!isOpen && typeof window.renderCartItems === 'function') {
+                    window.renderCartItems();
+                }
+            });
+        });
+    </script>
     <script>
         (function() {
             // Snipcart initialization
