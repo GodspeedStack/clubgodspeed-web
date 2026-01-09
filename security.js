@@ -262,7 +262,7 @@
             }
             
             // Last resort: log token (for development)
-            const verificationUrl = `${window.location.origin}/verify-email.html?email=${encodeURIComponent(email)}&token=${token}`;
+            const verificationUrl = `https://clubgodspeed.com/verify-email.html?email=${encodeURIComponent(email)}&token=${token}`;
             console.log(`[DEV] Verification URL: ${verificationUrl}`);
             return true;
         },

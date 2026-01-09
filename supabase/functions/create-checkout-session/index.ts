@@ -53,8 +53,8 @@ serve(async (req) => {
                 "Content-Type": "application/x-www-form-urlencoded",
             },
             body: new URLSearchParams({
-                "success_url": success_url || `${req.headers.get("origin")}/success.html`,
-                "cancel_url": cancel_url || `${req.headers.get("origin")}/training.html`,
+                "success_url": success_url || 'https://clubgodspeed.com/success.html',
+                "cancel_url": cancel_url || 'https://clubgodspeed.com/training.html',
                 "mode": "payment",
                 ...line_items.reduce((acc, item, index) => {
                     acc[`line_items[${index}][price_data][currency]`] = item.price_data.currency;
