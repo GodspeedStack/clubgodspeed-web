@@ -5,6 +5,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Parent Portal | Godspeed Basketball</title>
+    <script>
+        (async () => {
+            if (!window.supabase || !window.supabase.auth || !window.supabase.auth.getSession) {
+                window.location.replace('login.html');
+                return;
+            }
+
+            const { data } = await window.supabase.auth.getSession();
+
+            if (!data || !data.session) {
+                window.location.replace('login.html');
+            }
+        })();
+    </script>
 
     <!-- Resource Hints -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
