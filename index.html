@@ -4,149 +4,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GODSPEED BASKETBALL | Built Different</title>
+    <title>Godspeed Basketball | Built Different</title>
+    <meta name="description"
+        content="Godspeed builds complete players for the modern game. Movement science. High-level decision-making. Competitive confidence.">
+    <meta property="og:title" content="Godspeed Basketball | Built Different">
+    <meta property="og:description"
+        content="Godspeed builds complete players for the modern game. Movement science. High-level decision-making. Competitive confidence.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/hero-collage.png">
 
-    <!-- Resource Hints -->
+    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,800;1,800&display=swap"
+        rel="stylesheet">
 
-    <!-- Critical CSS loaded first -->
-    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="responsive-nav.css">
-    <link rel="stylesheet" href="easter-eggs.css">
 
-    <!-- Google Fonts (async load) -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet"
-        media="print" onload="this.media='all'">
-    <noscript>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
-    </noscript>
 
-    <!-- Non-critical CSS (async load) -->
-    <link rel="preload" href="animations.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript>
-        <link rel="stylesheet" href="animations.css">
-    </noscript>
-    <link rel="preload" href="quote-system.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript>
-        <link rel="stylesheet" href="quote-system.css">
-    </noscript>
-
-    <!-- Tailwind CDN (defer to prevent blocking) -->
-    <script src="https://cdn.tailwindcss.com" defer></script>
-    <style>
-        /* Navbar styles */
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.25rem 2rem;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            background: white;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            width: 100%;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 900;
-            font-family: 'Inter', sans-serif;
-            letter-spacing: -0.03em;
-            color: #000;
-            line-height: 1;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-
-        /* Hero Section with Background Image */
-        .hero-section-light {
-            position: relative;
-            min-height: 90vh;
-            display: flex;
-            align-items: center;
-            overflow: hidden;
-        }
-
-        .hero-bg {
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            background-image: url('assets/hero-collage.png') !important;
-            background-size: cover !important;
-            background-position: center -25px !important;
-            background-repeat: no-repeat !important;
-            z-index: 0 !important;
-        }
-
-        .hero-overlay-light {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to right, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 40%, rgba(255, 255, 255, 0) 100%);
-            z-index: 1;
-        }
-    </style>
+    <!-- Snipcart CSS -->
+    <link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.0.31/default/snipcart.css" />
+    <link rel="stylesheet" href="mobile-fixes.css">
 </head>
 
-<body class="bg-gray-50 text-black font-sans antialiased">
-    <nav class="navbar light-nav">
-        <div class="logo">GODSPEED<span class="text-blue-600">BASKETBALL</span></div>
-        <div class="hidden md:flex items-center space-x-8">
-            <div class="flex space-x-8 text-sm font-bold uppercase tracking-wide">
-                <a href="index.html" class="text-black">Home</a>
-                <a href="training.html" class="text-black">Training</a>
-                <a href="aau.html" class="text-black">AAU</a>
-                <a href="calendar-preview.html" class="text-black hover:text-blue-600 transition">Calendar</a>
-                <div class="relative group opacity-50 cursor-not-allowed">
-                    <span class="text-black">Academy</span>
-                    <span
-                        class="badge-pulse absolute -top-6 -right-6 text-[9px] bg-gray-100 text-gray-500 px-1 rounded border">SOON</span>
-                </div>
-                <!-- Shop Link -->
-                <a href="store.html" class="text-black hover:text-blue-600">Shop</a>
-                <a href="about.html" class="text-black hover:text-blue-600">About</a>
-            </div>
-
-            <!-- Right Side Icons -->
-            <div class="flex items-center space-x-6">
-                <!-- Cart Icon -->
-                <a href="#" id="cart-btn" class="nav-cart-btn cart-icon-delight icon-delight text-black hover:text-blue-600 transition relative"
-                    aria-label="Cart">
-                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+<body>
+    <nav class="navbar">
+        <!-- NAV LOCKED: DO NOT EDIT WITHOUT USER PERMISSION -->
+        <div class="logo">GODSPEED<span class="accent">BASKETBALL</span></div>
+        <ul class="nav-links">
+            <li><a href="index.html" class="active">Home</a></li>
+            <li><a href="training.html">Training</a></li>
+            <li><a href="aau.html">AAU</a></li>
+            <li><a href="calendar-preview.html" class="auth-restricted">Calendar</a></li>
+            <li><span class="nav-item-disabled">Academy <span class="coming-soon-badge">Coming</span></span></li>
+            <li><span class="nav-item-disabled">Shop <span class="coming-soon-badge">Coming</span></span></li>
+            <li><a href="about.html">About</a></li>
+            <li>
+                <a href="#" id="cart-btn" class="nav-cart-btn" aria-label="Cart">
+                    <svg class="cart-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                             d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        <!-- Keeping similar shape but thinner stroke via CSS -->
                     </svg>
-                    <span
-                        class="cart-badge badge-bounce absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1 rounded-full">0</span>
+                    <span class="cart-badge">0</span>
                 </a>
-
-                <!-- Member Login Dropdown -->
-                <div class="nav-login-wrapper relative z-50">
-                    <a href="#" class="nav-cart-btn login-icon-delight icon-delight text-black hover:text-blue-600 transition" aria-label="Sign In">
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            </li>
+            <li class="nav-item-dropdown">
+                <div class="nav-login-wrapper">
+                    <a href="#" class="nav-cart-btn" aria-label="Sign In">
+                        <svg class="cart-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 4 0 00-7 7h14a7 4 0 00-7-7z" />
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                     </a>
-
-                    <!-- Dropdown Menu -->
                     <div class="login-dropdown">
                         <div
                             style="padding: 8px 16px 4px; font-size: 11px; text-transform: uppercase; color: #86868b; font-weight: 600; letter-spacing: 0.05em;">
-                            Member Access</div>
-
+                            Sign In</div>
                         <a href="parent-portal.html" class="login-option">
                             <span style="display: flex; align-items: center; gap: 10px;">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                    style="color: #2563eb;">
+                                    style="color: #0071e3;">
                                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                                     <circle cx="9" cy="7" r="4"></circle>
                                     <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -156,12 +79,11 @@
                             </span>
                             <span class="login-arrow">›</span>
                         </a>
-
                         <a href="coach-portal.html" class="login-option">
                             <span style="display: flex; align-items: center; gap: 10px;">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                    style="color: #2563eb;">
+                                    style="color: #0071e3;">
                                     <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2">
                                     </path>
                                     <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
@@ -172,145 +94,153 @@
                         </a>
                     </div>
                 </div>
+            </li>
+            <li><a href="training.html#signup" class="btn-primary">Train With Us</a></li>
+        </ul>
+        <div class="mobile-menu-btn">☰</div>
+    </nav>
 
-                <a href="training.html#signup"
-                    class="px-6 py-2 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition">TRAIN
-                    WITH US</a>
+    <header id="home" class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">BUILT DIFFERENT.<br>TRAINED DIFFERENT.</h1>
+            <p class="hero-subtitle">Movement science. High-level decision-making. Competitive confidence.<br>Godspeed
+                builds complete players for the modern game.</p>
+            <div class="cta-group">
+                <a href="training.html#signup" class="btn-primary">Train with Godspeed</a>
+                <a href="#club" class="btn-secondary">Join Club Godspeed</a>
             </div>
         </div>
-        <button class="md:hidden text-3xl w-10 h-10 flex items-center justify-center cursor-pointer hover:opacity-70 transition" aria-label="Menu" onclick="openMobileMenu()">☰</button>
-    </nav>
-    <header class="hero-section-light">
-        <div class="hero-bg"></div>
-        <div class="hero-overlay-light"></div>
-        <div class="hero-content relative z-10 pl-6 md:pl-20 max-w-4xl pt-20">
-            <h1 class="hero-text-animate text-6xl md:text-8xl font-black text-black leading-[0.9] mb-6 uppercase tracking-tight">
-                <span class="hero-text-animate-delay-1">BUILT DIFFERENT.</span><br><span class="hero-text-animate-delay-2">TRAINED DIFFERENT.</span>
-            </h1>
-            <p class="hero-subtitle-animate text-gray-800 text-lg md:text-xl max-w-xl mb-10 leading-relaxed font-medium">
-                Movement science. High-level decision-making. Competitive confidence. Godspeed builds complete players
-                for the modern game.
-            </p>
-            <div class="flex flex-col md:flex-row gap-4">
-                <a href="training.html#signup"
-                    class="hero-cta-animate btn-glow btn-delight px-8 py-4 bg-blue-600 text-white font-bold rounded-full text-center hover:bg-blue-700 transition">TRAIN
-                    WITH GODSPEED</a>
-                <a href="#club"
-                    class="hero-cta-animate hero-cta-animate-delay btn-delight px-8 py-4 bg-white text-black font-bold rounded-full text-center border-2 border-gray-100 hover:border-gray-300 transition">JOIN
-                    CLUB GODSPEED</a>
-            </div>
+        <div class="hero-visual">
+            <div class="glowing-orb"></div>
+            <img src="assets/hero-collage.png" alt="Godspeed Basketball Collage" class="hero-image">
         </div>
     </header>
-    <section class="py-24 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-16">
-                <h2 class="scroll-reveal text-5xl font-black uppercase mb-6 tracking-tight text-gray-900">WHAT WE STAND FOR</h2>
-                <p class="scroll-reveal-stagger text-gray-600 text-lg max-w-3xl mx-auto leading-relaxed">
-                    Godspeed is a performance-driven basketball program committed to developing technically sound,
-                    mentally sharp, and purpose-led athletes.
-                </p>
-            </div>
 
-            <div class="grid md:grid-cols-3 gap-8 stagger-children">
-                <div
-                    class="stagger-item feature-card bg-white rounded-3xl shadow-xl overflow-hidden group hover:ring-2 hover:ring-blue-600 transition-all duration-200 transform hover:-translate-y-1 cursor-pointer">
-                    <div class="h-64 relative bg-gray-200">
-                        <img src="assets/movement-mastery.png" alt="Movement" class="image-hover-spring w-full h-full object-cover">
+    <section id="philosophy" class="section-dark">
+        <div class="container">
+            <h2 class="section-title">WHAT WE STAND FOR</h2>
+            <div class="content-block text-center" style="margin-bottom: 2rem;">
+                <p style="max-width: 800px; margin: 0 auto;">Godspeed is a performance-driven basketball program
+                    committed to developing technically sound,
+                    mentally sharp, and purpose-led athletes.</p>
+            </div>
+            <div class="about-grid">
+                <div class="feature-card">
+                    <div class="card-image">
+                        <img src="assets/movement-mastery.png" alt="Movement Mastery">
                     </div>
-                    <div class="p-10">
-                        <h3 class="text-2xl font-black uppercase mb-2 text-gray-900">MOVEMENT MASTERY</h3>
-                        <p class="text-gray-500 mb-6 text-sm">We engineer movement not mimic drills.</p>
-                        <ul class="space-y-3 text-gray-800 font-bold text-sm">
-                            <li class="flex items-center"><span
-                                    class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Footwork</li>
-                            <li class="flex items-center"><span
-                                    class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Posture</li>
-                            <li class="flex items-center"><span
-                                    class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Balance</li>
-                            <li class="flex items-center"><span
-                                    class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Efficiency</li>
+                    <div class="card-content">
+                        <h3>Movement Mastery</h3>
+                        <p>We engineer movement not mimic drills.</p>
+                        <ul class="feature-list" style="margin-top: 0.5rem;">
+                            <li>Footwork</li>
+                            <li>Posture</li>
+                            <li>Balance</li>
+                            <li>Efficiency</li>
                         </ul>
                         <div class="card-details-expanded">
-                            <div class="detail-section mt-6 pt-6 border-t border-gray-200">
-                                <h4 class="text-lg font-black uppercase mb-3 text-gray-900">The Problem: "Instagram Training"</h4>
-                                <p class="text-gray-600 leading-relaxed mb-4">Modern basketball training has lost its way. It focuses on flashy drills that look good on social media but don't translate to the game. Kids are learning to dribble around cones but can't move efficiently against a defender. This leads to bad habits, wasted energy, and a high risk of non-contact injuries.</p>
+                            <div class="detail-section">
+                                <h4>The Problem: "Instagram Training"</h4>
+                                <p>Modern basketball training has lost its way. It focuses on flashy drills that look
+                                    good on social media but don't translate to the game. Kids are learning to dribble
+                                    around cones but can't move efficiently against a defender. This leads to bad
+                                    habits, wasted energy, and a high risk of non-contact injuries.</p>
                             </div>
-                            <div class="detail-section mt-6 pt-6 border-t border-gray-200">
-                                <h4 class="text-lg font-black uppercase mb-3 text-gray-900">The Godspeed Solution: Biomechanics First</h4>
-                                <p class="text-gray-600 leading-relaxed mb-4">We don't just run drills; we build athletes. Our Movement Mastery curriculum is grounded in physics and biomechanics. We teach your child how to load their hips, absorb force safely, and explode out of cuts. We strip away the "fluff" and focus on the foundational movement patterns that every elite player possesses.</p>
+
+                            <div class="detail-section">
+                                <h4>The Godspeed Solution: Biomechanics First</h4>
+                                <p>We don't just run drills; we build athletes. Our Movement Mastery curriculum is
+                                    grounded in physics and biomechanics. We teach your child how to load their hips,
+                                    absorb force safely, and explode out of cuts. We strip away the "fluff" and focus on
+                                    the foundational movement patterns that every elite player possesses.</p>
                             </div>
-                            <div class="detail-section mt-6 pt-6 border-t border-gray-200">
-                                <h4 class="text-lg font-black uppercase mb-3 text-gray-900">The Result: Unstoppable Efficiency</h4>
-                                <p class="text-gray-600 leading-relaxed">When your child steps on the court, they will look different. They will glide while others grind. They will be faster, not just because they are running harder, but because they are moving <em class="font-bold">better</em>. This is the "hidden" advantage that college scouts notice immediately - an athlete who moves with purpose and power.</p>
+
+                            <div class="detail-section">
+                                <h4>The Result: Unstoppable Efficiency</h4>
+                                <p>When your child steps on the court, they will look different. They will glide while
+                                    others grind. They will be faster, not just because they are running harder, but
+                                    because they are moving <em>better</em>. This is the "hidden" advantage that college
+                                    scouts notice immediately - an athlete who moves with purpose and power.</p>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <div
-                    class="stagger-item feature-card bg-white rounded-3xl shadow-xl overflow-hidden group hover:ring-2 hover:ring-blue-600 transition-all duration-200 transform hover:-translate-y-1 cursor-pointer">
-                    <div class="h-64 relative bg-gray-200">
-                        <img src="assets/iq-decision.png" alt="IQ" class="w-full h-full object-cover object-top">
+                <div class="feature-card">
+                    <div class="card-image">
+                        <img src="assets/iq-decision.png" alt="IQ & Decision Training">
                     </div>
-                    <div class="p-10">
-                        <h3 class="text-2xl font-black uppercase mb-2 text-gray-900">IQ & DECISION TRAINING</h3>
-                        <p class="text-gray-500 mb-6 text-sm">Players learn to process faster than opponents can react.
-                        </p>
-                        <ul class="space-y-3 text-gray-800 font-bold text-sm">
-                            <li class="flex items-center"><span
-                                    class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Reads</li>
-                            <li class="flex items-center"><span
-                                    class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Spacing</li>
-                            <li class="flex items-center"><span
-                                    class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Manipulation</li>
-                            <li class="flex items-center"><span
-                                    class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Tempo</li>
+                    <div class="card-content">
+                        <h3>IQ & Decision Training</h3>
+                        <p>Players learn to process faster than opponents can react.</p>
+                        <ul class="feature-list" style="margin-top: 0.5rem;">
+                            <li>Reads</li>
+                            <li>Spacing</li>
+                            <li>Manipulation</li>
+                            <li>Tempo</li>
                         </ul>
                         <div class="card-details-expanded">
-                            <div class="detail-section mt-6 pt-6 border-t border-gray-200">
-                                <h4 class="text-lg font-black uppercase mb-3 text-gray-900">The Problem: The "Robot" Athlete</h4>
-                                <p class="text-gray-600 leading-relaxed mb-4">Traditional coaching often treats players like robots - "go here, do this." This creates players who can execute a set play but freeze when the defense does something unexpected. They become dependent on the coach for every decision and lack the autonomy to create on the fly.</p>
+                            <div class="detail-section">
+                                <h4>The Problem: The "Robot" Athlete</h4>
+                                <p>Traditional coaching often treats players like robots - "go here, do this." This
+                                    creates players who can execute a set play but freeze when the defense does
+                                    something unexpected. They become dependent on the coach for every decision and lack
+                                    the autonomy to create on the fly.</p>
                             </div>
-                            <div class="detail-section mt-6 pt-6 border-t border-gray-200">
-                                <h4 class="text-lg font-black uppercase mb-3 text-gray-900">The Godspeed Solution: Pattern Recognition</h4>
-                                <p class="text-gray-600 leading-relaxed mb-4">We don't teach plays; we teach patterns. Our IQ School curriculum trains players to recognize defensive structures, identify advantages, and make split-second decisions. Through game-like scenarios and film study, players develop the cognitive skills to read the game at an elite level.</p>
+
+                            <div class="detail-section">
+                                <h4>The Godspeed Solution: Cognitive Overload</h4>
+                                <p>We train the brain as intensely as the body. We put players in chaotic, live-play
+                                    scenarios where the rules change constantly. We force them to make split-second
+                                    reads, manipulate defensive spacing, and control the tempo of the game. We don't
+                                    teach them <em>what</em> to think; we teach them <em>how</em> to think.</p>
                             </div>
-                            <div class="detail-section mt-6 pt-6 border-t border-gray-200">
-                                <h4 class="text-lg font-black uppercase mb-3 text-gray-900">The Result: The Court General</h4>
-                                <p class="text-gray-600 leading-relaxed">Your child will become a decision-maker, not just a follower. They will see plays develop before they happen, manipulate defenders with their eyes and body language, and create opportunities for themselves and teammates. This is the difference between a good player and a great one - the ability to think the game.</p>
+
+                            <div class="detail-section">
+                                <h4>The Result: The Court General</h4>
+                                <p>Your child will play the game two steps ahead of everyone else. While other players
+                                    are reacting, yours will be dictating. They will see passing lanes before they open
+                                    and anticipate defensive rotations. This high "Basketball IQ" is the #1 trait that
+                                    separates elite level players.</p>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <div
-                    class="stagger-item feature-card bg-white rounded-3xl shadow-xl overflow-hidden group hover:ring-2 hover:ring-blue-600 transition-all duration-200 transform hover:-translate-y-1 cursor-pointer">
-                    <div class="h-64 relative bg-gray-200">
-                        <img src="assets/confidence-resilience.jpg" alt="Confidence"
-                            class="w-full h-full object-cover object-top">
+                <div class="feature-card">
+                    <div class="card-image">
+                        <img src="assets/confidence-resilience.jpg" alt="Confidence & Resilience">
                     </div>
-                    <div class="p-10">
-                        <h3 class="text-2xl font-black uppercase mb-2 text-gray-900">CONFIDENCE & RESILIENCE</h3>
-                        <p class="text-gray-500 mb-6 text-sm">Growth without shortcuts. Leadership without ego.</p>
-                        <ul class="space-y-3 text-gray-800 font-bold text-sm">
-                            <li class="flex items-center"><span
-                                    class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Pressure-tested confidence
-                            </li>
-                            <li class="flex items-center"><span
-                                    class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Failure without shame</li>
+                    <div class="card-content">
+                        <h3>Confidence & Resilience</h3>
+                        <p>Growth without shortcuts. Leadership without ego.</p>
+                        <ul class="feature-list" style="margin-top: 0.5rem;">
+                            <li>Pressure-tested confidence</li>
+                            <li>Failure without shame</li>
                         </ul>
                         <div class="card-details-expanded">
-                            <div class="detail-section mt-6 pt-6 border-t border-gray-200">
-                                <h4 class="text-lg font-black uppercase mb-3 text-gray-900">The Problem: Fragile Confidence</h4>
-                                <p class="text-gray-600 leading-relaxed mb-4">Many young athletes have confidence that shatters at the first sign of adversity. They've been praised for outcomes, not process. When they miss a shot or make a mistake, their entire game collapses. This creates players who play scared, avoid big moments, and never reach their potential.</p>
+                            <div class="detail-section">
+                                <h4>The Problem: Fragile Confidence</h4>
+                                <p>In a world of participation trophies and curated social media lives, many young
+                                    athletes have never truly faced failure. Their confidence is fragile - it exists
+                                    only
+                                    when things are going well. The moment they miss a shot or get yelled at by a coach,
+                                    they crumble.</p>
                             </div>
-                            <div class="detail-section mt-6 pt-6 border-t border-gray-200">
-                                <h4 class="text-lg font-black uppercase mb-3 text-gray-900">The Godspeed Solution: Process-Based Growth</h4>
-                                <p class="text-gray-600 leading-relaxed mb-4">We build unshakeable confidence through deliberate practice and failure. Our athletes learn that mistakes are data, not disasters. We create high-pressure situations in practice so that games feel easier. We celebrate effort, resilience, and growth - not just wins and stats.</p>
+
+                            <div class="detail-section">
+                                <h4>The Godspeed Solution: Manufactured Adversity</h4>
+                                <p>We believe that true confidence is forged in fire. We intentionally create difficult,
+                                    high-pressure environments where failure is guaranteed. We teach athletes to look
+                                    failure in the eye, own it, and learn from it without shame. We demand real
+                                    confidence, leadership, and accountability.</p>
                             </div>
-                            <div class="detail-section mt-6 pt-6 border-t border-gray-200">
-                                <h4 class="text-lg font-black uppercase mb-3 text-gray-900">The Result: Unbreakable Mindset</h4>
-                                <p class="text-gray-600 leading-relaxed">Your child will develop the mental toughness that separates good players from great ones. They will embrace pressure, learn from failure, and lead by example. This confidence extends beyond the court - into the classroom, relationships, and life. This is character development through sport.</p>
+
+                            <div class="detail-section">
+                                <h4>The Result: Bulletproof Character</h4>
+                                <p>Your child will walk away with a deep, inner belief that isn't dependent on external
+                                    validation. They will be the player who wants the ball in the final seconds, not for
+                                    the glory, but because they trust their preparation. They will be a leader who
+                                    elevates everyone around them - a trait that will serve them for the rest of their
+                                    lives.</p>
                             </div>
                         </div>
                     </div>
@@ -319,228 +249,455 @@
         </div>
     </section>
 
-    <section class="py-24 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-20">
-                <h2 class="scroll-reveal text-5xl font-black uppercase tracking-tight text-gray-900">PROGRAMS</h2>
+    <section class="section-light">
+        <div class="container">
+            <h2 class="section-title">THE STANDARD</h2>
+            <div class="content-block text-center" style="margin-bottom: 5rem;">
+                <p style="font-size: 1.2rem; font-weight: 700; max-width: 800px; margin: 0 auto; text-align: center;">We
+                    don't recruit
+                    talent. We build it.</p>
             </div>
 
-            <div class="grid md:grid-cols-3 gap-8">
-                <div
-                    class="stagger-item bg-white p-10 rounded-3xl shadow-xl flex flex-col h-full hover:shadow-2xl transition-shadow duration-200">
-                    <h3 class="text-2xl font-black uppercase mb-4 text-gray-900">ELITE GUARD ACADEMY</h3>
-                    <p class="text-gray-500 text-sm mb-6 leading-relaxed">Designed for guards who depend on skill, IQ,
-                        and movement not height.</p>
-                    <ul class="space-y-3 text-sm text-gray-800 font-medium mb-10 flex-1">
-                        <li class="flex items-center"><span
-                                class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Footwork and separation</li>
-                        <li class="flex items-center"><span
-                                class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Advanced finishing</li>
-                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Shot
-                            creation</li>
-                        <li class="flex items-center"><span
-                                class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Defensive manipulation</li>
-                    </ul>
-                    <button
-                        class="w-full py-4 bg-blue-600 text-white font-bold rounded-full uppercase tracking-wider hover:bg-blue-700 transition shadow-lg shadow-blue-600/20">SELECT
-                        PROGRAM</button>
+            <div class="standard-bars-container"
+                style="width: 100%; max-width: 800px; margin: 0 auto 5rem auto; display: flex; flex-direction: column; gap: 2rem;">
+                <!-- Bar 1: 100% Commitment -->
+                <div class="standard-bar filled">
+                    <div class="bar-fill" style="width: 0%;"></div>
+                    <div class="bar-content">
+                        <span class="bar-label">Commitment Required</span>
+                        <span class="bar-value">100%</span>
+                    </div>
+                    <div class="bar-details">
+                        <p>Expect consistent, high-intensity coaching. We don't waste time, so we ask that you don't
+                            either.</p>
+                    </div>
                 </div>
 
-                <div
-                    class="stagger-item bg-white p-10 rounded-3xl shadow-xl flex flex-col h-full hover:shadow-2xl transition-shadow duration-200">
-                    <h3 class="text-2xl font-black uppercase mb-4 text-gray-900">IQ SCHOOL (HYDRA)</h3>
-                    <p class="text-gray-500 text-sm mb-6 leading-relaxed">Not plays. Patterns. Players learn to read
-                        space and manipulate defenders.</p>
-                    <ul class="space-y-3 text-sm text-gray-800 font-medium mb-10 flex-1">
-                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Read
-                            space early</li>
-                        <li class="flex items-center"><span
-                                class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Manipulate defenders</li>
-                        <li class="flex items-center"><span
-                                class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Understand overloads</li>
-                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Create
-                            advantages</li>
-                    </ul>
-                    <button
-                        class="w-full py-4 bg-blue-600 text-white font-bold rounded-full uppercase tracking-wider hover:bg-blue-700 transition shadow-lg shadow-blue-600/20">SELECT
-                        PROGRAM</button>
+                <!-- Bar 2: 0% Politics -->
+                <div class="standard-bar">
+                    <div class="bar-fill" style="width: 0%;"></div> <!-- Empty fill for 0% -->
+                    <div class="bar-content">
+                        <span class="bar-label">Politics / Favoritism</span>
+                        <span class="bar-value">0%</span>
+                    </div>
+                    <div class="bar-details">
+                        <p>Expect total transparency. We play those who are prepared.</p>
+                    </div>
                 </div>
 
-                <div
-                    class="stagger-item bg-white p-10 rounded-3xl shadow-xl flex flex-col h-full hover:shadow-2xl transition-shadow duration-200">
-                    <h3 class="text-2xl font-black uppercase mb-4 text-gray-900">STRENGTH + MOVEMENT</h3>
-                    <p class="text-gray-500 text-sm mb-6 leading-relaxed">Functional athletic development without the
-                        burnout culture.</p>
-                    <ul class="space-y-3 text-sm text-gray-800 font-medium mb-10 flex-1">
-                        <li class="flex items-center"><span
-                                class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Reflexive strength</li>
-                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Ground
-                            reaction force</li>
-                        <li class="flex items-center"><span
-                                class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Plyometric sequencing</li>
-                        <li class="flex items-center"><span class="w-1.5 h-1.5 bg-black rounded-full mr-2"></span>Joint
-                            stability</li>
-                    </ul>
-                    <button
-                        class="w-full py-4 bg-blue-600 text-white font-bold rounded-full uppercase tracking-wider hover:bg-blue-700 transition shadow-lg shadow-blue-600/20">SELECT
-                        PROGRAM</button>
+                <!-- Bar 3: Earned Minutes -->
+                <div class="standard-bar filled">
+                    <div class="bar-fill" style="width: 0%;"></div>
+                    <div class="bar-content">
+                        <span class="bar-label">Earned Minutes</span>
+                        <span class="bar-value">100%</span>
+                    </div>
+                    <div class="bar-details">
+                        <p>Expect honest feedback. Playing time is a reward for practice performance, not a
+                            participation trophy.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 3rem;">
+                <a href="training.html#signup" class="btn-primary" style="padding: 1rem 3rem; font-size: 1.2rem;">APPLY
+                    NOW</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="training" class="section-dark">
+        <div class="container">
+            <h2 class="section-title">PROGRAMS</h2>
+            <div class="about-grid">
+                <div class="feature-card">
+                    <div class="card-content">
+                        <h3>Elite Guard Academy</h3>
+                        <p>Designed for guards who depend on skill, IQ, and movement not height.</p>
+                        <ul class="feature-list" style="margin-top: 1rem; margin-bottom: 1rem;">
+                            <li>Footwork and separation</li>
+                            <li>Advanced finishing</li>
+                            <li>Shot creation</li>
+                            <li>Defensive manipulation</li>
+                            <li>Pace + deception</li>
+                            <li>Finishing at multiple angles</li>
+                            <li>Footwork systems</li>
+                            <li>Shooting mechanics</li>
+                            <li>Spacing habits</li>
+                        </ul>
+                        <button class="btn-primary add-to-cart-btn" data-id="elite-guard-academy" data-price="150"
+                            data-name="Elite Guard Academy" data-interest="guard-academy"
+                            style="width: 100%; margin-top: auto;">
+                            Select Program
+                        </button>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="card-content">
+                        <h3>IQ School (Hydra Principles)</h3>
+                        <p>Not plays. Patterns. Players learn to read space, manipulate defenders, and make decisions.
+                        </p>
+                        <ul class="feature-list" style="margin-top: 1rem; margin-bottom: 1rem;">
+                            <li>Read space early</li>
+                            <li>Manipulate defenders</li>
+                            <li>Understand overloads</li>
+                            <li>Create advantages</li>
+                            <li>Attack contours of a defense</li>
+                            <li>Make decisions at live speed</li>
+                        </ul>
+                        <p style="margin-bottom: 1.5rem; color: #888; font-size: 0.9rem;">This is where players become
+                            problem-solvers.</p>
+                        <button class="btn-primary add-to-cart-btn" data-id="iq-school" data-price="120"
+                            data-name="IQ School (Hydra Principles)" data-interest="iq-school"
+                            style="width: 100%; margin-top: auto;">
+                            Select Program
+                        </button>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="card-content">
+                        <h3>Strength + Movement</h3>
+                        <p>Functional athletic development without the burnout culture.</p>
+                        <ul class="feature-list" style="margin-top: 1rem; margin-bottom: 1rem;">
+                            <li>Reflexive strength</li>
+                            <li>Ground reaction force</li>
+                            <li>Plyometric sequencing</li>
+                            <li>Balance + posture</li>
+                            <li>Speed mechanics</li>
+                            <li>Joint stability</li>
+                            <li>Low-to-the-ground efficiency</li>
+                        </ul>
+                        <p style="margin-bottom: 1.5rem; color: #888; font-size: 0.9rem;">Athletes move better, last
+                            longer, and react faster.</p>
+                        <button class="btn-primary add-to-cart-btn" data-id="strength-movement" data-price="100"
+                            data-name="Strength + Movement" data-interest="strength"
+                            style="width: 100%; margin-top: auto;">
+                            Select Program
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="bg-gray-50 py-24 px-6 text-center">
-        <div class="max-w-7xl mx-auto">
-            <h2 class="scroll-reveal text-4xl md:text-6xl font-black text-gray-900 uppercase mb-6 tracking-tight">
-                THE GODSPEED <span class="text-blue-600">FAMILY</span>
-            </h2>
-            <p class="text-gray-600 max-w-2xl mx-auto text-lg mb-20 leading-relaxed font-medium">
-                It's more than a jersey. It's a promise. When you join Club Godspeed, you join a brotherhood dedicated
-                to excellence on and off the court.
-            </p>
+    <section id="club" class="section-light">
+        <div class="container">
+            <h2 class="section-title">THE GODSPEED <span class="accent">FAMILY</span></h2>
+            <div class="content-block text-center" style="margin-bottom: 4rem;">
+                <p style="font-size: 1.2rem; max-width: 800px; margin: 0 auto;">It's more than a jersey. It's a promise.
+                    When you
+                    join Club Godspeed, you join a brotherhood dedicated to excellence on and off the court.</p>
+            </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Card 1: Mentorship -->
-                <div
-                    class="stagger-item bg-white rounded-3xl shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-                    <div class="h-80 overflow-hidden relative">
-                        <img src="assets/family-1.jpg" alt="Mentorship First"
-                            class="w-full h-full object-cover object-center transform group-hover:scale-105 transition duration-700 ease-out">
+            <div class="about-grid">
+                <div class="feature-card">
+                    <div class="card-image">
+                        <img src="quest_scott.jpg" alt="Mentorship" style="object-position: top center;">
                     </div>
-                    <div class="p-10 text-left">
-                        <h3 class="text-2xl font-black text-gray-900 uppercase mb-4 tracking-tight">MENTORSHIP FIRST
-                        </h3>
-                        <p class="text-gray-500 text-sm leading-relaxed font-medium">
-                            Our coaches are mentors, not just trainers. We guide athletes through the challenges of
-                            competition, school, and life.
-                        </p>
+                    <div class="card-content">
+                        <h3>Mentorship First</h3>
+                        <p>Our coaches are mentors, not just trainers. We guide athletes through the challenges of
+                            competition, school, and life.</p>
                     </div>
                 </div>
-
-                <!-- Card 2: Long-Term Vision -->
-                <div
-                    class="stagger-item bg-white rounded-3xl shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-                    <div class="h-80 overflow-hidden relative bg-black flex items-center justify-center">
-                        <img src="assets/vision-gold.png" alt="Long-Term Vision"
-                            class="w-full h-full object-contain p-8 transform group-hover:scale-105 transition duration-700 ease-out">
+                <div class="feature-card">
+                    <div class="card-image">
+                        <img src="assets/trophy-only.png" alt="Development">
                     </div>
-                    <div class="p-10 text-left">
-                        <h3 class="text-2xl font-black text-gray-900 uppercase mb-4 tracking-tight">LONG-TERM VISION
-                        </h3>
-                        <p class="text-gray-500 text-sm leading-relaxed font-medium">
-                            We don't chase trophies. We build skills that translate to high school, college, and beyond.
-                        </p>
+                    <div class="card-content">
+                        <h3>Long-Term Vision</h3>
+                        <p>We don't chase trophies. We build skills that translate to high school, college,
+                            and beyond.</p>
                     </div>
                 </div>
-
-                <!-- Card 3: Elite Skills -->
-                <div
-                    class="stagger-item bg-white rounded-3xl shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-                    <div class="h-80 overflow-hidden relative bg-black">
-                        <img src="assets/family-3.png" alt="Elite Skills Development"
-                            class="w-full h-full object-cover object-center transform group-hover:scale-105 transition duration-700 ease-out grayscale hover:grayscale-0">
+                <div class="feature-card">
+                    <div class="card-image">
+                        <img src="assets/shooting-ref.png" alt="Elite Skills">
                     </div>
-                    <div class="p-10 text-left">
-                        <h3 class="text-2xl font-black text-gray-900 uppercase mb-4 tracking-tight">ELITE SKILLS
-                            DEVELOPMENT</h3>
-                        <p class="text-gray-500 text-sm leading-relaxed font-medium">
-                            We are preparing kids to play. Iron sharpens iron. We plan to play a national schedule to
-                            expose weaknesses and accelerate growth.
-                        </p>
+                    <div class="card-content">
+                        <h3>Elite Skills Development</h3>
+                        <p>We are preparing kids to play. Iron sharpens iron. We plan to play a national schedule to
+                            expose
+                            weaknesses and accelerate growth.</p>
                     </div>
                 </div>
+            </div>
+
+            <div class="club-cta"
+                style="margin-top: 5rem; text-align: center; background: #111; padding: 4rem; border-radius: 20px; color: white;">
+                <h3 style="color: white; font-size: 2.5rem; margin-bottom: 1rem;">READY TO COMMIT?</h3>
+                <p style="color: #ccc; margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+                    Our roster spots are earned, not bought. If you are ready to work, we are ready to build.</p>
+                <a href="training.html?interest=aau#signup" class="btn-primary">Apply for AAU</a>
             </div>
         </div>
     </section>
 
-    <section class="py-24 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="bg-black rounded-[3rem] p-16 md:p-32 text-center shadow-2xl relative overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-b from-gray-900 to-black opacity-50 pointer-events-none">
-                </div>
 
-                <div class="relative z-10">
-                    <h2 class="scroll-reveal text-4xl md:text-6xl font-black text-white uppercase mb-8 tracking-tight">READY TO
-                        COMMIT?</h2>
-                    <p class="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-12 font-medium">
-                        Our roster spots are earned, not bought. If you are ready to work, we are ready to build.
-                    </p>
-                    <a href="aau.html"
-                        class="btn-glow btn-delight inline-block px-12 py-5 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition transform hover:-translate-y-1 uppercase tracking-widest text-sm">
-                        APPLY FOR AAU
-                    </a>
-                </div>
+
+    <!--
+    <section id="community" class="section-dark">
+        <div class="container">
+            <h2 class="section-title">COMMUNITY <span class="accent">IMPACT</span></h2>
+            <div class="content-block">
+                <ul class="feature-list" style="justify-content: center; display: flex; flex-wrap: wrap; gap: 2rem;">
+                    <li>Holiday Clinic</li>
+                    <li>Turkey Giveaway</li>
+                    <li>Shoe Drive</li>
+                    <li>Local mentorship</li>
+                    <li>Academic + character development</li>
+                </ul>
             </div>
         </div>
     </section>
-    <footer class="bg-gray-50 pt-20 pb-16 border-t border-gray-100">
-        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-12">
-            <div class="md:col-span-4">
-                <div class="text-2xl font-black tracking-tighter mb-6">
-                    GODSPEED<span class="text-blue-600">BASKETBALL</span>
+    -->
+
+    <footer class="site-footer">
+        <!-- FOOTER LOCKED: DO NOT EDIT WITHOUT USER PERMISSION -->
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-brand-section">
+                    <span class="footer-logo">GODSPEED BASKETBALL</span>
+                    <p class="footer-tagline">Building the future of Denver basketball. Character. Discipline.
+                        Excellence.</p>
                 </div>
-                <p class="text-gray-500 leading-relaxed max-w-sm text-sm">
-                    Building the future of Denver basketball.<br>
-                    Character. Discipline. Excellence.
-                </p>
+                <div class="footer-columns">
+                    <div class="footer-column">
+                        <h4>Programs</h4>
+                        <ul>
+                            <li><a href="training.html">Training</a></li>
+                            <li><a href="aau.html">AAU Club</a></li>
+                            <li><span class="nav-item-disabled">Academy </span></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Athletes</h4>
+                        <ul>
+                            <li><a href="skill-audit.html">Skill Assessment</a></li>
+                            <li><a href="card-preview.html">Player Card</a></li>
+                            <li><span class="nav-item-disabled">AAU Camps</span></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Shop</h4>
+                        <ul>
+                            <li><a href="parent-portal.html#gear" class="auth-restricted">Uniforms & Gear</a></li>
+                            <li><span class="nav-item-disabled">Apparel </span></li>
+                            <li><span class="nav-item-disabled">Footwear </span></li>
+                            <li><span class="nav-item-disabled">Accessories </span></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Parents</h4>
+                        <ul>
+                            <li><a href="calendar-preview.html" class="auth-restricted">Calendar</a></li>
+                            <li><a href="parent-audit.html">Parent Assessment</a></li>
+                            <li><a href="parent-portal.html">Parent Portal</a></li>
+                            <li><span class="nav-item-disabled auth-restricted">Manage Account </span></li>
+                            <li><a href="parent-portal.html#tuition" class="auth-restricted">Tuition & Fees</a></li>
+                            <li><a href="parent-portal.html#tuition" class="auth-restricted">Travel Info</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Company</h4>
+                        <ul>
+                            <li><a href="about.html">About Us</a></li>
+                            <li><a href="#" onclick="openContactModal()">Contact</a></li>
+                            <li><a href="coach-portal.html">Coach Portal</a></li>
+                            <li><span class="nav-item-disabled">Careers </span></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
-            <div class="md:col-span-8 grid grid-cols-2 md:grid-cols-5 gap-8">
-                <div>
-                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Programs</h4>
-                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
-                        <li><a href="training.html" class="hover:text-blue-600 transition">Training</a></li>
-                        <li><a href="aau.html" class="hover:text-blue-600 transition">AAU Club</a></li>
-                        <li class="text-gray-400 cursor-not-allowed" title="Coming Soon">Academy</li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Athletes</h4>
-                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
-                        <li><a href="#" class="hover:text-blue-600 transition">Skill Assessment</a></li>
-                        <li><a href="#" class="hover:text-blue-600 transition">Player Card</a></li>
-                        <li class="text-gray-400 cursor-not-allowed" title="Coming Soon">AAU Camps</li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Shop</h4>
-                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
-                        <li><a href="store.html?category=all" class="hover:text-blue-600 transition">Apparel</a></li>
-                        <li><a href="store.html?category=performance"
-                                class="hover:text-blue-600 transition">Footwear</a></li>
-                        <li><a href="store.html?category=accessories"
-                                class="hover:text-blue-600 transition">Accessories</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Parents</h4>
-                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
-                        <li><a href="#" class="hover:text-blue-600 transition">Parent Assessment</a></li>
-                        <li><a href="parent-portal.html" class="hover:text-blue-600 transition">Parent Portal</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Company</h4>
-                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
-                        <li><a href="about.html" class="hover:text-blue-600 transition">About Us</a></li>
-                        <li><a href="#contact" class="hover:text-blue-600 transition">Contact</a></li>
-                        <li><a href="coach-portal.html" class="hover:text-blue-600 transition">Coach Portal</a></li>
-                        <li class="text-gray-400 cursor-not-allowed" title="Coming Soon">Careers</li>
-                    </ul>
+            <div class="footer-bottom">
+                <div class="footer-copyright">Copyright © 2025 Godspeed Basketball. All rights reserved.</div>
+                <div class="footer-legal-links">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Use</a>
+                    <a href="#">Sales Policy</a>
+                    <a href="#">Legal</a>
+                    <a href="#">Site Map</a>
                 </div>
             </div>
         </div>
     </footer>
-    <!-- Scripts with defer for parallel loading -->
-    <script src="branded-modal.js"></script>
-    <script src="security.js"></script>
-    <script src="performance.js" defer></script>
-    <script src="button-states.js" defer></script>
-    <script src="scroll-reveal.js" defer></script>
-    <script src="count-up.js" defer></script>
-    <script src="inspirational-quotes.js" defer></script>
-    <script src="quote-system.js" defer></script>
-    <script src="easter-eggs.js" defer></script>
-    <script src="cart-handler.js" defer></script>
+
+    <!-- Global Contact Modal -->
+    <div class="modal-overlay" id="contactModal">
+        <div class="contact-modal">
+            <button class="modal-close" onclick="closeContactModal()">✕</button>
+
+            <!-- Left: Info Side -->
+            <div class="modal-info">
+                <div>
+                    <h2 class="modal-title">GET IN<br>TOUCH</h2>
+                    <p style="color: #86868b; font-weight: 500; line-height: 1.6;">Questions about the Academy, AAU
+                        teams, or training? We're locked in.</p>
+                </div>
+
+                <div>
+                    <div class="contact-detail-item">
+                        <div class="contact-label">HQ Location</div>
+                        <div class="contact-value">Denver Basketball Center</div>
+                        <div style="font-size: 0.9rem; color: #86868b; margin-top: 4px;">Godspeed HQ, Denver, CO</div>
+                    </div>
+
+                    <div class="contact-detail-item">
+                        <div class="contact-label">Direct Email</div>
+                        <div class="contact-value">info@godspeed.com</div>
+                    </div>
+
+                    <div class="contact-detail-item" style="margin-bottom: 0;">
+                        <div class="contact-label">Socials</div>
+                        <div class="contact-value" style="font-size: 0.95rem;">@godspeedbasketball</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Form Side -->
+            <div class="modal-form-section">
+                <form
+                    onsubmit="event.preventDefault(); alert('Message sent! We will reach out shortly.'); closeContactModal();">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                        <div>
+                            <label class="contact-label">First Name</label>
+                            <input type="text" class="modal-input" placeholder="LeBron" required>
+                        </div>
+                        <div>
+                            <label class="contact-label">Last Name</label>
+                            <input type="text" class="modal-input" placeholder="James" required>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 1rem;">
+                        <label class="contact-label">Email Address</label>
+                        <input type="email" class="modal-input" placeholder="king@lakers.com" required>
+                    </div>
+
+                    <div style="margin-bottom: 1rem;">
+                        <label class="contact-label">Topic</label>
+                        <div style="position: relative;">
+                            <select class="modal-input" style="appearance: none; cursor: pointer;">
+                                <option>General Inquiry</option>
+                                <option>AAU Tryouts</option>
+                                <option>Private Training</option>
+                            </select>
+                            <div
+                                style="position: absolute; right: 15px; top: 15px; pointer-events: none; font-size: 0.7rem; color: #888;">
+                                ▼</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <label class="contact-label">Message</label>
+                        <textarea class="modal-input" rows="4" style="resize: none;"
+                            placeholder="How can we help you build your legacy?"></textarea>
+                    </div>
+
+                    <button type="submit" class="modal-btn">Send Message_</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+
+    <!-- Cart Overlay -->
+    <div id="cart-overlay" class="cart-overlay">
+        <div class="cart-sidebar">
+            <div class="cart-header">
+                <h2>Your Cart</h2>
+                <button id="close-cart" class="close-cart-btn">×</button>
+            </div>
+            <div id="cart-items" class="cart-items">
+                <!-- Cart items will be injected here -->
+                <p class="empty-cart-msg">Your cart is empty.</p>
+            </div>
+            <div class="cart-footer">
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <span id="cart-total-price">$0.00</span>
+                </div>
+                <button class="btn-primary checkout-btn"
+                    onclick="alert('Checkout integration coming soon!')">Checkout</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Modal Logic
+        function openContactModal() {
+            document.getElementById('contactModal').classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+
+        function closeContactModal() {
+            document.getElementById('contactModal').classList.remove('active');
+            document.body.style.overflow = ''; // Restore scrolling
+        }
+
+        // Close on outside click
+        document.getElementById('contactModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeContactModal();
+            }
+        });
+
+        // Escape key to close
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeContactModal();
+            }
+        });
+    </script>
+    <!-- ENROLLMENT MODAL (Strict iOS) -->
+    <div class="ios-sheet-overlay" id="enrollment-modal">
+        <div class="ios-sheet">
+            <div class="sheet-handle"></div>
+
+            <div style="flex: 1; overflow-y: auto;">
+                <h2 class="sheet-title" id="enroll-program-name">Loading...</h2>
+                <div class="sheet-subtitle" style="text-align: center; margin-bottom: 24px;">Secure your spot for the
+                    upcoming season. Limited availability.</div>
+
+                <!-- GUEST FORM (Always visible if Guest) -->
+                <div id="enroll-guest-form" style="display: none; margin-bottom: 24px;">
+                    <div style="margin-bottom: 16px;">
+                        <label class="ios-label-small">YOUR INFORMATION</label>
+                        <input type="text" class="ios-filled-input" id="guest-parent-name" placeholder="Parent Name">
+                        <input type="email" class="ios-filled-input" id="guest-email" placeholder="Email Address">
+                        <input type="text" class="ios-filled-input" id="guest-athlete-name" placeholder="Athlete Name">
+                    </div>
+                </div>
+
+                <!-- ATHLETE SELECT (Logged In) -->
+                <div id="enroll-athlete-select" style="display: none; margin-bottom: 24px;">
+                    <label class="ios-label-small">SELECT ATHLETE</label>
+                    <div id="enroll-athlete-list"></div>
+                </div>
+
+                <!-- SESSIONS -->
+                <div style="margin-bottom: 24px;">
+                    <label class="ios-label-small">SELECT SESSION(S)</label>
+                    <div id="enroll-session-list">
+                        <!-- JS Injected Cards -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA -->
+            <button id="btn-confirm-enroll" class="btn-sheet-primary">
+                Select Session(s)
+            </button>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="portal-data.js"></script>
+    <script src="enrollment.js"></script>
+    <script src="auth.js"></script>
+    <script src="src/components/MobileBottomNav.js"></script>
+    <script src="nav-security.js"></script>
 </body>
 
 </html>

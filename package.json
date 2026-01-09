@@ -1,26 +1,27 @@
 {
+    "name": "godspeed-seeder",
+    "version": "1.0.0",
+    "description": "Scripts to seed Firestore data",
+    "main": "seed_firestore.js",
     "scripts": {
-        "dev": "vite",
-        "build": "echo 'Team Protocol: Static Deploy Active'",
-        "auto-commit:start": "node auto-commit.js",
-        "auto-commit:stop": "pkill -f 'node auto-commit.js' || echo 'Auto-commit not running'",
-        "supabase": "supabase",
-        "migrations:push": "supabase db push",
-        "migrations:run": "./scripts/run-migrations-with-cli.sh"
+        "seed": "node seed_firestore.js",
+        "dev": "python3 -m http.server 8000",
+        "build": "echo 'Static HTML site - no build required'",
+        "preview": "python3 -m http.server 8000"
     },
     "dependencies": {
         "@supabase/supabase-js": "^2.89.0",
-        "chokidar": "^3.6.0",
-        "dotenv": "^17.2.3",
-        "firebase-admin": "^13.6.0",
-        "otplib": "^12.0.1",
-        "pg": "^8.16.3",
-        "qrcode": "^1.5.3",
-        "resend": "^6.7.0",
-        "simple-git": "^3.25.0"
+        "firebase-admin": "^11.5.0",
+        "lucide-react": "^0.263.1",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "recharts": "^2.7.2",
+        "resend": "^6.6.0"
     },
     "devDependencies": {
-        "supabase": "^2.72.1",
-        "vite": "^5.4.21"
+        "@types/react": "^18.2.15",
+        "@types/react-dom": "^18.2.7",
+        "@vitejs/plugin-react": "^4.0.3",
+        "vite": "^4.4.5"
     }
 }

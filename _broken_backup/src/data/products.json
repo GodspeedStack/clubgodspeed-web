@@ -1,0 +1,409 @@
+{
+    "categories": [
+        {
+            "id": "cat-001",
+            "name": "Apparel",
+            "slug": "apparel",
+            "description": "Premium basketball apparel and training gear"
+        },
+        {
+            "id": "cat-002",
+            "name": "Footwear",
+            "slug": "footwear",
+            "description": "Performance basketball shoes"
+        },
+        {
+            "id": "cat-003",
+            "name": "Equipment",
+            "slug": "equipment",
+            "description": "Training equipment and accessories"
+        }
+    ],
+    "products": [
+        {
+            "id": "prod-001",
+            "title": "Godspeed Elite Training Jersey",
+            "slug": "godspeed-elite-training-jersey",
+            "description": "Premium moisture-wicking jersey designed for high-intensity training. Features Godspeed branding and advanced breathability technology.",
+            "base_price": 45.00,
+            "category_id": "cat-001",
+            "brand": "Godspeed",
+            "featured_image_url": "/images/products/jersey-black.jpg",
+            "images": [
+                "/images/products/jersey-black.jpg",
+                "/images/products/jersey-black-back.jpg",
+                "/images/products/jersey-black-detail.jpg"
+            ],
+            "status": "active",
+            "is_featured": true,
+            "variants": [
+                {
+                    "id": "var-001",
+                    "sku": "GS-JER-BLK-S",
+                    "size": "S",
+                    "color": "Black",
+                    "inventory_count": 25,
+                    "price_override": null
+                },
+                {
+                    "id": "var-002",
+                    "sku": "GS-JER-BLK-M",
+                    "size": "M",
+                    "color": "Black",
+                    "inventory_count": 40,
+                    "price_override": null
+                },
+                {
+                    "id": "var-003",
+                    "sku": "GS-JER-BLK-L",
+                    "size": "L",
+                    "color": "Black",
+                    "inventory_count": 35,
+                    "price_override": null
+                },
+                {
+                    "id": "var-004",
+                    "sku": "GS-JER-BLK-XL",
+                    "size": "XL",
+                    "color": "Black",
+                    "inventory_count": 20,
+                    "price_override": null
+                },
+                {
+                    "id": "var-005",
+                    "sku": "GS-JER-WHT-M",
+                    "size": "M",
+                    "color": "White",
+                    "inventory_count": 30,
+                    "price_override": null
+                },
+                {
+                    "id": "var-006",
+                    "sku": "GS-JER-WHT-L",
+                    "size": "L",
+                    "color": "White",
+                    "inventory_count": 25,
+                    "price_override": null
+                }
+            ]
+        },
+        {
+            "id": "prod-002",
+            "title": "Godspeed Performance Shorts",
+            "slug": "godspeed-performance-shorts",
+            "description": "Lightweight, breathable shorts with 4-way stretch fabric. Perfect for training and game day.",
+            "base_price": 35.00,
+            "category_id": "cat-001",
+            "brand": "Godspeed",
+            "featured_image_url": "/images/products/shorts-black.jpg",
+            "images": [
+                "/images/products/shorts-black.jpg",
+                "/images/products/shorts-black-side.jpg"
+            ],
+            "status": "active",
+            "is_featured": true,
+            "variants": [
+                {
+                    "id": "var-007",
+                    "sku": "GS-SHT-BLK-S",
+                    "size": "S",
+                    "color": "Black",
+                    "inventory_count": 30,
+                    "price_override": null
+                },
+                {
+                    "id": "var-008",
+                    "sku": "GS-SHT-BLK-M",
+                    "size": "M",
+                    "color": "Black",
+                    "inventory_count": 45,
+                    "price_override": null
+                },
+                {
+                    "id": "var-009",
+                    "sku": "GS-SHT-BLK-L",
+                    "size": "L",
+                    "color": "Black",
+                    "inventory_count": 40,
+                    "price_override": null
+                }
+            ]
+        },
+        {
+            "id": "prod-003",
+            "title": "Anta KT9 'Speed of Light'",
+            "slug": "anta-kt9-speed-of-light",
+            "description": "Klay Thompson's signature shoe featuring advanced cushioning and superior court feel. Limited edition colorway.",
+            "base_price": 140.00,
+            "category_id": "cat-002",
+            "brand": "Anta",
+            "featured_image_url": "/images/products/anta-kt9.jpg",
+            "images": [
+                "/images/products/anta-kt9.jpg",
+                "/images/products/anta-kt9-side.jpg",
+                "/images/products/anta-kt9-sole.jpg"
+            ],
+            "status": "active",
+            "is_featured": true,
+            "variants": [
+                {
+                    "id": "var-010",
+                    "sku": "ANTA-KT9-8",
+                    "size": "8",
+                    "color": "White/Blue",
+                    "inventory_count": 5,
+                    "price_override": null
+                },
+                {
+                    "id": "var-011",
+                    "sku": "ANTA-KT9-9",
+                    "size": "9",
+                    "color": "White/Blue",
+                    "inventory_count": 8,
+                    "price_override": null
+                },
+                {
+                    "id": "var-012",
+                    "sku": "ANTA-KT9-10",
+                    "size": "10",
+                    "color": "White/Blue",
+                    "inventory_count": 10,
+                    "price_override": null
+                },
+                {
+                    "id": "var-013",
+                    "sku": "ANTA-KT9-11",
+                    "size": "11",
+                    "color": "White/Blue",
+                    "inventory_count": 7,
+                    "price_override": null
+                },
+                {
+                    "id": "var-014",
+                    "sku": "ANTA-KT9-12",
+                    "size": "12",
+                    "color": "White/Blue",
+                    "inventory_count": 4,
+                    "price_override": null
+                }
+            ]
+        },
+        {
+            "id": "prod-004",
+            "title": "New Balance Two WXY v4",
+            "slug": "new-balance-two-wxy-v4",
+            "description": "Kawhi Leonard's signature shoe with FuelCell cushioning. Designed for explosive movements and lockdown defense.",
+            "base_price": 160.00,
+            "category_id": "cat-002",
+            "brand": "New Balance",
+            "featured_image_url": "/images/products/nb-two-wxy.jpg",
+            "images": [
+                "/images/products/nb-two-wxy.jpg",
+                "/images/products/nb-two-wxy-side.jpg"
+            ],
+            "status": "active",
+            "is_featured": false,
+            "variants": [
+                {
+                    "id": "var-015",
+                    "sku": "NB-TWO-8",
+                    "size": "8",
+                    "color": "Black/Red",
+                    "inventory_count": 6,
+                    "price_override": null
+                },
+                {
+                    "id": "var-016",
+                    "sku": "NB-TWO-9",
+                    "size": "9",
+                    "color": "Black/Red",
+                    "inventory_count": 9,
+                    "price_override": null
+                },
+                {
+                    "id": "var-017",
+                    "sku": "NB-TWO-10",
+                    "size": "10",
+                    "color": "Black/Red",
+                    "inventory_count": 12,
+                    "price_override": null
+                },
+                {
+                    "id": "var-018",
+                    "sku": "NB-TWO-11",
+                    "size": "11",
+                    "color": "Black/Red",
+                    "inventory_count": 8,
+                    "price_override": null
+                }
+            ]
+        },
+        {
+            "id": "prod-005",
+            "title": "Godspeed Resistance Bands Set",
+            "slug": "godspeed-resistance-bands-set",
+            "description": "Professional-grade resistance bands for strength and mobility training. Includes 5 resistance levels.",
+            "base_price": 29.99,
+            "category_id": "cat-003",
+            "brand": "Godspeed",
+            "featured_image_url": "/images/products/resistance-bands.jpg",
+            "images": [
+                "/images/products/resistance-bands.jpg",
+                "/images/products/resistance-bands-use.jpg"
+            ],
+            "status": "active",
+            "is_featured": false,
+            "variants": [
+                {
+                    "id": "var-019",
+                    "sku": "GS-RB-SET",
+                    "size": "One Size",
+                    "color": "Multi",
+                    "inventory_count": 50,
+                    "price_override": null
+                }
+            ]
+        },
+        {
+            "id": "prod-006",
+            "title": "Godspeed Training Hoodie",
+            "slug": "godspeed-training-hoodie",
+            "description": "Premium heavyweight hoodie with embroidered Godspeed logo. Perfect for pre-game warmups and casual wear.",
+            "base_price": 65.00,
+            "category_id": "cat-001",
+            "brand": "Godspeed",
+            "featured_image_url": "/images/products/hoodie-black.jpg",
+            "images": [
+                "/images/products/hoodie-black.jpg",
+                "/images/products/hoodie-black-back.jpg",
+                "/images/products/hoodie-black-detail.jpg"
+            ],
+            "status": "active",
+            "is_featured": true,
+            "variants": [
+                {
+                    "id": "var-020",
+                    "sku": "GS-HOOD-BLK-S",
+                    "size": "S",
+                    "color": "Black",
+                    "inventory_count": 15,
+                    "price_override": null
+                },
+                {
+                    "id": "var-021",
+                    "sku": "GS-HOOD-BLK-M",
+                    "size": "M",
+                    "color": "Black",
+                    "inventory_count": 25,
+                    "price_override": null
+                },
+                {
+                    "id": "var-022",
+                    "sku": "GS-HOOD-BLK-L",
+                    "size": "L",
+                    "color": "Black",
+                    "inventory_count": 30,
+                    "price_override": null
+                },
+                {
+                    "id": "var-023",
+                    "sku": "GS-HOOD-BLK-XL",
+                    "size": "XL",
+                    "color": "Black",
+                    "inventory_count": 20,
+                    "price_override": null
+                },
+                {
+                    "id": "var-024",
+                    "sku": "GS-HOOD-GRY-M",
+                    "size": "M",
+                    "color": "Heather Gray",
+                    "inventory_count": 20,
+                    "price_override": null
+                },
+                {
+                    "id": "var-025",
+                    "sku": "GS-HOOD-GRY-L",
+                    "size": "L",
+                    "color": "Heather Gray",
+                    "inventory_count": 25,
+                    "price_override": null
+                }
+            ]
+        },
+        {
+            "id": "prod-007",
+            "title": "Basketball Training Cones (Set of 12)",
+            "slug": "basketball-training-cones",
+            "description": "Durable agility cones for footwork drills and defensive training. Includes carrying bag.",
+            "base_price": 24.99,
+            "category_id": "cat-003",
+            "brand": "Godspeed",
+            "featured_image_url": "/images/products/cones.jpg",
+            "images": [
+                "/images/products/cones.jpg"
+            ],
+            "status": "active",
+            "is_featured": false,
+            "variants": [
+                {
+                    "id": "var-026",
+                    "sku": "GS-CONE-12",
+                    "size": "One Size",
+                    "color": "Orange",
+                    "inventory_count": 40,
+                    "price_override": null
+                }
+            ]
+        },
+        {
+            "id": "prod-008",
+            "title": "Godspeed Compression Tights",
+            "slug": "godspeed-compression-tights",
+            "description": "Full-length compression tights for enhanced performance and recovery. Moisture-wicking fabric with anti-odor technology.",
+            "base_price": 42.00,
+            "category_id": "cat-001",
+            "brand": "Godspeed",
+            "featured_image_url": "/images/products/tights-black.jpg",
+            "images": [
+                "/images/products/tights-black.jpg"
+            ],
+            "status": "active",
+            "is_featured": false,
+            "variants": [
+                {
+                    "id": "var-027",
+                    "sku": "GS-TIGHT-BLK-S",
+                    "size": "S",
+                    "color": "Black",
+                    "inventory_count": 20,
+                    "price_override": null
+                },
+                {
+                    "id": "var-028",
+                    "sku": "GS-TIGHT-BLK-M",
+                    "size": "M",
+                    "color": "Black",
+                    "inventory_count": 30,
+                    "price_override": null
+                },
+                {
+                    "id": "var-029",
+                    "sku": "GS-TIGHT-BLK-L",
+                    "size": "L",
+                    "color": "Black",
+                    "inventory_count": 25,
+                    "price_override": null
+                },
+                {
+                    "id": "var-030",
+                    "sku": "GS-TIGHT-BLK-XL",
+                    "size": "XL",
+                    "color": "Black",
+                    "inventory_count": 15,
+                    "price_override": null
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parent Assessment | Godspeed Basketball</title>
+
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="stylesheet" href="mobile-fixes.css">
+</head>
+
+<body class="audit-body">
+
+    <!-- Navigation (Dark Initial) -->
+    <nav class="navbar navbar-dark-initial">
+        <div class="logo">GODSPEED<span class="accent">BASKETBALL</span></div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="training.html">Training</a></li>
+            <li><a href="aau.html">AAU</a></li>
+            <li><a href="calendar-preview.html" class="auth-restricted">Calendar</a></li>
+            <li><span class="nav-item-disabled">Academy <span class="coming-soon-badge">Coming</span></span></li>
+            <li><span class="nav-item-disabled">Shop <span class="coming-soon-badge">Coming</span></span></li>
+            <li><a href="about.html">About</a></li>
+                        <li class="nav-item-dropdown">
+                <div class="nav-login-wrapper">
+                    <a href="parent-portal.html" class="btn-secondary" style="padding: 0.6rem 1.2rem; font-size: 0.85rem; font-weight: 700;">
+                        SIGN IN
+                    </a>
+                    <div class="login-dropdown">
+                        <div
+                            style="padding: 8px 16px 4px; font-size: 11px; text-transform: uppercase; color: #86868b; font-weight: 600; letter-spacing: 0.05em;">
+                            Sign In</div>
+                        <a href="parent-portal.html" class="login-option">
+                            <span style="display: flex; align-items: center; gap: 10px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    style="color: #0071e3;">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                                Parents
+                            </span>
+                            <span class="login-arrow">›</span>
+                        </a>
+                        <a href="coach-portal.html" class="login-option">
+                            <span style="display: flex; align-items: center; gap: 10px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    style="color: #0071e3;">
+                                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1-2-2h2">
+                                    </path>
+                                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                                </svg>
+                                Coaches
+                            </span>
+                            <span class="login-arrow">›</span>
+                        </a>
+                    </div>
+                </div>
+            </li>
+            <li><a href="training.html#signup" class="btn-primary">Train With Us</a></li>
+        </ul>
+        <div class="mobile-menu-btn">☰</div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container main-content">
+
+        <!-- Intro Section -->
+        <div id="audit-intro" class="audit-step active">
+            <div class="audit-header">
+                <h1 class="audit-title">PARENTING THE ELITE</h1>
+                <p class="audit-subtitle">The "Athletic Triangle" of Coach, Athlete, and Parent is fragile. Are you an
+                    Elite Developer, or are you accidentally sabotaging your child's potential?</p>
+                <div class="audit-meta">
+                    <span><span class="icon">⏱</span> 3 Minutes</span>
+                    <span><span class="icon">📝</span> 20 Questions</span>
+                    <span><span class="icon">🔬</span> Psych-Backed</span>
+                </div>
+            </div>
+
+            <button onclick="startAudit()" class="btn-primary">START ASSESSMENT</button>
+            <p class="audit-disclaimer">Based on the Comprehensive Elite Parenting Assessment (CEPA) framework.</p>
+        </div>
+
+        <!-- Question Section -->
+        <div id="audit-question" class="audit-step">
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            <div class="question-counter">QUESTION <span id="current-question-num">1</span> OF <span
+                    id="total-question-num">20</span></div>
+
+            <h2 id="question-text" class="question-text">Question goes here...</h2>
+
+            <!-- Standard Likert Scale for CEPA -->
+            <div class="options-grid" id="options-container">
+                <!-- Options injected by JS -->
+            </div>
+        </div>
+
+        <!-- Loading/Analyzing Section -->
+        <div id="audit-loading" class="audit-step">
+            <div class="loading-spinner"></div>
+            <h2 class="loading-text">ANALYZING PARENTING STYLE...</h2>
+            <p class="loading-subtext">Calculating Demandingness vs. Responsiveness...</p>
+        </div>
+
+        <!-- Result Section -->
+        <div id="audit-result" class="audit-step">
+            <div class="score-circle">
+                <div class="score-value-wrapper">
+                    <!-- Icon or Text representation of the style -->
+                    <span id="final-score" style="font-size: 3rem;">TYPE</span>
+                </div>
+                <span class="score-label">YOUR PARENTING ARCHETYPE</span>
+            </div>
+
+            <h2 id="archetype-title" class="archetype-title">THE ELITE DEVELOPER</h2>
+            <p id="archetype-desc" class="archetype-desc">Description of the result...</p>
+
+            <div class="result-actions">
+                <a href="training.html" class="btn-primary">GET PARENT GUIDE</a>
+                <a href="#" class="btn-secondary">RETAKE QUIZ</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Background Grid -->
+    <div class="bg-grid"></div>
+
+    <script src="parent-audit.js"></script>
+<script src="auth.js"></script>
+</body>
+
+</html>
