@@ -589,6 +589,13 @@ window.openDocModal = function (type) {
     overlay.style.display = 'flex';
     document.body.style.overflow = 'hidden';
 
+    const childInput = document.getElementById('signer-child-name');
+    const parentInput = document.getElementById('signer-parent-name');
+    if (childInput) childInput.value = cName !== 'Athlete Name' ? cName : '';
+    if (parentInput) parentInput.value = pName !== 'Parent Name' ? pName : '';
+
+    if (window.resetSignature) window.resetSignature();
+
     // Resize canvas
     setTimeout(resizeCanvas, 100);
 
@@ -655,6 +662,13 @@ function initSignaturePad() {
     const clearBtn = document.getElementById('clear-signature');
     const submitBtn = document.getElementById('submit-waiver');
     const agreeCheck = document.getElementById('agree-check');
+    const childInput = document.getElementById('signer-child-name');
+    const parentInput = document.getElementById('signer-parent-name');
+    const errorMessage = document.getElementById('signature-error');
+
+    function getTrimmedValue(input) {
+        return input ? input.value.trim() : '';
+    }
 
     function startPosition(e) {
         if (!currentDocType) return;
@@ -696,12 +710,20 @@ function initSignaturePad() {
 
     if (clearBtn) clearBtn.addEventListener('click', () => window.resetSignature());
     if (agreeCheck) agreeCheck.addEventListener('change', updateSubmitState);
+    if (childInput) childInput.addEventListener('input', updateSubmitState);
+    if (parentInput) parentInput.addEventListener('input', updateSubmitState);
 
     window.resetSignature = function () {
         if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
         hasSigned = false;
         if (overlay) overlay.style.display = 'block';
         if (agreeCheck) agreeCheck.checked = false;
+        if (errorMessage) {
+            errorMessage.textContent = '';
+            errorMessage.style.display = 'none';
+        }
+        if (childInput) childInput.removeAttribute('aria-invalid');
+        if (parentInput) parentInput.removeAttribute('aria-invalid');
         if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.innerHTML = 'Sign & Accept';
@@ -709,8 +731,16 @@ function initSignaturePad() {
     }
 
     function updateSubmitState() {
-        if (hasSigned && agreeCheck.checked) {
+        const childName = getTrimmedValue(childInput);
+        const parentName = getTrimmedValue(parentInput);
+        if (childName && childInput) childInput.removeAttribute('aria-invalid');
+        if (parentName && parentInput) parentInput.removeAttribute('aria-invalid');
+        if (hasSigned && agreeCheck.checked && childName && parentName) {
             submitBtn.disabled = false;
+            if (errorMessage) {
+                errorMessage.textContent = '';
+                errorMessage.style.display = 'none';
+            }
         } else {
             submitBtn.disabled = true;
         }
@@ -726,8 +756,33 @@ function initSignaturePad() {
 
     if (submitBtn) {
         submitBtn.addEventListener('click', () => {
+            const childName = getTrimmedValue(childInput);
+            const parentName = getTrimmedValue(parentInput);
+            const isValid = hasSigned && agreeCheck.checked && childName && parentName;
+
+            if (!isValid) {
+                if (errorMessage) {
+                    errorMessage.textContent = 'Please enter both names, provide a signature, and confirm agreement.';
+                    errorMessage.style.display = 'block';
+                }
+                if (!childName && childInput) childInput.setAttribute('aria-invalid', 'true');
+                if (!parentName && parentInput) parentInput.setAttribute('aria-invalid', 'true');
+                return;
+            }
+
             submitBtn.innerHTML = 'Signing...';
             setTimeout(() => {
+                const signatureData = canvas.toDataURL('image/png');
+                const signedPayload = {
+                    docType: currentDocType,
+                    parentName,
+                    childName,
+                    signedAt: new Date().toISOString(),
+                    signatureData
+                };
+                localStorage.setItem(`gba_signature_${currentDocType}`, JSON.stringify(signedPayload));
+                localStorage.setItem('gba_parent_name', parentName);
+                localStorage.setItem('gba_child_name', childName);
                 markDocumentSigned(currentDocType);
                 closeDocModal();
                 godspeedAlert(getTitleFromType(currentDocType) + ' Signed Successfully!', 'Success');
