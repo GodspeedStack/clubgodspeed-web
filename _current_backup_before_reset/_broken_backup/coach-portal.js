@@ -1528,7 +1528,7 @@ const ACADEMY_CONTENT = {
             title: "Zone Offense Principles",
             coach: "Jay Wright",
             category: "Offense",
-            image: "assets/shooting-ref.png",
+            image: "/assets/skills-hand.png",
             desc: "How Villanova attacks the 2-3 Zone using the high post and corner overload."
         }
     ],
