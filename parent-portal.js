@@ -2412,3 +2412,325 @@ window.initPortal = function () {
     }
 }
 
+/**
+ * View Switching Functions
+ */
+window.showLoginForm = function () {
+    document.getElementById('portal-login').style.display = 'flex';
+    document.getElementById('portal-signup').style.display = 'none';
+    document.getElementById('portal-reset').style.display = 'none';
+
+    // Clear any error messages
+    const errorMsg = document.querySelector('#portal-login .login-error');
+    if (errorMsg) {
+        errorMsg.style.display = 'none';
+        errorMsg.textContent = '';
+    }
+}
+
+window.showSignupForm = function () {
+    document.getElementById('portal-login').style.display = 'none';
+    document.getElementById('portal-signup').style.display = 'flex';
+    document.getElementById('portal-reset').style.display = 'none';
+
+    // Clear any error messages
+    const errorMsg = document.querySelector('#portal-signup .login-error');
+    if (errorMsg) {
+        errorMsg.style.display = 'none';
+        errorMsg.textContent = '';
+    }
+}
+
+window.showPasswordResetForm = function () {
+    document.getElementById('portal-login').style.display = 'none';
+    document.getElementById('portal-signup').style.display = 'none';
+    document.getElementById('portal-reset').style.display = 'flex';
+
+    // Clear any messages
+    const errorMsg = document.querySelector('#portal-reset .login-error');
+    const successMsg = document.querySelector('#portal-reset .login-success');
+    if (errorMsg) {
+        errorMsg.style.display = 'none';
+        errorMsg.textContent = '';
+    }
+    if (successMsg) {
+        successMsg.style.display = 'none';
+        successMsg.textContent = '';
+    }
+}
+
+/**
+ * Handle Parent Account Signup
+ */
+window.handleSignup = async function () {
+    const nameInput = document.getElementById('signup-parent-name');
+    const emailInput = document.getElementById('signup-email');
+    const passwordInput = document.getElementById('signup-password');
+    const confirmPasswordInput = document.getElementById('signup-confirm-password');
+    const phoneInput = document.getElementById('signup-phone');
+
+    const name = nameInput ? nameInput.value.trim() : '';
+    const email = emailInput ? emailInput.value.trim() : '';
+    const password = passwordInput ? passwordInput.value : '';
+    const confirmPassword = confirmPasswordInput ? confirmPasswordInput.value : '';
+    const phone = phoneInput ? phoneInput.value.trim() : '';
+
+    const btn = document.querySelector('#portal-signup button[type="submit"]');
+    const errorMsg = document.querySelector('#portal-signup .login-error');
+
+    // Input validation
+    if (!name || !email || !password || !confirmPassword) {
+        if (errorMsg) {
+            errorMsg.textContent = 'Please fill in all required fields';
+            errorMsg.style.display = 'block';
+        }
+        return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        if (errorMsg) {
+            errorMsg.textContent = 'Please enter a valid email address';
+            errorMsg.style.display = 'block';
+        }
+        return;
+    }
+
+    // Password validation
+    if (password.length < 6) {
+        if (errorMsg) {
+            errorMsg.textContent = 'Password must be at least 6 characters';
+            errorMsg.style.display = 'block';
+        }
+        return;
+    }
+
+    if (password !== confirmPassword) {
+        if (errorMsg) {
+            errorMsg.textContent = 'Passwords do not match';
+            errorMsg.style.display = 'block';
+        }
+        return;
+    }
+
+    btn.innerHTML = 'Creating Account...';
+    btn.disabled = true;
+
+    try {
+        // Check if auth.signup exists
+        if (!window.auth || typeof window.auth.signup !== 'function') {
+            throw new Error('Signup functionality is not available. Please contact support.');
+        }
+
+        // Call signup with metadata
+        const result = await window.auth.signup(email, password, {
+            full_name: name,
+            phone: phone,
+            role: 'parent'
+        });
+
+        if (result.success) {
+            // Show success message
+            if (errorMsg) {
+                errorMsg.style.display = 'none';
+            }
+
+            // Show verification message
+            if (window.godspeedAlert) {
+                godspeedAlert(
+                    'Account created successfully! Please check your email to verify your account before logging in.',
+                    'Success',
+                    () => showLoginForm()
+                );
+            } else {
+                alert('Account created successfully! Please check your email to verify your account before logging in.');
+                showLoginForm();
+            }
+        } else {
+            throw new Error(result.error || 'Failed to create account');
+        }
+    } catch (error) {
+        console.error('Signup error:', error);
+        if (errorMsg) {
+            let userFriendlyMessage = 'Failed to create account. Please try again.';
+
+            if (error.message) {
+                if (error.message.includes('already registered') || error.message.includes('already exists')) {
+                    userFriendlyMessage = 'An account with this email already exists. Please try logging in or use a different email.';
+                } else if (error.message.includes('Invalid email')) {
+                    userFriendlyMessage = 'Please enter a valid email address.';
+                } else if (error.message.includes('Password')) {
+                    userFriendlyMessage = error.message;
+                } else {
+                    userFriendlyMessage = error.message;
+                }
+            }
+
+            errorMsg.textContent = userFriendlyMessage;
+            errorMsg.style.display = 'block';
+
+            // Add shake animation
+            const form = document.querySelector('#portal-signup .login-form');
+            if (form) {
+                form.classList.add('shake');
+                setTimeout(() => form.classList.remove('shake'), 500);
+            }
+        }
+    } finally {
+        btn.innerHTML = 'Create Account';
+        btn.disabled = false;
+    }
+}
+
+/**
+ * Handle Password Reset
+ */
+window.handlePasswordReset = async function () {
+    const emailInput = document.getElementById('reset-email');
+    const email = emailInput ? emailInput.value.trim() : '';
+
+    const btn = document.querySelector('#portal-reset button[type="submit"]');
+    const errorMsg = document.querySelector('#portal-reset .login-error');
+    const successMsg = document.querySelector('#portal-reset .login-success');
+
+    // Input validation
+    if (!email) {
+        if (errorMsg) {
+            errorMsg.textContent = 'Please enter your email address';
+            errorMsg.style.display = 'block';
+        }
+        return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        if (errorMsg) {
+            errorMsg.textContent = 'Please enter a valid email address';
+            errorMsg.style.display = 'block';
+        }
+        return;
+    }
+
+    btn.innerHTML = 'Sending...';
+    btn.disabled = true;
+
+    try {
+        // Check if Supabase is available
+        const supabaseClient = window.auth?.getSupabaseClient();
+
+        if (!supabaseClient) {
+            throw new Error('Password reset is not available at this time. Please contact support.');
+        }
+
+        // Send password reset email
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+            redirectTo: 'https://clubgodspeed.com/parent-portal.html'
+        });
+
+        if (error) {
+            throw error;
+        }
+
+        // Show success message
+        if (errorMsg) {
+            errorMsg.style.display = 'none';
+        }
+        if (successMsg) {
+            successMsg.textContent = 'Password reset link sent! Please check your email inbox (and spam folder).';
+            successMsg.style.display = 'block';
+        }
+
+        // Clear the email input
+        if (emailInput) {
+            emailInput.value = '';
+        }
+
+        // Redirect to login after 5 seconds
+        setTimeout(() => {
+            showLoginForm();
+        }, 5000);
+
+    } catch (error) {
+        console.error('Password reset error:', error);
+        if (errorMsg) {
+            let userFriendlyMessage = 'Failed to send reset link. Please try again.';
+
+            if (error.message) {
+                if (error.message.includes('not found') || error.message.includes('User not found')) {
+                    // Don't reveal if email exists for security reasons
+                    userFriendlyMessage = 'If an account exists with this email, you will receive a password reset link shortly.';
+                    // Still show as success
+                    if (successMsg) {
+                        errorMsg.style.display = 'none';
+                        successMsg.textContent = userFriendlyMessage;
+                        successMsg.style.display = 'block';
+                    }
+                } else {
+                    userFriendlyMessage = error.message;
+                }
+            }
+
+            if (!successMsg || successMsg.style.display === 'none') {
+                errorMsg.textContent = userFriendlyMessage;
+                errorMsg.style.display = 'block';
+            }
+        }
+    } finally {
+        btn.innerHTML = 'Send Reset Link';
+        btn.disabled = false;
+    }
+}
+
+/**
+ * Initialize password visibility toggles
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    // Login password toggle (existing)
+    const togglePassword = document.getElementById('toggle-password');
+    const passwordInput = document.getElementById('password');
+    const eyeIcon = document.getElementById('eye-icon');
+    const eyeOffIcon = document.getElementById('eye-off-icon');
+
+    if (togglePassword && passwordInput) {
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.type === 'password' ? 'text' : 'password';
+            passwordInput.type = type;
+
+            if (eyeIcon && eyeOffIcon) {
+                if (type === 'text') {
+                    eyeIcon.style.display = 'none';
+                    eyeOffIcon.style.display = 'block';
+                } else {
+                    eyeIcon.style.display = 'block';
+                    eyeOffIcon.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    // Signup password toggle (new)
+    const toggleSignupPassword = document.getElementById('toggle-signup-password');
+    const signupPasswordInput = document.getElementById('signup-password');
+    const signupEyeIcon = document.getElementById('signup-eye-icon');
+    const signupEyeOffIcon = document.getElementById('signup-eye-off-icon');
+
+    if (toggleSignupPassword && signupPasswordInput) {
+        toggleSignupPassword.addEventListener('click', function() {
+            const type = signupPasswordInput.type === 'password' ? 'text' : 'password';
+            signupPasswordInput.type = type;
+
+            if (signupEyeIcon && signupEyeOffIcon) {
+                if (type === 'text') {
+                    signupEyeIcon.style.display = 'none';
+                    signupEyeOffIcon.style.display = 'block';
+                } else {
+                    signupEyeIcon.style.display = 'block';
+                    signupEyeOffIcon.style.display = 'none';
+                }
+            }
+        });
+    }
+});
+
