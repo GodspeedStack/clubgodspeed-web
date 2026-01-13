@@ -119,7 +119,7 @@
 
                     <div class="divider"><span>OR</span></div>
 
-                    <button type="button" class="btn-secondary full-width google-btn">
+                    <button type="button" id="google-login-btn" class="btn-secondary full-width google-btn">
                         <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
                             <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
                                 <path fill="#4285F4"
@@ -943,11 +943,11 @@
     <!-- Footer Removed per User Request -->
     <!-- Supabase Client (load with defer for non-blocking) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script defer>
-        // Configure Supabase (can be overridden via environment variables)
+    <script>
+        // Configure Supabase (Hardcoded for stability)
         window.SUPABASE_CONFIG = {
-            url: (typeof window !== 'undefined' && window.VITE_SUPABASE_URL) ? window.VITE_SUPABASE_URL : '',
-            anonKey: (typeof window !== 'undefined' && window.VITE_SUPABASE_ANON_KEY) ? window.VITE_SUPABASE_ANON_KEY : ''
+            url: 'https://nnqokhqennuxalamnvps.supabase.co',
+            anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis'
         };
     </script>
     <!-- Core scripts (defer for parallel loading) -->
