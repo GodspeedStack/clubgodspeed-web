@@ -14,7 +14,11 @@ pattern = re.compile(
 # 3. The Fix: Wrap matches in comments # We add a check to ensure we don't comment out something that is ALREADY commented.
 def hide_match(match):
     text = match.group(1)
-    if text.strip().startswith(""
+    # If it's already wrapped in an HTML comment, leave it unchanged.
+    if text.strip().startswith("<!--"):
+        return text
+    # Otherwise, wrap the matched <a> tag in an HTML comment to hide it.
+    return "<!-- " + text + " -->"
 
 new_content, count = pattern.subn(hide_match, content)
 
