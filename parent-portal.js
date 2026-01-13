@@ -2732,5 +2732,45 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-});
 
+    // --- Google Login Handler ---
+    const googleBtn = document.getElementById('google-login-btn');
+    if (googleBtn) {
+        googleBtn.addEventListener('click', async () => {
+            console.log('Initiating Google Login...');
+
+            // Check if Supabase client is available (from global window.supabase or imported)
+            // It might be window.supabase or supabase inside modules.
+            // Based on parent-portal.html, auth-supabase.js is loaded.
+
+            if (window.auth && window.auth.signInWithOAuth) {
+                try {
+                     const { error } = await window.auth.signInWithOAuth({
+                        provider: 'google',
+                        options: {
+                            redirectTo: window.location.origin + '/parent-portal.html'
+                        }
+                    });
+                    if (error) throw error;
+                } catch (err) {
+                    console.error('Google Login Error:', err.message);
+                    alert('Error signing in with Google: ' + err.message);
+                }
+            } else {
+                 console.warn('Auth system not ready or signInWithOAuth missing');
+                 // Fallback to direct supabase call if available
+                 if (typeof supabase !== 'undefined' && supabase.auth) {
+                      const { error } = await supabase.auth.signInWithOAuth({
+                        provider: 'google',
+                        options: {
+                            redirectTo: window.location.origin + '/parent-portal.html'
+                        }
+                    });
+                    if (error) alert(error.message);
+                 } else {
+                     alert('Authentication system is initializing. Please try again in a moment.');
+                 }
+            }
+        });
+    }
+});
