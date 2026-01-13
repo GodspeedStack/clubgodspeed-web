@@ -253,6 +253,10 @@ async function handleGoogleLogin() {
     const googleButton = document.querySelector('.google-btn');
     const label = googleButton ? googleButton.querySelector('.google-label') : null;
     const originalLabel = label ? label.textContent : '';
+    const googleLogin = window.auth && typeof window.auth.loginWithGoogle === 'function'
+        ? window.auth.loginWithGoogle
+        : null;
+    let shouldRestoreButton = true;
 
     setLoginStatus('');
 
@@ -260,7 +264,7 @@ async function handleGoogleLogin() {
         return;
     }
 
-    if (!window.auth || typeof window.auth.loginWithGoogle !== 'function') {
+    if (!googleLogin) {
         setLoginStatus('Google sign-in is not configured yet. Please use email and password for now.');
         return;
     }
@@ -270,17 +274,20 @@ async function handleGoogleLogin() {
         if (label) {
             label.textContent = 'Connecting to Google...';
         }
-        const result = await window.auth.loginWithGoogle();
+        const result = await googleLogin();
         if (result && result.success) {
+            shouldRestoreButton = false;
             setLoginStatus('Redirecting to Google sign-in...', 'info');
         }
     } catch (error) {
         console.error('Google login error:', error);
         setLoginStatus(error.message || 'Google sign-in is unavailable. Please try again.');
     } finally {
-        googleButton.disabled = false;
-        if (label) {
-            label.textContent = originalLabel;
+        if (shouldRestoreButton) {
+            googleButton.disabled = false;
+            if (label) {
+                label.textContent = originalLabel;
+            }
         }
     }
 }
