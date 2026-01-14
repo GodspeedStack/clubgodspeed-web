@@ -99,6 +99,66 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Signup password visibility toggle
+    const toggleSignupPassword = document.getElementById('toggle-signup-password');
+    const signupPasswordInput = document.getElementById('signup-password');
+    const signupEyeIcon = document.getElementById('signup-eye-icon');
+    const signupEyeOffIcon = document.getElementById('signup-eye-off-icon');
+
+    if (toggleSignupPassword && signupPasswordInput) {
+        toggleSignupPassword.addEventListener('click', function() {
+            const type = signupPasswordInput.type === 'password' ? 'text' : 'password';
+            signupPasswordInput.type = type;
+
+            if (signupEyeIcon && signupEyeOffIcon) {
+                if (type === 'text') {
+                    signupEyeIcon.style.display = 'none';
+                    signupEyeOffIcon.style.display = 'block';
+                } else {
+                    signupEyeIcon.style.display = 'block';
+                    signupEyeOffIcon.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    // Google Login Handler
+    const googleBtn = document.getElementById('google-login-btn');
+    if (googleBtn) {
+        googleBtn.addEventListener('click', async () => {
+            console.log('Initiating Google Login...');
+            
+            if (window.auth && window.auth.signInWithOAuth) {
+                try {
+                    const { error } = await window.auth.signInWithOAuth({
+                        provider: 'google',
+                        options: {
+                            redirectTo: window.location.origin + '/parent-portal.html'
+                        }
+                    });
+                    if (error) throw error;
+                } catch (err) {
+                    console.error('Google Login Error:', err.message);
+                    alert('Error signing in with Google: ' + err.message);
+                }
+            } else {
+                console.warn('Auth system not ready or signInWithOAuth missing');
+                // Fallback to direct supabase call if available
+                if (typeof supabase !== 'undefined' && supabase.auth) {
+                    const { error } = await supabase.auth.signInWithOAuth({
+                        provider: 'google',
+                        options: {
+                            redirectTo: window.location.origin + '/parent-portal.html'
+                        }
+                    });
+                    if (error) alert(error.message);
+                } else {
+                    alert('Authentication system is initializing. Please try again in a moment.');
+                }
+            }
+        });
+    }
+
     // Check for existing session
     if (window.auth && window.auth.isLoggedIn()) {
         const savedEmail = localStorage.getItem('gba_user_email');
@@ -2682,95 +2742,3 @@ window.handlePasswordReset = async function () {
         btn.disabled = false;
     }
 }
-
-/**
- * Initialize password visibility toggles
- */
-document.addEventListener('DOMContentLoaded', function() {
-    // Login password toggle (existing)
-    const togglePassword = document.getElementById('toggle-password');
-    const passwordInput = document.getElementById('password');
-    const eyeIcon = document.getElementById('eye-icon');
-    const eyeOffIcon = document.getElementById('eye-off-icon');
-
-    if (togglePassword && passwordInput) {
-        togglePassword.addEventListener('click', function() {
-            const type = passwordInput.type === 'password' ? 'text' : 'password';
-            passwordInput.type = type;
-
-            if (eyeIcon && eyeOffIcon) {
-                if (type === 'text') {
-                    eyeIcon.style.display = 'none';
-                    eyeOffIcon.style.display = 'block';
-                } else {
-                    eyeIcon.style.display = 'block';
-                    eyeOffIcon.style.display = 'none';
-                }
-            }
-        });
-    }
-
-    // Signup password toggle (new)
-    const toggleSignupPassword = document.getElementById('toggle-signup-password');
-    const signupPasswordInput = document.getElementById('signup-password');
-    const signupEyeIcon = document.getElementById('signup-eye-icon');
-    const signupEyeOffIcon = document.getElementById('signup-eye-off-icon');
-
-    if (toggleSignupPassword && signupPasswordInput) {
-        toggleSignupPassword.addEventListener('click', function() {
-            const type = signupPasswordInput.type === 'password' ? 'text' : 'password';
-            signupPasswordInput.type = type;
-
-            if (signupEyeIcon && signupEyeOffIcon) {
-                if (type === 'text') {
-                    signupEyeIcon.style.display = 'none';
-                    signupEyeOffIcon.style.display = 'block';
-                } else {
-                    signupEyeIcon.style.display = 'block';
-                    signupEyeOffIcon.style.display = 'none';
-                }
-            }
-        });
-    }
-
-    // --- Google Login Handler ---
-    const googleBtn = document.getElementById('google-login-btn');
-    if (googleBtn) {
-        googleBtn.addEventListener('click', async () => {
-            console.log('Initiating Google Login...');
-
-            // Check if Supabase client is available (from global window.supabase or imported)
-            // It might be window.supabase or supabase inside modules.
-            // Based on parent-portal.html, auth-supabase.js is loaded.
-
-            if (window.auth && window.auth.signInWithOAuth) {
-                try {
-                     const { error } = await window.auth.signInWithOAuth({
-                        provider: 'google',
-                        options: {
-                            redirectTo: window.location.origin + '/parent-portal.html'
-                        }
-                    });
-                    if (error) throw error;
-                } catch (err) {
-                    console.error('Google Login Error:', err.message);
-                    alert('Error signing in with Google: ' + err.message);
-                }
-            } else {
-                 console.warn('Auth system not ready or signInWithOAuth missing');
-                 // Fallback to direct supabase call if available
-                 if (typeof supabase !== 'undefined' && supabase.auth) {
-                      const { error } = await supabase.auth.signInWithOAuth({
-                        provider: 'google',
-                        options: {
-                            redirectTo: window.location.origin + '/parent-portal.html'
-                        }
-                    });
-                    if (error) alert(error.message);
-                 } else {
-                     alert('Authentication system is initializing. Please try again in a moment.');
-                 }
-            }
-        });
-    }
-});
