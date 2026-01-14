@@ -34,6 +34,54 @@ function validateURL(url) {
     return null;
 }
 
+// Global Google Login Handler
+window.handleGoogleLogin = async function() {
+    console.log('Google Login clicked');
+    
+    const btn = document.getElementById('google-login-btn');
+    const originalHTML = btn ? btn.innerHTML : '';
+    
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = btn.innerHTML.replace('Continue with Google', 'Connecting...');
+    }
+    
+    try {
+        // Wait for auth system to be ready (max 5 seconds)
+        let retries = 0;
+        while ((!window.auth || !window.auth.signInWithOAuth) && retries < 50) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            retries++;
+        }
+        
+        if (!window.auth || !window.auth.signInWithOAuth) {
+            throw new Error('Authentication system not ready. Please refresh the page and try again.');
+        }
+        
+        console.log('Initiating Google OAuth...');
+        const { error } = await window.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: window.location.origin + '/parent-portal.html'
+            }
+        });
+        
+        if (error) throw error;
+        
+        console.log('Google OAuth popup should open...');
+        
+    } catch (err) {
+        console.error('Google Login Error:', err);
+        alert('Error signing in with Google: ' + err.message);
+        
+        // Restore button
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+        }
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     // Security: Check permissions before allowing access
     if (window.Security && window.Security.RBAC) {
