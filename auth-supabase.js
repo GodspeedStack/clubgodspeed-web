@@ -17,6 +17,21 @@
     let isSupabaseAvailable = false;
 
     // Initialize Supabase client if available
+    // Lazy load supabase-js if it failed to load before the auth bootstrap
+    let supabaseLoadPromise = null;
+    function loadSupabaseScript() {
+        if (supabaseLoadPromise) return supabaseLoadPromise;
+        supabaseLoadPromise = new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+            script.defer = true;
+            script.onload = () => resolve(true);
+            script.onerror = () => reject(new Error('Failed to load supabase-js from CDN'));
+            document.head.appendChild(script);
+        });
+        return supabaseLoadPromise;
+    }
+
     function initSupabase() {
         if (!SUPABASE_CONFIG.url || !SUPABASE_CONFIG.anonKey) {
             console.warn('Supabase not configured. Using localStorage fallback.');
@@ -24,7 +39,6 @@
         }
 
         try {
-            // Check if Supabase is loaded from CDN
             if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
                 supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey, {
                     auth: {
@@ -36,12 +50,23 @@
                 });
                 isSupabaseAvailable = true;
                 return true;
-            } else {
-                console.warn('Supabase client library not loaded. Add: <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>');
-                return false;
             }
+
+            console.warn('Supabase client library not loaded. Attempting dynamic load...');
+            return false;
         } catch (error) {
             console.error('Failed to initialize Supabase:', error);
+            return false;
+        }
+    }
+
+    async function ensureSupabaseClient() {
+        if (isSupabaseAvailable && supabaseClient) return true;
+        try {
+            await loadSupabaseScript();
+            return initSupabase();
+        } catch (error) {
+            console.error('Unable to load Supabase client:', error);
             return false;
         }
     }
@@ -74,7 +99,7 @@
             }
 
             // Basic Supabase auth (fallback)
-            if (isSupabaseAvailable && supabaseClient) {
+            if (await ensureSupabaseClient()) {
                 try {
                     // Check email verification if required
                     const { data: { user: existingUser } } = await supabaseClient.auth.getUser();
@@ -323,7 +348,7 @@
          * @returns {Promise<Object>} { success: boolean, requiresVerification: boolean }
          */
         signup: async function (email, password, metadata = {}) {
-            if (isSupabaseAvailable && supabaseClient) {
+            if (await ensureSupabaseClient()) {
                 try {
                     // Use SecureAuth wrapper if available
                     if (window.Security && window.Security.SecureAuth) {
@@ -361,7 +386,7 @@
         },
 
         signInWithOAuth: async function (options) {
-            if (isSupabaseAvailable && supabaseClient) {
+            if (await ensureSupabaseClient()) {
                 return await supabaseClient.auth.signInWithOAuth(options);
             }
             return { error: { message: 'Supabase not available' } };
