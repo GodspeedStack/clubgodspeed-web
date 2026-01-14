@@ -94,14 +94,14 @@
 
                     if (data.session) {
                         const userId = data.user.id;
-                        
+
                         // Check if 2FA is required
                         if (window.Security && window.Security.TwoFactorAuth) {
                             const mfaEnabled = window.Security.TwoFactorAuth.isEnabled(userId);
                             if (mfaEnabled && !twoFactorToken) {
                                 return { requires2FA: true, userId };
                             }
-                            
+
                             if (mfaEnabled && twoFactorToken) {
                                 const mfaValid = window.Security.TwoFactorAuth.verifyToken(userId, twoFactorToken);
                                 if (!mfaValid) {
@@ -114,14 +114,14 @@
                         localStorage.setItem(AUTH_KEY, 'supabase_session');
                         localStorage.setItem('gba_user_email', email);
                         localStorage.setItem('gba_user_id', userId);
-                        
+
                         // Set role from user metadata
                         const role = data.user.user_metadata?.role || 'parent';
                         localStorage.setItem('gba_user_role', role);
-                        
+
                         // Create or update parent account
                         await this.ensureParentAccount(userId, email);
-                        
+
                         updateUI(true);
                         return { success: true };
                     }
@@ -150,7 +150,7 @@
                     console.error('Logout error:', error);
                 }
             }
-            
+
             localStorage.removeItem(AUTH_KEY);
             localStorage.removeItem('gba_user_email');
             localStorage.removeItem('gba_user_id');
@@ -346,8 +346,8 @@
 
                     if (data.user) {
                         // User profile will be created by trigger
-                        return { 
-                            success: true, 
+                        return {
+                            success: true,
                             requiresVerification: true,
                             userId: data.user.id
                         };
@@ -358,6 +358,13 @@
                 }
             }
             throw new Error('Supabase not available');
+        },
+
+        signInWithOAuth: async function (options) {
+            if (isSupabaseAvailable && supabaseClient) {
+                return await supabaseClient.auth.signInWithOAuth(options);
+            }
+            return { error: { message: 'Supabase not available' } };
         }
     };
 
@@ -404,3 +411,4 @@
     }
 
 })();
+
