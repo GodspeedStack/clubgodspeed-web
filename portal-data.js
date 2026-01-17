@@ -4,7 +4,10 @@
 const GODSPEED_DATA = {
     // 1. Teams Configuration (Preserved)
     teams: [
-        { id: 'TEAM-10U-DEV-BLACK', name: '10U Development Black', category: '10U Development', coach: 'Coach Sarah' }
+        { id: 'TEAM-10U-DEV-BLACK', name: '10U Development Black', category: '10U Development', coach: 'Coach Sarah' },
+        { id: 'TEAM-10U-DEV-RED', name: '10U Development Red', category: '10U Development', coach: 'Coach Mike' },
+        { id: 'TEAM-10U-GOLD-BLACK', name: '10U Gold Black', category: '10U Gold', coach: 'Coach Dave' },
+        { id: 'TEAM-10U-ELITE-BLACK', name: '10U Elite Black', category: '10U Elite', coach: 'Coach Scott' }
     ],
 
     // 2. The Roster (Live Snapshot: Finalized 12-Man Squad)
