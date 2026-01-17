@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabaseClient';
-import ProductCard from '../../components/store/ProductCard';
+import { supabase } from '../lib/supabaseClient';
+import ProductCard from '../components/store/ProductCard';
 
 /**
  * Store - Pro Shop Landing Page
