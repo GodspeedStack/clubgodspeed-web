@@ -149,8 +149,8 @@ const GODSPEED_DATA = {
         "denis@gmail.com": {
             hours: {
                 totalPurchased: 10,
-                used: 3.0,
-                remaining: 7.0,
+                used: 5.0,
+                remaining: 5.0,
                 expiryDate: "2026-12-31"
             },
             logs: [
