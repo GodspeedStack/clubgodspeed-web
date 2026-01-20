@@ -9,6 +9,18 @@ const WarRoom = () => {
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+            <div className="md:col-span-2 bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <h2 className="font-black text-gray-900 uppercase">Team Chat</h2>
+                    <p className="text-sm text-gray-500">Open the team conversation for messaging.</p>
+                </div>
+                <a
+                    href="/messages"
+                    className="px-4 py-2 rounded-full bg-black text-white font-semibold text-sm"
+                >
+                    Open Messages
+                </a>
+            </div>
             {/* CARD 1: MOMENTUM (Who is hot?) */}
             <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                 <div className="flex items-center gap-2 mb-4">

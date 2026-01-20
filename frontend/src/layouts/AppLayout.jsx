@@ -25,6 +25,7 @@ export default function AppLayout() {
         <Link to="/" style={navStyles.link}>Home</Link>
         <Link to="/store" style={navStyles.link}>Store</Link>
         <Link to="/war-room" style={navStyles.link}>War Room</Link>
+        <Link to="/messages" style={navStyles.link}>Messages</Link>
         <Link to="/about" style={navStyles.link}>About</Link>
         <Link to="/academy" style={navStyles.link}>Academy</Link>
         <Link to="/training" style={navStyles.link}>Training</Link>

@@ -7,6 +7,9 @@ import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
 import Store from "./pages/Store.jsx";
 import WarRoom from "./pages/WarRoom.jsx";
+import Messages from "./pages/Messages.jsx";
+import Conversation from "./pages/Conversation.jsx";
+import NewDirectMessage from "./pages/NewDirectMessage.jsx";
 import NotFound from "./pages/NotFound.jsx";
 
 const legacyRoutes = [
@@ -41,6 +44,30 @@ export default function App() {
           element={
             <ProtectedRoute>
               <WarRoom />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="messages"
+          element={
+            <ProtectedRoute>
+              <Messages />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="messages/new"
+          element={
+            <ProtectedRoute>
+              <NewDirectMessage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="messages/:id"
+          element={
+            <ProtectedRoute>
+              <Conversation />
             </ProtectedRoute>
           }
         />
