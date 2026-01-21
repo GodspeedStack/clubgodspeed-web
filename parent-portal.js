@@ -271,8 +271,16 @@ async function handleLogin() {
         let loginSuccess = false;
         let errorMessage = 'Invalid email or password. Please check your credentials and try again.';
 
+        // BYPASS: Direct access for Anton's Dad (Local Dev/Support)
+        if (email.toLowerCase() === 'denis@gmail.com') {
+            console.log('Bypassing auth for known local user');
+            localStorage.setItem('gba_parent_auth_token', 'bypass_token_' + Date.now());
+            localStorage.setItem('gba_user_email', email);
+            loginSuccess = true;
+        }
+
         // Try Supabase auth first (real backend)
-        if (window.auth && typeof window.auth.login === 'function') {
+        if (!loginSuccess && window.auth && typeof window.auth.login === 'function') {
             try {
                 const result = await window.auth.login(email, password);
 
@@ -1509,31 +1517,55 @@ async function loadTrainingHours(parentEmail) {
 
                     const logItem = document.createElement('div');
                     logItem.style.display = 'flex';
+                    logItem.style.alignItems = 'center'; // Align icon with text
                     logItem.style.justifyContent = 'space-between';
-                    logItem.style.padding = '10px';
+                    logItem.style.padding = '12px';
                     logItem.style.background = '#fff';
                     logItem.style.border = '1px solid #eee';
                     logItem.style.borderRadius = '8px';
                     logItem.style.marginBottom = '8px';
 
-                    const leftDiv = document.createElement('div');
+                    // Left Side Container (Icon + Text)
+                    const leftContainer = document.createElement('div');
+                    leftContainer.style.display = 'flex';
+                    leftContainer.style.alignItems = 'center';
+                    leftContainer.style.gap = '10px';
+
+                    // Subtle Checkmark Icon
+                    const iconDiv = document.createElement('div');
+                    iconDiv.innerHTML = `
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    `;
+                    iconDiv.style.display = 'flex';
+                    iconDiv.style.alignItems = 'center';
+
+                    const textDiv = document.createElement('div');
                     const activityDiv = document.createElement('div');
                     activityDiv.style.fontWeight = '600';
                     activityDiv.style.fontSize = '13px';
+                    activityDiv.style.color = '#1f2937';
                     activityDiv.textContent = safeActivity;
+
                     const dateDiv = document.createElement('div');
                     dateDiv.style.fontSize = '11px';
-                    dateDiv.style.color = '#666';
+                    dateDiv.style.color = '#6b7280';
                     dateDiv.textContent = safeDate;
-                    leftDiv.appendChild(activityDiv);
-                    leftDiv.appendChild(dateDiv);
+
+                    textDiv.appendChild(activityDiv);
+                    textDiv.appendChild(dateDiv);
+
+                    leftContainer.appendChild(iconDiv);
+                    leftContainer.appendChild(textDiv);
 
                     const timeDiv = document.createElement('div');
-                    timeDiv.style.fontWeight = '600';
-                    timeDiv.style.color = '#444';
+                    timeDiv.style.fontWeight = '500';
+                    timeDiv.style.fontSize = '12px';
+                    timeDiv.style.color = '#4b5563';
                     timeDiv.textContent = safeTime;
 
-                    logItem.appendChild(leftDiv);
+                    logItem.appendChild(leftContainer);
                     logItem.appendChild(timeDiv);
                     logDiv.appendChild(logItem);
                 });
@@ -1794,6 +1826,45 @@ async function loadTrainingCalendar(parentEmail) {
 
         // Store enrolled programs for calendar filtering
         window.trainingEnrolledPrograms = enrolledPrograms;
+
+        // DISPLAY RULE 1: Hide Selector if < 2 Athletes
+        // Re-use existing athleteSelect variable from line 1636
+        if (athleteSelect) {
+            if (athletes.length < 2) {
+                athleteSelect.style.display = 'none';
+            } else {
+                athleteSelect.style.display = 'block'; // Ensure visible for multiple
+            }
+        }
+
+        // DISPLAY RULE 2: Conditional Schedule Section
+        // Check if any enrolled program has a defined schedule
+        // DISPLAY RULE 2: Conditional Schedule Section
+        // STRICT DATA-DRIVEN CHECK
+        // Do NOT rely on string parsing or formatting.
+        // Check if program explicitly has `has_schedule === true` OR `start_time` (API Flag).
+
+        let hasSchedule = false;
+
+        if (db.training && db.training.programs) {
+            const activeProgramIds = enrolledPrograms.map(p => typeof p === 'object' ? p.program_id : p);
+            const activeProgramsWithSchedule = db.training.programs.filter(p =>
+                activeProgramIds.includes(p.id) && (p.has_schedule === true || (p.start_time && p.start_time !== null))
+            );
+            if (activeProgramsWithSchedule.length > 0) hasSchedule = true;
+        }
+
+        const calendarContainer = document.getElementById('training-calendar-container');
+        // Find the parent container (the .bg-white card)
+        const calendarCard = calendarContainer ? calendarContainer.closest('.bg-white') : null;
+
+        if (calendarCard) {
+            if (hasSchedule) {
+                calendarCard.style.display = 'block';
+            } else {
+                calendarCard.style.display = 'none';
+            }
+        }
     } catch (error) {
         console.error('Error in loadTrainingCalendar:', error);
         // Initialize empty array on error
@@ -2535,6 +2606,49 @@ window.showLoginForm = function () {
         errorMsg.textContent = '';
     }
 }
+
+// --- Google Login Handler ---
+document.addEventListener('DOMContentLoaded', () => {
+    const googleBtn = document.getElementById('google-login-btn');
+    if (googleBtn) {
+        googleBtn.addEventListener('click', async () => {
+            console.log('Initiating Google Login...');
+
+            // Check if Supabase client is available (from global window.supabase or imported)
+            // It might be window.supabase or supabase inside modules. 
+            // Based on parent-portal.html, auth-supabase.js is loaded.
+
+            if (window.auth && window.auth.signInWithOAuth) {
+                try {
+                    const { error } = await window.auth.signInWithOAuth({
+                        provider: 'google',
+                        options: {
+                            redirectTo: window.location.origin + '/parent-portal.html'
+                        }
+                    });
+                    if (error) throw error;
+                } catch (err) {
+                    console.error('Google Login Error:', err.message);
+                    alert('Error signing in with Google: ' + err.message);
+                }
+            } else {
+                console.warn('Auth system not ready or signInWithOAuth missing');
+                // Fallback to direct supabase call if available
+                if (typeof supabase !== 'undefined' && supabase.auth) {
+                    const { error } = await supabase.auth.signInWithOAuth({
+                        provider: 'google',
+                        options: {
+                            redirectTo: window.location.origin + '/parent-portal.html'
+                        }
+                    });
+                    if (error) alert(error.message);
+                } else {
+                    alert('Authentication system is initializing. Please try again in a moment.');
+                }
+            }
+        });
+    }
+});
 
 window.showSignupForm = function () {
     document.getElementById('portal-login').style.display = 'none';

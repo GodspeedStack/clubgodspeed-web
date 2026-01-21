@@ -42,7 +42,8 @@ const GODSPEED_DATA = {
         },
         { athleteId: "p9", teamId: 'TEAM-10U-DEV-BLACK', name: "Junior", initials: "J", tier: "Limited", avg_grade: 6.65, trend: "Declining", notes: "Scheme IQ / Conditioning" }, // "down" maps to Declining/Red arrow
         { athleteId: "p10", teamId: 'TEAM-10U-DEV-BLACK', name: "Kyrie", initials: "K", tier: "Limited", avg_grade: 7.55, trend: "Up", notes: "Improving closeouts" },
-        { athleteId: "p12", teamId: 'TEAM-10U-DEV-BLACK', name: "Khalik", initials: "K", tier: "Limited", avg_grade: 6.93, trend: "Steady", notes: "Learning help defense" }
+        { athleteId: "p12", teamId: 'TEAM-10U-DEV-BLACK', name: "Khalik", initials: "K", tier: "Limited", avg_grade: 6.93, trend: "Steady", notes: "Learning help defense" },
+        { athleteId: "14414235", teamId: 'TEAM-10U-DEV-BLACK', name: "Test Athlete (14414235)", initials: "T", tier: "6+", avg_grade: 0.0, trend: "New", notes: "Test account", parentId: "denis@gmail.com" }
     ],
 
     // 3. Reports & Analytics (Merged V2 Structure)
@@ -122,7 +123,7 @@ const GODSPEED_DATA = {
             expiryDate: "2026-12-31" // Valid for year
         },
         programs: [
-            { id: "prog_1", name: "Elite Guard Academy", type: "1v1 Training", status: "Active", schedule: "Mon 6pm", coach: "Coach Mike", description: "Designed for guards who depend on skill, IQ, and movement not height.", focus: ["Footwork and separation", "Advanced finishing", "Shot creation"] }
+            { id: "prog_1", name: "Elite Guard Academy", type: "1v1 Training", status: "Active", has_schedule: true, schedule: "Mon 6pm", coach: "Coach Mike", description: "Designed for guards who depend on skill, IQ, and movement not height.", focus: ["Footwork and separation", "Advanced finishing", "Shot creation"] }
         ],
         upcomingSessions: [
             { id: "sess_101", date: "2026-01-05", time: "6:00 PM", program: "Elite Guard Academy", location: "Main Court", topic: "Pick & Roll Reads" },
@@ -141,7 +142,7 @@ const GODSPEED_DATA = {
         { id: "acc_3", parentName: "Mike Jones", email: "mike.j@example.com", phone: "(555) 555-5555", athletes: ["p4", "p5"], status: "Active", balance: "$0.00" },
         { id: "acc_4", parentName: "Lisa Johnson", email: "lisa.j@example.com", phone: "(555) 111-2222", athletes: ["p6"], status: "Active", balance: "$0.00" },
         { id: "acc_5", parentName: "David Brown", email: "david.b@example.com", phone: "(555) 333-4444", athletes: ["p11"], status: "Pending", balance: "$0.00" },
-        { id: "acc_6", parentName: "Denis (Anton's Dad)", email: "denis@gmail.com", phone: "(555) 666-7777", athletes: ["p6"], status: "Active", balance: "$0.00" }
+        { id: "acc_6", parentName: "Denis (Anton's Dad)", email: "denis@gmail.com", phone: "(555) 666-7777", athletes: ["p6", "14414235"], status: "Active", balance: "$0.00" }
     ],
 
     // 9. Training Records (User Specific - New)
@@ -154,6 +155,7 @@ const GODSPEED_DATA = {
                 expiryDate: "2026-12-31"
             },
             logs: [
+                { date: "2026-01-19", time: "12:00 PM - 1:00 PM", duration: 1, activity: "Elite Guard Academy", notes: "Focus: post feeds, ball handling against pressure (Status: Completed)" },
                 { date: "2026-01-04", time: "2:00 PM - 3:00 PM", duration: 1, activity: "1v1 Training", notes: "Self-guided session" },
                 { date: "2026-01-03", time: "2:00 PM - 4:00 PM", duration: 2, activity: "1v1 Training (Coach Mike)", notes: "Focus on ball handling" }
             ],
