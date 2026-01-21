@@ -1,23 +1,32 @@
-# Godspeed Website (AcademyOS)
+# Club Godspeed Web
 
-This is the official repository for strict "AcademyOS" standard website for Godspeed Basketball.
+Frontend lives in /frontend, backend lives in /backend.
 
-## Architecture
+Vite + React web app for Club Godspeed.
 
-- **Home (Light Mode):** `index.html` (Black Text / White BG)
-- **Store (Dark Mode):** `store.html` (White Text / Black BG)
-- **Styles:** `styles.css` (Contains both Design Systems)
+## Quick start
 
-## Deployment
+```bash
+npm install
+npm run dev
+```
 
-This site is configured for static deployment on Vercel.
+Dev server runs at: http://127.0.0.1:3000
 
-- **Build Command:** None (Static)
-- **Output Directory:** `.` (Root)
+## Tooling
 
-## Key Files
+Administrative and seeding scripts live in:
 
-- `index.html`: Main landing page
-- `store.html`: E-commerce page
-- `styles.css`: Central stylesheet
-- `script.js`: Core interactivity
+tools/seed/
+
+See tools/seed/README.md for usage.
+
+## Backend
+
+This app uses Supabase for backend services (auth, data, RLS, triggers).
+
+Backend setup, migrations, and verification live in:
+
+README_BACKEND.md
+
+docs/BACKEND_SETUP_GUIDE.md

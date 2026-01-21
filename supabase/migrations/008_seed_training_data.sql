@@ -181,3 +181,4 @@ END $$;
 -- JOIN training_sessions ts ON ta.session_id = ts.id
 -- WHERE ta.purchase_id = '<purchase_id>'
 -- ORDER BY ts.session_date DESC;
+

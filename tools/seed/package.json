@@ -1,0 +1,14 @@
+{
+  "name": "clubgodspeed-seed",
+  "version": "1.0.0",
+  "description": "Firestore seed tooling for Club Godspeed",
+  "private": true,
+  "type": "commonjs",
+  "main": "seed_firestore.js",
+  "scripts": {
+    "seed": "node seed_firestore.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^11.5.0"
+  }
+}

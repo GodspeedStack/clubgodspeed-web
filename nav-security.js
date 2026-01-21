@@ -18,17 +18,20 @@ async function checkAuthAndUpdateNav() {
         const calendarLinks = document.querySelectorAll('a[href="calendar-preview.html"]');
 
         calendarLinks.forEach(link => {
+            const parentLi = link.closest('li');
             if (!isAuthenticated) {
                 // Hide calendar link for public visitors
-                const parentLi = link.closest('li');
                 if (parentLi) {
                     parentLi.style.display = 'none';
+                } else {
+                    link.style.display = 'none';
                 }
             } else {
                 // Show calendar link for authenticated users
-                const parentLi = link.closest('li');
                 if (parentLi) {
                     parentLi.style.display = '';
+                } else {
+                    link.style.display = '';
                 }
             }
         });

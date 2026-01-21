@@ -3,7 +3,10 @@
 Run these commands in your terminal:
 
 ```bash
-cd /Users/shortsread/.gemini/antigravity/scratch/aau_site
+cd /Users/godspeed-stack/Projects/clubgodspeed-web
+
+# Install repo guardrail hooks (one-time)
+bash scripts/install-git-hooks.sh
 
 # Stage all changes
 git add -A
