@@ -10,7 +10,7 @@ const GODSPEED_DATA = {
     // 1.5 Coaches List (New Source of Truth)
     coaches: [
         { id: "c_scott", name: "Coach Scott", role: "Head Coach", specialty: "Development" },
-        { id: "c_mike", name: "Coach Mike", role: "Skills Trainer", specialty: "Guards" },
+        { id: "c_scott", name: "Coach Scott", role: "Skills Trainer", specialty: "Guards" },
         { id: "c_sarah", name: "Coach Sarah", role: "Shooting Coach", specialty: "Shooting" }
     ],
 
@@ -123,7 +123,7 @@ const GODSPEED_DATA = {
             expiryDate: "2026-12-31" // Valid for year
         },
         programs: [
-            { id: "prog_1", name: "Elite Guard Academy", type: "1v1 Training", status: "Active", has_schedule: true, schedule: "Mon 6pm", coach: "Coach Mike", description: "Designed for guards who depend on skill, IQ, and movement not height.", focus: ["Footwork and separation", "Advanced finishing", "Shot creation"] }
+            { id: "prog_1", name: "Elite Guard Academy", type: "1v1 Training", status: "Active", has_schedule: true, schedule: "Mon 6pm", coach: "Coach Scott", description: "Designed for guards who depend on skill, IQ, and movement not height.", focus: ["Footwork and separation", "Advanced finishing", "Shot creation"] }
         ],
         upcomingSessions: [
             { id: "sess_101", date: "2026-01-05", time: "6:00 PM", program: "Elite Guard Academy", location: "Main Court", topic: "Pick & Roll Reads" },
@@ -150,18 +150,18 @@ const GODSPEED_DATA = {
         "denis@gmail.com": {
             hours: {
                 totalPurchased: 10,
-                used: 5.0,
-                remaining: 5.0,
+                used: 7.0,
+                remaining: 3.0,
                 expiryDate: "2026-12-31"
             },
             logs: [
+                { date: "2026-01-26", time: "10:00 AM - 12:00 PM", duration: 2, activity: "1v1 Training", notes: "Focus on shooting mechanics and footwork" },
                 { date: "2026-01-19", time: "12:00 PM - 1:00 PM", duration: 1, activity: "Elite Guard Academy", notes: "Focus: post feeds, ball handling against pressure (Status: Completed)" },
                 { date: "2026-01-04", time: "2:00 PM - 3:00 PM", duration: 1, activity: "1v1 Training", notes: "Self-guided session" },
-                { date: "2026-01-03", time: "2:00 PM - 4:00 PM", duration: 2, activity: "1v1 Training (Coach Mike)", notes: "Focus on ball handling" }
+                { date: "2026-01-03", time: "2:00 PM - 4:00 PM", duration: 2, activity: "1v1 Training (Coach Scott)", notes: "Focus on ball handling" }
             ],
             purchases: [
-                { id: "rcpt_002", date: "2026-01-03", item: "Training Credit Top-Up", amount: "$400.00", status: "Paid", link: "#" },
-                { id: "rcpt_001", date: "2026-01-01", item: "10 Hour Training Package", amount: "$850.00", status: "Paid", link: "#" }
+                { id: "rcpt_002", date: "2026-01-03", item: "Training Credit Top-Up", amount: "$400.00", status: "Paid", link: "#" }
             ]
         }
     }

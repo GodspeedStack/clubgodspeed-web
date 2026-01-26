@@ -576,7 +576,11 @@ window.switchPortalView = function (viewName, linkElement) {
     }
 
     if (viewName === 'training') {
+        const email = localStorage.getItem('gba_user_email');
         renderTrainingDashboard();
+        loadSessionCounts(email);
+        loadTrainingCalendar(email);
+        loadTrainingHours(email);
     }
 
     if (viewName === 'calendar') {
@@ -1005,7 +1009,13 @@ function loadPerformance(parentEmail) {
 
     // Mock Attendance (Grades count vs Expected)
     // Simple logic: 1 grade = 1 attendance point for now
-    if (attendanceEl) attendanceEl.textContent = '100%'; // Placeholder logic
+    if (attendanceEl) {
+        // Simple attendance estimate: each grade entry counts as one attended session.
+        // Assuming a typical season has 10 sessions, cap at 100%.
+        const totalGrades = grades ? grades.length : 0;
+        const attendancePct = Math.min(100, Math.round((totalGrades / 10) * 100));
+        attendanceEl.textContent = `${attendancePct}%`;
+    }
 }
 
 // Hook into View Switching to load data when tab is clicked
@@ -1289,15 +1299,18 @@ async function renderTrainingDashboard() {
                 const safeActivity = escapeHTML(log.activity || '');
                 const safeDate = escapeHTML(new Date(log.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }));
                 const safeNotes = escapeHTML(log.notes || '');
-                const safeTime = escapeHTML(log.time || '');
+                const safeDuration = log.duration ? `${log.duration.toFixed(1)} hrs` : '';
 
                 return `
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#fff; border-radius:8px; margin-bottom:8px; border:1px solid #eee;">
-                     <div>
-                        <div style="font-weight:600; color:#111; font-size:13px;">${safeActivity}</div>
-                        <div style="font-size:11px; color:#666;">${safeDate} • ${safeNotes}</div>
+                     <div style="display:flex; align-items:center; gap:8px; flex:1;">
+                        <svg style="width:16px; height:16px; flex-shrink:0;" fill="none" stroke="#10b981" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                        <div style="flex:1;">
+                            <div style="font-weight:600; color:#111; font-size:13px;">${safeActivity}</div>
+                            <div style="font-size:11px; color:#666;">${safeDate} • ${safeNotes}</div>
+                        </div>
                     </div>
-                    <div style="font-weight:700; color:#444; font-size:13px;">-${safeTime}</div>
+                    <div style="font-weight:700; color:#444; font-size:13px;">-${safeDuration}</div>
                 </div>
             `;
             }).join('');
@@ -1371,7 +1384,7 @@ async function renderTrainingDashboard() {
                         <div style="font-size:13px; font-weight:600;">Receipt: ${safeItem}</div>
                         <div style="font-size:11px; color:#166534;">${safeDate} • ${safeAmount} • ${safeStatus}</div>
                     </div>
-                    <button data-email="${escapeHTML(safeEmail)}" class="btn-primary view-receipt-btn" style="padding: 6px 12px; font-size: 10px; width: auto; display: inline-block; text-decoration: none; line-height:1.2; border:none; cursor:pointer;">View Receipt</button>
+                    <button data-email="${escapeHTML(safeEmail)}" class="btn-primary view-receipt-btn" style="padding: 6px 12px; font-size: 10px; min-width: 88px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; line-height:1.2; border:none; cursor:pointer; box-sizing: border-box;">View Receipt</button>
                 </div>
             `;
             }).join('');
@@ -1391,7 +1404,7 @@ async function renderTrainingDashboard() {
                     <div style="font-size:13px; font-weight:600;">${safeTitle}</div>
                     <div style="font-size:11px; color:#888;">Added ${safeDate}</div>
                 </div>
-                <a href="${safeLink}" class="btn-primary" style="padding: 6px 12px; font-size: 10px; width: auto; display: inline-block; text-decoration: none; line-height:1.2;">Download</a>
+                <a href="${safeLink}" class="btn-primary" style="padding: 6px 12px; font-size: 10px; min-width: 88px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; line-height:1.2; border:none; cursor:pointer; box-sizing: border-box;">Download</a>
             </div>
         `;
         }).join('');
@@ -1442,10 +1455,13 @@ async function calculateRemainingHours(parentEmail) {
         }
     }
 
-    // Fallback to Mock Data
-    if (totalPurchased === 0 && db.training) {
-        totalPurchased = db.training.hours.totalPurchased;
-        totalUsed = db.training.hours.used;
+    // Fallback to Mock Data from trainingRecords
+    if (totalPurchased === 0) {
+        const userRecords = db.trainingRecords ? db.trainingRecords[parentEmail] : null;
+        if (userRecords && userRecords.hours) {
+            totalPurchased = userRecords.hours.totalPurchased;
+            totalUsed = userRecords.hours.used;
+        }
     }
 
     const remaining = totalPurchased - totalUsed;
@@ -1466,188 +1482,187 @@ async function loadTrainingHours(parentEmail) {
     const hoursData = await calculateRemainingHours(parentEmail);
 
     // Update hours display
-    const hoursRemainingEl = document.getElementById('hours-remaining');
     const hoursPurchasedEl = document.getElementById('hours-purchased');
     const hoursUsedEl = document.getElementById('hours-used');
     const progressFillEl = document.getElementById('hours-progress-fill');
 
-    if (hoursRemainingEl) {
-        hoursRemainingEl.textContent = hoursData.remaining.toFixed(1);
+    // --- User-Specific Usage & Purchase History ---
+    const db = getDB();
+    const userRecords = db.trainingRecords ? db.trainingRecords[parentEmail] : null;
 
-        // --- NEW: User-Specific Usage & Purchase History ---
-        const db = getDB();
-        const userRecords = db.trainingRecords ? db.trainingRecords[parentEmail] : null;
+    if (userRecords) {
+        // Set purchased hours
+        if (hoursPurchasedEl) {
+            hoursPurchasedEl.textContent = userRecords.hours.totalPurchased;
+        }
 
-        if (userRecords) {
-            // Overwrite details if user record exists
-            hoursRemainingEl.textContent = userRecords.hours.remaining.toFixed(1);
-            if (hoursPurchasedEl) hoursPurchasedEl.textContent = userRecords.hours.totalPurchased; // if element exists (might not)
+        // Update the main dashboard display elements
+        const trainingHoursDisplay = document.getElementById('training-hours-display');
+        if (trainingHoursDisplay) {
+            trainingHoursDisplay.textContent = userRecords.hours.remaining.toFixed(1);
+        }
 
-            // Also update the main dashboard display elements if they differ
-            if (document.getElementById('training-hours-display')) {
-                document.getElementById('training-hours-display').textContent = userRecords.hours.remaining.toFixed(1);
-            }
-            const utilizedDisplay = document.getElementById('training-utilized-display');
-            if (utilizedDisplay) {
-                utilizedDisplay.textContent = userRecords.hours.used.toFixed(1);
-            }
+        const utilizedDisplay = document.getElementById('training-utilized-display');
+        if (utilizedDisplay) {
+            utilizedDisplay.textContent = userRecords.hours.used.toFixed(1);
+        }
 
-            // Create Log Container if not exists (Training View)
-            // Use existing container or append a new one
-            /* Assuming we are in 'training' view context or similar elements exist */
+        // Create Log Container if not exists (Training View)
+        // Use existing container or append a new one
+        /* Assuming we are in 'training' view context or similar elements exist */
 
-            // We'll append usage logs to 'training-calendar-container' used as a placeholder or create a new div if feasible
-            // Actually, let's create a dedicated section dynamically
-            const calendarContainer = document.getElementById('training-calendar-container');
-            if (calendarContainer && !document.getElementById('user-usage-log')) {
-                const logDiv = document.createElement('div');
-                logDiv.id = 'user-usage-log';
-                logDiv.style.marginTop = '20px';
-                const header = document.createElement('h4');
-                header.style.marginBottom = '10px';
-                header.style.fontSize = '14px';
-                header.style.color = '#444';
-                header.textContent = 'Session History';
-                logDiv.appendChild(header);
+        // We'll append usage logs to 'training-calendar-container' used as a placeholder or create a new div if feasible
+        // Actually, let's create a dedicated section dynamically
+        const calendarContainer = document.getElementById('training-calendar-container');
+        if (calendarContainer && !document.getElementById('user-usage-log')) {
+            const logDiv = document.createElement('div');
+            logDiv.id = 'user-usage-log';
+            logDiv.style.marginTop = '20px';
+            const header = document.createElement('h4');
+            header.style.marginBottom = '10px';
+            header.style.fontSize = '14px';
+            header.style.color = '#444';
+            header.textContent = 'Session History';
+            logDiv.appendChild(header);
 
-                userRecords.logs.forEach(log => {
-                    const safeActivity = escapeHTML(log.activity || '');
-                    const safeDate = escapeHTML(log.date || '');
-                    const safeTime = escapeHTML(log.time || '');
+            userRecords.logs.forEach(log => {
+                const safeActivity = escapeHTML(log.activity || '');
+                const safeDate = escapeHTML(log.date || '');
+                const safeTime = escapeHTML(log.time || '');
 
-                    const logItem = document.createElement('div');
-                    logItem.style.display = 'flex';
-                    logItem.style.alignItems = 'center'; // Align icon with text
-                    logItem.style.justifyContent = 'space-between';
-                    logItem.style.padding = '12px';
-                    logItem.style.background = '#fff';
-                    logItem.style.border = '1px solid #eee';
-                    logItem.style.borderRadius = '8px';
-                    logItem.style.marginBottom = '8px';
+                const logItem = document.createElement('div');
+                logItem.style.display = 'flex';
+                logItem.style.alignItems = 'center'; // Align icon with text
+                logItem.style.justifyContent = 'space-between';
+                logItem.style.padding = '12px';
+                logItem.style.background = '#fff';
+                logItem.style.border = '1px solid #eee';
+                logItem.style.borderRadius = '8px';
+                logItem.style.marginBottom = '8px';
 
-                    // Left Side Container (Icon + Text)
-                    const leftContainer = document.createElement('div');
-                    leftContainer.style.display = 'flex';
-                    leftContainer.style.alignItems = 'center';
-                    leftContainer.style.gap = '10px';
+                // Left Side Container (Icon + Text)
+                const leftContainer = document.createElement('div');
+                leftContainer.style.display = 'flex';
+                leftContainer.style.alignItems = 'center';
+                leftContainer.style.gap = '10px';
 
-                    // Subtle Checkmark Icon
-                    const iconDiv = document.createElement('div');
-                    iconDiv.innerHTML = `
+                // Subtle Checkmark Icon
+                const iconDiv = document.createElement('div');
+                iconDiv.innerHTML = `
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="20 6 9 17 4 12"></polyline>
                         </svg>
                     `;
-                    iconDiv.style.display = 'flex';
-                    iconDiv.style.alignItems = 'center';
+                iconDiv.style.display = 'flex';
+                iconDiv.style.alignItems = 'center';
 
-                    const textDiv = document.createElement('div');
-                    const activityDiv = document.createElement('div');
-                    activityDiv.style.fontWeight = '600';
-                    activityDiv.style.fontSize = '13px';
-                    activityDiv.style.color = '#1f2937';
-                    activityDiv.textContent = safeActivity;
+                const textDiv = document.createElement('div');
+                const activityDiv = document.createElement('div');
+                activityDiv.style.fontWeight = '600';
+                activityDiv.style.fontSize = '13px';
+                activityDiv.style.color = '#1f2937';
+                activityDiv.textContent = safeActivity;
 
-                    const dateDiv = document.createElement('div');
-                    dateDiv.style.fontSize = '11px';
-                    dateDiv.style.color = '#6b7280';
-                    dateDiv.textContent = safeDate;
+                const dateDiv = document.createElement('div');
+                dateDiv.style.fontSize = '11px';
+                dateDiv.style.color = '#6b7280';
+                dateDiv.textContent = safeDate;
 
-                    textDiv.appendChild(activityDiv);
-                    textDiv.appendChild(dateDiv);
+                textDiv.appendChild(activityDiv);
+                textDiv.appendChild(dateDiv);
 
-                    leftContainer.appendChild(iconDiv);
-                    leftContainer.appendChild(textDiv);
+                leftContainer.appendChild(iconDiv);
+                leftContainer.appendChild(textDiv);
 
-                    const timeDiv = document.createElement('div');
-                    timeDiv.style.fontWeight = '500';
-                    timeDiv.style.fontSize = '12px';
-                    timeDiv.style.color = '#4b5563';
-                    timeDiv.textContent = safeTime;
+                const timeDiv = document.createElement('div');
+                timeDiv.style.fontWeight = '500';
+                timeDiv.style.fontSize = '12px';
+                timeDiv.style.color = '#4b5563';
+                timeDiv.textContent = safeTime;
 
-                    logItem.appendChild(leftContainer);
-                    logItem.appendChild(timeDiv);
-                    logDiv.appendChild(logItem);
-                });
-                calendarContainer.parentNode.insertBefore(logDiv, calendarContainer.nextSibling);
-            }
-
-            // Receipts
-            const docsContainer = document.getElementById('training-documents-list');
-            if (docsContainer && userRecords.purchases) {
-                userRecords.purchases.forEach(p => {
-                    // Sanitize purchase data
-                    const safeItem = escapeHTML(p.item || '');
-                    const safeDate = escapeHTML(p.date || '');
-                    const safeAmount = escapeHTML(p.amount || '');
-                    const safeStatus = escapeHTML(p.status || '');
-                    const safeLink = validateURL(p.link) || '#';
-
-                    const purchaseDiv = document.createElement('div');
-                    purchaseDiv.className = 'doc-item';
-                    purchaseDiv.style.display = 'flex';
-                    purchaseDiv.style.alignItems = 'center';
-                    purchaseDiv.style.gap = '12px';
-                    purchaseDiv.style.padding = '12px';
-                    purchaseDiv.style.borderBottom = '1px solid #f0f0f0';
-                    purchaseDiv.style.background = '#f9fafb';
-
-                    const iconDiv = document.createElement('div');
-                    iconDiv.style.background = '#dcfce7';
-                    iconDiv.style.color = '#166534';
-                    iconDiv.style.width = '32px';
-                    iconDiv.style.height = '32px';
-                    iconDiv.style.display = 'flex';
-                    iconDiv.style.alignItems = 'center';
-                    iconDiv.style.justifyContent = 'center';
-                    iconDiv.style.borderRadius = '6px';
-                    iconDiv.style.fontSize = '14px';
-                    iconDiv.style.fontWeight = '700';
-                    iconDiv.textContent = '$';
-
-                    const contentDiv = document.createElement('div');
-                    contentDiv.style.flex = '1';
-                    const itemDiv = document.createElement('div');
-                    itemDiv.style.fontSize = '13px';
-                    itemDiv.style.fontWeight = '600';
-                    itemDiv.textContent = `Receipt: ${safeItem}`;
-                    const detailsDiv = document.createElement('div');
-                    detailsDiv.style.fontSize = '11px';
-                    detailsDiv.style.color = '#888';
-                    detailsDiv.textContent = `${safeDate} • ${safeAmount} • ${safeStatus}`;
-                    contentDiv.appendChild(itemDiv);
-                    contentDiv.appendChild(detailsDiv);
-
-                    const linkEl = document.createElement('a');
-                    linkEl.href = safeLink;
-                    linkEl.style.fontSize = '11px';
-                    linkEl.style.color = '#2563eb';
-                    linkEl.style.fontWeight = '600';
-                    linkEl.style.textDecoration = 'none';
-                    linkEl.textContent = 'View PDF';
-                    linkEl.onclick = (e) => {
-                        e.preventDefault();
-                        godspeedAlert('Receipt View Placeholder', 'Info');
-                        return false;
-                    };
-
-                    purchaseDiv.appendChild(iconDiv);
-                    purchaseDiv.appendChild(contentDiv);
-                    purchaseDiv.appendChild(linkEl);
-                    docsContainer.insertBefore(purchaseDiv, docsContainer.firstChild);
-                });
-            }
+                logItem.appendChild(leftContainer);
+                logItem.appendChild(timeDiv);
+                logDiv.appendChild(logItem);
+            });
+            calendarContainer.parentNode.insertBefore(logDiv, calendarContainer.nextSibling);
         }
 
-        // Add warning class if low hours
-        if (hoursData.remaining < 5) {
-            hoursRemainingEl.parentElement.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+        // Receipts
+        const docsContainer = document.getElementById('training-documents-list');
+        if (docsContainer && userRecords.purchases) {
+            userRecords.purchases.forEach(p => {
+                // Sanitize purchase data
+                const safeItem = escapeHTML(p.item || '');
+                const safeDate = escapeHTML(p.date || '');
+                const safeAmount = escapeHTML(p.amount || '');
+                const safeStatus = escapeHTML(p.status || '');
+                const safeLink = validateURL(p.link) || '#';
+
+                const purchaseDiv = document.createElement('div');
+                purchaseDiv.className = 'doc-item';
+                purchaseDiv.style.display = 'flex';
+                purchaseDiv.style.alignItems = 'center';
+                purchaseDiv.style.gap = '12px';
+                purchaseDiv.style.padding = '12px';
+                purchaseDiv.style.borderBottom = '1px solid #f0f0f0';
+                purchaseDiv.style.background = '#f9fafb';
+
+                const iconDiv = document.createElement('div');
+                iconDiv.style.background = '#dcfce7';
+                iconDiv.style.color = '#166534';
+                iconDiv.style.width = '32px';
+                iconDiv.style.height = '32px';
+                iconDiv.style.display = 'flex';
+                iconDiv.style.alignItems = 'center';
+                iconDiv.style.justifyContent = 'center';
+                iconDiv.style.borderRadius = '6px';
+                iconDiv.style.fontSize = '14px';
+                iconDiv.style.fontWeight = '700';
+                iconDiv.textContent = '$';
+
+                const contentDiv = document.createElement('div');
+                contentDiv.style.flex = '1';
+                const itemDiv = document.createElement('div');
+                itemDiv.style.fontSize = '13px';
+                itemDiv.style.fontWeight = '600';
+                itemDiv.textContent = `Receipt: ${safeItem}`;
+                const detailsDiv = document.createElement('div');
+                detailsDiv.style.fontSize = '11px';
+                detailsDiv.style.color = '#888';
+                detailsDiv.textContent = `${safeDate} • ${safeAmount} • ${safeStatus}`;
+                contentDiv.appendChild(itemDiv);
+                contentDiv.appendChild(detailsDiv);
+
+                const linkEl = document.createElement('a');
+                linkEl.href = safeLink;
+                linkEl.style.fontSize = '11px';
+                linkEl.style.color = '#2563eb';
+                linkEl.style.fontWeight = '600';
+                linkEl.style.textDecoration = 'none';
+                linkEl.textContent = 'View PDF';
+                linkEl.target = '_blank';
+                linkEl.rel = 'noopener';
+                // If the link is a direct PDF URL, let the browser open it.
+                // Otherwise fall back to the receipt modal view.
+                if (!safeLink || safeLink === '#') {
+                    linkEl.onclick = (e) => {
+                        e.preventDefault();
+                        viewReceiptDetail(safeItem); // fallback to modal view using receipt ID
+                    };
+                }
+
+                purchaseDiv.appendChild(iconDiv);
+                purchaseDiv.appendChild(contentDiv);
+                purchaseDiv.appendChild(linkEl);
+                docsContainer.insertBefore(purchaseDiv, docsContainer.firstChild);
+            });
         }
     }
 
-    if (hoursPurchasedEl) hoursPurchasedEl.textContent = hoursData.purchased.toFixed(1);
-    if (hoursUsedEl) hoursUsedEl.textContent = hoursData.used.toFixed(1);
-    if (progressFillEl) progressFillEl.style.width = `${hoursData.progressPercent}%`;
+    // Set progress bar
+    if (progressFillEl) {
+        progressFillEl.style.width = `${hoursData.progressPercent}%`;
+    }
 }
 
 /**
@@ -1735,6 +1750,7 @@ async function loadSessionCounts(parentEmail) {
         // 1. Update Top Stats
         const completedEl = document.getElementById('sessions-completed');
         const upcomingEl = document.getElementById('sessions-upcoming');
+        const activeProgramsEl = document.getElementById('active-programs');
 
         // Get user record for completed count
         // Reuse existing db instance
@@ -1743,6 +1759,13 @@ async function loadSessionCounts(parentEmail) {
 
         if (completedEl) completedEl.textContent = (userRecord && userRecord.logs) ? userRecord.logs.length : completedCount;
         if (upcomingEl) upcomingEl.textContent = upcomingCount;
+
+        // Active Programs count - count programs with status 'Active' for this user
+        if (activeProgramsEl) {
+            const activePrograms = db.training && db.training.programs ?
+                db.training.programs.filter(p => p.status === 'Active').length : 0;
+            activeProgramsEl.textContent = activePrograms;
+        }
     } catch (error) {
         console.error('Error in loadSessionCounts:', error);
         // Set default values on error
@@ -2099,13 +2122,22 @@ async function loadReceipts(parentEmail) {
             amountDiv.style.fontWeight = '600';
             amountDiv.style.marginBottom = '4px';
             amountDiv.textContent = `$${safeAmount}`;
+            // View Receipt button (opens PDF in new tab)
+            const viewBtn = document.createElement('button');
+            viewBtn.className = 'btn-text';
+            viewBtn.style.fontSize = '12px';
+            viewBtn.style.color = '#2563eb';
+            viewBtn.textContent = 'View Receipt';
+            viewBtn.onclick = () => window.open(`/receipts/${safeReceiptNumber}/pdf`, '_blank');
+            // Download PDF button
             const downloadBtn = document.createElement('button');
             downloadBtn.className = 'btn-text';
             downloadBtn.style.fontSize = '12px';
             downloadBtn.style.color = '#2563eb';
-            downloadBtn.textContent = 'Download';
+            downloadBtn.textContent = 'Download PDF';
             downloadBtn.onclick = () => generateReceiptPDF(safeReceiptNumber);
             rightDiv.appendChild(amountDiv);
+            rightDiv.appendChild(viewBtn);
             rightDiv.appendChild(downloadBtn);
 
             receiptDiv.appendChild(leftDiv);

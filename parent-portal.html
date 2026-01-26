@@ -543,6 +543,7 @@
 
                         <!-- Quick Stats -->
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                            <!-- Sessions Completed -->
                             <div
                                 class="bg-white rounded-xl p-5 text-center shadow-md hover:shadow-xl transition-shadow duration-200">
                                 <div class="text-3xl font-bold text-blue-600 mb-2" id="sessions-completed">0</div>
@@ -594,10 +595,11 @@
 
                             <!-- Receipts -->
                             <div class="mb-6">
-                                <div class="flex justify-between items-center mb-3">
+                                <div class="flex justify-between items-center mb-3" style="padding-right: 12px;">
                                     <h4 class="text-base font-semibold">Receipts</h4>
-                                    <button onclick="loadReceipts()"
-                                        class="btn-secondary px-3 py-2 text-sm min-h-[44px]">
+                                    <button onclick="loadReceipts(localStorage.getItem('gba_user_email'))"
+                                        class="btn-primary px-3 py-2 text-sm min-h-[44px]"
+                                        style="padding: 6px 12px; font-size: 10px; min-width: 88px;">
                                         View All</button>
                                 </div>
                                 <div id="training-documents-list" class="flex flex-col gap-3 mb-3">
@@ -610,10 +612,11 @@
 
                             <!-- Invoices -->
                             <div class="mb-6">
-                                <div class="flex justify-between items-center mb-3">
+                                <div class="flex justify-between items-center mb-3" style="padding-right: 12px;">
                                     <h4 class="text-base font-semibold">Invoices</h4>
-                                    <button onclick="loadInvoices()"
-                                        class="btn-secondary px-3 py-2 text-sm min-h-[44px]">
+                                    <button onclick="showInvoicesList()"
+                                        class="btn-primary px-3 py-2 text-sm min-h-[44px]"
+                                        style="padding: 6px 12px; font-size: 10px; min-width: 88px;">
                                         View All</button>
                                 </div>
                                 <div id="invoices-list" class="flex flex-col gap-3">
@@ -837,203 +840,124 @@
                     </div>
 
                     <!-- VIEW: SETTINGS -->
-                    <div id="view-settings" class="portal-view"
-                        style="display: none; background-color: #F2F2F7; min-height: 100%; padding: 20px;">
-                        <div class="section-header" style="margin-bottom: 20px;">
-                            <h2 style="font-size: 34px; font-weight: 700; color: #000; letter-spacing: -0.02em;">
-                                Settings</h2>
-                        </div>
+                    <section id="view-settings" class="portal-view" hidden>
+                        <header class="section-header">
+                            <h2 class="settings-title">Settings</h2>
+                        </header>
 
-                        <form id="settings-form" onsubmit="event.preventDefault(); handleSettingsSave();"
-                            style="max-width: 600px; margin: 0 auto;">
+                        <form id="settings-form" class="settings-form" novalidate>
+                            <!-- Parent Information -->
+                            <div class="settings-group">
+                                <h3 class="settings-group-title">Parent Information</h3>
 
-                            <!-- Parent Information Group -->
-                            <div style="margin-bottom: 24px;">
-                                <h3
-                                    style="font-size: 13px; color: #6d6d72; text-transform: uppercase; margin-bottom: 8px; font-weight: 400; padding-left: 16px;">
-                                    Parent Information</h3>
-                                <div
-                                    style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-
-                                    <!-- Parent Name -->
-                                    <div
-                                        style="display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid #e5e5ea;">
-                                        <label for="settings-parent-name"
-                                            style="width: 140px; font-size: 17px; color: #000;">Parent Name</label>
-                                        <input type="text" id="settings-parent-name" placeholder="Enter your full name"
-                                            style="flex-grow: 1; border: none; font-size: 17px; color: #000; outline: none; background: transparent; text-align: right;">
+                                <div class="settings-card">
+                                    <div class="settings-row">
+                                        <label for="settings-parent-name" class="settings-label">Parent Name</label>
+                                        <input type="text" id="settings-parent-name" name="parent_name"
+                                            class="settings-input" autocomplete="name"
+                                            placeholder="Enter your full name" />
                                     </div>
 
-                                    <!-- Email Address -->
-                                    <div
-                                        style="display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid #e5e5ea;">
-                                        <label for="settings-parent-email"
-                                            style="width: 140px; font-size: 17px; color: #000;">Email Address</label>
-                                        <input type="email" id="settings-parent-email" placeholder="jewellsco@gmail.com"
-                                            readonly
-                                            style="flex-grow: 1; border: none; font-size: 17px; color: #8e8e93; outline: none; background: transparent; text-align: right;">
+                                    <div class="settings-row">
+                                        <label for="settings-parent-email" class="settings-label">Email Address</label>
+                                        <input type="email" id="settings-parent-email" name="parent_email"
+                                            class="settings-input is-readonly" autocomplete="email" readonly />
                                     </div>
 
-                                    <!-- Phone Number -->
-                                    <div style="display: flex; align-items: center; padding: 12px 16px;">
-                                        <label for="settings-parent-phone"
-                                            style="width: 140px; font-size: 17px; color: #000;">Phone Number</label>
-                                        <input type="tel" id="settings-parent-phone" placeholder="(555) 555-5555"
-                                            style="flex-grow: 1; border: none; font-size: 17px; color: #2563eb; outline: none; background: transparent; text-align: right;">
+                                    <div class="settings-row">
+                                        <label for="settings-parent-phone" class="settings-label">Phone Number</label>
+                                        <input type="tel" id="settings-parent-phone" name="parent_phone"
+                                            class="settings-input is-accent" autocomplete="tel"
+                                            placeholder="(555) 555-5555" inputmode="tel" />
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Athlete Information Group -->
-                            <div style="margin-bottom: 30px;">
-                                <h3
-                                    style="font-size: 13px; color: #6d6d72; text-transform: uppercase; margin-bottom: 8px; font-weight: 400; padding-left: 16px;">
-                                    Athlete Information (Pairing)</h3>
-                                <div
-                                    style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                            <!-- Athlete Information -->
+                            <div class="settings-group">
+                                <h3 class="settings-group-title">Athlete Information</h3>
 
-                                    <!-- Athlete Name -->
-                                    <div
-                                        style="display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid #e5e5ea;">
-                                        <label for="settings-athlete-name"
-                                            style="width: 140px; font-size: 17px; color: #000;">Athlete Name</label>
-                                        <input type="text" id="settings-athlete-name"
-                                            placeholder="Enter athlete's full name"
-                                            style="flex-grow: 1; border: none; font-size: 17px; color: #000; outline: none; background: transparent; text-align: right;">
+                                <div class="settings-card">
+                                    <div class="settings-row">
+                                        <label for="settings-athlete-name" class="settings-label">Athlete Name</label>
+                                        <input type="text" id="settings-athlete-name" name="athlete_name"
+                                            class="settings-input" placeholder="Enter athlete's full name" </div>
                                     </div>
 
-                                    <!-- Team Selection -->
+                                    <!-- Date of Birth -->
                                     <div
-                                        style="display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid #e5e5ea; justify-content: space-between;">
-                                        <label for="settings-athlete-team"
-                                            style="font-size: 17px; color: #000;">Team</label>
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <select id="settings-athlete-team"
-                                                style="border: none; font-size: 17px; color: #8e8e93; outline: none; background: transparent; text-align: right; appearance: none; padding-right: 0; cursor: pointer;">
-                                                <option value="" disabled selected>Select a team...</option>
-                                                <option value="TEAM-10U-DEV-BLACK">10U Development Black</option>
-                                                <option value="TEAM-10U-DEV-RED">10U Development Red</option>
-                                                <option value="TEAM-10U-GOLD-BLACK">10U Gold Black</option>
-                                                <option value="TEAM-10U-ELITE-BLACK">10U Elite Black</option>
-                                            </select>
-                                            <span style="color: #c7c7cc; font-size: 12px;">▼</span>
-                                            <!-- Notification Settings (New) -->
-                                            <div style="margin-bottom: 30px;">
-                                                <h3
-                                                    style="font-size: 13px; color: #6d6d72; text-transform: uppercase; margin-bottom: 8px; font-weight: 400; padding-left: 16px;">
-                                                    Notifications</h3>
-                                                <div
-                                                    style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-                                                    <div
-                                                        style="display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid #e5e5ea; justify-content: space-between;">
-                                                        <label for="settings-notify-payment"
-                                                            style="font-size: 17px; color: #000;">Payment
-                                                            Reminders</label>
-                                                        <label class="toggle-switch"
-                                                            style="position: relative; display: inline-block; width: 50px; height: 30px;">
-                                                            <input type="checkbox" id="settings-notify-payment" checked
-                                                                style="opacity: 0; width: 0; height: 0;">
-                                                            <span class="slider"
-                                                                style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px;"></span>
-                                                            <span class="slider-knob"
-                                                                style="position: absolute; content: ''; height: 26px; width: 26px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></span>
-                                                        </label>
-                                                    </div>
-                                                    <div
-                                                        style="display: flex; align-items: center; padding: 12px 16px; justify-content: space-between;">
-                                                        <label for="settings-notify-overdue"
-                                                            style="font-size: 17px; color: #000;">Overdue Alerts</label>
-                                                        <label class="toggle-switch"
-                                                            style="position: relative; display: inline-block; width: 50px; height: 30px;">
-                                                            <input type="checkbox" id="settings-notify-overdue" checked
-                                                                style="opacity: 0; width: 0; height: 0;">
-                                                            <span class="slider"
-                                                                style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px;"></span>
-                                                            <span class="slider-knob"
-                                                                style="position: absolute; content: ''; height: 26px; width: 26px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></span>
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                                <p
-                                                    style="font-size: 13px; color: #6d6d72; margin-top: 8px; padding-left: 16px;">
-                                                    You will receive emails and texts for payment due dates.</p>
-                                            </div>
-                                        </div>
-
-                                        <!-- Date of Birth -->
-                                        <div
-                                            style="display: flex; align-items: center; padding: 12px 16px; justify-content: space-between;">
-                                            <label for="settings-athlete-dob" style="font-size: 17px; color: #000;">Date
-                                                of
-                                                Birth</label>
-                                            <input type="date" id="settings-athlete-dob"
-                                                style="border: none; font-size: 17px; color: #8e8e93; outline: none; background: transparent; text-align: right; font-family: inherit;">
-                                        </div>
+                                        style="display: flex; align-items: center; padding: 12px 16px; justify-content: space-between;">
+                                        <label for="settings-athlete-dob" style="font-size: 17px; color: #000;">Date
+                                            of
+                                            Birth</label>
+                                        <input type="date" id="settings-athlete-dob"
+                                            style="border: none; font-size: 17px; color: #8e8e93; outline: none; background: transparent; text-align: right; font-family: inherit;">
                                     </div>
                                 </div>
+                            </div>
 
-                                <!-- Save Button -->
-                                <div style="text-align: center;">
-                                    <button type="submit" class="btn-primary"
-                                        style="width: 100%; border-radius: 12px; font-size: 17px; font-weight: 600; padding: 14px; background: #2563eb; box-shadow: none;">
-                                        Save Changes
-                                    </button>
-                                </div>
+                            <!-- Save Button -->
+                            <div style="text-align: center;">
+                                <button type="submit" class="btn-primary"
+                                    style="width: 100%; border-radius: 12px; font-size: 17px; font-weight: 600; padding: 14px; background: #2563eb; box-shadow: none;">
+                                    Save Changes
+                                </button>
+                            </div>
 
                         </form>
-                    </div>
-
                 </div>
-            </main>
 
-            <!-- SHARED MODAL (Kept same) -->
-            <div class="doc-modal-overlay" id="doc-modal-overlay">
-                <div class="doc-modal">
-                    <div class="doc-modal-header">
-                        <h3 id="modal-title">Document Title</h3>
-                        <button class="modal-close" onclick="closeDocModal()">✕</button>
+        </div>
+        </main>
+
+        <!-- SHARED MODAL (Kept same) -->
+        <div class="doc-modal-overlay" id="doc-modal-overlay">
+            <div class="doc-modal">
+                <div class="doc-modal-header">
+                    <h3 id="modal-title">Document Title</h3>
+                    <button class="modal-close" onclick="closeDocModal()">✕</button>
+                </div>
+                <div class="doc-modal-body">
+                    <div class="legal-scroll-box" id="modal-content" style="height: 200px; margin-bottom: 1.5rem;">
+                        <!-- Content Injected via JS -->
                     </div>
-                    <div class="doc-modal-body">
-                        <div class="legal-scroll-box" id="modal-content" style="height: 200px; margin-bottom: 1.5rem;">
-                            <!-- Content Injected via JS -->
+
+                    <div class="signature-section">
+                        <div class="form-row"
+                            style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                            <div class="form-group">
+                                <label>Name of Child</label>
+                                <input type="text" id="signer-child-name" class="modal-input"
+                                    placeholder="Athlete Name">
+                            </div>
+                            <div class="form-group">
+                                <label>Parent Name</label>
+                                <input type="text" id="signer-parent-name" class="modal-input"
+                                    placeholder="Parent Name">
+                            </div>
                         </div>
 
-                        <div class="signature-section">
-                            <div class="form-row"
-                                style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                                <div class="form-group">
-                                    <label>Name of Child</label>
-                                    <input type="text" id="signer-child-name" class="modal-input"
-                                        placeholder="Athlete Name">
-                                </div>
-                                <div class="form-group">
-                                    <label>Parent Name</label>
-                                    <input type="text" id="signer-parent-name" class="modal-input"
-                                        placeholder="Parent Name">
-                                </div>
-                            </div>
-
-                            <label>Signature:</label>
-                            <div class="signature-pad-wrapper" style="height: 150px;">
-                                <canvas id="signature-pad"></canvas>
-                                <div class="signature-overlay">Sign Here</div>
-                            </div>
-                            <button id="clear-signature" class="btn-text" style="font-size: 0.8rem;">Clear</button>
-
-                            <div class="agreement-checkbox">
-                                <input type="checkbox" id="agree-check">
-                                <label for="agree-check">I agree to the terms above. <span
-                                        style="font-size: 0.8em; color: #888;">(Date: <span
-                                            id="current-date"></span>)</span></label>
-                            </div>
-
-                            <button id="submit-waiver" class="btn-primary full-width" disabled>Sign & Accept</button>
+                        <label>Signature:</label>
+                        <div class="signature-pad-wrapper" style="height: 150px;">
+                            <canvas id="signature-pad"></canvas>
+                            <div class="signature-overlay">Sign Here</div>
                         </div>
+                        <button id="clear-signature" class="btn-text" style="font-size: 0.8rem;">Clear</button>
+
+                        <div class="agreement-checkbox">
+                            <input type="checkbox" id="agree-check">
+                            <label for="agree-check">I agree to the terms above. <span
+                                    style="font-size: 0.8em; color: #888;">(Date: <span
+                                        id="current-date"></span>)</span></label>
+                        </div>
+
+                        <button id="submit-waiver" class="btn-primary full-width" disabled>Sign & Accept</button>
                     </div>
                 </div>
             </div>
-
         </div>
+
+    </div>
     </div>
 
     <!-- ONBOARDING MODAL -->
@@ -1082,6 +1006,8 @@
     <script src="security.js" defer></script>
     <script type="module" src="src/lib/exposeServices.js" defer></script>
     <script src="portal-data.js" defer></script>
+    <script src="export-functions.js" defer></script>
+    <script src="receipt-view.js" defer></script>
     <script src="parent-portal.js" defer></script>
     <!-- auth.js removed - auth-supabase.js is the primary auth system -->
     <!-- Non-critical scripts (async for independent loading) -->

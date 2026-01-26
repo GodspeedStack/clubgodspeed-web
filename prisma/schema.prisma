@@ -1,0 +1,182 @@
+// Prisma Schema for Parent Portal
+// Database: PostgreSQL
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// Parent Accounts
+// ==========================================
+model ParentAccount {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  phone     String?
+  status    String   @default("Active") // Active, Past Due, Pending
+  balance   Decimal  @default(0) @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  athletes         Athlete[]
+  trainingPurchases TrainingPurchase[]
+  trainingAttendance TrainingAttendance[]
+  receipts         Receipt[]
+  invoices         Invoice[]
+
+  @@map("parent_accounts")
+}
+
+// ==========================================
+// Athletes
+// ==========================================
+model Athlete {
+  id          String   @id @default(cuid())
+  parentId    String
+  name        String
+  dateOfBirth DateTime?
+  team        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  parent             ParentAccount        @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  trainingPurchases  TrainingPurchase[]
+  trainingAttendance TrainingAttendance[]
+
+  @@map("athletes")
+}
+
+// ==========================================
+// Training Purchases (Hours Packages)
+// ==========================================
+model TrainingPurchase {
+  id             String   @id @default(cuid())
+  parentId       String
+  athleteId      String?
+  purchaseDate   DateTime @default(now())
+  item           String   // e.g., "10 Hour Training Package"
+  amount         Decimal  @db.Decimal(10, 2)
+  hoursPurchased Decimal  @db.Decimal(5, 1) // e.g., 10.0
+  status         String   @default("Paid") // Paid, Pending, Refunded
+  receiptLink    String?
+  expiryDate     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  parent  ParentAccount @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  athlete Athlete?      @relation(fields: [athleteId], references: [id], onDelete: SetNull)
+  receipts Receipt[]    // Inverse relation - receipts generated from this purchase
+
+  @@map("training_purchases")
+}
+
+// ==========================================
+// Training Attendance (Session Logs)
+// ==========================================
+model TrainingAttendance {
+  id         String   @id @default(cuid())
+  parentId   String
+  athleteId  String?
+  sessionDate DateTime
+  startTime  String   // e.g., "2:00 PM"
+  endTime    String   // e.g., "4:00 PM"
+  duration   Decimal  @db.Decimal(5, 1) // Hours, e.g., 2.0
+  activity   String   // e.g., "1v1 Training (Coach Scott)"
+  notes      String?
+  status     String   @default("Completed") // Completed, Cancelled, No-Show
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  parent  ParentAccount @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  athlete Athlete?      @relation(fields: [athleteId], references: [id], onDelete: SetNull)
+
+  @@index([parentId, status])
+  @@index([sessionDate])
+  @@map("training_attendance")
+}
+
+// ==========================================
+// Receipts
+// ==========================================
+model Receipt {
+  id            String   @id @default(cuid())
+  parentId      String
+  athleteId     String?  // REQUIRED for V1 - links receipt to specific athlete
+  purchaseId    String?  // BEST: Links to specific training purchase for deterministic athlete assignment
+  receiptNumber String   @unique
+  paymentDate   DateTime
+  amount        Decimal  @db.Decimal(10, 2)
+  item          String   // e.g., "Training Credit Top-Up (10 hours)"
+  status        String   @default("Paid") // Paid, Pending, Refunded
+  pdfUrl        String?
+  
+  // Optional payment tracking (bulletproof for disputes)
+  paymentMethod  String?  // card, cash, check, etc.
+  transactionId  String?  // External payment processor ID
+  currency       String   @default("USD")
+  refundedAt     DateTime?
+  refundAmount   Decimal? @db.Decimal(10, 2)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  parent  ParentAccount    @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  athlete Athlete?         @relation(fields: [athleteId], references: [id], onDelete: SetNull)
+  purchase TrainingPurchase? @relation(fields: [purchaseId], references: [id], onDelete: SetNull)
+
+  @@index([parentId])
+  @@index([athleteId])
+  @@index([purchaseId])
+  @@index([paymentDate])
+  @@map("receipts")
+}
+
+// ==========================================
+// Invoices
+// ==========================================
+model Invoice {
+  id            String   @id @default(cuid())
+  parentId      String
+  invoiceNumber String   @unique
+  issueDate     DateTime @default(now())
+  dueDate       DateTime
+  totalAmount   Decimal  @db.Decimal(10, 2)
+  status        String   @default("pending") // paid, pending, overdue
+  pdfUrl        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  parent ParentAccount @relation(fields: [parentId], references: [id], onDelete: Cascade)
+
+  @@index([parentId])
+  @@index([status])
+  @@index([dueDate])
+  @@map("invoices")
+}
+
+// ==========================================
+// Training Programs (Optional - for enrollment tracking)
+// ==========================================
+model TrainingProgram {
+  id          String   @id @default(cuid())
+  name        String   // e.g., "Elite Guard Academy"
+  type        String   // e.g., "1v1 Training"
+  status      String   @default("Active") // Active, Inactive
+  schedule    String?  // e.g., "Mon 6pm"
+  coach       String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("training_programs")
+}
