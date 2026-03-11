@@ -13,10 +13,10 @@ if (typeof window.jspdf === 'undefined') {
 /**
  * Generate Receipt PDF
  */
-window.generateReceiptPDF = async function(receiptId) {
+window.generateReceiptPDF = async function (receiptId) {
     const supabase = window.auth?.getSupabaseClient?.();
     const parentEmail = localStorage.getItem('gba_user_email');
-    
+
     if (!parentEmail) {
         godspeedAlert('Please log in to view receipts', 'GODSPEED BASKETBALL');
         return;
@@ -77,10 +77,10 @@ window.generateReceiptPDF = async function(receiptId) {
 /**
  * Generate Invoice PDF
  */
-window.generateInvoicePDF = async function(invoiceNumber) {
+window.generateInvoicePDF = async function (invoiceNumber) {
     const supabase = window.auth?.getSupabaseClient?.();
     const parentEmail = localStorage.getItem('gba_user_email');
-    
+
     if (!parentEmail) {
         godspeedAlert('Please log in to view invoices', 'GODSPEED BASKETBALL');
         return;
@@ -136,7 +136,7 @@ function generateReceiptPDFDocument(receipt) {
             if (typeof window.jspdf !== 'undefined') {
                 generateReceiptPDFDocument(receipt);
             } else {
-        godspeedAlert('PDF library not loaded. Please refresh the page.', 'Error');
+                godspeedAlert('PDF library not loaded. Please refresh the page.', 'Error');
             }
         };
         document.head.appendChild(script);
@@ -151,13 +151,13 @@ function generateReceiptPDFDocument(receipt) {
     // Header with branding
     doc.setFillColor(37, 99, 235); // Brand blue
     doc.rect(0, 0, pageWidth, 40, 'F');
-    
+
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(28);
     doc.setFont(undefined, 'bold');
     doc.text('GODSPEED', margin, 20);
     doc.text('BASKETBALL', margin, 30);
-    
+
     // Receipt title
     doc.setFontSize(16);
     doc.setTextColor(255, 255, 255);
@@ -175,16 +175,16 @@ function generateReceiptPDFDocument(receipt) {
     doc.setFont(undefined, 'normal');
     doc.text(receipt.receipt_number || receipt.transaction_id || 'N/A', margin + 50, yPos);
     yPos += 8;
-    
+
     // Date
     doc.setFont(undefined, 'bold');
     doc.text('Date:', margin, yPos);
     doc.setFont(undefined, 'normal');
-    doc.text(new Date(receipt.payment_date).toLocaleDateString('en-US', { 
-        year: 'numeric', month: 'long', day: 'numeric' 
+    doc.text(new Date(receipt.payment_date).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'long', day: 'numeric'
     }), margin + 50, yPos);
     yPos += 8;
-    
+
     // Payment method
     doc.setFont(undefined, 'bold');
     doc.text('Payment Method:', margin, yPos);
@@ -221,7 +221,7 @@ function generateReceiptPDFDocument(receipt) {
     doc.setDrawColor(200, 200, 200);
     doc.line(margin, yPos, pageWidth - margin, yPos);
     yPos += 10;
-    
+
     doc.setFontSize(14);
     doc.setFont(undefined, 'bold');
     doc.text('Total Amount:', margin, yPos);
@@ -239,8 +239,11 @@ function generateReceiptPDFDocument(receipt) {
     yPos += 6;
     doc.text('Denver Basketball Center | Godspeed HQ, Denver, CO', margin, yPos);
 
-    // Download
-    doc.save(`receipt-${receipt.receipt_number || receipt.transaction_id || 'receipt'}.pdf`);
+    // Download — named for easy filing: GODSPEED_Receipt_[Name]_[ID]_[Date].pdf
+    const receiptId = receipt.receipt_number || receipt.transaction_id || 'Unknown';
+    const parentName = (receipt.parent_name || localStorage.getItem('gba_user_email') || 'Parent').split('@')[0].replace(/\s+/g, '-');
+    const receiptDate = receipt.payment_date ? new Date(receipt.payment_date).toISOString().slice(0, 7) : new Date().toISOString().slice(0, 7);
+    doc.save(`GODSPEED_Receipt_${parentName}_${receiptId}_${receiptDate}.pdf`);
 }
 
 /**
@@ -256,7 +259,7 @@ function generateInvoicePDFDocument(invoice) {
             if (typeof window.jspdf !== 'undefined') {
                 generateInvoicePDFDocument(invoice);
             } else {
-        godspeedAlert('PDF library not loaded. Please refresh the page.', 'Error');
+                godspeedAlert('PDF library not loaded. Please refresh the page.', 'Error');
             }
         };
         document.head.appendChild(script);
@@ -271,13 +274,13 @@ function generateInvoicePDFDocument(invoice) {
     // Header with branding
     doc.setFillColor(37, 99, 235); // Brand blue
     doc.rect(0, 0, pageWidth, 40, 'F');
-    
+
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(28);
     doc.setFont(undefined, 'bold');
     doc.text('GODSPEED', margin, 20);
     doc.text('BASKETBALL', margin, 30);
-    
+
     // Invoice title
     doc.setFontSize(16);
     doc.setTextColor(255, 255, 255);
@@ -295,32 +298,32 @@ function generateInvoicePDFDocument(invoice) {
     doc.setFont(undefined, 'normal');
     doc.text(invoice.invoice_number || 'N/A', margin + 50, yPos);
     yPos += 8;
-    
+
     // Issue date
     doc.setFont(undefined, 'bold');
     doc.text('Issue Date:', margin, yPos);
     doc.setFont(undefined, 'normal');
-    doc.text(new Date(invoice.issue_date).toLocaleDateString('en-US', { 
-        year: 'numeric', month: 'long', day: 'numeric' 
+    doc.text(new Date(invoice.issue_date).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'long', day: 'numeric'
     }), margin + 50, yPos);
     yPos += 8;
-    
+
     // Due date
     doc.setFont(undefined, 'bold');
     doc.text('Due Date:', margin, yPos);
     doc.setFont(undefined, 'normal');
-    doc.text(new Date(invoice.due_date).toLocaleDateString('en-US', { 
-        year: 'numeric', month: 'long', day: 'numeric' 
+    doc.text(new Date(invoice.due_date).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'long', day: 'numeric'
     }), margin + 50, yPos);
     yPos += 8;
-    
+
     // Status
     doc.setFont(undefined, 'bold');
     doc.text('Status:', margin, yPos);
     doc.setFont(undefined, 'normal');
-    const statusColor = invoice.status === 'paid' ? [16, 185, 129] : 
-                        invoice.status === 'overdue' ? [239, 68, 68] : 
-                        [245, 158, 11];
+    const statusColor = invoice.status === 'paid' ? [16, 185, 129] :
+        invoice.status === 'overdue' ? [239, 68, 68] :
+            [245, 158, 11];
     doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
     doc.text(invoice.status.toUpperCase(), margin + 50, yPos);
     yPos += 15;
@@ -338,7 +341,7 @@ function generateInvoicePDFDocument(invoice) {
     doc.text('Description', margin + 5, yPos);
     doc.text('Amount', pageWidth - margin - 5, yPos, { align: 'right' });
     yPos += 8;
-    
+
     doc.setDrawColor(200, 200, 200);
     doc.line(margin, yPos, pageWidth - margin, yPos);
     yPos += 8;
@@ -369,7 +372,7 @@ function generateInvoicePDFDocument(invoice) {
     doc.setDrawColor(200, 200, 200);
     doc.line(margin, yPos, pageWidth - margin, yPos);
     yPos += 10;
-    
+
     doc.setFontSize(10);
     if (invoice.tax_amount && invoice.tax_amount > 0) {
         doc.text('Subtotal:', pageWidth - margin - 60, yPos);
@@ -379,7 +382,7 @@ function generateInvoicePDFDocument(invoice) {
         doc.text(`$${parseFloat(invoice.tax_amount).toFixed(2)}`, pageWidth - margin - 5, yPos, { align: 'right' });
         yPos += 8;
     }
-    
+
     doc.setFontSize(14);
     doc.setFont(undefined, 'bold');
     doc.text('Total:', pageWidth - margin - 60, yPos);
@@ -404,6 +407,9 @@ function generateInvoicePDFDocument(invoice) {
     yPos += 6;
     doc.text('Denver Basketball Center | Godspeed HQ, Denver, CO', margin, yPos);
 
-    // Download
-    doc.save(`invoice-${invoice.invoice_number || 'invoice'}.pdf`);
+    // Download — named for easy filing: GODSPEED_Invoice_[Name]_[ID]_[Date].pdf
+    const invoiceId = invoice.invoice_number || 'Unknown';
+    const invoiceParentName = (invoice.parent_name || localStorage.getItem('gba_user_email') || 'Parent').split('@')[0].replace(/\s+/g, '-');
+    const invoiceDate = invoice.issue_date ? new Date(invoice.issue_date).toISOString().slice(0, 7) : new Date().toISOString().slice(0, 7);
+    doc.save(`GODSPEED_Invoice_${invoiceParentName}_${invoiceId}_${invoiceDate}.pdf`);
 }

@@ -76,24 +76,22 @@
             </div>
             <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
                 <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Hours Completed</div>
-                <!-- Updated to 3.0 based on latest data correction -->
-                <div class="text-4xl font-black text-blue-600">3.0</div>
+                <div class="text-4xl font-black text-blue-600">10.0</div>
                 <div class="w-full bg-gray-100 h-1.5 mt-3 rounded-full overflow-hidden">
-                    <div class="bg-blue-600 h-full w-[30%]"></div>
+                    <div class="bg-blue-600 h-full w-[100%]"></div>
                 </div>
             </div>
             <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
                 <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Hours Remaining</div>
-                <!-- Updated to 7.0 based on latest data correction -->
-                <div class="text-4xl font-black text-gray-800">7.0</div>
-                <div class="text-xs font-bold text-blue-600 mt-2">Active</div>
+                <div class="text-4xl font-black text-gray-800">0.0</div>
+                <div class="text-xs font-bold text-orange-500 mt-2">Package Complete</div>
             </div>
         </div>
 
         <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-12">
             <div class="p-6 border-b border-gray-100 flex justify-between items-center">
                 <h2 class="text-lg font-black uppercase">Training Log</h2>
-                <span class="text-xs font-bold bg-gray-100 px-2 py-1 rounded text-gray-600">JAN 2026</span>
+                <span class="text-xs font-bold bg-gray-100 px-2 py-1 rounded text-gray-600">FEB 2026</span>
             </div>
             <table class="w-full text-left text-sm">
                 <thead class="bg-gray-50 text-gray-500 font-bold uppercase text-xs">
@@ -106,6 +104,31 @@
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     <tr>
+                        <td class="p-4 font-bold">Feb 24, 2026</td>
+                        <td class="p-4">Dribbling, off hand activation, shooting, low man reads</td>
+                        <td class="p-4 text-gray-500">Coach Scott</td>
+                        <td class="p-4 text-right font-bold">2.0 Hrs</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold">Feb 22, 2026</td>
+                        <td class="p-4">Off hand activation, ball handling against pressure and free throws</td>
+                        <td class="p-4 text-gray-500">Coach Scott</td>
+                        <td class="p-4 text-right font-bold">1.0 Hrs</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold">Jan 25, 2026</td>
+                        <td class="p-4">Finishing, ballhandling, and reads off DHO</td>
+                        <td class="p-4 text-gray-500">Coach Scott</td>
+                        <td class="p-4 text-right font-bold">2.0 Hrs</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 font-bold">Jan 19, 2026</td>
+                        <td class="p-4">Long splits off post entry, passing to post, driving vs pressure, footwork
+                            separation</td>
+                        <td class="p-4 text-gray-500">Coach Scott</td>
+                        <td class="p-4 text-right font-bold">2.0 Hrs</td>
+                    </tr>
+                    <tr>
                         <td class="p-4 font-bold">Jan 04, 2026</td>
                         <td class="p-4">Ball handling, footwork, shot creation</td>
                         <td class="p-4 text-gray-500">Coach Scott</td>
@@ -115,7 +138,6 @@
                         <td class="p-4 font-bold">Jan 03, 2026</td>
                         <td class="p-4">Handling pressure defense, ballhandling, footwork</td>
                         <td class="p-4 text-gray-500">Coach Scott</td>
-                        <!-- Updated to 2.0 Hrs per JSON source of truth -->
                         <td class="p-4 text-right font-bold">2.0 Hrs</td>
                     </tr>
                 </tbody>
@@ -198,100 +220,321 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
 
-            // --- HEADER ---
-            doc.setFillColor(0, 0, 0); // Black background
-            doc.rect(0, 0, 210, 40, 'F');
+            // Colors
+            const godspeedBlue = [37, 99, 235];
+            const black = [17, 24, 39];
+            const grayText = [107, 114, 128];
+            const lightGray = [243, 244, 246];
+            const borderGray = [229, 231, 235];
 
-            doc.setTextColor(255, 255, 255); // White text
-            doc.setFontSize(24);
+            // --- HEADER (Godspeed Logo & Title) ---
+            doc.setFillColor(...black);
+            doc.rect(0, 0, 210, 45, 'F');
+
+            // "GODSPEED" text
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(32);
             doc.setFont("helvetica", "bold");
-            doc.text("GODSPEED BASKETBALL", 15, 20);
+            doc.text("GODSPEED", 15, 22);
 
-            doc.setFontSize(10);
-            doc.text("PLAYER DEVELOPMENT REPORT", 15, 30);
+            // "BASKETBALL" text in blue
+            doc.setTextColor(...godspeedBlue);
+            doc.text("BASKETBALL", 82, 22);
 
-            doc.setFontSize(30);
-            doc.text("#12", 180, 25); // Player Number
-
-            // --- PLAYER INFO ---
-            doc.setTextColor(0, 0, 0); // Reset to black
-            doc.setFontSize(16);
-            doc.setFont("helvetica", "bold");
-            doc.text("ANTON", 15, 55);
-
-            doc.setFontSize(12);
+            // Subtitle
+            doc.setTextColor(200, 200, 200);
+            doc.setFontSize(9);
             doc.setFont("helvetica", "normal");
-            doc.setTextColor(100, 100, 100);
-            doc.text("Program: Elite Guard Academy", 15, 62);
-            doc.text("Season: Jan 2026", 15, 68);
+            doc.text("PLAYER DEVELOPMENT REPORT  //  CONFIDENTIAL", 15, 34);
+
+            // Print Date
+            doc.setFontSize(8);
+            doc.text(`Generated: ${new Date().toLocaleDateString()}`, 155, 34);
+
+            // --- PLAYER PROFILE CARD ---
+            doc.setFillColor(255, 255, 255);
+            doc.roundedRect(15, 55, 180, 32, 4, 4, 'FD');
+            doc.setDrawColor(...borderGray);
+            doc.setLineWidth(0.5);
+            doc.roundedRect(15, 55, 180, 32, 4, 4, 'S');
+
+            // Avatar circle
+            doc.setFillColor(...lightGray);
+            doc.circle(35, 71, 12, 'F');
+            doc.setTextColor(150, 150, 150);
+            doc.setFontSize(14);
+            doc.setFont("helvetica", "bold");
+            doc.text("A", 32, 76);
+
+            // Player Name
+            doc.setTextColor(...black);
+            doc.setFontSize(24);
+            doc.text("ANTON", 55, 69);
+
+            // Player Number
+            doc.setTextColor(200, 200, 200);
+            doc.setFontSize(18);
+            doc.text("#12", 98, 69);
+
+            // Tags
+            doc.setFillColor(...black);
+            doc.roundedRect(55, 75, 48, 6, 1, 1, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(8);
+            doc.text("ELITE GUARD ACADEMY", 58, 79.5);
+
+            doc.setTextColor(...grayText);
+            doc.setFont("helvetica", "bold");
+            doc.text("Grade: 5th", 110, 79.5);
+            doc.text("Parent: Denis", 140, 79.5);
 
             // --- STATS OVERVIEW ---
-            // Draw boxes
-            doc.setDrawColor(220, 220, 220);
-            doc.setFillColor(248, 248, 248);
+            const startY = 98;
 
             // Box 1: Total
-            doc.rect(15, 80, 50, 25, 'F');
-            doc.setFontSize(8); doc.text("TOTAL HOURS", 18, 86);
-            doc.setFontSize(16); doc.setTextColor(0, 0, 0); doc.text("10.0", 18, 98);
+            doc.setDrawColor(...borderGray);
+            doc.setFillColor(255, 255, 255);
+            doc.roundedRect(15, startY, 55, 28, 3, 3, 'FD');
+            doc.setTextColor(...grayText);
+            doc.setFontSize(8);
+            doc.text("TOTAL HOURS", 20, startY + 8);
+            doc.setTextColor(...black);
+            doc.setFontSize(24);
+            doc.text("10.0", 20, startY + 22);
 
-            // Box 2: Completed (Updated to 3.0 based on latest JSON data)
-            doc.rect(70, 80, 50, 25, 'F');
-            doc.setFillColor(255, 255, 255); // Reset fill
-            doc.setFontSize(8); doc.setTextColor(100, 100, 100); doc.text("COMPLETED", 73, 86);
-            doc.setFontSize(16); doc.setTextColor(37, 99, 235); // Blue
-            doc.text("3.0", 73, 98);
+            // Box 2: Completed (Highlighted Godspeed Blue)
+            doc.setFillColor(248, 250, 252);
+            doc.roundedRect(77, startY, 55, 28, 3, 3, 'FD');
+            doc.setDrawColor(...godspeedBlue);
+            doc.setLineWidth(1);
+            doc.roundedRect(77, startY, 55, 28, 3, 3, 'S');
 
-            // Box 3: Remaining (Updated to 7.0 based on latest JSON data)
-            doc.rect(125, 80, 50, 25, 'F');
-            doc.setFontSize(8); doc.setTextColor(100, 100, 100); doc.text("REMAINING", 128, 86);
-            doc.setFontSize(16); doc.setTextColor(0, 0, 0); doc.text("7.0", 128, 98);
+            doc.setTextColor(...godspeedBlue);
+            doc.setFontSize(8);
+            doc.setFont("helvetica", "bold");
+            doc.text("COMPLETED", 82, startY + 8);
+            doc.setFontSize(24);
+            doc.text("10.0", 82, startY + 22);
+            doc.setLineWidth(0.5); // Reset
 
-            // --- TRAINING LOG ---
+            // Box 3: Remaining
+            doc.setDrawColor(...borderGray);
+            doc.setFillColor(255, 255, 255);
+            doc.roundedRect(140, startY, 55, 28, 3, 3, 'FD');
+            doc.setTextColor(...grayText);
+            doc.setFontSize(8);
+            doc.text("REMAINING", 145, startY + 8);
+            doc.setTextColor(...black);
+            doc.setFontSize(24);
+            doc.text("0.0", 145, startY + 22);
+
+            // --- TRAINING LOG TABLE ---
+            // Title
+            let yPos = 145;
             doc.setFontSize(14);
-            doc.setTextColor(0, 0, 0);
-            doc.text("Training Log", 15, 120);
+            doc.setTextColor(...black);
+            doc.text("Recent Activity Log", 15, yPos);
 
-            let yPos = 130;
-            const lineHeight = 10;
+            yPos += 8;
 
-            // Headers
+            // Table Header Background
+            doc.setFillColor(...lightGray);
+            doc.rect(15, yPos, 180, 8, 'F');
+
+            doc.setFontSize(8);
+            doc.setTextColor(...grayText);
+            doc.setFont("helvetica", "bold");
+            doc.text("DATE", 20, yPos + 5.5);
+            doc.text("SESSION FOCUS", 55, yPos + 5.5);
+            doc.text("DURATION", 170, yPos + 5.5);
+
+            yPos += 8;
+
+            // Row Helper
+            function drawRow(date, focus, duration, isAlt) {
+                if (isAlt) {
+                    doc.setFillColor(250, 250, 250);
+                    doc.rect(15, yPos, 180, 12, 'F');
+                }
+
+                doc.setTextColor(...black);
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(9);
+                doc.text(date, 20, yPos + 7.5);
+
+                doc.setFont("helvetica", "normal");
+                doc.setTextColor(50, 50, 50);
+                doc.text(focus, 55, yPos + 7.5);
+
+                doc.setFont("helvetica", "bold");
+                doc.setTextColor(...black);
+                doc.text(duration, 170, yPos + 7.5);
+
+                doc.setDrawColor(...borderGray);
+                doc.line(15, yPos + 12, 195, yPos + 12);
+
+                yPos += 12;
+            }
+
+            // Data Rows
+            drawRow("Feb 24, 2026", "Dribbling, off hand activation, shooting, low man reads", "2.0 Hrs", false);
+            drawRow("Feb 22, 2026", "Off hand activation, ball handling vs pressure, free throws", "1.0 Hrs", true);
+            drawRow("Jan 25, 2026", "Finishing, ballhandling, and reads off DHO", "2.0 Hrs", false);
+            drawRow("Jan 19, 2026", "Long splits off post entry, passing to post, driving vs pressure", "2.0 Hrs", true);
+            drawRow("Jan 04, 2026", "Ball handling, footwork, shot creation", "1.0 Hrs", false);
+            drawRow("Jan 03, 2026", "Handling pressure defense, ballhandling, footwork", "2.0 Hrs", true);
+
+            // --- TRAINING SUMMARY ---
+            yPos += 6;
+            doc.setFontSize(9);
+            doc.setTextColor(...grayText);
+            doc.setFont("helvetica", "bold");
+            doc.text("TOTAL HOURS LOGGED IN THIS REPORT:", 20, yPos);
+            doc.setTextColor(...godspeedBlue);
+            doc.text("10.0 Hrs  (6 Sessions)", 110, yPos);
+
+            // --- PAGE 2: COACH'S ASSESSMENT ---
+            doc.addPage();
+
+            // Page 2 Header Bar
+            doc.setFillColor(...black);
+            doc.rect(0, 0, 210, 30, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(18);
+            doc.setFont("helvetica", "bold");
+            doc.text("COACH'S ASSESSMENT", 15, 20);
             doc.setFontSize(9);
             doc.setTextColor(150, 150, 150);
-            doc.text("DATE", 15, yPos);
-            doc.text("FOCUS", 45, yPos);
-            doc.text("DURATION", 180, yPos);
+            doc.text("DEVELOPMENT REPORT  //  CONFIDENTIAL", 130, 20);
 
-            doc.setDrawColor(200, 200, 200);
-            doc.line(15, yPos + 3, 195, yPos + 3);
-            yPos += 10;
-
-            // Data Rows (Matches JSON Data Source)
-            doc.setTextColor(0, 0, 0);
+            // Player Badge on Page 2
+            doc.setFillColor(248, 250, 252);
+            doc.setDrawColor(...borderGray);
+            doc.roundedRect(15, 38, 180, 20, 3, 3, 'FD');
+            doc.setTextColor(...black);
+            doc.setFontSize(13);
             doc.setFont("helvetica", "bold");
-
-            // Row 1
-            doc.text("Jan 04", 15, yPos);
-            doc.setFont("helvetica", "normal");
-            doc.text("Ball handling, footwork, shot creation", 45, yPos);
-            doc.text("1.0 Hrs", 180, yPos);
-            yPos += lineHeight;
-
-            // Row 2
-            doc.setFont("helvetica", "bold");
-            doc.text("Jan 03", 15, yPos);
-            doc.setFont("helvetica", "normal");
-            doc.text("Handling pressure defense, footwork", 45, yPos);
-            doc.text("2.0 Hrs", 180, yPos);
-
-
-            // --- FOOTER ---
+            doc.text("Anton  #12", 25, 51);
             doc.setFontSize(8);
-            doc.setTextColor(150, 150, 150);
-            doc.text("GodspeedOS Generated Report | " + new Date().toLocaleDateString(), 15, 280);
+            doc.setTextColor(...grayText);
+            doc.text("Elite Guard Academy  |  5th Grade  |  Season: 2025–2026", 68, 51);
 
-            // Save File
-            doc.save("GODSPEED_Report_Anton_#12_Jan2026.pdf");
+            // --- SECTION: DEVELOPMENT GOAL ---
+            let aY = 70;
+            doc.setFillColor(...godspeedBlue);
+            doc.roundedRect(15, aY, 180, 8, 2, 2, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "bold");
+            doc.text("DEVELOPMENT GOAL", 20, aY + 5.5);
+            aY += 14;
+
+            doc.setTextColor(...black);
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "bold");
+            doc.text("Next Role: Starting Point Guard", 20, aY);
+            aY += 8;
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(9);
+            doc.setTextColor(50, 50, 50);
+            const goalText = doc.splitTextToSize(
+                "Anton is being developed for a starting point guard role. His coach believes in his ability to reach that level and is committed to building the skill set required to get there.",
+                170
+            );
+            doc.text(goalText, 20, aY);
+            aY += goalText.length * 6 + 6;
+
+            // --- SECTION: STRENGTHS ---
+            doc.setFillColor(...lightGray);
+            doc.rect(15, aY, 180, 8, 'F');
+            doc.setTextColor(...black);
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "bold");
+            doc.text("STRENGTHS", 20, aY + 5.5);
+            aY += 13;
+
+            const strengths = [
+                { label: "Efficiency & IQ", body: "Anton is one of the most efficient and composed players on the roster. He possesses a high-level basketball IQ for his age — he plays at a good pace, makes smart decisions under pressure, and converts when fouled." },
+                { label: "Competitiveness", body: "His competitiveness is a defining quality. His coach repeatedly noted his poise in game situations. He does not dominate through flash or speed; he impacts the game through stability and control." },
+                { label: "Versatility", body: "Anton has fit seamlessly into both the 2nd unit and the starting role. Against mid-level competition, his control stands out — he plays under control, avoids forcing action, and is at his best when attacking closeouts and creating freely within the flow of the offense." },
+            ];
+
+            strengths.forEach(({ label, body }) => {
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(9);
+                doc.setTextColor(...godspeedBlue);
+                doc.text(`• ${label}`, 20, aY);
+                aY += 6;
+                doc.setFont("helvetica", "normal");
+                doc.setTextColor(50, 50, 50);
+                const lines = doc.splitTextToSize(body, 165);
+                doc.text(lines, 26, aY);
+                aY += lines.length * 5.5 + 5;
+            });
+
+            // --- SECTION: DEVELOPMENT AREAS ---
+            aY += 2;
+            doc.setFillColor(...lightGray);
+            doc.rect(15, aY, 180, 8, 'F');
+            doc.setTextColor(...black);
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "bold");
+            doc.text("AREAS FOR DEVELOPMENT", 20, aY + 5.5);
+            aY += 13;
+
+            const improvements = [
+                { label: "On-Ball Defense", body: "Against high-level teams with faster guards, Anton struggles to stay in front of his opponent. Improving his lateral quickness and defensive positioning is essential for the starting PG role." },
+                { label: "Ball Handling Under Pressure", body: "His ball handling needs significant work in order to function as a lead guard at the next level. This is the primary focus of ongoing 1v1 training sessions." },
+            ];
+
+            improvements.forEach(({ label, body }) => {
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(9);
+                doc.setTextColor(239, 68, 68);
+                doc.text(`• ${label}`, 20, aY);
+                aY += 6;
+                doc.setFont("helvetica", "normal");
+                doc.setTextColor(50, 50, 50);
+                const lines = doc.splitTextToSize(body, 165);
+                doc.text(lines, 26, aY);
+                aY += lines.length * 5.5 + 5;
+            });
+
+            // --- SECTION: COACH'S OUTLOOK ---
+            aY += 4;
+            doc.setFillColor(240, 245, 255);
+            doc.setDrawColor(37, 99, 235);
+            doc.setLineWidth(0.5);
+            doc.roundedRect(15, aY, 180, 28, 3, 3, 'FD');
+            doc.setTextColor(...godspeedBlue);
+            doc.setFontSize(8);
+            doc.setFont("helvetica", "bold");
+            doc.text("COACH'S OUTLOOK", 20, aY + 7);
+            doc.setFont("helvetica", "italic");
+            doc.setTextColor(30, 30, 30);
+            doc.setFontSize(9);
+            const outlookText = doc.splitTextToSize(
+                "\"When Anton locks in on ball handling and on-ball defense, I am confident his game will flourish and he will earn more minutes as a starter. The foundation is there — the work ahead is targeted and achievable.\"",
+                168
+            );
+            doc.text(outlookText, 20, aY + 14);
+            aY += 35;
+
+            // Page 2 Footer
+            doc.setDrawColor(...borderGray);
+            doc.line(15, aY, 195, aY);
+            aY += 6;
+            doc.setFontSize(8);
+            doc.setTextColor(...grayText);
+            doc.setFont("helvetica", "normal");
+            doc.text("GodspeedOS Generated Report  //  Authorized Personnel Only  //  " + new Date().toLocaleDateString(), 15, aY);
+
+            // Save File — named for easy filing: GODSPEED_PlayerReport_[Name]-No[Num]_[Mon-YYYY].pdf
+            const reportDate = new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }).replace(' ', '');
+            const playerName = document.querySelector('h1')?.textContent?.trim().split('#')[0].trim().replace(/\s+/g, '-') || 'Player';
+            const playerNum = document.querySelector('h1 .text-gray-400')?.textContent?.replace('#', '').trim() || '';
+            const numSuffix = playerNum ? `-No${playerNum}` : '';
+            doc.save(`GODSPEED_PlayerReport_${playerName}${numSuffix}_${reportDate}.pdf`);
         }
 
         // 2. MAGIC LINK NOTIFICATION
@@ -306,8 +549,11 @@
             const payload = {
                 "recipient": "denis@example.com",
                 "sessions": [
+                    { "date": "2026-02-22", "focus": "Off hand activation..." },
+                    { "date": "2026-01-25", "focus": "Finishing, ballhandling..." },
+                    { "date": "2026-01-19", "focus": "Long splits off post entry..." },
                     { "date": "2026-01-04", "focus": "Ball handling, footwork..." },
-                    { "date": "2026-01-03", "focus": "Handling pressure..." }
+                    { "date": "2026-01-03", "focus": "Handling pressure defense..." }
                 ],
                 "token": "mz_88192_sec_11"
             };

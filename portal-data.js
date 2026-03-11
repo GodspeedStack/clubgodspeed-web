@@ -21,7 +21,24 @@ const GODSPEED_DATA = {
         { athleteId: "p3", teamId: 'TEAM-10U-DEV-BLACK', name: "Cassius", initials: "C", tier: "Rotation/Starter", avg_grade: 8.20, trend: "Steady", notes: "IQ/Spacing needs work" },
         { athleteId: "p4", teamId: 'TEAM-10U-DEV-BLACK', name: "A.D.", initials: "AD", tier: "Rotation/Starter", avg_grade: 8.00, trend: "Steady", notes: "Needs coachability" },
         { athleteId: "p5", teamId: 'TEAM-10U-DEV-BLACK', name: "Howard", initials: "H", tier: "Rotation/Starter", avg_grade: 8.86, trend: "Up", notes: "Defensive Anchor" },
-        { athleteId: "p6", teamId: 'TEAM-10U-DEV-BLACK', name: "Anton", initials: "A", tier: "Rotation/Starter", avg_grade: 8.35, trend: "New", notes: "Plays under control", parentId: "denis@gmail.com" },
+        {
+            athleteId: "p6", teamId: 'TEAM-10U-DEV-BLACK', name: "Anton", initials: "A", tier: "Rotation/Starter", avg_grade: 8.35, trend: "New", notes: "Plays under control", parentId: "denis@gmail.com",
+            coachAssessment: {
+                updatedDate: "2026-02-25",
+                developmentGoal: "Starting Point Guard",
+                coachNote: "I believe in Anton and love his competitiveness. The goal is clear: earn the starting point guard role.",
+                strengths: [
+                    { label: "Efficiency & IQ", detail: "One of the most efficient and composed players on the roster. High-level basketball IQ for his age — plays at a good pace, makes smart decisions under pressure, and converts when fouled." },
+                    { label: "Competitiveness & Poise", detail: "His competitiveness is a defining quality. Repeatedly noted for poise in game situations. Does not dominate through flash or speed — impacts the game through stability and control." },
+                    { label: "Versatility", detail: "Fits seamlessly into both the 2nd unit and the starting role. Against mid-level competition, his control stands out. At his best attacking closeouts and creating freely without forcing action." }
+                ],
+                areasForDevelopment: [
+                    { label: "On-Ball Defense", detail: "Against high-level teams with faster guards, struggles to stay in front of his opponent. Lateral quickness and defensive positioning are essential to lock in the starting PG role." },
+                    { label: "Ball Handling Under Pressure", detail: "Ball handling needs significant work to function as a lead guard at the next level. Primary focus of ongoing 1v1 training sessions." }
+                ],
+                outlook: "When Anton improves his ball handling and on-ball defense, I am confident his game will flourish and he will earn more minutes. The foundation is there — the work ahead is targeted and achievable."
+            }
+        },
         { athleteId: "p11", teamId: 'TEAM-10U-DEV-BLACK', name: "Oliver", initials: "O", tier: "Rotation/Starter", avg_grade: 8.12, trend: "Rocket", notes: "Huge jump in Practice 8" }, // PROMOTED
         { athleteId: "p7", teamId: 'TEAM-10U-DEV-BLACK', name: "Emory", initials: "E", tier: "Development", avg_grade: 7.30, trend: "Steady", notes: "Lackluster closeouts" },
         {
@@ -149,14 +166,16 @@ const GODSPEED_DATA = {
     trainingRecords: {
         "denis@gmail.com": {
             hours: {
-                totalPurchased: 10,
-                used: 7.0,
-                remaining: 3.0,
+                totalPurchased: 10.0,
+                used: 10.0,
+                remaining: 0.0,
                 expiryDate: "2026-12-31"
             },
             logs: [
-                { date: "2026-01-26", time: "10:00 AM - 12:00 PM", duration: 2, activity: "1v1 Training", notes: "Focus on shooting mechanics and footwork" },
-                { date: "2026-01-19", time: "12:00 PM - 1:00 PM", duration: 1, activity: "Elite Guard Academy", notes: "Focus: post feeds, ball handling against pressure (Status: Completed)" },
+                { date: "2026-02-24", time: "TBD", duration: 2, activity: "1v1 Training", notes: "Dribbling, off hand activation, shooting, low man reads" },
+                { date: "2026-02-22", time: "6:00 PM - 7:00 PM", duration: 1, activity: "1v1 Training", notes: "Off hand activation, ball handling against pressure and free throws" },
+                { date: "2026-01-25", time: "10:00 AM - 12:00 PM", duration: 2, activity: "1v1 Training", notes: "Finishing, ballhandling, and reads off DHO" },
+                { date: "2026-01-19", time: "11:00 AM - 1:00 PM", duration: 2, activity: "Elite Guard Academy", notes: "Long splits off post entry, passing to post, driving vs pressure, footwork" },
                 { date: "2026-01-04", time: "2:00 PM - 3:00 PM", duration: 1, activity: "1v1 Training", notes: "Self-guided session" },
                 { date: "2026-01-03", time: "2:00 PM - 4:00 PM", duration: 2, activity: "1v1 Training (Coach Scott)", notes: "Focus on ball handling" }
             ],

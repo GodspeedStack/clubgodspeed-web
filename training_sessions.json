@@ -1,6 +1,38 @@
 {
     "training_sessions": [
         {
+            "session_id": "S-2026-006",
+            "date": "2026-02-24",
+            "focus": "Dribbling, off hand activation, shooting, low man reads",
+            "coach": "Coach Scott",
+            "duration": "2.0 Hrs",
+            "notes": "Worked on dribbling, off hand activation, shooting, and low man reads."
+        },
+        {
+            "session_id": "S-2026-005",
+            "date": "2026-01-25",
+            "focus": "Finishing, ballhandling, and reads off DHO",
+            "coach": "Coach Scott",
+            "duration": "2.0 Hrs",
+            "notes": "Good reads."
+        },
+        {
+            "session_id": "S-2026-003",
+            "date": "2026-02-22",
+            "focus": "Off hand activation, ball handling against pressure and free throws",
+            "coach": "Coach Scott",
+            "duration": "1.0 Hrs",
+            "notes": "Consistent form, good energy."
+        },
+        {
+            "session_id": "S-2026-004",
+            "date": "2026-01-19",
+            "focus": "Long splits off post entry, passing to post, driving vs pressure, footwork separation",
+            "coach": "Coach Scott",
+            "duration": "2.0 Hrs",
+            "notes": "Good work on separation."
+        },
+        {
             "session_id": "S-2026-001",
             "date": "2026-01-04",
             "focus": "Ball handling, footwork, shot creation",

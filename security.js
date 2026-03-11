@@ -8,7 +8,7 @@
  * - Role-based access control (RBAC)
  */
 
-(function() {
+(function () {
     'use strict';
 
     // ============================================
@@ -17,8 +17,8 @@
     const SECURITY_CONFIG = {
         // Rate limiting
         rateLimit: {
-            loginAttempts: 5,        // Max login attempts
-            windowMinutes: 15,        // Time window in minutes
+            loginAttempts: 50,       // Max login attempts per day
+            windowMinutes: 1440,     // Time window in minutes (1440 = 24 hours)
             resetAfterHours: 24      // Reset after 24 hours
         },
         // 2FA
@@ -45,14 +45,14 @@
     // ============================================
     const RateLimiter = {
         storageKey: 'gba_rate_limits',
-        
+
         /**
          * Check if action is rate limited
          * @param {string} action - Action identifier (e.g., 'login', 'signup')
          * @param {string} identifier - User identifier (IP, email, etc.)
          * @returns {Object} { allowed: boolean, remaining: number, resetAt: Date }
          */
-        check: function(action, identifier) {
+        check: function (action, identifier) {
             const key = `${action}:${identifier}`;
             const limits = this.getLimits();
             const limit = limits[key];
@@ -74,16 +74,16 @@
             // Check if max attempts reached
             if (limit.attempts >= SECURITY_CONFIG.rateLimit.loginAttempts) {
                 const resetAt = new Date(limit.firstAttempt + windowMs);
-                return { 
-                    allowed: false, 
-                    remaining: 0, 
+                return {
+                    allowed: false,
+                    remaining: 0,
                     resetAt: resetAt,
                     message: `Too many attempts. Please try again after ${resetAt.toLocaleTimeString()}`
                 };
             }
 
-            return { 
-                allowed: true, 
+            return {
+                allowed: true,
                 remaining: SECURITY_CONFIG.rateLimit.loginAttempts - limit.attempts,
                 resetAt: new Date(limit.firstAttempt + windowMs)
             };
@@ -94,10 +94,10 @@
          * @param {string} action - Action identifier
          * @param {string} identifier - User identifier
          */
-        recordAttempt: function(action, identifier) {
+        recordAttempt: function (action, identifier) {
             const key = `${action}:${identifier}`;
             const limits = this.getLimits();
-            
+
             if (!limits[key]) {
                 limits[key] = {
                     attempts: 0,
@@ -114,14 +114,14 @@
         /**
          * Reset rate limit for identifier
          */
-        reset: function(action, identifier) {
+        reset: function (action, identifier) {
             const key = `${action}:${identifier}`;
             const limits = this.getLimits();
             delete limits[key];
             this.saveLimits(limits);
         },
 
-        getLimits: function() {
+        getLimits: function () {
             try {
                 const stored = localStorage.getItem(this.storageKey);
                 return stored ? JSON.parse(stored) : {};
@@ -130,7 +130,7 @@
             }
         },
 
-        saveLimits: function(limits) {
+        saveLimits: function (limits) {
             try {
                 localStorage.setItem(this.storageKey, JSON.stringify(limits));
             } catch (e) {
@@ -144,17 +144,17 @@
     // ============================================
     const EmailVerification = {
         storageKey: 'gba_email_verifications',
-        
+
         /**
          * Generate verification token
          * @param {string} email - User email
          * @returns {string} Verification token
          */
-        generateToken: function(email) {
+        generateToken: function (email) {
             const token = Array.from(crypto.getRandomValues(new Uint8Array(32)))
                 .map(b => b.toString(16).padStart(2, '0'))
                 .join('');
-            
+
             const verifications = this.getVerifications();
             verifications[email] = {
                 token: token,
@@ -163,7 +163,7 @@
                 expiresAt: Date.now() + (SECURITY_CONFIG.emailVerification.expiryHours * 60 * 60 * 1000)
             };
             this.saveVerifications(verifications);
-            
+
             this.audit('email_verification_sent', { email });
             return token;
         },
@@ -174,7 +174,7 @@
          * @param {string} token - Verification token
          * @returns {boolean} Success
          */
-        verify: function(email, token) {
+        verify: function (email, token) {
             const verifications = this.getVerifications();
             const verification = verifications[email];
 
@@ -202,10 +202,10 @@
             verification.verified = true;
             verification.verifiedAt = Date.now();
             this.saveVerifications(verifications);
-            
+
             // Store verified status
             localStorage.setItem(`gba_email_verified_${email}`, 'true');
-            
+
             this.audit('email_verification_success', { email });
             return true;
         },
@@ -213,14 +213,14 @@
         /**
          * Check if email is verified
          */
-        isVerified: function(email) {
+        isVerified: function (email) {
             if (!SECURITY_CONFIG.emailVerification.required) {
                 return true;
             }
 
             const verifications = this.getVerifications();
             const verification = verifications[email];
-            
+
             if (verification && verification.verified) {
                 return true;
             }
@@ -232,9 +232,9 @@
         /**
          * Send verification email (integrated with Supabase and Resend)
          */
-        sendVerificationEmail: async function(email, token) {
+        sendVerificationEmail: async function (email, token) {
             this.audit('email_verification_email_sent', { email });
-            
+
             // Try to use emailVerification service if available
             if (window.emailVerification && window.emailVerification.generateAndSendVerificationToken) {
                 try {
@@ -245,7 +245,7 @@
                     console.error('Failed to send verification email via service:', error);
                 }
             }
-            
+
             // Fallback: Use Supabase Auth email verification
             if (window.supabase && window.supabase.auth) {
                 try {
@@ -260,14 +260,14 @@
                     return false;
                 }
             }
-            
+
             // Last resort: log token (for development)
             const verificationUrl = `https://clubgodspeed.com/verify-email.html?email=${encodeURIComponent(email)}&token=${token}`;
             console.log(`[DEV] Verification URL: ${verificationUrl}`);
             return true;
         },
 
-        getVerifications: function() {
+        getVerifications: function () {
             try {
                 const stored = localStorage.getItem(this.storageKey);
                 return stored ? JSON.parse(stored) : {};
@@ -276,7 +276,7 @@
             }
         },
 
-        saveVerifications: function(verifications) {
+        saveVerifications: function (verifications) {
             try {
                 localStorage.setItem(this.storageKey, JSON.stringify(verifications));
             } catch (e) {
@@ -290,19 +290,19 @@
     // ============================================
     const TwoFactorAuth = {
         storageKey: 'gba_2fa_secrets',
-        
+
         /**
          * Generate 2FA secret for user
          * @param {string} userId - User ID
          * @param {string} email - User email
          * @returns {Object} { secret, qrCodeUrl }
          */
-        generateSecret: function(userId, email) {
+        generateSecret: function (userId, email) {
             // Generate random secret (in production, use proper TOTP library)
             const secret = Array.from(crypto.getRandomValues(new Uint8Array(20)))
                 .map(b => b.toString(16).padStart(2, '0'))
                 .join('');
-            
+
             const secrets = this.getSecrets();
             secrets[userId] = {
                 secret: secret,
@@ -314,9 +314,9 @@
 
             // Generate QR code URL (format: otpauth://totp/Issuer:Email?secret=SECRET&issuer=Issuer)
             const qrCodeUrl = `otpauth://totp/${encodeURIComponent(SECURITY_CONFIG.twoFactor.issuer)}:${encodeURIComponent(email)}?secret=${secret}&issuer=${encodeURIComponent(SECURITY_CONFIG.twoFactor.issuer)}`;
-            
+
             this.audit('2fa_secret_generated', { userId, email });
-            
+
             return { secret, qrCodeUrl };
         },
 
@@ -326,7 +326,7 @@
          * @param {string} token - 6-digit token
          * @returns {Promise<boolean>} Success
          */
-        verifyToken: async function(userId, token) {
+        verifyToken: async function (userId, token) {
             // Use mfaService if available (Supabase-integrated)
             if (window.mfaService && window.mfaService.verifyMFAToken) {
                 try {
@@ -367,20 +367,20 @@
             // Last resort: Mock verification
             const expectedToken = this.generateTOTP(userSecret.secret);
             const isValid = token === expectedToken;
-            
+
             if (isValid) {
                 this.audit('2fa_verification_success', { userId });
             } else {
                 this.audit('2fa_verification_failed', { userId, reason: 'invalid_token' });
             }
-            
+
             return isValid;
         },
 
         /**
          * Enable 2FA for user (after verification)
          */
-        enable: function(userId, token) {
+        enable: function (userId, token) {
             if (!this.verifyToken(userId, token)) {
                 return false;
             }
@@ -399,7 +399,7 @@
         /**
          * Check if 2FA is enabled for user
          */
-        isEnabled: function(userId) {
+        isEnabled: function (userId) {
             const secrets = this.getSecrets();
             return secrets[userId] && secrets[userId].enabled === true;
         },
@@ -407,7 +407,7 @@
         /**
          * Generate TOTP token (uses otplib if available, otherwise mock)
          */
-        generateTOTP: function(secret) {
+        generateTOTP: function (secret) {
             // Use otplib if available
             if (window.otplib && window.otplib.authenticator) {
                 try {
@@ -416,14 +416,14 @@
                     console.error('Failed to generate TOTP with otplib:', error);
                 }
             }
-            
+
             // Fallback: Mock implementation
             const time = Math.floor(Date.now() / 1000 / 30); // 30-second window
             const hash = this.simpleHash(secret + time);
             return String(Math.abs(hash) % 1000000).padStart(6, '0');
         },
 
-        simpleHash: function(str) {
+        simpleHash: function (str) {
             let hash = 0;
             for (let i = 0; i < str.length; i++) {
                 const char = str.charCodeAt(i);
@@ -433,7 +433,7 @@
             return hash;
         },
 
-        getSecrets: function() {
+        getSecrets: function () {
             try {
                 const stored = localStorage.getItem(this.storageKey);
                 return stored ? JSON.parse(stored) : {};
@@ -442,7 +442,7 @@
             }
         },
 
-        saveSecrets: function(secrets) {
+        saveSecrets: function (secrets) {
             try {
                 localStorage.setItem(this.storageKey, JSON.stringify(secrets));
             } catch (e) {
@@ -504,14 +504,14 @@
         /**
          * Get user role
          */
-        getRole: function() {
+        getRole: function () {
             return localStorage.getItem('gba_user_role') || this.roles.GUEST;
         },
 
         /**
          * Set user role
          */
-        setRole: function(role) {
+        setRole: function (role) {
             if (Object.values(this.roles).includes(role)) {
                 localStorage.setItem('gba_user_role', role);
                 this.audit('role_set', { role });
@@ -523,7 +523,7 @@
         /**
          * Check if user has permission
          */
-        hasPermission: function(permission) {
+        hasPermission: function (permission) {
             const role = this.getRole();
             const rolePermissions = this.permissions[role] || [];
             return rolePermissions.includes(permission);
@@ -532,21 +532,21 @@
         /**
          * Check if user has any of the permissions
          */
-        hasAnyPermission: function(permissions) {
+        hasAnyPermission: function (permissions) {
             return permissions.some(p => this.hasPermission(p));
         },
 
         /**
          * Check if user has all permissions
          */
-        hasAllPermissions: function(permissions) {
+        hasAllPermissions: function (permissions) {
             return permissions.every(p => this.hasPermission(p));
         },
 
         /**
          * Require permission (throws if not authorized)
          */
-        requirePermission: function(permission) {
+        requirePermission: function (permission) {
             if (!this.hasPermission(permission)) {
                 this.audit('permission_denied', { permission, role: this.getRole() });
                 throw new Error(`Permission denied: ${permission}`);
@@ -556,7 +556,7 @@
         /**
          * Get all permissions for current user
          */
-        getUserPermissions: function() {
+        getUserPermissions: function () {
             const role = this.getRole();
             return this.permissions[role] || [];
         }
@@ -572,7 +572,7 @@
         /**
          * Log security event
          */
-        log: function(level, event, details) {
+        log: function (level, event, details) {
             const logEntry = {
                 timestamp: new Date().toISOString(),
                 level: level,
@@ -593,7 +593,7 @@
             this.saveLogs(logs);
 
             // Console output based on level
-            if (SECURITY_CONFIG.audit.logLevel === 'debug' || 
+            if (SECURITY_CONFIG.audit.logLevel === 'debug' ||
                 (level === 'error' && SECURITY_CONFIG.audit.logLevel !== 'none')) {
                 console.log(`[Security Audit ${level.toUpperCase()}]`, event, details);
             }
@@ -602,7 +602,7 @@
         /**
          * Get audit logs
          */
-        getLogs: function(filter = {}) {
+        getLogs: function (filter = {}) {
             try {
                 const stored = localStorage.getItem(this.storageKey);
                 let logs = stored ? JSON.parse(stored) : [];
@@ -628,11 +628,11 @@
         /**
          * Clear audit logs
          */
-        clearLogs: function() {
+        clearLogs: function () {
             localStorage.removeItem(this.storageKey);
         },
 
-        saveLogs: function(logs) {
+        saveLogs: function (logs) {
             try {
                 localStorage.setItem(this.storageKey, JSON.stringify(logs));
             } catch (e) {
@@ -643,7 +643,7 @@
         /**
          * Security vulnerability checks
          */
-        runSecurityCheck: function() {
+        runSecurityCheck: function () {
             const issues = [];
 
             // Check for XSS vulnerabilities
@@ -695,7 +695,7 @@
         /**
          * Secure login with rate limiting and 2FA
          */
-        login: async function(email, password, twoFactorToken = null) {
+        login: async function (email, password, twoFactorToken = null) {
             // Get user identifier (email or IP)
             const identifier = email || this.getUserIP();
 
@@ -755,7 +755,7 @@
         /**
          * Secure signup with email verification
          */
-        signup: async function(email, password, userData = {}) {
+        signup: async function (email, password, userData = {}) {
             const identifier = email || this.getUserIP();
 
             // Check rate limiting
@@ -787,7 +787,7 @@
         /**
          * Get user IP (mock - use proper service in production)
          */
-        getUserIP: function() {
+        getUserIP: function () {
             // In production, get from server or use a service
             return localStorage.getItem('gba_user_ip') || 'unknown';
         }
