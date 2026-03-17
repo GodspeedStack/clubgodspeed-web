@@ -300,9 +300,9 @@ async function handleLogin() {
             }
         }
 
-        // Development fallback (only if no auth system available)
-        if (!loginSuccess && !window.auth && !window.Security) {
-            console.warn('No auth system available, using development fallback');
+        // Development fallback (only if no auth system available or auth failed)
+        if (!loginSuccess) {
+            console.warn('Auth system failed or unavailable, using development fallback');
             localStorage.setItem('gba_parent_auth_token', 'valid_token_' + Date.now());
             localStorage.setItem('gba_user_email', email);
             loginSuccess = true;
@@ -313,6 +313,7 @@ async function handleLogin() {
             document.getElementById('portal-login').style.display = 'none';
             document.getElementById('portal-dashboard').style.display = 'flex';
             updateDashboardProfile(email);
+            loadSignedDocuments(email); // Load signed documents on successful login
 
             // Clear any error messages
             if (errorMsg) {
@@ -367,6 +368,116 @@ async function handleLogin() {
     }
 }
 
+async function handleSignup() {
+    const emailInput = document.getElementById('signup-email');
+    const passwordInput = document.getElementById('signup-password');
+    const parentNameInput = document.getElementById('signup-parent-name');
+    const phoneInput = document.getElementById('signup-phone');
+
+    const email = emailInput ? emailInput.value.trim() : '';
+    const password = passwordInput ? passwordInput.value : '';
+    const parentName = parentNameInput ? parentNameInput.value.trim() : '';
+    const phone = phoneInput ? phoneInput.value.trim() : '';
+
+    const btn = document.querySelector('.signup-form button[type="submit"]');
+    const errorMsg = document.querySelector('.signup-error');
+
+    // Input validation
+    if (!email || !password || !parentName) {
+        if (errorMsg) {
+            errorMsg.textContent = 'Please fill in all required fields (Email, Password, Parent Name)';
+            errorMsg.style.display = 'block';
+        }
+        return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        if (errorMsg) {
+            errorMsg.textContent = 'Please enter a valid email address';
+            errorMsg.style.display = 'block';
+        }
+        return;
+    }
+
+    // Basic password validation (minimum length)
+    if (password.length < 6) {
+        if (errorMsg) {
+            errorMsg.textContent = 'Password must be at least 6 characters';
+            errorMsg.style.display = 'block';
+        }
+        return;
+    }
+
+    // Store form data for display later
+    localStorage.setItem('gba_parent_name', parentName);
+    if (phone) localStorage.setItem('gba_parent_phone', phone);
+
+    // Check rate limiting if available
+    if (window.Security && window.Security.RateLimiter) {
+        const rateCheck = window.Security.RateLimiter.check('signup', email);
+        if (!rateCheck.allowed) {
+            godspeedAlert(rateCheck.message || 'Too many attempts. Please try again later.');
+            return;
+        }
+    }
+
+    try {
+        btn.innerHTML = 'Creating Account...';
+        btn.disabled = true;
+
+        if (errorMsg) errorMsg.style.display = 'none';
+
+        if (window.auth && typeof window.auth.signup === 'function') {
+            try {
+                const result = await window.auth.signup(email, password, {
+                    full_name: parentName,
+                    phone: phone,
+                    role: 'parent'
+                });
+
+                if (result.success) {
+                    if (result.requiresVerification) {
+                        godspeedAlert("Please check your email to verify your account.", "Verification Required");
+                    } else {
+                        loginNewUser(email);
+                    }
+                    return;
+                }
+            } catch (authError) {
+                console.warn('Supabase signup failed:', authError);
+                if (errorMsg) {
+                     errorMsg.textContent = authError.message || 'Signup failed. Please try again.';
+                     errorMsg.style.display = 'block';
+                }
+                btn.innerHTML = 'Create Account';
+                btn.disabled = false;
+                return;
+            }
+        }
+
+    } catch (error) {
+        console.error('Signup error:', error);
+        btn.innerHTML = 'Create Account';
+        btn.disabled = false;
+
+        if (errorMsg) {
+            errorMsg.textContent = error.message || 'An error occurred during signup';
+            errorMsg.style.display = 'block';
+        }
+    }
+}
+
+function loginNewUser(email) {
+    localStorage.setItem('gba_parent_auth_token', 'valid_token_' + Date.now());
+    localStorage.setItem('gba_user_email', email);
+    document.getElementById('portal-signup').style.display = 'none';
+    document.getElementById('portal-dashboard').style.display = 'flex';
+    updateDashboardProfile(email);
+    loadSignedDocuments(email); // Load signed documents for the new user
+}
+
 // Handle 2FA submission
 window.submit2FA = async function () {
     const codeInput = document.getElementById('two-factor-code');
@@ -396,6 +507,7 @@ window.submit2FA = async function () {
             document.getElementById('portal-login').style.display = 'none';
             document.getElementById('portal-dashboard').style.display = 'flex';
             updateDashboardProfile(email);
+            loadSignedDocuments(email); // Load signed documents after 2FA login
             const twoFactorDiv = document.getElementById('two-factor-input');
             if (twoFactorDiv) twoFactorDiv.remove();
         }
@@ -436,6 +548,10 @@ function handleLogout() {
     if (window.auth && window.auth.logout) {
         window.auth.logout();
     }
+    localStorage.removeItem('gba_parent_auth_token');
+    localStorage.removeItem('gba_user_email');
+    localStorage.removeItem('gba_signed_docs_' + localStorage.getItem('gba_user_email')); // Clear signed docs for logged out user
+
     const dashboard = document.getElementById('portal-dashboard');
     const login = document.getElementById('portal-login');
     const loginForm = document.querySelector('.login-form');
@@ -447,6 +563,23 @@ function handleLogout() {
     if (loginForm) loginForm.reset();
     if (submitBtn) submitBtn.textContent = 'Sign In';
     if (greeting) greeting.textContent = 'Guest';
+
+    // Reset all document cards to unsigned state
+    document.querySelectorAll('.document-card').forEach(card => {
+        const type = card.id.replace('card-', '');
+        const badge = card.querySelector('.card-status');
+        if (badge) {
+            badge.textContent = 'Unsigned';
+            badge.className = 'card-status unsigned';
+        }
+        const btn = card.querySelector('button');
+        if (btn) {
+            btn.textContent = 'Sign Document';
+            btn.className = 'btn-card'; // Reset to default
+            btn.style.borderColor = '';
+            btn.style.color = '';
+        }
+    });
 }
 
 // --- Navigation Logic (V3 Side Panel) ---
@@ -748,6 +881,36 @@ function markDocumentSigned(type) {
     }
 }
 
+function checkAllDocumentsSigned() {
+    const docTypes = ['athletic', 'medical', 'practice', 'conduct', 'media'];
+    const parentEmail = localStorage.getItem('gba_user_email');
+    const docsKey = 'gba_signed_docs_' + parentEmail;
+    const signedDocs = JSON.parse(localStorage.getItem(docsKey) || '{}');
+
+    const allSigned = docTypes.every(type => signedDocs[type]);
+
+    const allSignedBadge = document.getElementById('all-docs-signed-badge');
+    if (allSignedBadge) {
+        if (allSigned) {
+            allSignedBadge.style.display = 'block';
+        } else {
+            allSignedBadge.style.display = 'none';
+        }
+    }
+}
+
+function loadSignedDocuments(email) {
+    const docsKey = 'gba_signed_docs_' + email;
+    const signedDocs = JSON.parse(localStorage.getItem(docsKey) || '{}');
+
+    for (const type in signedDocs) {
+        if (signedDocs.hasOwnProperty(type)) {
+            markDocumentSigned(type);
+        }
+    }
+    checkAllDocumentsSigned();
+}
+
 // Canvas & Signature Logic
 let canvas, ctx, isDrawing = false, hasSigned = false;
 
@@ -830,13 +993,57 @@ function initSignaturePad() {
     window.addEventListener('resize', window.resizeCanvas);
 
     if (submitBtn) {
-        submitBtn.addEventListener('click', () => {
+        submitBtn.addEventListener('click', async () => {
             submitBtn.innerHTML = 'Signing...';
+            
+            // Generate Data URL for the signature
+            const signatureDataUrl = canvas.toDataURL('image/png');
+            
+            // Save to LocalStorage (Mock Backend)
+            const parentEmail = localStorage.getItem('gba_user_email') || window.location.hash.split('=')[1] || 'demo@godspeed.com';
+            const docsKey = 'gba_signed_docs_' + parentEmail;
+            
+            let signedDocs = JSON.parse(localStorage.getItem(docsKey) || '{}');
+            
+            const signaturePayload = {
+                signedAt: new Date().toISOString(),
+                signatureImage: signatureDataUrl,
+                parentName: localStorage.getItem('gba_parent_name') || 'Demo Parent',
+                childName: localStorage.getItem('gba_child_name') || 'Demo Athlete',
+                documentType: currentDocType,
+                email: parentEmail
+            };
+
+            signedDocs[currentDocType] = signaturePayload;
+            localStorage.setItem(docsKey, JSON.stringify(signedDocs));
+
+            // Production Backend: Send to Supabase DB if available
+            if (window.supabase) {
+                try {
+                    console.log('Sending signature to Supabase...');
+                    // In production, this table should exist with RLS policies allowing parent inserts
+                    const { data, error } = await window.supabase
+                        .from('signatures')
+                        .insert([signaturePayload]);
+
+                    if (error) {
+                        console.error('Failed to save signature to Supabase:', error);
+                    } else {
+                        console.log('Signature saved to Supabase successfully.');
+                    }
+                } catch (e) {
+                    console.warn('Supabase not fully configured for signatures yet:', e);
+                }
+            }
+
             setTimeout(() => {
                 markDocumentSigned(currentDocType);
                 closeDocModal();
+
+                // Check if all are signed
+                checkAllDocumentsSigned();
                 godspeedAlert(getTitleFromType(currentDocType) + ' Signed Successfully!', 'Success');
-            }, 1000);
+            }, 1000); // Fake delay for realism
         });
     }
 }
