@@ -119,15 +119,11 @@ a {
     position: fixed;
     top: 0;
     width: 100%;
-    padding: 0.8rem 5%;
+    padding: 1.2rem 5%; /* Adjusted back to standard, the md:pl-20 handles alignment */
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(255, 255, 255, 0.8);
-    /* Highly transparent */
-    backdrop-filter: blur(20px) saturate(180%);
-    /* Apple-style frost */
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    background: #ffffff;
     z-index: 1000;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -298,97 +294,75 @@ a {
 }
 
 /* Hero Section */
-.hero-section {
-    height: 100vh;
+.hero-section-light {
+    min-height: 90vh;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 0 5%;
     position: relative;
     overflow: hidden;
-    /* Subtle, sophisticated gradient */
-    background: radial-gradient(circle at 100% 0%, rgba(0, 113, 227, 0.08) 0%, rgba(255, 255, 255, 0) 50%),
-        radial-gradient(circle at 0% 100%, rgba(0, 0, 0, 0.02) 0%, rgba(255, 255, 255, 0) 50%);
+    padding: 0 5%; /* Added to perfectly match navbar horizontal offset */
+}
+
+.hero-bg {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background-image: url('assets/hero-collage.png') !important;
+    background-size: cover !important;
+    background-position: center -25px !important;
+    background-repeat: no-repeat !important;
+    z-index: 0 !important;
+}
+
+.hero-overlay-light {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Create a gradient from white on the left (for text), fading out to the right */
+    background: linear-gradient(90deg, 
+      rgba(245, 245, 247, 1) 0%, 
+      rgba(245, 245, 247, 0.9) 30%, 
+      rgba(245, 245, 247, 0.4) 60%, 
+      rgba(245, 245, 247, 0) 100%);
+    z-index: 1;
 }
 
 .hero-content {
-    max-width: 600px;
-    z-index: 2;
+    max-width: 56rem; /* Tailwind max-w-4xl */
+    z-index: 10;
+    padding-top: 5rem; /* Tailwind pt-20 */
 }
 
 .hero-title {
-    font-size: 5rem;
-    line-height: 0.9;
-    margin-bottom: 1.5rem;
-    color: var(--color-text);
+    font-size: 6rem; /* Tailwind text-8xl */
+    font-weight: 900; /* Tailwind font-black */
+    line-height: 0.9; /* Tailwind leading-[0.9] */
+    color: #000; /* Tailwind text-black */
+    letter-spacing: -0.075em; /* Extra tight tracking to match reference */
+    margin-bottom: 1.5rem; /* Tailwind mb-6 */
+    text-transform: uppercase;
 }
 
 .hero-subtitle {
-    font-size: 1.2rem;
-    color: var(--color-text-muted);
-    margin-bottom: 2.5rem;
-    max-width: 400px;
+    font-size: 1.25rem; /* Tailwind text-xl */
+    font-weight: 500; /* Tailwind font-medium */
+    color: #1f2937; /* Tailwind text-gray-800 */
+    max-width: 36rem; /* Tailwind max-w-xl */
+    line-height: 1.625; /* Tailwind leading-relaxed */
+    margin-bottom: 2.5rem; /* Tailwind mb-10 */
 }
 
 .cta-group {
     display: flex;
     gap: 1rem;
+    margin-left: 12px; /* Slight offset requested to match exact reference */
 }
 
-.hero-visual {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-    pointer-events: none;
-}
-
-.hero-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    position: absolute;
-    top: 5vh;
-    left: 0;
-    z-index: 1;
-}
-
-/* Gradient overlay to ensure text readability */
-/* Gradient overlay to ensure text readability */
-.hero-visual::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(to right, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 40%, rgba(255, 255, 255, 0) 100%);
-    z-index: 2;
-}
-
-.glowing-orb {
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle, var(--color-primary) 0%, transparent 70%);
-    opacity: 0.15;
-    /* Reduced opacity for light mode */
-    filter: blur(60px);
-    animation: pulse 4s infinite alternate;
-}
-
-@keyframes pulse {
-    0% {
-        transform: scale(0.8);
-        opacity: 0.1;
-    }
-
-    100% {
-        transform: scale(1.1);
-        opacity: 0.2;
-    }
-}
+/* Static layout replaces tailwind animations */
 
 /* Sections */
 .section-title {
@@ -888,7 +862,6 @@ img[src*="coach-scott.png"] {
         color: #991b1b;
     }
 
-    /* Responsive */
     @media (max-width: 768px) {
         .container {
             padding: 4rem 1.5rem;
@@ -913,20 +886,6 @@ img[src*="coach-scott.png"] {
 
         .mobile-menu-btn {
             display: block;
-        }
-
-        .hero-visual {
-            /* Ensure background remains full coverage */
-            width: 100%;
-            height: 100%;
-            opacity: 1;
-            /* Keep full opacity */
-            right: 0;
-        }
-
-        .hero-visual::after {
-            /* Stronger gradient on mobile for readability */
-            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.85) 60%, rgba(255, 255, 255, 0.4) 100%);
         }
 
         .cta-group {
