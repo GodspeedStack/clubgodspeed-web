@@ -1,0 +1,105 @@
+/* UNIFIED NAVIGATION CSS - GUARANTEES PERFECT ALIGNMENT ACROSS ALL PAGES */
+html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.navbar {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 20px 48px !important;
+    min-height: 90px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    background: white !important;
+    color: #000 !important;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.nav-desktop-unified {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .nav-desktop-unified {
+        display: flex;
+        align-items: center;
+        margin-left: auto; /* Push to right slightly if needed, but space-between handles it */
+    }
+    .mobile-menu-btn {
+        display: none !important;
+    }
+}
+
+.nav-links-unified {
+    display: flex;
+    gap: 2rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em;
+    align-items: center;
+}
+
+.nav-links-unified a {
+    color: #000;
+    text-decoration: none;
+    transition: opacity 0.2s;
+}
+
+.nav-links-unified a.active, .nav-links-unified a:hover {
+    color: #2563eb;
+    opacity: 1;
+}
+
+.nav-right-unified {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-left: 3rem;
+}
+
+.btn-unified-train {
+    background-color: #2563eb;
+    color: white !important;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 0.875rem;
+    padding: 0.6rem 1.75rem;
+    border-radius: 9999px;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: background-color 0.2s, transform 0.2s;
+    letter-spacing: 0.05em;
+}
+
+.btn-unified-train:hover {
+    background-color: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+.nav-icon-btn-unified {
+    color: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    transition: color 0.2s;
+    position: relative;
+}
+
+.nav-icon-btn-unified:hover {
+    color: #2563eb;
+}
+
+.nav-icon-btn-unified svg {
+    width: 24px;
+    height: 24px;
+}

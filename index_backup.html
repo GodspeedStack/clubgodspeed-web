@@ -87,93 +87,63 @@
             z-index: 1;
         }
     </style>
+    <link rel="stylesheet" href="nav-unified.css">
 </head>
 
 <body class="bg-gray-50 text-black font-sans antialiased">
-    <nav class="navbar light-nav">
-        <div class="logo">GODSPEED<span class="text-blue-600">BASKETBALL</span></div>
-        <div class="hidden md:flex items-center space-x-8">
-            <div class="flex space-x-8 text-sm font-bold uppercase tracking-wide">
-                <a href="index.html" class="text-black">Home</a>
-                <a href="training.html" class="text-black">Training</a>
-                <a href="aau.html" class="text-black">AAU</a>
-                <a href="calendar-preview.html" class="text-black hover:text-blue-600 transition">Calendar</a>
-                <div class="relative group opacity-50 cursor-not-allowed">
-                    <span class="text-black">Academy</span>
-                    <span
-                        class="absolute -top-6 -right-6 text-[9px] bg-gray-100 text-gray-500 px-1 rounded border">SOON</span>
+        <nav class="navbar">
+        <div class="logo">GODSPEED<span style="color: #2563eb;">BASKETBALL</span></div>
+        <div class="nav-desktop-unified">
+            <div class="nav-links-unified">
+                <a href="index.html">Home</a>
+                <a href="training.html">Training</a>
+                <a href="aau.html">AAU</a>
+                <a href="calendar-preview.html">Calendar</a>
+                <div style="position: relative; opacity: 0.5; cursor: not-allowed; display: flex; align-items: center;">
+                    <span>Academy</span>
+                    <span style="position: absolute; top: -12px; right: -24px; font-size: 9px; background: #f3f4f6; color: #6b7280; padding: 2px 4px; border-radius: 4px; border: 1px solid #e5e7eb;">SOON</span>
                 </div>
-                <!-- Shop Link -->
-                <a href="store.html" class="text-black hover:text-blue-600">Shop</a>
-                <a href="about.html" class="text-black hover:text-blue-600">About</a>
+                <a href="store.html">Shop</a>
+                <a href="about.html">About</a>
             </div>
-
             <!-- Right Side Icons -->
-            <div class="flex items-center space-x-6">
+            <div class="nav-right-unified">
                 <!-- Cart Icon -->
-                <a href="#" id="cart-btn" class="nav-cart-btn text-black hover:text-blue-600 transition relative"
-                    aria-label="Cart">
-                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                <a href="#" id="cart-btn" class="nav-cart-btn" aria-label="Cart">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
-                    <span
-                        class="cart-badge absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1 rounded-full">0</span>
+                    <span class="cart-badge badge-bounce" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: bold; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">0</span>
                 </a>
-
                 <!-- Member Login Dropdown -->
-                <div class="nav-login-wrapper relative z-50">
-                    <a href="#" class="nav-cart-btn text-black hover:text-blue-600 transition block"
-                        aria-label="Sign In">
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 4 0 00-7 7h14a7 4 0 00-7-7z" />
+                <div class="nav-login-wrapper" style="position: relative; z-index: 50;">
+                    <a href="#" class="nav-cart-btn" aria-label="Sign In">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 4 0 00-7 7h14a7 4 0 00-7-7z" />
                         </svg>
                     </a>
-
-                    <!-- Dropdown Menu -->
                     <div class="login-dropdown">
-                        <div
-                            style="padding: 8px 16px 4px; font-size: 11px; text-transform: uppercase; color: #86868b; font-weight: 600; letter-spacing: 0.05em;">
-                            Member Access</div>
-
+                        <div style="padding: 8px 16px 4px; font-size: 11px; text-transform: uppercase; color: #86868b; font-weight: 600; letter-spacing: 0.05em;">Member Access</div>
                         <a href="parent-portal.html" class="login-option">
                             <span style="display: flex; align-items: center; gap: 10px;">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                    style="color: #0071e3;">
-                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="9" cy="7" r="4"></circle>
-                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                                </svg>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                                 Parents
                             </span>
                             <span class="login-arrow">›</span>
                         </a>
-
                         <a href="coach-portal.html" class="login-option">
                             <span style="display: flex; align-items: center; gap: 10px;">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                    style="color: #0071e3;">
-                                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2">
-                                    </path>
-                                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-                                </svg>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
                                 Coaches
                             </span>
                             <span class="login-arrow">›</span>
                         </a>
                     </div>
                 </div>
-
-                <a href="training.html#signup"
-                    class="px-6 py-2 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition">TRAIN
-                    WITH US</a>
+                <a href="training.html#signup" class="btn-unified-train">TRAIN WITH US</a>
             </div>
         </div>
-        <button class="md:hidden text-2xl">☰</button>
+        <button class="mobile-menu-btn" aria-label="Menu" onclick="openMobileMenu()" style="background:none; border:none; font-size:24px; cursor:pointer;">☰</button>
     </nav>
     <header class="hero-section-light">
         <div class="hero-bg"></div>

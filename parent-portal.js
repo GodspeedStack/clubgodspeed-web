@@ -300,27 +300,64 @@ async function handleLogin() {
             }
         }
 
-        // Development fallback (only if no auth system available or auth failed)
-        if (!loginSuccess) {
-            console.warn('Auth system failed or unavailable, using development fallback');
-            localStorage.setItem('gba_parent_auth_token', 'valid_token_' + Date.now());
-            localStorage.setItem('gba_user_email', email);
-            loginSuccess = true;
-        }
+        // Enforce strict authentication - No fallbacks allowed in production
 
         // Handle successful login
         if (loginSuccess) {
-            document.getElementById('portal-login').style.display = 'none';
-            document.getElementById('portal-dashboard').style.display = 'flex';
-            updateDashboardProfile(email);
-            loadSignedDocuments(email); // Load signed documents on successful login
-
-            // Clear any error messages
-            if (errorMsg) {
-                errorMsg.style.display = 'none';
-                errorMsg.textContent = '';
+            // --- STRICT IP ENFORCEMENT ---
+            try {
+                btn.innerHTML = 'Verifying Security...';
+                
+                // 1. Fetch User's current IP
+                const ipRes = await fetch('https://api.ipify.org?format=json');
+                const ipData = await ipRes.json();
+                const currentIp = ipData.ip;
+                
+                if (window.supabase) {
+                    // 2. Look up their allowed_ip in the database
+                    const { data: parentData, error: parentError } = await window.supabase
+                        .from('parent_accounts')
+                        .select('allowed_ip, id')
+                        .eq('email', email)
+                        .single();
+                        
+                    if (parentData) {
+                        if (!parentData.allowed_ip) {
+                            // First login ever: Lock this IP to their account
+                            await window.supabase
+                                .from('parent_accounts')
+                                .update({ allowed_ip: currentIp })
+                                .eq('id', parentData.id);
+                        } else if (parentData.allowed_ip !== currentIp) {
+                            // IP MISMATCH: BLOCK ACCESS
+                            if (window.auth && typeof window.auth.logout === 'function') {
+                                await window.auth.logout(); // Force sign out
+                            }
+                            throw new Error(`Access blocked: Unrecognized IP address. This account is locked to a different secure network.`);
+                        }
+                    }
+                }
+            } catch (securityError) {
+                console.error("IP Verification failed:", securityError);
+                loginSuccess = false;
+                errorMessage = securityError.message || "Security verification failed. Access Denied.";
             }
-        } else {
+
+            if (loginSuccess) {
+                document.getElementById('portal-login').style.display = 'none';
+                document.getElementById('portal-dashboard').style.display = 'flex';
+                updateDashboardProfile(email);
+                loadSignedDocuments(email); // Load signed documents on successful login
+    
+                // Clear any error messages
+                if (errorMsg) {
+                    errorMsg.style.display = 'none';
+                    errorMsg.textContent = '';
+                }
+            }
+        } 
+        
+        if (!loginSuccess) {
             // Show error message
             if (errorMsg) {
                 errorMsg.textContent = errorMessage;
@@ -370,22 +407,22 @@ async function handleLogin() {
 
 async function handleSignup() {
     const emailInput = document.getElementById('signup-email');
-    const passwordInput = document.getElementById('signup-password');
     const parentNameInput = document.getElementById('signup-parent-name');
-    const phoneInput = document.getElementById('signup-phone');
+    const playerNameInput = document.getElementById('signup-player-name');
+    const playerAgeInput = document.getElementById('signup-player-age');
 
     const email = emailInput ? emailInput.value.trim() : '';
-    const password = passwordInput ? passwordInput.value : '';
     const parentName = parentNameInput ? parentNameInput.value.trim() : '';
-    const phone = phoneInput ? phoneInput.value.trim() : '';
+    const playerName = playerNameInput ? playerNameInput.value.trim() : '';
+    const playerAge = playerAgeInput ? parseInt(playerAgeInput.value, 10) : 0;
 
     const btn = document.querySelector('.signup-form button[type="submit"]');
     const errorMsg = document.querySelector('.signup-error');
 
     // Input validation
-    if (!email || !password || !parentName) {
+    if (!email || !parentName || !playerName || !playerAge) {
         if (errorMsg) {
-            errorMsg.textContent = 'Please fill in all required fields (Email, Password, Parent Name)';
+            errorMsg.textContent = 'Please fill in all required fields (Name, Email, Player Name, Age)';
             errorMsg.style.display = 'block';
         }
         return;
@@ -401,70 +438,74 @@ async function handleSignup() {
         return;
     }
 
-    // Basic password validation (minimum length)
-    if (password.length < 6) {
-        if (errorMsg) {
-            errorMsg.textContent = 'Password must be at least 6 characters';
-            errorMsg.style.display = 'block';
-        }
-        return;
-    }
-
-    // Store form data for display later
-    localStorage.setItem('gba_parent_name', parentName);
-    if (phone) localStorage.setItem('gba_parent_phone', phone);
-
     // Check rate limiting if available
     if (window.Security && window.Security.RateLimiter) {
         const rateCheck = window.Security.RateLimiter.check('signup', email);
         if (!rateCheck.allowed) {
-            godspeedAlert(rateCheck.message || 'Too many attempts. Please try again later.');
+            if (typeof godspeedAlert === 'function') {
+                godspeedAlert(rateCheck.message || 'Too many attempts. Please try again later.');
+            } else {
+                alert('Too many attempts. Please try again later.');
+            }
             return;
         }
     }
 
     try {
-        btn.innerHTML = 'Creating Account...';
+        btn.innerHTML = 'Submitting Request...';
         btn.disabled = true;
 
         if (errorMsg) errorMsg.style.display = 'none';
 
-        if (window.auth && typeof window.auth.signup === 'function') {
-            try {
-                const result = await window.auth.signup(email, password, {
-                    full_name: parentName,
-                    phone: phone,
-                    role: 'parent'
-                });
+        if (window.supabase) {
+            // Insert into access_requests table directly
+            const { error: insertError } = await window.supabase.from('access_requests').insert([{
+                parent_name: parentName,
+                email: email,
+                player_name: playerName,
+                player_age: playerAge
+            }]);
 
-                if (result.success) {
-                    if (result.requiresVerification) {
-                        godspeedAlert("Please check your email to verify your account.", "Verification Required");
-                    } else {
-                        loginNewUser(email);
-                    }
-                    return;
-                }
-            } catch (authError) {
-                console.warn('Supabase signup failed:', authError);
-                if (errorMsg) {
-                     errorMsg.textContent = authError.message || 'Signup failed. Please try again.';
-                     errorMsg.style.display = 'block';
-                }
-                btn.innerHTML = 'Create Account';
-                btn.disabled = false;
-                return;
+            if (insertError) {
+                console.error('Supabase access_request insert error:', insertError);
+                throw new Error(insertError.message || 'Failed to submit the request to the database.');
             }
-        }
 
+            // Success UI
+            if (typeof godspeedAlert === 'function') {
+                godspeedAlert(`Your access request for ${playerName} has been securely submitted! Coach Scott will review it shortly. Keep an eye on your email inbox for the approval link.`, "Request Received");
+            } else {
+                alert("Request Received! Admin review is pending.");
+            }
+            
+            // Switch back to login form naturally
+            if (typeof showLoginForm === 'function') showLoginForm();
+
+            // Clear inputs
+            if (emailInput) emailInput.value = '';
+            if (parentNameInput) parentNameInput.value = '';
+            if (playerNameInput) playerNameInput.value = '';
+            if (playerAgeInput) playerAgeInput.value = '';
+            
+            btn.innerHTML = 'Submit Access Request';
+            btn.disabled = false;
+        } else {
+            throw new Error("Supabase is not connected. Are your .env keys configured?");
+        }
     } catch (error) {
-        console.error('Signup error:', error);
-        btn.innerHTML = 'Create Account';
+        console.error('Access Request error:', error);
+        btn.innerHTML = 'Submit Access Request';
         btn.disabled = false;
 
         if (errorMsg) {
-            errorMsg.textContent = error.message || 'An error occurred during signup';
+            errorMsg.textContent = error.message || 'An error occurred while submitting your request.';
             errorMsg.style.display = 'block';
+            
+            const form = document.querySelector('.signup-form');
+            if (form) {
+                form.classList.add('shake');
+                setTimeout(() => form.classList.remove('shake'), 500);
+            }
         }
     }
 }
@@ -2459,7 +2500,7 @@ function viewTrainingStatement(email) {
         </head>
         <body>
             <div class="header">
-                <div class="logo">GODSPEED<span>ACADEMY</span></div>
+                <div class="logo">GODSPEED<span style="color: #2563eb;">BASKETBALL</span></div>
                 <div class="invoice-details">
                     <h1>Training Statement</h1>
                     <p>Date: ${date}</p>

@@ -160,12 +160,15 @@ a {
 }
 
 .logo {
-    font-size: 1.3rem;
-    font-weight: 800;
-    letter-spacing: 0.1em;
+    font-family: 'Inter', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     color: var(--color-text);
-    z-index: 1001;
-    /* Keep above mobile menu */
+    z-index: 1001; /* Keep above mobile menu */
     position: relative;
 }
 
