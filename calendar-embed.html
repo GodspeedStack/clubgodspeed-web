@@ -12,6 +12,20 @@
     <link rel="stylesheet" href="styles.css">
 
     <style>
+        /* Embedded Button Visibility Override */
+        .calendar-controls .btn-secondary {
+            color: #111 !important;
+            background: #ffffff !important;
+            border: 1px solid #d1d5db !important;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+            font-weight: 600 !important;
+            transition: all 0.2s ease !important;
+        }
+        .calendar-controls .btn-secondary:hover {
+            background: #f3f4f6 !important;
+            border-color: #9ca3af !important;
+        }
+        
         /* Calendar Specific Styles */
         .calendar-container {
             padding: 8rem 5% 5rem 5%;
@@ -544,123 +558,7 @@
         </div>
     </div>
 
-    <!-- Event Detail Card (Float) -->
-    <div class="overlay-dim" id="overlay" onclick="closeEvent()"></div>
-    <div class="float-card" id="eventCard">
-        <div style="background: #2563eb; padding: 1.5rem; border-radius: 0; margin: -2rem -2rem 1.5rem -2rem;">
-            <h3 id="eventTitle" style="color: white; margin: 0; font-size: 1.5rem;">Event Title</h3>
-            <p id="eventType" style="color: rgba(255,255,255,0.8); margin: 0.5rem 0 0 0;">Event Type</p>
-        </div>
 
-        <div style="margin-bottom: 1.5rem;">
-            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                <div style="font-weight: 600; width: 80px;">Time</div>
-                <div id="eventTime">Time</div>
-            </div>
-            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                <div style="font-weight: 600; width: 80px;">Location</div>
-                <div id="eventLocation">Location</div>
-            </div>
-            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                <div style="font-weight: 600; width: 80px;">Details</div>
-                <div id="eventDetails">Details</div>
-            </div>
-        </div>
-
-
-    </div>
-
-    <!-- Sync Modal -->
-    <div class="sync-modal" id="syncModal">
-        <h3 style="margin-top: 0; margin-bottom: 0.5rem;">Sync Calendar</h3>
-        <p style="color: #86868b; font-size: 0.9rem; margin-bottom: 1.5rem;">Add the 2025-26 Season to your device.</p>
-
-        <button class="sync-btn-option" onclick="processSync('apple')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                    d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.5 1.55-.03 2.99 1.05 3.95 1.05.97 0 2.8-.82 4.03-1.25s1.8 1.5 2.95 1.76c-1.2 1.95-1.02 5.09.91 5.99-.09.34-.23.68-.41 1.06zm-4.73-13.6c.98-1.18 1.63-2.82 1.45-4.46-1.42.06-3.11.94-4.13 2.14-.92 1.07-1.71 2.76-1.5 4.38 1.58.12 3.2-.84 4.18-2.06z" />
-            </svg>
-            Apple Calendar
-        </button>
-
-        <button class="sync-btn-option" onclick="processSync('google')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                    d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2.03 6.8 2.03 12c0 5.05 4.13 12 12.22 12 9.83 0 12.94-6.29 12.94-11.02 0-1.24-.05-1.77-.15-1.88z" />
-            </svg>
-            Google Calendar
-        </button>
-
-        <button onclick="closeSyncModal()"
-            style="margin-top: 1rem; background: none; border: none; color: #86868b; cursor: pointer; font-size: 0.9rem;">Cancel</button>
-    </div>
-
-    <!-- Global Contact Modal (Copied) -->
-    <div class="modal-overlay" id="contactModal">
-        <div class="contact-modal">
-            <button class="modal-close" onclick="closeContactModal()">✕</button>
-            <div class="modal-info">
-                <div>
-                    <h2 class="modal-title">GET IN<br>TOUCH</h2>
-                    <p style="color: #86868b; font-weight: 500; line-height: 1.6;">Questions about the Academy, AAU
-                        teams, or training? We're locked in.</p>
-                </div>
-                <div>
-                    <div class="contact-detail-item">
-                        <div class="contact-label">HQ Location</div>
-                        <div class="contact-value">Denver Basketball Center</div>
-                        <div style="font-size: 0.9rem; color: #86868b; margin-top: 4px;">Godspeed HQ, Denver, CO
-                        </div>
-                    </div>
-                    <div class="contact-detail-item">
-                        <div class="contact-label">Direct Email</div>
-                        <div class="contact-value">info@godspeed.com</div>
-                    </div>
-                    <div class="contact-detail-item" style="margin-bottom: 0;">
-                        <div class="contact-label">Socials</div>
-                        <div class="contact-value" style="font-size: 0.95rem;">@godspeedbasketball</div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-form-section">
-                <form onsubmit="submitContactForm(event)">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                        <div>
-                            <label class="contact-label">First Name</label>
-                            <input type="text" class="modal-input" placeholder="LeBron" required>
-                        </div>
-                        <div>
-                            <label class="contact-label">Last Name</label>
-                            <input type="text" class="modal-input" placeholder="James" required>
-                        </div>
-                    </div>
-                    <div style="margin-bottom: 1rem;">
-                        <label class="contact-label">Email Address</label>
-                        <input type="email" class="modal-input" placeholder="king@lakers.com" required>
-                    </div>
-                    <div style="margin-bottom: 1rem;">
-                        <label class="contact-label">Topic</label>
-                        <div style="position: relative;">
-                            <select class="modal-input" style="appearance: none; cursor: pointer;">
-                                <option>General Inquiry</option>
-                                <option>AAU Tryouts</option>
-                                <option>Private Training</option>
-                            </select>
-                            <div
-                                style="position: absolute; right: 15px; top: 15px; pointer-events: none; font-size: 0.7rem; color: #888;">
-                                ▼</div>
-                        </div>
-                    </div>
-                    <div style="margin-bottom: 1.5rem;">
-                        <label class="contact-label">Message</label>
-                        <textarea class="modal-input" rows="4" style="resize: none;"
-                            placeholder="How can we help you build your legacy?"></textarea>
-                    </div>
-                    <button type="submit" class="modal-btn">Send Message_</button>
-                </form>
-            </div>
-        </div>
-    </div>
 
     <!-- Embedded Calendar Mode: Footer Removed -->
 

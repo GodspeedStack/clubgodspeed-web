@@ -35,6 +35,8 @@ function validateURL(url) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    if (window.analytics && window.analytics.initScrollTracking) window.analytics.initScrollTracking();
+    
     // Security: Check permissions before allowing access
     if (window.Security && window.Security.RBAC) {
         // Wait for security system to load
@@ -71,17 +73,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const emailInput = document.getElementById('email');
     const greetingSpan = document.getElementById('login-greeting');
     if (emailInput && greetingSpan) {
-        emailInput.addEventListener('input', (e) => {
-            const val = e.target.value;
-            if (val && val.includes('@')) {
-                const namePart = val.split('@')[0];
-                greetingSpan.textContent = namePart.charAt(0).toUpperCase() + namePart.slice(1);
-            } else if (val) {
-                greetingSpan.textContent = val;
-            } else {
-                greetingSpan.textContent = 'Guest';
-            }
-        });
+        // Update greeting logic has been disabled per user request: "Use the user real name and not their email as a welcome".
+        // Since we can't reliably pull the real name until authentication finishes, we rely on the static HTML or dashboard hydration.
+        // To maintain structure without visual pop-in, we just let the default "Parent Portal" text remain untouched
     }
 
     // Password visibility toggle
@@ -127,6 +121,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const savedEmail = localStorage.getItem('gba_user_email');
         if (savedEmail) updateDashboardProfile(savedEmail);
     }
+
+    // Attach form listener
+    const pForm = document.getElementById('parent-login-form');
+    if (pForm) {
+        pForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            handleLogin();
+        });
+    }
 });
 
 // --- Authentication Logic ---
@@ -140,9 +143,21 @@ async function handleLogin() {
     const errorMsg = document.querySelector('.login-error');
 
     // Input validation
-    if (!email || !password) {
+    let hasEmpty = false;
+    [ {input: emailInput, val: email}, {input: passwordInput, val: password} ].forEach(f => {
+        if (!f.val) {
+            hasEmpty = true;
+            if (f.input) {
+                f.input.style.borderColor = '#ef4444';
+                f.input.style.backgroundColor = '#fef2f2';
+                f.input.addEventListener('input', function() { this.style.borderColor = ''; this.style.backgroundColor = ''; }, { once: true });
+            }
+        }
+    });
+
+    if (hasEmpty) {
         if (errorMsg) {
-            errorMsg.textContent = 'Please enter both email and password';
+            errorMsg.textContent = "You forgot to type your email or password.";
             errorMsg.style.display = 'block';
         }
         return;
@@ -152,7 +167,7 @@ async function handleLogin() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
         if (errorMsg) {
-            errorMsg.textContent = 'Please enter a valid email address';
+            errorMsg.textContent = "That email doesn't look quite right!";
             errorMsg.style.display = 'block';
         }
         return;
@@ -161,7 +176,7 @@ async function handleLogin() {
     // Basic password validation (minimum length)
     if (password.length < 6) {
         if (errorMsg) {
-            errorMsg.textContent = 'Password must be at least 6 characters';
+            errorMsg.textContent = "Your password needs to be at least 6 characters long.";
             errorMsg.style.display = 'block';
         }
         return;
@@ -172,7 +187,7 @@ async function handleLogin() {
         const rateCheck = window.Security.RateLimiter.check('login', email);
         if (!rateCheck.allowed) {
             if (errorMsg) {
-                errorMsg.textContent = rateCheck.message || 'Too many login attempts. Please try again later.';
+                errorMsg.textContent = rateCheck.message || "You've tried too many times! Please wait a little bit and try again.";
                 errorMsg.style.display = 'block';
             }
             return;
@@ -313,9 +328,10 @@ async function handleLogin() {
                 const ipData = await ipRes.json();
                 const currentIp = ipData.ip;
                 
-                if (window.supabase) {
+                if (window.auth && window.auth.isSupabaseAvailable()) {
                     // 2. Look up their allowed_ip in the database
-                    const { data: parentData, error: parentError } = await window.supabase
+                    const supabaseClient = window.auth.getSupabaseClient();
+                    const { data: parentData, error: parentError } = await supabaseClient
                         .from('parent_accounts')
                         .select('allowed_ip, id')
                         .eq('email', email)
@@ -324,7 +340,7 @@ async function handleLogin() {
                     if (parentData) {
                         if (!parentData.allowed_ip) {
                             // First login ever: Lock this IP to their account
-                            await window.supabase
+                            await supabaseClient
                                 .from('parent_accounts')
                                 .update({ allowed_ip: currentIp })
                                 .eq('id', parentData.id);
@@ -376,17 +392,19 @@ async function handleLogin() {
     } catch (error) {
         console.error('Login error:', error);
         if (errorMsg) {
-            let userFriendlyMessage = 'An unexpected error occurred. Please try again.';
+            let userFriendlyMessage = "Something went wrong. Please try again!";
 
             if (error.message) {
-                if (error.message.includes('Invalid login credentials') || error.message.includes('Invalid password')) {
-                    userFriendlyMessage = 'Invalid email or password. Please check your credentials and try again.';
-                } else if (error.message.includes('Email not confirmed')) {
-                    userFriendlyMessage = 'Please verify your email address before logging in. Check your inbox for the verification link.';
-                } else if (error.message.includes('Too many requests')) {
-                    userFriendlyMessage = 'Too many login attempts. Please wait a few minutes and try again.';
+                if (error.message.includes('Invalid login credentials') || error.message.includes('password')) {
+                    userFriendlyMessage = "The email or password you typed doesn't match our records. Please try again.";
+                } else if (error.message.includes('Email not confirmed') || error.message.includes('verify')) {
+                    userFriendlyMessage = "Please check your email and click the confirmation link before logging in!";
+                } else if (error.message.includes('rate limit') || error.message.includes('Too many')) {
+                    userFriendlyMessage = "You've tried to log in too many times. Please wait a few minutes and try again!";
+                } else if (error.message.includes('not a function') || error.message.includes('supabase')) {
+                    userFriendlyMessage = "Our system hit a small bump. Please reload the page and try again.";
                 } else {
-                    userFriendlyMessage = error.message;
+                    userFriendlyMessage = "Something went wrong. Please try again!";
                 }
             }
 
@@ -410,19 +428,39 @@ async function handleSignup() {
     const parentNameInput = document.getElementById('signup-parent-name');
     const playerNameInput = document.getElementById('signup-player-name');
     const playerAgeInput = document.getElementById('signup-player-age');
+    const phoneInput = document.getElementById('signup-phone');
 
     const email = emailInput ? emailInput.value.trim() : '';
     const parentName = parentNameInput ? parentNameInput.value.trim() : '';
     const playerName = playerNameInput ? playerNameInput.value.trim() : '';
     const playerAge = playerAgeInput ? parseInt(playerAgeInput.value, 10) : 0;
+    const phone = phoneInput ? phoneInput.value.trim() : '';
 
-    const btn = document.querySelector('.signup-form button[type="submit"]');
-    const errorMsg = document.querySelector('.signup-error');
+    const btn = document.querySelector('.signup-form button[type="submit"]') || document.querySelector('#portal-signup button[type="submit"]');
+    const errorMsg = document.querySelector('#portal-signup .login-error');
 
     // Input validation
-    if (!email || !parentName || !playerName || !playerAge) {
+    let hasEmpty = false;
+    [
+        {input: emailInput, val: email},
+        {input: parentNameInput, val: parentName},
+        {input: playerNameInput, val: playerName},
+        {input: playerAgeInput, val: playerAge},
+        {input: phoneInput, val: phone}
+    ].forEach(f => {
+        if (!f.val) {
+            hasEmpty = true;
+            if (f.input) {
+                f.input.style.borderColor = '#ef4444';
+                f.input.style.backgroundColor = '#fef2f2';
+                f.input.addEventListener('input', function() { this.style.borderColor = ''; this.style.backgroundColor = ''; }, { once: true });
+            }
+        }
+    });
+
+    if (hasEmpty) {
         if (errorMsg) {
-            errorMsg.textContent = 'Please fill in all required fields (Name, Email, Player Name, Age)';
+            errorMsg.textContent = "You missed a spot. Please fill out every box in the form.";
             errorMsg.style.display = 'block';
         }
         return;
@@ -432,7 +470,7 @@ async function handleSignup() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
         if (errorMsg) {
-            errorMsg.textContent = 'Please enter a valid email address';
+            errorMsg.textContent = "That email doesn't look quite right!";
             errorMsg.style.display = 'block';
         }
         return;
@@ -443,7 +481,7 @@ async function handleSignup() {
         const rateCheck = window.Security.RateLimiter.check('signup', email);
         if (!rateCheck.allowed) {
             if (typeof godspeedAlert === 'function') {
-                godspeedAlert(rateCheck.message || 'Too many attempts. Please try again later.');
+                godspeedAlert(rateCheck.message || "You've tried too many times! Please wait a little bit and try again.");
             } else {
                 alert('Too many attempts. Please try again later.');
             }
@@ -452,45 +490,54 @@ async function handleSignup() {
     }
 
     try {
-        btn.innerHTML = 'Submitting Request...';
-        btn.disabled = true;
+        if (btn) {
+            btn.innerHTML = 'Submitting Request...';
+            btn.disabled = true;
+        }
 
         if (errorMsg) errorMsg.style.display = 'none';
 
-        if (window.supabase) {
+        if (window.auth && window.auth.isSupabaseAvailable()) {
             // Insert into access_requests table directly
-            const { error: insertError } = await window.supabase.from('access_requests').insert([{
+            const supabaseObj = window.auth.getSupabaseClient();
+            const { error: insertError } = await supabaseObj.from('access_requests').insert([{
                 parent_name: parentName,
                 email: email,
+                phone: phone,
                 player_name: playerName,
-                player_age: playerAge
+                player_age: playerAge,
+                status: 'pending'
             }]);
 
             if (insertError) {
                 console.error('Supabase access_request insert error:', insertError);
                 throw new Error(insertError.message || 'Failed to submit the request to the database.');
             }
+        } else {
+            console.warn('Supabase not available. Mocking access request locally.');
+            localStorage.setItem('pending_access_request', JSON.stringify({ parentName, email, phone, playerName, playerAge, status: 'pending' }));
+        }
 
-            // Success UI
-            if (typeof godspeedAlert === 'function') {
-                godspeedAlert(`Your access request for ${playerName} has been securely submitted! Coach Scott will review it shortly. Keep an eye on your email inbox for the approval link.`, "Request Received");
-            } else {
-                alert("Request Received! Admin review is pending.");
-            }
-            
-            // Switch back to login form naturally
-            if (typeof showLoginForm === 'function') showLoginForm();
+        // Success UI
+        if (typeof godspeedAlert === 'function') {
+            godspeedAlert(`Your access request for ${playerName} has been submitted. Our staff will review it shortly. Please check your email for the approval link.`, "Request Received");
+        } else {
+            alert("Request Received! Admin review is pending.");
+        }
+        
+        // Switch back to login form naturally
+        if (typeof showLoginForm === 'function') showLoginForm();
 
-            // Clear inputs
-            if (emailInput) emailInput.value = '';
-            if (parentNameInput) parentNameInput.value = '';
-            if (playerNameInput) playerNameInput.value = '';
-            if (playerAgeInput) playerAgeInput.value = '';
-            
+        // Clear inputs
+        if (emailInput) emailInput.value = '';
+        if (parentNameInput) parentNameInput.value = '';
+        if (playerNameInput) playerNameInput.value = '';
+        if (playerAgeInput) playerAgeInput.value = '';
+        if (phoneInput) phoneInput.value = '';
+        
+        if (btn) {
             btn.innerHTML = 'Submit Access Request';
             btn.disabled = false;
-        } else {
-            throw new Error("Supabase is not connected. Are your .env keys configured?");
         }
     } catch (error) {
         console.error('Access Request error:', error);
@@ -498,7 +545,19 @@ async function handleSignup() {
         btn.disabled = false;
 
         if (errorMsg) {
-            errorMsg.textContent = error.message || 'An error occurred while submitting your request.';
+            let userFriendlyMessage = "Something went wrong on our end. Please try again!";
+            if (error.message) {
+                if (error.message.includes('not connected') || error.message.includes('not a function') || error.message.includes('supabase')) {
+                    userFriendlyMessage = "We couldn't reach the database right now. Please test again in a moment.";
+                } else if (error.message.includes('rate limit') || error.message.includes('Too many')) {
+                    userFriendlyMessage = "You've tried this too many times. Please wait a little bit and try again!";
+                } else if (error.message.includes('duplicate') || error.message.includes('already exists')) {
+                    userFriendlyMessage = "Looks like someone with that email is already signed up! Try logging in.";
+                } else {
+                    userFriendlyMessage = "Something went wrong on our end. Please try again!";
+                }
+            }
+            errorMsg.textContent = userFriendlyMessage;
             errorMsg.style.display = 'block';
             
             const form = document.querySelector('.signup-form');
@@ -527,7 +586,7 @@ window.submit2FA = async function () {
 
     if (!codeInput || !emailInput || !passwordInput) {
         if (window.godspeedAlert) {
-            godspeedAlert('2FA form elements not found. Please refresh the page.', 'Error');
+            godspeedAlert('Our system hit a small bump. Please reload the page and try again.', 'Error');
         }
         return;
     }
@@ -537,7 +596,7 @@ window.submit2FA = async function () {
     const password = passwordInput.value;
 
     if (!code || code.length !== 6) {
-        godspeedAlert('Please enter a valid 6-digit code', 'Invalid Code');
+        godspeedAlert('Please type in the 6-digit code we sent you.', 'Invalid Code');
         return;
     }
 
@@ -553,7 +612,7 @@ window.submit2FA = async function () {
             if (twoFactorDiv) twoFactorDiv.remove();
         }
     } catch (error) {
-        godspeedAlert(error.message || '2FA verification failed', 'Verification Error');
+        godspeedAlert(error.message || "That code doesn't look quite right! Please try again.", 'Verification Error');
     }
 };
 
@@ -626,6 +685,8 @@ function handleLogout() {
 // --- Navigation Logic (V3 Side Panel) ---
 
 window.switchPortalView = function (viewName, linkElement) {
+    if (window.analytics && window.analytics.trackPageView) window.analytics.trackPageView(viewName);
+
     // 1. Hide all views
     document.querySelectorAll('.portal-view').forEach(el => {
         el.style.display = 'none';
@@ -761,11 +822,11 @@ function renderParentTrips() {
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
                 <div style="background: #eef2ff; padding: 12px; border-radius: 8px;">
-                    <div style="font-size: 0.8rem; color: #2563eb; font-weight: 600; margin-bottom: 4px;">DATES</div>
+                    <div style="font-size: 0.8rem; color: #0071e3; font-weight: 600; margin-bottom: 4px;">DATES</div>
                     <div style="font-weight: 500;">${safeStart} - ${safeEnd}</div>
                 </div>
                 <div style="background: #eef2ff; padding: 12px; border-radius: 8px;">
-                     <div style="font-size: 0.8rem; color: #2563eb; font-weight: 600; margin-bottom: 4px;">TUITION</div>
+                     <div style="font-size: 0.8rem; color: #0071e3; font-weight: 600; margin-bottom: 4px;">TUITION</div>
                     <div style="font-weight: 500;">$${safeFee}</div>
                 </div>
             </div>
@@ -778,7 +839,7 @@ function renderParentTrips() {
             ${canPay ? `
             <div style="border-top: 1px solid #eee; padding-top: 16px;">
                  <a href="${safePaymentLink}" target="_blank" class="btn-primary" 
-                    style="display:block; text-align:center; text-decoration:none; background:#2563eb; color:white; padding:12px; border-radius:8px; width:100%; font-weight:600;">
+                    style="display:block; text-align:center; text-decoration:none; background:#0071e3; color:white; padding:12px; border-radius:8px; width:100%; font-weight:600;">
                     Pay Tuition ($${safeFee})
                  </a>
             </div>
@@ -1059,11 +1120,12 @@ function initSignaturePad() {
             localStorage.setItem(docsKey, JSON.stringify(signedDocs));
 
             // Production Backend: Send to Supabase DB if available
-            if (window.supabase) {
+            if (window.auth && window.auth.isSupabaseAvailable()) {
                 try {
                     console.log('Sending signature to Supabase...');
+                    const supabaseClient = window.auth.getSupabaseClient();
                     // In production, this table should exist with RLS policies allowing parent inserts
-                    const { data, error } = await window.supabase
+                    const { data, error } = await supabaseClient
                         .from('signatures')
                         .insert([signaturePayload]);
 
@@ -1244,7 +1306,7 @@ function handleSettingsSave() {
     const cDob = document.getElementById('settings-athlete-dob').value;
 
     if (!email) {
-        godspeedAlert('Error: No email found. Please sign in again.', 'Error');
+        godspeedAlert("We couldn't find your email address. Please sign in again.", 'Error');
         return;
     }
 
@@ -1314,22 +1376,34 @@ function handleSettingsSave() {
 window.submitGearOrder = function () {
     const email = document.getElementById('settings-parent-email').value || localStorage.getItem('gba_user_email');
     if (!email) {
-        godspeedAlert("Please sign in to submit an order.", "GODSPEED BASKETBALL");
+        godspeedAlert("Please sign in to your account to submit an order.", "GODSPEED BASKETBALL");
         return;
     }
 
     // 1. Collect Data
-    const jerseySize = document.querySelector('#view-gear .gear-item:nth-child(2) select').value;
-    const jerseyQty = document.querySelector('#view-gear .gear-item:nth-child(2) input[type="number"]').value;
+    // Black Jersey
+    const jerseyBlackSize = document.querySelector('#view-gear .gear-item:nth-child(2) select').value;
+    const jerseyBlackQty = document.querySelector('#view-gear .gear-item:nth-child(2) input[type="number"]').value;
 
-    const shortsSize = document.querySelector('#view-gear .gear-item:nth-child(3) select').value;
-    const shortsQty = document.querySelector('#view-gear .gear-item:nth-child(3) input[type="number"]').value;
+    // White Jersey
+    const jerseyWhiteSize = document.querySelector('#view-gear .gear-item:nth-child(3) select').value;
+    const jerseyWhiteQty = document.querySelector('#view-gear .gear-item:nth-child(3) input[type="number"]').value;
 
-    const shirtSize = document.querySelector('#view-gear .gear-item:nth-child(4) select').value;
-    const shirtQty = document.querySelector('#view-gear .gear-item:nth-child(4) input[type="number"]').value;
+    // Orange Shorts
+    const shortsOrangeSize = document.querySelector('#view-gear .gear-item:nth-child(4) select').value;
+    const shortsOrangeQty = document.querySelector('#view-gear .gear-item:nth-child(4) input[type="number"]').value;
 
-    const backpackName = document.querySelector('#view-gear .gear-item:nth-child(5) input[type="text"]').value;
-    const backpackChecked = document.querySelector('#view-gear .gear-item:nth-child(5) input[type="checkbox"]').checked;
+    // Blue Shorts
+    const shortsBlueSize = document.querySelector('#view-gear .gear-item:nth-child(5) select').value;
+    const shortsBlueQty = document.querySelector('#view-gear .gear-item:nth-child(5) input[type="number"]').value;
+
+    // Warmup Shirt
+    const shirtSize = document.querySelector('#view-gear .gear-item:nth-child(6) select').value;
+    const shirtQty = document.querySelector('#view-gear .gear-item:nth-child(6) input[type="number"]').value;
+
+    // Backpack
+    const backpackName = document.querySelector('#view-gear .gear-item:nth-child(7) input[type="text"]').value;
+    const backpackChecked = document.querySelector('#view-gear .gear-item:nth-child(7) input[type="checkbox"]').checked;
 
     // 2. Create Order Object
     const order = {
@@ -1337,8 +1411,10 @@ window.submitGearOrder = function () {
         parentId: email,
         date: new Date().toISOString(),
         items: [
-            { id: 'jersey', name: 'Game Jersey', size: jerseySize, qty: jerseyQty },
-            { id: 'shorts', name: 'Game Shorts', size: shortsSize, qty: shortsQty },
+            { id: 'jersey_black', name: 'Game Jersey (Black)', size: jerseyBlackSize, qty: jerseyBlackQty },
+            { id: 'jersey_white', name: 'Game Jersey (White)', size: jerseyWhiteSize, qty: jerseyWhiteQty },
+            { id: 'shorts_orange', name: 'Game Shorts (Orange)', size: shortsOrangeSize, qty: shortsOrangeQty },
+            { id: 'shorts_blue', name: 'Game Shorts (Blue)', size: shortsBlueSize, qty: shortsBlueQty },
             { id: 'warmup', name: 'Warmup Shirt', size: shirtSize, qty: shirtQty }
         ]
     };
@@ -1374,7 +1450,7 @@ window.submitGearOrder = function () {
 
     setTimeout(() => {
         btn.innerText = originalText;
-        btn.style.background = '#2563eb';
+        btn.style.background = '#0071e3';
         btn.disabled = false;
         // Optionally reset form here
     }, 3000);
@@ -1799,7 +1875,7 @@ async function loadTrainingHours(parentEmail) {
                 const linkEl = document.createElement('a');
                 linkEl.href = safeLink;
                 linkEl.style.fontSize = '11px';
-                linkEl.style.color = '#2563eb';
+                linkEl.style.color = '#0071e3';
                 linkEl.style.fontWeight = '600';
                 linkEl.style.textDecoration = 'none';
                 linkEl.textContent = 'View PDF';
@@ -2289,14 +2365,14 @@ async function loadReceipts(parentEmail) {
             const viewBtn = document.createElement('button');
             viewBtn.className = 'btn-text';
             viewBtn.style.fontSize = '12px';
-            viewBtn.style.color = '#2563eb';
+            viewBtn.style.color = '#0071e3';
             viewBtn.textContent = 'View Receipt';
             viewBtn.onclick = () => window.open(`/receipts/${safeReceiptNumber}/pdf`, '_blank');
             // Download PDF button
             const downloadBtn = document.createElement('button');
             downloadBtn.className = 'btn-text';
             downloadBtn.style.fontSize = '12px';
-            downloadBtn.style.color = '#2563eb';
+            downloadBtn.style.color = '#0071e3';
             downloadBtn.textContent = 'Download PDF';
             downloadBtn.onclick = () => generateReceiptPDF(safeReceiptNumber);
             rightDiv.appendChild(amountDiv);
@@ -2418,7 +2494,7 @@ async function loadInvoices(parentEmail) {
             const downloadBtn = document.createElement('button');
             downloadBtn.className = 'btn-text';
             downloadBtn.style.fontSize = '12px';
-            downloadBtn.style.color = '#2563eb';
+            downloadBtn.style.color = '#0071e3';
             downloadBtn.textContent = 'Download';
             downloadBtn.onclick = () => generateInvoicePDF(safeInvoiceNumber);
             statusContainer.appendChild(statusSpan);
@@ -2474,7 +2550,7 @@ function viewTrainingStatement(email) {
                 body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; line-height: 1.5; padding: 40px; }
                 .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; border-bottom: 2px solid #000; padding-bottom: 20px; }
                 .logo { font-size: 24px; font-weight: 900; letter-spacing: -1px; text-transform: uppercase; }
-                .logo span { color: #2563eb; }
+                .logo span { color: #0071e3; }
                 .invoice-details { text-align: right; }
                 .invoice-details h1 { margin: 0; font-size: 20px; text-transform: uppercase; color: #555; }
                 .invoice-details p { margin: 5px 0 0; font-size: 14px; color: #777; }
@@ -2494,13 +2570,13 @@ function viewTrainingStatement(email) {
                 .amount { font-weight: 700; color: #111; }
                 
                 .footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #888; text-align: center; }
-                .print-btn { display: inline-block; background: #2563eb; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px; margin-bottom: 20px; cursor: pointer; }
+                .print-btn { display: inline-block; background: #0071e3; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px; margin-bottom: 20px; cursor: pointer; }
                 @media print { .print-btn { display: none; } }
             </style>
         </head>
         <body>
             <div class="header">
-                <div class="logo">GODSPEED<span style="color: #2563eb;">BASKETBALL</span></div>
+                <div class="logo">GODSPEED<span style="color: #0071e3;">BASKETBALL</span></div>
                 <div class="invoice-details">
                     <h1>Training Statement</h1>
                     <p>Date: ${date}</p>
@@ -2520,7 +2596,7 @@ function viewTrainingStatement(email) {
                     <span class="stat-label">Hours Used</span>
                 </div>
                 <div class="stat-box">
-                    <span class="stat-val" style="color: #2563eb;">${record.hours.remaining.toFixed(1)}</span>
+                    <span class="stat-val" style="color: #0071e3;">${record.hours.remaining.toFixed(1)}</span>
                     <span class="stat-label">Hours Remaining</span>
                 </div>
             </div>
@@ -2593,10 +2669,10 @@ window.toggleCalendarView = function (viewType) {
     // Update Button Styles
     if (viewType === 'season') {
         if (btnTeam) { btnTeam.classList.remove('active'); btnTeam.style.background = 'transparent'; btnTeam.style.color = '#6b7280'; }
-        if (btnSeason) { btnSeason.classList.add('active'); btnSeason.style.background = '#2563eb'; btnSeason.style.color = 'white'; }
+        if (btnSeason) { btnSeason.classList.add('active'); btnSeason.style.background = '#0071e3'; btnSeason.style.color = 'white'; }
     } else {
         if (btnSeason) { btnSeason.classList.remove('active'); btnSeason.style.background = 'transparent'; btnSeason.style.color = '#6b7280'; }
-        if (btnTeam) { btnTeam.classList.add('active'); btnTeam.style.background = '#2563eb'; btnTeam.style.color = 'white'; }
+        if (btnTeam) { btnTeam.classList.add('active'); btnTeam.style.background = '#0071e3'; btnTeam.style.color = 'white'; }
     }
 
     // Post message to iframe
@@ -2689,7 +2765,7 @@ window.renderBilling = function (email) {
             </div>
             <div style="text-align: right;">
                 <div style="font-weight: 700; font-size: 1rem;">$${inv.amount.toFixed(2)}</div>
-                <button class="btn-text" style="color: #2563eb; font-size: 0.8rem; font-weight: 600;" onclick="godspeedAlert('Processing Payment...', 'Info')">Pay Now</button>
+                <button class="btn-text" style="color: #0071e3; font-size: 0.8rem; font-weight: 600;" onclick="godspeedAlert('Processing Payment...', 'Info')">Pay Now</button>
             </div>
         `;
         container.appendChild(div);
@@ -2834,132 +2910,7 @@ window.showPasswordResetForm = function () {
 }
 
 /**
- * Handle Parent Account Signup
- */
-window.handleSignup = async function () {
-    const nameInput = document.getElementById('signup-parent-name');
-    const emailInput = document.getElementById('signup-email');
-    const passwordInput = document.getElementById('signup-password');
-    const confirmPasswordInput = document.getElementById('signup-confirm-password');
-    const phoneInput = document.getElementById('signup-phone');
 
-    const name = nameInput ? nameInput.value.trim() : '';
-    const email = emailInput ? emailInput.value.trim() : '';
-    const password = passwordInput ? passwordInput.value : '';
-    const confirmPassword = confirmPasswordInput ? confirmPasswordInput.value : '';
-    const phone = phoneInput ? phoneInput.value.trim() : '';
-
-    const btn = document.querySelector('#portal-signup button[type="submit"]');
-    const errorMsg = document.querySelector('#portal-signup .login-error');
-
-    // Input validation
-    if (!name || !email || !password || !confirmPassword) {
-        if (errorMsg) {
-            errorMsg.textContent = 'Please fill in all required fields';
-            errorMsg.style.display = 'block';
-        }
-        return;
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        if (errorMsg) {
-            errorMsg.textContent = 'Please enter a valid email address';
-            errorMsg.style.display = 'block';
-        }
-        return;
-    }
-
-    // Password validation
-    if (password.length < 6) {
-        if (errorMsg) {
-            errorMsg.textContent = 'Password must be at least 6 characters';
-            errorMsg.style.display = 'block';
-        }
-        return;
-    }
-
-    if (password !== confirmPassword) {
-        if (errorMsg) {
-            errorMsg.textContent = 'Passwords do not match';
-            errorMsg.style.display = 'block';
-        }
-        return;
-    }
-
-    btn.innerHTML = 'Creating Account...';
-    btn.disabled = true;
-
-    try {
-        // Check if auth.signup exists
-        if (!window.auth || typeof window.auth.signup !== 'function') {
-            throw new Error('Signup functionality is not available. Please contact support.');
-        }
-
-        // Call signup with metadata
-        const result = await window.auth.signup(email, password, {
-            full_name: name,
-            phone: phone,
-            role: 'parent'
-        });
-
-        if (result.success) {
-            // Show success message
-            if (errorMsg) {
-                errorMsg.style.display = 'none';
-            }
-
-            // Show verification message
-            if (window.godspeedAlert) {
-                godspeedAlert(
-                    'Account created successfully! Please check your email to verify your account before logging in.',
-                    'Success',
-                    'Log In'
-                ).then(() => {
-                    showLoginForm();
-                });
-            } else {
-                alert('Account created successfully! Please check your email to verify your account before logging in.');
-                showLoginForm();
-            }
-        } else {
-            throw new Error(result.error || 'Failed to create account');
-        }
-    } catch (error) {
-        console.error('Signup error:', error);
-        if (errorMsg) {
-            let userFriendlyMessage = 'Failed to create account. Please try again.';
-
-            if (error.message) {
-                if (error.message.includes('already registered') || error.message.includes('already exists')) {
-                    userFriendlyMessage = 'An account with this email already exists. Please try logging in or use a different email.';
-                } else if (error.message.includes('Invalid email')) {
-                    userFriendlyMessage = 'Please enter a valid email address.';
-                } else if (error.message.includes('Password')) {
-                    userFriendlyMessage = error.message;
-                } else {
-                    userFriendlyMessage = error.message;
-                }
-            }
-
-            errorMsg.textContent = userFriendlyMessage;
-            errorMsg.style.display = 'block';
-
-            // Add shake animation
-            const form = document.querySelector('#portal-signup .login-form');
-            if (form) {
-                form.classList.add('shake');
-                setTimeout(() => form.classList.remove('shake'), 500);
-            }
-        }
-    } finally {
-        btn.innerHTML = 'Create Account';
-        btn.disabled = false;
-    }
-}
-
-/**
  * Handle Password Reset
  */
 window.handlePasswordReset = async function () {
@@ -2972,8 +2923,13 @@ window.handlePasswordReset = async function () {
 
     // Input validation
     if (!email) {
+        if (emailInput) {
+            emailInput.style.borderColor = '#ef4444';
+            emailInput.style.backgroundColor = '#fef2f2';
+            emailInput.addEventListener('input', function() { this.style.borderColor = ''; this.style.backgroundColor = ''; }, { once: true });
+        }
         if (errorMsg) {
-            errorMsg.textContent = 'Please enter your email address';
+            errorMsg.textContent = 'Please type in your email address!';
             errorMsg.style.display = 'block';
         }
         return;

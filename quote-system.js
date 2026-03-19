@@ -284,9 +284,40 @@
     }
 
     // ============================================
-    // Image Detection & Placement Logic
+    // Luminance & Image Detection Logic
     // ============================================
-    
+
+    function isDarkBackground(element) {
+        let current = element;
+        while (current && current !== document.body) {
+            let style = window.getComputedStyle(current);
+            let bgColor = style.backgroundColor;
+            if (!bgColor) {
+                current = current.parentElement;
+                continue;
+            }
+            
+            let rgbaMatch = bgColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+            if (rgbaMatch) {
+                let r = parseInt(rgbaMatch[1], 10);
+                let g = parseInt(rgbaMatch[2], 10);
+                let b = parseInt(rgbaMatch[3], 10);
+                let a = rgbaMatch.length > 4 ? parseFloat(rgbaMatch[4]) : 1;
+                
+                if (a === 0 || style.backgroundColor === 'transparent') {
+                    current = current.parentElement;
+                    continue;
+                }
+                
+                // Rec. 709 luma components
+                let luminance = (0.299 * r) + (0.587 * g) + (0.114 * b);
+                return luminance < 128; // Threshold
+            }
+            current = current.parentElement;
+        }
+        return false;
+    }
+
     /**
      * Check if element is an image or has background image
      */
@@ -416,6 +447,16 @@
                     placement.insertAdjacentElement('afterend', container);
                     placedQuotes.push(container);
                     quoteIndex++;
+
+                    // Verify Background Context for visibility compliance
+                    setTimeout(() => {
+                        if (isDarkBackground(container.parentElement)) {
+                            container.style.setProperty('--quote-text', '#ffffff');
+                            container.style.setProperty('--quote-accent', '#ffffff');
+                        } else {
+                            container.style.setProperty('--quote-text', '#000000');
+                        }
+                    }, 100);
                 }
             }
         });
@@ -434,6 +475,16 @@
                 area.insertAdjacentElement('beforeend', container);
                 placedQuotes.push(container);
                 quoteIndex++;
+
+                // Verify Background Context for visibility compliance
+                setTimeout(() => {
+                    if (isDarkBackground(container.parentElement)) {
+                        container.style.setProperty('--quote-text', '#ffffff');
+                        container.style.setProperty('--quote-accent', '#ffffff');
+                    } else {
+                        container.style.setProperty('--quote-text', '#000000');
+                    }
+                }, 100);
             }
         });
         

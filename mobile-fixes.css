@@ -116,7 +116,8 @@ p {
 /* Fix for hero sections */
 .hero,
 .store-hero,
-[class*="hero"] {
+.hero-section-light,
+.hero-section-dark {
     width: 100%;
     max-width: 100vw;
     overflow-x: hidden;

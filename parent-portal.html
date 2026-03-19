@@ -49,14 +49,14 @@
 
     <!-- Navigation -->
         <nav class="navbar">
-        <div class="logo">GODSPEED<span style="color: #2563eb;">BASKETBALL</span></div>
+        <div class="logo">GODSPEED<span style="color: #0071e3;">BASKETBALL</span></div>
         <div class="nav-desktop-unified">
             <div class="nav-links-unified">
                 <a href="index.html">Home</a>
                 <a href="training.html">Training</a>
                 <a href="aau.html">AAU</a>
-                <a href="calendar-preview.html">Calendar</a>
-                <div style="position: relative; opacity: 0.5; cursor: not-allowed; display: flex; align-items: center;">
+                <a href="calendar-grid.html" class="auth-restricted" style="display: none;">Calendar</a>
+                <div style="position: relative; opacity: 0.5; cursor: not-allowed; display: none; align-items: center;">
                     <span>Academy</span>
                     <span style="position: absolute; top: -12px; right: -24px; font-size: 9px; background: #f3f4f6; color: #6b7280; padding: 2px 4px; border-radius: 4px; border: 1px solid #e5e7eb;">SOON</span>
                 </div>
@@ -83,14 +83,14 @@
                         <div style="padding: 8px 16px 4px; font-size: 11px; text-transform: uppercase; color: #86868b; font-weight: 600; letter-spacing: 0.05em;">Member Access</div>
                         <a href="parent-portal.html" class="login-option">
                             <span style="display: flex; align-items: center; gap: 10px;">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #0071e3;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                                 Parents
                             </span>
                             <span class="login-arrow">›</span>
                         </a>
                         <a href="coach-portal.html" class="login-option">
                             <span style="display: flex; align-items: center; gap: 10px;">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #0071e3;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
                                 Coaches
                             </span>
                             <span class="login-arrow">›</span>
@@ -110,10 +110,10 @@
         <div id="portal-login" class="portal-login-view">
             <div class="login-card">
                 <div class="login-header">
-                    <h2>Parent <span id="login-greeting" style="color: #2563eb;">Login</span></h2>
-                    <p>Access grading and roster management.</p>
+                    <h2>Parent <span id="login-greeting" style="color: #0071e3;">Login</span></h2>
+                    <p>Access your athlete's schedule, evaluations, and progress.</p>
                 </div>
-                <form class="login-form" onsubmit="event.preventDefault(); handleLogin();">
+                <form id="parent-login-form" class="login-form">
                     <div class="login-error"
                         style="display: none; color: #ef4444; font-size: 14px; margin-bottom: 16px; padding: 12px; background: #fee2e2; border-radius: 8px;">
                     </div>
@@ -160,7 +160,7 @@
         <div id="portal-signup" class="portal-login-view" style="display: none;">
             <div class="login-card">
                 <div class="login-header">
-                    <h2>Create Your <span style="color: #2563eb;">Parent Account</span></h2>
+                    <h2>Create Your <span style="color: #0071e3;">Parent Account</span></h2>
                     <p>Set up your account to access your athlete's profile and schedule.</p>
                 </div>
                 <form class="login-form" onsubmit="event.preventDefault(); handleSignup();">
@@ -184,8 +184,8 @@
                         <input type="number" id="signup-player-age" placeholder="11" min="5" max="19" required>
                     </div>
                     <div class="form-group">
-                        <label for="signup-phone">Phone Number (Optional)</label>
-                        <input type="tel" id="signup-phone" placeholder="(555) 555-5555">
+                        <label for="signup-phone">Phone Number</label>
+                        <input type="tel" id="signup-phone" placeholder="(555) 555-5555" required>
                     </div>
                     <button type="submit" class="btn-primary full-width">Submit Access Request</button>
 
@@ -199,7 +199,7 @@
         <div id="portal-reset" class="portal-login-view" style="display: none;">
             <div class="login-card">
                 <div class="login-header">
-                    <h2>Reset Your <span style="color: #2563eb;">Password</span></h2>
+                    <h2>Reset Your <span style="color: #0071e3;">Password</span></h2>
                     <p>Enter your email address and we'll send you a reset link.</p>
                 </div>
                 <form class="login-form" onsubmit="event.preventDefault(); handlePasswordReset();">
@@ -256,6 +256,17 @@
                         </span>
                         <span class="label">Schedule</span>
                     </a>
+                    
+                    <a href="#" class="nav-item" onclick="switchPortalView('performance', this)">
+                        <span class="icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                            </svg>
+                        </span>
+                        <span class="label">Performance</span>
+                    </a>
+
                     <a href="#" class="nav-item" onclick="switchPortalView('training', this)">
                         <span class="icon">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -311,26 +322,6 @@
                         <span class="user-role">Premium Member</span>
                     </div>
                 </div>
-                <!-- Player Stats Container (New) -->
-                <div id="sidebar-player-stats" style="padding: 0 1.5rem 1rem 1.5rem; display:none;">
-                    <div style="background: #f9fafb; border-radius: 12px; padding: 12px; border: 1px solid #e5e7eb;">
-                        <div
-                            style="font-size: 0.75rem; font-weight: 700; color: #6b7280; text-transform: uppercase; margin-bottom: 8px;">
-                            Athlete Stats</div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                            <div style="text-align: center;">
-                                <div id="sidebar-stat-gp" style="font-size: 1.1rem; font-weight: 800; color: #111;">-
-                                </div>
-                                <div style="font-size: 0.65rem; color: #888;">GP</div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div id="sidebar-stat-ppg" style="font-size: 1.1rem; font-weight: 800; color: #111;">-
-                                </div>
-                                <div style="font-size: 0.65rem; color: #888;">PPG</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
                 <button class="logout-btn-v3" onclick="handleLogout()">Sign Out</button>
             </aside>
 
@@ -342,109 +333,191 @@
                 </header>
 
                 <div class="content-container">
-                    <div id="dashboard-welcome" class="welcome-banner">
-                        <h1>Welcome back, <span id="dashboard-user-name">James</span></h1>
-                        <p id="dashboard-welcome-msg">Here is what's happening with your athlete today.</p>
-                    </div>
 
-                    <!-- COACH MEMO (Manifesto Letter) -->
-                    <div class="memo-card-v3"
-                        style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 32px; border-left: 4px solid #1A3A8F;">
-                        <header style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #f3f4f6;">
-                            <h2
-                                style="font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: #0A0A0A; letter-spacing: 0.05em; line-height: 1.1; margin: 0;">
-                                GODSPEED BASKETBALL</h2>
-                            <div
-                                style="font-family: 'DM Sans', sans-serif; font-size: 0.75rem; color: #FF5722; font-weight: 700; letter-spacing: 0.1em; margin-top: 4px;">
-                                MEMO: 001 // THE WINTER BEATING</div>
-                        </header>
-
-                        <div
-                            style="font-family: 'Libre Baskerville', serif; font-size: 1.05rem; line-height: 1.8; color: #111;">
-                            <p style="margin-bottom: 1.5rem; font-weight: 700;">To the Godspeed Family:</p>
-
-                            <p style="margin-bottom: 1.5rem;">The winter season was brutal. I knew it would be. It was
-                                humiliating. It was a wake-up
-                                call. And it was exactly what we needed. I call it a blessing wrapped in mud.</p>
-
-                            <p style="margin-bottom: 1.5rem;">There is a scene in The Dark Knight Rises where Batman
-                                tries to use the shadows to intimidate his enemy,
-                                Bane. Bane doesn't flinch. He steps forward and says: "You merely adopted the dark. I
-                                was born
-                                in it, molded by it." He then hands Batman the most absolute, devastating defeat of his
-                                life.</p>
-
-                            <p style="margin-bottom: 1.5rem;">Why? Because you cannot break a man with the darkness when
-                                the darkness is what built
-                                him.</p>
-
-                            <p style="margin-bottom: 1.5rem;">That is what this winter did for us. It molded us. When
-                                you take the kind of losses we took, it
-                                strips away your ego. There is nowhere to hide. Excuses burn away, and you are left
-                                looking
-                                in the mirror, forced to decide exactly who you are going to be.</p>
-
-                            <p style="margin-bottom: 1.5rem;">I didn't run from that feeling. I sat in it. I let the
-                                frustration harden my resolve. Easy wins make you
-                                soft. Humiliation makes you dangerous, if you use it right. The darkness of this season
-                                showed us exactly where we were weak, so now we know exactly where to build.</p>
-
-                            <p style="margin-bottom: 1.5rem;">These losses did not break us. They sharpened me. A fire
-                                has been lit in the hardest
-                                season we've faced, and I am completely committed to the standard of excellence.</p>
-
-                            <p style="margin-bottom: 1.5rem;">When things get tough, some people fold. Some jump ship.
-                                Godspeed will not. Parents, we need your
-                                full commitment.</p>
-
-                            <p style="margin-bottom: 1.5rem;">This is bigger than basketball. We are building.</p>
-
-                            <p style="margin-bottom: 2.5rem;">Success is coming.</p>
-
-                            <div
-                                style="font-family: 'Oswald', sans-serif; font-size: 1.5rem; font-weight: 700; color: #0A0A0A; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2rem;">
-                                Coach Scott<span style="color: #FF5722 !important;">.</span>
-                            </div>
-                            
-                            <!-- Help us build CTA -->
-                            <div style="margin-top: 2.5rem;">
-                                <button onclick="commitToGodspeed()" class="btn-primary" style="width: 100%; border-radius: 8px; font-size: 1.1rem; padding: 1rem; text-transform: uppercase; letter-spacing: 0.05em; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);">Help us build</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- COMMITTED ANIMATION -->
-                    <div id="committed-animation" style="display: none; background: white; border-radius: 12px; padding: 3rem 2rem; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 32px; border-left: 4px solid #10b981;">
-                        <style>
-                            @keyframes popSpring { 0% { transform: scale(0.8); opacity: 0; } 70% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; } }
-                        </style>
-                        <div style="font-family: 'Inter', sans-serif; font-weight: 900; font-size: 3rem; color: #10b981; letter-spacing: 0.1em; animation: popSpring 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
-                            COMMITTED
-                        </div>
-                        <p style="margin-top: 0.5rem; color: #4b5563; font-weight: 600; font-size: 1.1rem;">Welcome to the family. Let's get to work.</p>
-                    </div>
 
                     <script>
-                        function commitToGodspeed() {
-                            document.querySelector('.memo-card-v3').style.display = 'none';
-                            const anim = document.getElementById('committed-animation');
-                            anim.style.display = 'block';
-                            // Trigger reflow to restart animation smoothly if needed
-                            anim.style.animation = 'none';
-                            anim.offsetHeight;
-                            anim.style.animation = null; 
+                        function commitToGodspeed(e) {
+                            const card = document.querySelector('.memo-card-v3');
+                            const miniBadge = document.getElementById('committed-badge-mini');
+                            
+                            // 1. Inject morph styles
+                            if(!document.getElementById('morph-styles')) {
+                                const styles = document.createElement('style');
+                                styles.id = 'morph-styles';
+                                styles.innerHTML = `
+                                    .fade-out-morph {
+                                        opacity: 0 !important;
+                                        transform: scale(0.9) translateY(10px) !important;
+                                        transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                                        pointer-events: none;
+                                    }
+                                    @keyframes badgePopSpring {
+                                        0% { transform: scale(0); opacity: 0; }
+                                        50% { transform: scale(1.15); opacity: 1; }
+                                        70% { transform: scale(0.95); }
+                                        100% { transform: scale(1); opacity: 1; }
+                                    }
+                                    .badge-pop {
+                                        animation: badgePopSpring 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
+                                    }
+                                    .flying-pill {
+                                        position: absolute !important;
+                                        z-index: 9999;
+                                        transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+                                        will-change: transform;
+                                    }
+                                `;
+                                document.head.appendChild(styles);
+                            }
+                            
+                            // Generate Ghost Pill payload
+                            const ctaBtn = card ? card.querySelector('.btn-primary') : null;
+                            const startRect = ctaBtn ? ctaBtn.getBoundingClientRect() : (card ? card.getBoundingClientRect() : null);
+                            
+                            if (startRect && miniBadge) {
+                                // Briefly show target to calculate absolute DOM landing coords
+                                const wasHidden = miniBadge.style.display === 'none';
+                                miniBadge.style.display = 'inline-flex';
+                                miniBadge.style.opacity = '0';
+                                const targetRect = miniBadge.getBoundingClientRect();
+                                if (wasHidden) miniBadge.style.display = 'none';
+
+                                // Calculate scroll offsets
+                                const scrollY = window.scrollY;
+                                const scrollX = window.scrollX;
+                                
+                                const startY = startRect.top + scrollY + (startRect.height / 2) - 12; // 12 is half pill height
+                                const startX = startRect.left + scrollX + (startRect.width / 2) - 42; // 42 is half pill width
+                                
+                                const targetY = targetRect.top + scrollY;
+                                const targetX = targetRect.left + scrollX;
+
+                                // Clone badge as Ghost
+                                const ghostPill = miniBadge.cloneNode(true);
+                                ghostPill.id = "ghost-pill";
+                                ghostPill.style.display = 'inline-flex';
+                                ghostPill.style.opacity = '1';
+                                ghostPill.style.margin = '0';
+                                ghostPill.classList.remove('badge-pop');
+                                ghostPill.classList.add('flying-pill');
+                                
+                                // Set initial origin 
+                                ghostPill.style.left = startX + 'px';
+                                ghostPill.style.top = startY + 'px';
+                                ghostPill.style.transform = 'scale(0.5)';
+                                document.body.appendChild(ghostPill);
+
+                                // Trigger Reflow
+                                ghostPill.offsetHeight;
+                                
+                                // Launch Flight and scale up
+                                ghostPill.style.transform = `translate(${targetX - startX}px, ${targetY - startY}px) scale(1)`;
+                            }
+                            
+                            // 2. Smoothly fade out the memo card immediately
+                            if(card) {
+                                card.style.transformOrigin = "top center";
+                                card.classList.add('fade-out-morph');
+                            }
+                            
+                            // 3. Initiate camera tracking simultaneously
+                            window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+                            
+                            // 4. Conclude sequence at 800ms
+                            setTimeout(() => {
+                                if(card) card.style.display = 'none';
+                                
+                                const ghost = document.getElementById('ghost-pill');
+                                if (ghost) ghost.remove();
+                                
+                                miniBadge.style.display = 'inline-flex';
+                                miniBadge.style.opacity = '1';
+                                miniBadge.style.transform = 'scale(1)';
+                                miniBadge.classList.add('badge-pop');
+                            }, 800);
+
+                            // 5. Log Commitment
+                            const email = localStorage.getItem('gba_user_email') || 'Guest Parent';
+                            const db = JSON.parse(localStorage.getItem('gba_db')) || {};
+                            if (!db.commits) db.commits = [];
+                            db.commits.push({ parentId: email, date: new Date().toISOString() });
+                            localStorage.setItem('gba_db', JSON.stringify(db));
                         }
+                        
+                        // Boot check: if already committed, show the badge silently
+                        document.addEventListener('DOMContentLoaded', () => {
+                            const email = localStorage.getItem('gba_user_email') || 'Guest Parent';
+                            const db = JSON.parse(localStorage.getItem('gba_db')) || {};
+                            const hasCommitted = (db.commits || []).some(c => c.parentId === email);
+                            if (hasCommitted) {
+                                const miniBadge = document.getElementById('committed-badge-mini');
+                                if(miniBadge) {
+                                    miniBadge.style.display = 'inline-flex';
+                                    miniBadge.style.opacity = '1';
+                                    miniBadge.style.transform = 'scale(1)';
+                                }
+                                const card = document.querySelector('.memo-card-v3');
+                                if(card) card.style.display = 'none';
+                            }
+                        });
                     </script>
 
                     <!-- VIEW: DOCUMENTS -->
                     <div id="view-documents" class="portal-view active">
+                        <div id="dashboard-welcome" class="welcome-banner">
+                            <h1 style="display: flex; align-items: center; flex-wrap: wrap;">
+                                Welcome back, <span id="dashboard-user-name" style="margin-left: 6px;">James</span>
+                                <span id="committed-badge-mini" style="display: none; align-items: center; justify-content: center; width: 84px; height: 24px; background: #10b981; color: white; font-size: 9px; font-weight: 700; border-radius: 12px; letter-spacing: 0.05em; text-transform: uppercase; margin-left: 12px; box-shadow: 0 2px 8px rgba(16,185,129,0.3); opacity: 0; transform: scale(0.8); transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);">✓ COMMITTED</span>
+                            </h1>
+                            <p style="margin-top: 8px; opacity: 0.9; font-weight: 500;">Spring/Summer Season 2026 is underway. Stay updated on your athlete's progress.</p>
+                        </div>
+                        
+                        <!-- COACH MEMO (Manifesto Letter) -->
+                        <div class="memo-card-v3" style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 32px; border-left: 4px solid #1A3A8F;">
+                            <header style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #f3f4f6;">
+                                <h2 style="font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: #0A0A0A; letter-spacing: 0.05em; line-height: 1.1; margin: 0;">GODSPEED BASKETBALL</h2>
+                                <div style="font-family: 'DM Sans', sans-serif; font-size: 0.75rem; color: #FF5722; font-weight: 700; letter-spacing: 0.1em; margin-top: 4px;">MEMO: 001 // THE WINTER BEATING</div>
+                            </header>
+
+                            <div id="manifesto-content" style="position: relative; max-height: 180px; overflow: hidden; transition: max-height 0.4s ease-out; font-family: 'Libre Baskerville', serif; font-size: 1.05rem; line-height: 1.8; color: #111;">
+                                <p style="margin-bottom: 1.5rem; font-weight: 700;">To the Godspeed Family:</p>
+                                <p style="margin-bottom: 1.5rem;">The winter season was brutal. I knew it would be. It was humiliating. It was a wake-up call. And it was exactly what we needed. I call it a blessing wrapped in mud.</p>
+                                <p style="margin-bottom: 1.5rem;">There is a scene in The Dark Knight Rises where Batman tries to use the shadows to intimidate his enemy, Bane. Bane doesn't flinch. He steps forward and says: "You merely adopted the dark. I was born in it, molded by it." He then hands Batman the most absolute, devastating defeat of his life.</p>
+                                <p style="margin-bottom: 1.5rem;">Why? Because you cannot break a man with the darkness when the darkness is what built him.</p>
+                                <p style="margin-bottom: 1.5rem;">That is what this winter did for us. It molded us. When you take the kind of losses we took, it strips away your ego. There is nowhere to hide. Excuses burn away, and you are left looking in the mirror, forced to decide exactly who you are going to be.</p>
+                                <p style="margin-bottom: 1.5rem;">I didn't run from that feeling. I sat in it. I let the frustration harden my resolve. Easy wins make you soft. Humiliation makes you dangerous, if you use it right. The darkness of this season showed us exactly where we were weak, so now we know exactly where to build.</p>
+                                <p style="margin-bottom: 1.5rem;">These losses did not break us. They sharpened me. A fire has been lit in the hardest season we've faced, and I am completely committed to the standard of excellence.</p>
+                                <p style="margin-bottom: 1.5rem;">When things get tough, some people fold. Some jump ship. Godspeed will not. Parents, we need your full commitment.</p>
+                                <p style="margin-bottom: 1.5rem;">This is bigger than basketball. We are building.</p>
+                                <p style="margin-bottom: 2.5rem;">Success is coming.</p>
+                                <div style="font-family: 'Oswald', sans-serif; font-size: 1.5rem; font-weight: 700; color: #0A0A0A; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2rem;">Coach Scott<span style="color: #FF5722 !important;">.</span></div>
+                                
+                                <div id="manifesto-fade" style="position: absolute; bottom: 0; left: 0; right: 0; height: 100px; background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1) 90%); pointer-events: none;"></div>
+                            </div>
+                            
+                            <a href="#" id="manifesto-read-more" style="display: inline-flex; align-items: center; gap: 6px; margin-top: 1rem; color: #0071e3; text-decoration: none; font-size: 0.9rem; font-weight: 700; cursor: pointer;" onclick="document.getElementById('manifesto-content').style.maxHeight = '2000px'; document.getElementById('manifesto-fade').style.display = 'none'; this.style.display = 'none'; return false;">
+                                Read full dispatch 
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                            </a>
+                            
+                            <!-- Help us build CTA inside Memo Card -->
+                            <div id="committed-animation-container" style="position: relative; width: 100%; max-width: 300px; margin: 0 auto; margin-top: 2.5rem;">
+                                <div id="cta-button-wrapper" style="width: 100%; position: relative; z-index: 10;">
+                                    <button onclick="commitToGodspeed(this)" class="btn-primary" style="width: 100%; padding: 1rem;">Help us build</button>
+                                </div>
+                                
+                                <div id="committed-badge" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5); opacity: 0; pointer-events: none; display: flex; align-items: center; justify-content: center; gap: 8px; background: #10b981; color: white; padding: 12px 24px; border-radius: 99px; font-weight: 800; font-size: 1rem; letter-spacing: 0.05em; text-transform: uppercase; box-shadow: 0 10px 25px rgba(16,185,129,0.4); z-index: 5;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> COMMITTED
+                                </div>
+                            </div>
+                        </div>
                         <div class="section-header">
-                            <h2>Required Documents</h2>
+                            <h2 style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 1.35rem; color: #111; letter-spacing: -0.02em; text-transform: uppercase;">Required Documents</h2>
                         </div>
                         <div class="documents-grid-v3">
                             <!-- Parent Guide -->
                             <div class="doc-card-v3" id="card-parent-guide" onclick="document.querySelector('#card-parent-guide a').click()">
-                                <div class="card-status signed" style="background: #eef2ff; color: #2563eb;">Info</div>
+                                <div class="card-status signed" style="background: #eef2ff; color: #0071e3;">Info</div>
                                 <div class="card-icon">
                                     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                         stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -553,16 +626,7 @@
                     <div id="view-calendar" class="portal-view" style="display: none;">
                         <div class="section-header"
                             style="display: flex; justify-content: space-between; align-items: center;">
-                            <h2>Schedule</h2>
-                            <div class="calendar-toggles"
-                                style="display: flex; background: white; padding: 4px; border-radius: 8px; border: 1px solid #e5e7eb;">
-                                <button class="btn-toggle active" onclick="toggleCalendarView('team')" id="btn-cal-team"
-                                    style="padding: 6px 12px; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border: none; background: #2563eb; color: white;">Team
-                                    Calendar</button>
-                                <button class="btn-toggle" onclick="toggleCalendarView('season')" id="btn-cal-season"
-                                    style="padding: 6px 12px; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border: none; background: transparent; color: #6b7280;">Season
-                                    Calendar</button>
-                            </div>
+                            <h2 style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 1.35rem; color: #111; letter-spacing: -0.02em; text-transform: uppercase;">Schedule</h2>
                         </div>
                         <div class="calendar-wrapper-v3">
                             <iframe src="calendar-embed.html" id="main-calendar-iframe"
@@ -573,7 +637,7 @@
                     <!-- VIEW: TRAINING -->
                     <div id="view-training" class="portal-view hidden bg-gray-100 min-h-full p-5">
                         <div class="section-header mb-5">
-                            <h2 class="text-4xl md:text-5xl font-black uppercase tracking-tight text-gray-900">
+                            <h2 style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 1.35rem; color: #111; letter-spacing: -0.02em; text-transform: uppercase; margin: 0;">
                                 Training Dashboard</h2>
                         </div>
 
@@ -599,6 +663,13 @@
                             <div id="hours-progress-bar" class="bg-white/20 rounded-lg h-2 mt-4 overflow-hidden">
                                 <div id="hours-progress-fill"
                                     class="bg-white h-full w-0 transition-all duration-300 ease-in-out">
+                                </div>
+                            </div>
+                            <div style="margin-top: 1.25rem; justify-content: space-between; align-items: center; display: flex; flex-wrap: wrap; gap: 12px;">
+                                <span style="font-size: 0.8rem; font-weight: 600; opacity: 0.9;">Low balance? Keep the momentum going.</span>
+                                <div style="display: flex; gap: 8px;">
+                                    <button onclick="if(window.analytics) window.analytics.trackDownload('training_report'); alert('Downloading Training Statement...')" style="background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; border-radius: 9999px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;">Download Report</button>
+                                    <button onclick="switchPortalView('billing', this)" style="background: white; color: #1d4ed8; padding: 8px 16px; border-radius: 9999px; font-weight: 800; font-size: 0.85rem; border: none; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Purchase Hours</button>
                                 </div>
                             </div>
                         </div>
@@ -688,27 +759,130 @@
                         </div>
                     </div>
 
+                    <!-- VIEW: PERFORMANCE -->
+                    <div id="view-performance" class="portal-view" style="display: none; background-color: #F2F2F7; min-height: 100%; padding: 20px;">
+                        <div class="section-header" style="margin-bottom: 2rem;">
+                            <h2 style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 1.35rem; color: #111; letter-spacing: -0.02em; text-transform: uppercase;">Athlete Performance Evaluation</h2>
+                            <p style="color: #6b7280; font-size: 1rem; font-weight: 500;">Practice tracking, game metrics, and live coach feedback.</p>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+                            <!-- Practice Metrics -->
+                            <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e5e7eb;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 1rem;">
+                                    <div style="width: 32px; height: 32px; border-radius: 8px; background: #e0e7ff; color: #4f46e5; display: flex; align-items: center; justify-content: center;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                                    </div>
+                                    <h3 style="font-weight: 800; font-size: 1.1rem; color: #111; margin: 0;">Practice Tracking</h3>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                    <div style="background: #f9fafb; padding: 1rem; border-radius: 12px; border: 1px solid #f3f4f6;">
+                                        <div style="font-size: 1.75rem; font-weight: 900; color: #111;">98%</div>
+                                        <div style="font-size: 0.75rem; font-weight: 700; color: #6b7280; text-transform: uppercase;">Attendance</div>
+                                    </div>
+                                    <div style="background: #f9fafb; padding: 1rem; border-radius: 12px; border: 1px solid #f3f4f6;">
+                                        <div style="font-size: 1.75rem; font-weight: 900; color: #059669;">A-</div>
+                                        <div style="font-size: 0.75rem; font-weight: 700; color: #6b7280; text-transform: uppercase;">Average Effort Rating</div>
+                                    </div>
+                                    <div style="background: #f9fafb; padding: 1rem; border-radius: 12px; border: 1px solid #f3f4f6; grid-column: span 2;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                            <span style="font-size: 0.85rem; font-weight: 700; color: #111;">Agility Drills</span>
+                                            <span style="font-size: 0.85rem; font-weight: 700; color: #2563eb;">Top 15%</span>
+                                        </div>
+                                        <div style="width: 100%; height: 6px; background: #e5e7eb; border-radius: 4px; overflow: hidden;"><div style="width: 85%; height: 100%; background: #2563eb;"></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Game Metrics -->
+                            <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e5e7eb;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <div style="width: 32px; height: 32px; border-radius: 8px; background: #fce7f3; color: #db2777; display: flex; align-items: center; justify-content: center;">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                        </div>
+                                        <h3 style="font-weight: 800; font-size: 1.1rem; color: #111; margin: 0;">Game Analytics</h3>
+                                    </div>
+                                    <select style="border: 1px solid #e5e7eb; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; color: #4b5563; background: #f9fafb;">
+                                        <option>Winter Season</option>
+                                        <option>Fall Season</option>
+                                    </select>
+                                </div>
+                                
+                                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 1rem;">
+                                    <div style="text-align: center; background: #f9fafb; padding: 12px 4px; border-radius: 10px; border: 1px solid #f3f4f6;">
+                                        <div style="font-size: 1.25rem; font-weight: 900; color: #111;">18.5</div>
+                                        <div style="font-size: 0.65rem; font-weight: 700; color: #6b7280;">MINS</div>
+                                    </div>
+                                    <div style="text-align: center; background: #f9fafb; padding: 12px 4px; border-radius: 10px; border: 1px solid #f3f4f6;">
+                                        <div style="font-size: 1.25rem; font-weight: 900; color: #111;">12.4</div>
+                                        <div style="font-size: 0.65rem; font-weight: 700; color: #6b7280;">PPG</div>
+                                    </div>
+                                    <div style="text-align: center; background: #f9fafb; padding: 12px 4px; border-radius: 10px; border: 1px solid #f3f4f6;">
+                                        <div style="font-size: 1.25rem; font-weight: 900; color: #111;">4.1</div>
+                                        <div style="font-size: 0.65rem; font-weight: 700; color: #6b7280;">APG</div>
+                                    </div>
+                                    <div style="text-align: center; background: #f9fafb; padding: 12px 4px; border-radius: 10px; border: 1px solid #f3f4f6;">
+                                        <div style="font-size: 1.25rem; font-weight: 900; color: #111;">6.8</div>
+                                        <div style="font-size: 0.65rem; font-weight: 700; color: #6b7280;">RPG</div>
+                                    </div>
+                                </div>
+                                <div style="background: rgba(0,113,227,0.05); padding: 12px; border-radius: 10px; border: 1px solid rgba(0,113,227,0.15); display: flex; align-items: flex-start; gap: 12px;">
+                                    <div style="width: 24px; height: 24px; padding-top: 2px;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0071e3" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 0.8rem; font-weight: 800; color: #0071e3; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">Development Focus</div>
+                                        <div style="font-size: 0.8rem; color: #333; line-height: 1.4; font-weight: 500;">Game film indicates a need for stronger weak-side defensive rotations.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Coaches Notes -->
+                        <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e5e7eb;">
+                            <h3 style="font-weight: 800; font-size: 1.25rem; color: #111; margin-bottom: 1.25rem;">Recent Coach Notes</h3>
+                            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                <!-- Note 1 -->
+                                <div style="border-left: 3px solid #2563eb; padding-left: 1rem;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                        <div style="font-weight: 700; font-size: 1rem; color: #111;">Coach Scott</div>
+                                        <div style="font-size: 0.75rem; color: #6b7280; font-weight: 600;">March 15, 2026</div>
+                                    </div>
+                                    <p style="font-size: 0.95rem; color: #374151; line-height: 1.5; margin: 0;">Excellent energy closing out passing lanes today. Need to see the same intensity translating to free-throw mechanics under fatigue. Keep working the baseline drive.</p>
+                                </div>
+                                <!-- Note 2 -->
+                                <div style="border-left: 3px solid #d1d5db; padding-left: 1rem;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                        <div style="font-weight: 700; font-size: 1rem; color: #111;">Coach Jordan</div>
+                                        <div style="font-size: 0.75rem; color: #6b7280; font-weight: 600;">February 28, 2026</div>
+                                    </div>
+                                    <p style="font-size: 0.95rem; color: #374151; line-height: 1.5; margin: 0;">Solid performance in the weekend tournament. Shot selection is improving drastically. Let's focus on boxing out heavier forwards next week in training.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- VIEW: GEAR & UNIFORMS -->
                     <div id="view-gear" class="portal-view"
                         style="display: none; background-color: #F2F2F7; min-height: 100%; padding: 20px;">
                         <div class="section-header" style="margin-bottom: 20px;">
-                            <h2 style="font-size: 34px; font-weight: 700; color: #000; letter-spacing: -0.02em;">Team
-                                Gear</h2>
+                            <h2 style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 1.35rem; color: #111; letter-spacing: -0.02em; text-transform: uppercase; margin: 0;">Team<br>Gear & Uniforms</h2>
                         </div>
 
-                        <div style="max-width: 800px; margin: 0 auto;">
+                        <div style="width: 100%;">
                             <div
                                 style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 24px;">
                                 <h3 style="margin-bottom: 16px; font-size: 18px;">Required Uniform Package</h3>
                                 <p style="color: #666; font-size: 0.9rem; margin-bottom: 24px;">Please select sizes for
                                     your athlete. All orders will be processed by the team admin.</p>
 
-                                <!-- Jersey -->
+                                <!-- Jersey (Black) -->
                                 <div class="gear-item"
                                     style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid #eee; margin-bottom: 16px;">
                                     <div>
-                                        <div style="font-weight: 600;">Game Jersey (Reversible)</div>
-                                        <div style="font-size: 0.8rem; color: #888;">Black/Red Mesh</div>
+                                        <div style="font-weight: 600;">Game Jersey (Black)</div>
+                                        <div style="font-size: 0.8rem; color: #888;">Away Mesh</div>
                                     </div>
                                     <div style="display: flex; gap: 12px; align-items: center;">
                                         <select class="gear-size-select"
@@ -726,12 +900,12 @@
                                     </div>
                                 </div>
 
-                                <!-- Shorts -->
+                                <!-- Jersey (White) -->
                                 <div class="gear-item"
                                     style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid #eee; margin-bottom: 16px;">
                                     <div>
-                                        <div style="font-weight: 600;">Game Shorts</div>
-                                        <div style="font-size: 0.8rem; color: #888;">Black with Side Stripe</div>
+                                        <div style="font-weight: 600;">Game Jersey (White)</div>
+                                        <div style="font-size: 0.8rem; color: #888;">Home Mesh</div>
                                     </div>
                                     <div style="display: flex; gap: 12px; align-items: center;">
                                         <select class="gear-size-select"
@@ -742,6 +916,53 @@
                                             <option value="YXL">Youth XL</option>
                                             <option value="AS">Adult S</option>
                                             <option value="AM">Adult M</option>
+                                            <option value="AL">Adult L</option>
+                                        </select>
+                                        <input type="number" value="1" min="1"
+                                            style="width: 50px; padding: 8px; border-radius: 8px; border: 1px solid #ddd; text-align: center;">
+                                    </div>
+                                </div>
+
+                                <!-- Shorts (Orange) -->
+                                <div class="gear-item"
+                                    style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid #eee; margin-bottom: 16px;">
+                                    <div>
+                                        <div style="font-weight: 600;">Game Shorts (Orange)</div>
+                                        <div style="font-size: 0.8rem; color: #888;">Performance Knit</div>
+                                    </div>
+                                    <div style="display: flex; gap: 12px; align-items: center;">
+                                        <select class="gear-size-select"
+                                            style="padding: 8px; border-radius: 8px; border: 1px solid #ddd; background: #f9f9f9;">
+                                            <option value="YS">Youth S</option>
+                                            <option value="YM">Youth M</option>
+                                            <option value="YL">Youth L</option>
+                                            <option value="YXL">Youth XL</option>
+                                            <option value="AS">Adult S</option>
+                                            <option value="AM">Adult M</option>
+                                            <option value="AL">Adult L</option>
+                                        </select>
+                                        <input type="number" value="1" min="1"
+                                            style="width: 50px; padding: 8px; border-radius: 8px; border: 1px solid #ddd; text-align: center;">
+                                    </div>
+                                </div>
+
+                                <!-- Shorts (Blue) -->
+                                <div class="gear-item"
+                                    style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid #eee; margin-bottom: 16px;">
+                                    <div>
+                                        <div style="font-weight: 600;">Game Shorts (Blue)</div>
+                                        <div style="font-size: 0.8rem; color: #888;">Performance Knit</div>
+                                    </div>
+                                    <div style="display: flex; gap: 12px; align-items: center;">
+                                        <select class="gear-size-select"
+                                            style="padding: 8px; border-radius: 8px; border: 1px solid #ddd; background: #f9f9f9;">
+                                            <option value="YS">Youth S</option>
+                                            <option value="YM">Youth M</option>
+                                            <option value="YL">Youth L</option>
+                                            <option value="YXL">Youth XL</option>
+                                            <option value="AS">Adult S</option>
+                                            <option value="AM">Adult M</option>
+                                            <option value="AL">Adult L</option>
                                         </select>
                                         <input type="number" value="1" min="1"
                                             style="width: 50px; padding: 8px; border-radius: 8px; border: 1px solid #ddd; text-align: center;">
@@ -790,7 +1011,7 @@
 
                             <div style="text-align: right;">
                                 <button onclick="submitGearOrder()" class="btn-primary"
-                                    style="background: #2563eb; padding: 12px 32px; border-radius: 20px; font-weight: 600;">Confirm
+                                    style="background: #0071e3; padding: 12px 32px; border-radius: 20px; font-weight: 600;">Confirm
                                     Order Request</button>
                             </div>
                         </div>
@@ -800,9 +1021,7 @@
                     <div id="view-billing" class="portal-view"
                         style="display: none; background-color: #F2F2F7; min-height: 100%; padding: 20px;">
                         <div class="section-header" style="margin-bottom: 20px;">
-                            <h2 style="font-size: 34px; font-weight: 700; color: #000; letter-spacing: -0.02em;">
-                                Payments
-                                & Billing</h2>
+                            <h2 style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 1.35rem; color: #111; letter-spacing: -0.02em; text-transform: uppercase; margin: 0;">Payments & Billing</h2>
                         </div>
 
                         <div
@@ -825,6 +1044,12 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #f3f4f6; display: flex; justify-content: flex-end;">
+                                    <button onclick="if(window.analytics) window.analytics.trackDownload('billing_invoice'); alert('Downloading Current Invoice...')" style="display: flex; align-items: center; gap: 8px; background: #f3f4f6; color: #374151; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; border: 1px solid #e5e7eb; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#e5e7eb'" onmouseout="this.style.background='#f3f4f6'">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                        Download Invoice
+                                    </button>
+                                </div>
                             </div>
 
                             <!-- Purchase Training -->
@@ -836,7 +1061,7 @@
                                     style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;">
                                     <div onclick="initiateTrainingPayment(1)"
                                         style="background: white; padding: 16px; border-radius: 12px; cursor: pointer; border: 1px solid #e5e5e5; transition: all 0.2s;"
-                                        onmouseover="this.style.borderColor='#2563eb'"
+                                        onmouseover="this.style.borderColor='#0071e3'"
                                         onmouseout="this.style.borderColor='#e5e5e5'">
                                         <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">1 Session
                                         </div>
@@ -844,10 +1069,10 @@
                                     </div>
                                     <div onclick="initiateTrainingPayment(5)"
                                         style="background: white; padding: 16px; border-radius: 12px; cursor: pointer; border: 1px solid #e5e5e5; transition: all 0.2s; position: relative;"
-                                        onmouseover="this.style.borderColor='#2563eb'"
+                                        onmouseover="this.style.borderColor='#0071e3'"
                                         onmouseout="this.style.borderColor='#e5e5e5'">
                                         <div
-                                            style="position: absolute; top: -8px; right: -8px; background: #2563eb; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 700;">
+                                            style="position: absolute; top: -8px; right: -8px; background: #0071e3; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 700;">
                                             POPULAR</div>
                                         <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">5 Pack
                                         </div>
@@ -855,7 +1080,7 @@
                                     </div>
                                     <div onclick="initiateTrainingPayment(10)"
                                         style="background: white; padding: 16px; border-radius: 12px; cursor: pointer; border: 1px solid #e5e5e5; transition: all 0.2s;"
-                                        onmouseover="this.style.borderColor='#2563eb'"
+                                        onmouseover="this.style.borderColor='#0071e3'"
                                         onmouseout="this.style.borderColor='#e5e5e5'">
                                         <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">10 Pack
                                         </div>
@@ -902,72 +1127,61 @@
                     </div>
 
                     <!-- VIEW: SETTINGS -->
-                    <section id="view-settings" class="portal-view" hidden>
-                        <header class="section-header">
-                            <h2 class="settings-title">Settings</h2>
-                        </header>
+                    <section id="view-settings" class="portal-view" style="display: none; background-color: #F2F2F7; min-height: 100%; padding: 20px;">
+                        <div class="section-header" style="margin-bottom: 24px;">
+                            <h2 style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 1.35rem; color: #111; letter-spacing: -0.02em; text-transform: uppercase; margin: 0;">Settings</h2>
+                        </div>
 
-                        <form id="settings-form" class="settings-form" novalidate>
-                            <!-- Parent Information -->
-                            <div class="settings-group">
-                                <h3 class="settings-group-title">Parent Information</h3>
+                        <div style="max-width: 800px; margin: 0 auto;">
+                            <form id="settings-form" novalidate>
+                                <!-- Parent Information -->
+                                <div style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); margin-bottom: 24px;">
+                                    <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; color: #1d1d1f; border-bottom: 1px solid #f0f0f0; padding-bottom: 12px;">Parent Information</h3>
+                                    
+                                    <div style="display: grid; grid-template-columns: 1fr; gap: 16px;">
+                                        <div>
+                                            <label for="settings-parent-name" style="display: block; font-size: 0.85rem; font-weight: 600; color: #86868b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Parent Name</label>
+                                            <input type="text" id="settings-parent-name" name="parent_name" autocomplete="name" placeholder="Enter your full name" style="width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid #e5e5ea; background: #f9f9f9; font-size: 1rem; outline: none; transition: all 0.2s;" onfocus="this.style.borderColor='#0071e3'; this.style.background='#fff'" onblur="this.style.borderColor='#e5e5ea'; this.style.background='#f9f9f9'" />
+                                        </div>
 
-                                <div class="settings-card">
-                                    <div class="settings-row">
-                                        <label for="settings-parent-name" class="settings-label">Parent Name</label>
-                                        <input type="text" id="settings-parent-name" name="parent_name"
-                                            class="settings-input" autocomplete="name"
-                                            placeholder="Enter your full name" />
-                                    </div>
+                                        <div>
+                                            <label for="settings-parent-email" style="display: block; font-size: 0.85rem; font-weight: 600; color: #86868b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Email Address</label>
+                                            <input type="email" id="settings-parent-email" name="parent_email" autocomplete="email" readonly style="width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid #f0f0f0; background: #f2f2f7; color: #86868b; font-size: 1rem; outline: none; cursor: not-allowed;" />
+                                        </div>
 
-                                    <div class="settings-row">
-                                        <label for="settings-parent-email" class="settings-label">Email Address</label>
-                                        <input type="email" id="settings-parent-email" name="parent_email"
-                                            class="settings-input is-readonly" autocomplete="email" readonly />
-                                    </div>
-
-                                    <div class="settings-row">
-                                        <label for="settings-parent-phone" class="settings-label">Phone Number</label>
-                                        <input type="tel" id="settings-parent-phone" name="parent_phone"
-                                            class="settings-input is-accent" autocomplete="tel"
-                                            placeholder="(555) 555-5555" inputmode="tel" />
+                                        <div>
+                                            <label for="settings-parent-phone" style="display: block; font-size: 0.85rem; font-weight: 600; color: #86868b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Phone Number</label>
+                                            <input type="tel" id="settings-parent-phone" name="parent_phone" autocomplete="tel" placeholder="(555) 555-5555" inputmode="tel" style="width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid #e5e5ea; background: #f9f9f9; font-size: 1rem; outline: none; transition: all 0.2s;" onfocus="this.style.borderColor='#0071e3'; this.style.background='#fff'" onblur="this.style.borderColor='#e5e5ea'; this.style.background='#f9f9f9'" />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- Athlete Information -->
-                            <div class="settings-group">
-                                <h3 class="settings-group-title">Athlete Information</h3>
+                                <!-- Athlete Information -->
+                                <div style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); margin-bottom: 32px;">
+                                    <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; color: #1d1d1f; border-bottom: 1px solid #f0f0f0; padding-bottom: 12px;">Athlete Information</h3>
+                                    
+                                    <div style="display: grid; grid-template-columns: 1fr; gap: 16px;">
+                                        <div>
+                                            <label for="settings-athlete-name" style="display: block; font-size: 0.85rem; font-weight: 600; color: #86868b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Athlete Name</label>
+                                            <input type="text" id="settings-athlete-name" name="athlete_name" placeholder="Enter athlete's full name" style="width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid #e5e5ea; background: #f9f9f9; font-size: 1rem; outline: none; transition: all 0.2s;" onfocus="this.style.borderColor='#0071e3'; this.style.background='#fff'" onblur="this.style.borderColor='#e5e5ea'; this.style.background='#f9f9f9'" />
+                                        </div>
 
-                                <div class="settings-card">
-                                    <div class="settings-row">
-                                        <label for="settings-athlete-name" class="settings-label">Athlete Name</label>
-                                        <input type="text" id="settings-athlete-name" name="athlete_name"
-                                            class="settings-input" placeholder="Enter athlete's full name" </div>
-                                    </div>
-
-                                    <!-- Date of Birth -->
-                                    <div
-                                        style="display: flex; align-items: center; padding: 12px 16px; justify-content: space-between;">
-                                        <label for="settings-athlete-dob" style="font-size: 17px; color: #000;">Date
-                                            of
-                                            Birth</label>
-                                        <input type="date" id="settings-athlete-dob"
-                                            style="border: none; font-size: 17px; color: #8e8e93; outline: none; background: transparent; text-align: right; font-family: inherit;">
+                                        <div>
+                                            <label for="settings-athlete-dob" style="display: block; font-size: 0.85rem; font-weight: 600; color: #86868b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Date of Birth</label>
+                                            <input type="date" id="settings-athlete-dob" style="width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid #e5e5ea; background: #f9f9f9; font-size: 1rem; font-family: inherit; color: #1d1d1f; transition: all 0.2s; outline: none;" onfocus="this.style.borderColor='#0071e3'; this.style.background='#fff'" onblur="this.style.borderColor='#e5e5ea'; this.style.background='#f9f9f9'" />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- Save Button -->
-                            <div style="text-align: center;">
-                                <button type="submit" class="btn-primary"
-                                    style="width: 100%; border-radius: 12px; font-size: 17px; font-weight: 600; padding: 14px; background: #2563eb; box-shadow: none;">
-                                    Save Changes
-                                </button>
-                            </div>
-
-                        </form>
-                </div>
+                                <!-- Save Button -->
+                                <div style="display: flex; justify-content: flex-end;">
+                                    <button type="submit" class="btn-primary" style="padding: 16px 32px; border-radius: 9999px; font-size: 1rem; font-weight: 700; border: none; outline: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(37,99,235,0.3); transition: all 0.2s;">
+                                        Save Changes
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </section>
 
         </div>
         </main>
@@ -1056,15 +1270,9 @@
     <!-- Footer Removed per User Request -->
     <!-- Supabase Client (load with defer for non-blocking) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script>
-        // Configure Supabase (Hardcoded for stability)
-        window.SUPABASE_CONFIG = {
-            url: 'https://nnqokhqennuxalamnvps.supabase.co',
-            anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis'
-        };
-    </script>
-    <!-- Core scripts (defer for parallel loading) -->
+    <!-- Content removed: Offline DB mode active -->
     <script src="auth-supabase.js" defer></script>
+    <script src="analytics.js" defer></script>
     <script src="security.js" defer></script>
     <script type="module" src="src/lib/exposeServices.js" defer></script>
     <script src="portal-data.js" defer></script>

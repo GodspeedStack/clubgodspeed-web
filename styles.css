@@ -9,9 +9,9 @@
 
 :root {
     --primary-color: #000000;
-    --brand-blue: #2563eb;
+    --brand-blue: #0071e3;
     /* Godspeed Blue - blue-600 */
-    --interaction-blue: #1d4ed8;
+    --interaction-blue: #0077ed;
     /* Hover state - blue-700 */
     --accent-color: #FF4500;
     --text-light: #FFFFFF;
@@ -25,12 +25,20 @@
 
 body {
     font-family: 'Inter', 'Arial', 'Helvetica', sans-serif;
-    line-height: 1.6;
+    line-height: 1.5;
     color: var(--text-dark);
     background-color: var(--text-light);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5 {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
 }
 
 .container {
@@ -303,28 +311,35 @@ ul {
     flex-wrap: wrap;
 }
 
+button,
 .btn {
-    display: inline-block;
-    padding: 1rem 2rem;
-    border-radius: 9999px;
-    font-weight: bold;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.05em;
+    line-height: 1;
     cursor: pointer;
     border: none;
-    transition: var(--transition);
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background-color: var(--brand-blue);
-    color: var(--text-light);
+    color: #ffffff;
+    padding: 1rem 2rem;
     border-radius: 9999px;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    text-decoration: none;
 }
 
 .btn-primary:hover {
     background-color: var(--interaction-blue);
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(37, 99, 235, 0.4);
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
 }
 
 .btn-secondary {
@@ -1082,7 +1097,7 @@ ul {
 
 .login-option:hover {
     background: #f5f5f7;
-    color: #2563eb;
+    color: #0071e3;
 }
 
 .login-option svg {
@@ -1263,7 +1278,7 @@ ul {
 .godspeed-logo-accent {
     font-size: 1rem;
     font-weight: 900;
-    color: #2563eb;
+    color: #0071e3;
     letter-spacing: -0.02em;
 }
 
@@ -1327,7 +1342,7 @@ ul {
 
 .godspeed-modal-input:focus {
     outline: none;
-    border-color: #2563eb;
+    border-color: #0071e3;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
@@ -1354,12 +1369,12 @@ ul {
 }
 
 .godspeed-modal-btn-primary {
-    background: #2563eb;
+    background: #0071e3;
     color: white;
 }
 
 .godspeed-modal-btn-primary:hover {
-    background: #1d4ed8;
+    background: #0077ed;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }

@@ -60,6 +60,58 @@
         return quoteDiv;
     }
 
+    // Check luminance to protect quote colors
+    function isDarkBackground(element) {
+        let current = element;
+        while (current && current !== document.body) {
+            let style = window.getComputedStyle(current);
+            let bgColor = style.backgroundColor;
+            if (!bgColor) {
+                current = current.parentElement;
+                continue;
+            }
+            
+            let rgbaMatch = bgColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+            if (rgbaMatch) {
+                let r = parseInt(rgbaMatch[1], 10);
+                let g = parseInt(rgbaMatch[2], 10);
+                let b = parseInt(rgbaMatch[3], 10);
+                let a = rgbaMatch.length > 4 ? parseFloat(rgbaMatch[4]) : 1;
+                
+                if (a === 0 || style.backgroundColor === 'transparent') {
+                    current = current.parentElement;
+                    continue;
+                }
+                
+                let luminance = (0.299 * r) + (0.587 * g) + (0.114 * b);
+                return luminance < 128;
+            }
+            current = current.parentElement;
+        }
+        return false;
+    }
+
+    // Secure colors for high-contrast context
+    function enforceLuminanceContrast(quoteElement) {
+        setTimeout(() => {
+            if (isDarkBackground(quoteElement.parentElement)) {
+                // Background is dark, make text white
+                const bq = quoteElement.querySelector('blockquote');
+                const ct = quoteElement.querySelector('cite');
+                if (bq) bq.style.setProperty('color', '#ffffff', 'important');
+                if (ct) ct.style.setProperty('color', '#e2e8f0', 'important');
+                quoteElement.style.borderLeftColor = '#ffffff';
+                quoteElement.style.background = 'rgba(255, 255, 255, 0.05)';
+            } else {
+                // Background is light, ensure black/dark text
+                const bq = quoteElement.querySelector('blockquote');
+                const ct = quoteElement.querySelector('cite');
+                if (bq) bq.style.setProperty('color', '#1a1a1a', 'important');
+                if (ct) ct.style.setProperty('color', '#666666', 'important');
+            }
+        }, 100);
+    }
+
     // Insert quotes at strategic points
     function insertQuotes() {
         // Find sections to insert quotes
@@ -71,6 +123,7 @@
             if (index > 0 && index % 3 === 0 && quoteIndex < quotes.length) {
                 const quote = createQuoteElement(quotes[quoteIndex], quoteIndex);
                 section.insertAdjacentElement('beforebegin', quote);
+                enforceLuminanceContrast(quote);
                 quoteIndex++;
             }
         });
@@ -82,6 +135,7 @@
             const content = hero.querySelector('.hero-content, .relative.z-10');
             if (content) {
                 content.insertAdjacentElement('afterend', quote);
+                enforceLuminanceContrast(quote);
             }
         });
     }

@@ -103,3 +103,15 @@ html, body {
     width: 24px;
     height: 24px;
 }
+
+/* Global Icon Unified Colors */
+.nav-cart-btn, #userMenuBtn, .mobile-menu-btn {
+    color: #111827 !important; /* Black Icons */
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+}
+
+.nav-cart-btn:hover, #userMenuBtn:hover, .mobile-menu-btn:hover {
+    color: #2563eb !important; /* Godspeed Blue Hover */
+}

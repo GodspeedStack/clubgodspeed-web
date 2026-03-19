@@ -96,7 +96,7 @@ window.handleCoachLogin = async function () {
     const code = codeInput ? codeInput.value.trim() : '';
 
     if (!code) {
-        godspeedAlert("Please enter an access code.", "GODSPEED BASKETBALL");
+        godspeedAlert("Please type in an access code.", "GODSPEED BASKETBALL");
         return;
     }
 
@@ -105,7 +105,7 @@ window.handleCoachLogin = async function () {
         const identifier = code || 'unknown';
         const rateCheck = window.Security.RateLimiter.check('coach_login', identifier);
         if (!rateCheck.allowed) {
-            godspeedAlert(rateCheck.message || "Too many attempts. Please try again later.", "GODSPEED BASKETBALL");
+            godspeedAlert(rateCheck.message || "You've tried too many times! Please wait a little bit and try again.", "GODSPEED BASKETBALL");
             return;
         }
         window.Security.RateLimiter.recordAttempt('coach_login', identifier);
@@ -204,7 +204,7 @@ window.handleCoachLogin = async function () {
     } else if (hash === coachHash) {
         role = 'coach';
     } else {
-        godspeedAlert("Access Denied. Invalid Code.", "GODSPEED BASKETBALL");
+        godspeedAlert("That code doesn't match our records. Please try again.", "GODSPEED BASKETBALL");
         if (codeInput) {
             codeInput.value = '';
             codeInput.focus();
@@ -233,7 +233,7 @@ window.handleCoachLogin = async function () {
         dashboardView.style.display = 'flex';
         initDashboard();
     } else {
-        godspeedAlert("Critical Error: Dashboard views not found.", "Error");
+        godspeedAlert("Our system hit a small bump. Please reload the page and try again.", "Error");
     }
 }
 
@@ -266,7 +266,7 @@ function checkCoachPermissions() {
             window.Security.RBAC.requirePermission('view_coach_portal');
             return true;
         } catch (error) {
-            godspeedAlert('You do not have permission to access the coach portal.', 'Access Denied');
+            godspeedAlert('You do not have permission to view the coach portal. Please log in as a coach.', 'Access Denied');
             logoutCoach();
             return false;
         }
@@ -518,7 +518,7 @@ function saveFocusFromTable(athleteId, input) {
 
     // Validation: Max 50 Chars (approx 2 distinct items)
     if (finalVal.length > 50) {
-        godspeedAlert("Please keep Focus items concise (max 50 chars). Example: 'Box Out, Move Feet'", "Validation");
+        godspeedAlert("Please make Focus items shorter (50 letters max). Example: 'Box Out, Move Feet'", "Validation");
         // Revert to original or trim
         input.value = originalValue;
         return;
@@ -723,7 +723,7 @@ function validateFocusInput(input) {
 
 
     if (val.length > 50) {
-        godspeedAlert("Focus must be concise (max 50 chars). Example: 'Defensive Slides, Motor'.", "Validation");
+        godspeedAlert("Please make Focus items shorter (50 letters max). Example: 'Defensive Slides, Motor'.", "Validation");
         // Trim to 50
         input.value = val.substring(0, 50);
     }
@@ -734,7 +734,7 @@ function savePlayerReport() {
     const athleteId = modal.dataset.activeAthleteId;
 
     if (!athleteId) {
-        godspeedAlert("Error: No athlete selected.", "Error");
+        godspeedAlert("Please pick an athlete from the list first.", "Error");
         return;
     }
 
@@ -863,7 +863,7 @@ function saveGrade() {
     };
 
     if (!date) {
-        godspeedAlert('Please select a date', 'Validation');
+        godspeedAlert('Please pick a date first.', 'Validation');
         return;
     }
 
@@ -898,7 +898,7 @@ function closeBulkModal() {
 function processBulkText() {
     const text = document.getElementById('bulk-text').value;
     if (!text) {
-        godspeedAlert('Please paste some data first.', 'Validation');
+        godspeedAlert('Please paste some data into the box first.', 'Validation');
         return;
     }
     parseAndSaveCSV(text);
@@ -912,7 +912,7 @@ function parseAndSaveCSV(csvText) {
     // Simple CSV Parser (Assumes comma delimiter, no quoted newlines)
     const lines = csvText.split('\n');
     if (lines.length < 2) {
-        godspeedAlert('CSV appears empty or invalid.', 'Error');
+        godspeedAlert("That data format doesn't look quite right!", 'Error');
         return;
     }
 
@@ -982,7 +982,7 @@ function parseAndSaveCSV(csvText) {
         // Refresh view if on a team
         loadTeamRoster();
     } else {
-        godspeedAlert('No grades imported. Please check CSV format:\nAthleteID, Date, Focus, Hustle, Skill, IQ, Notes', 'Import Error');
+        godspeedAlert("We couldn't load those grades. Please check your data format:\nAthleteID, Date, Focus, Hustle, Skill, IQ, Notes", 'Import Error');
     }
 }
 
@@ -1012,7 +1012,8 @@ window.switchTeamView = function (viewName, btnElement) {
         'schedule': document.getElementById('schedule-view'),
         'logistics': document.getElementById('logistics-view'),
         'postgame': document.getElementById('postgame-view'),
-        'accounts': document.getElementById('accounts-view')
+        'accounts': document.getElementById('accounts-view'),
+        'tracking': document.getElementById('tracking-view')
     };
 
     const buttons = {
@@ -1020,7 +1021,8 @@ window.switchTeamView = function (viewName, btnElement) {
         'analytics': document.getElementById('btn-view-analytics'),
         'schedule': document.getElementById('btn-view-schedule'),
         'logistics': document.getElementById('btn-view-logistics'),
-        'postgame': document.getElementById('btn-view-postgame')
+        'postgame': document.getElementById('btn-view-postgame'),
+        'tracking': document.getElementById('btn-view-tracking')
     };
 
     // Hide all
@@ -1045,6 +1047,8 @@ window.switchTeamView = function (viewName, btnElement) {
         renderAdminTrips();
     } else if (viewName === 'postgame') {
         renderPostGameEntry();
+    } else if (viewName === 'tracking') {
+        renderParentTrackingTable();
     } else if (viewName === 'accounts') {
         document.getElementById('view-tabs').style.display = 'none';
         document.getElementById('view-title').textContent = 'User Accounts';
@@ -1235,7 +1239,7 @@ function saveBoxScore() {
     const gameId = document.getElementById('postgame-select').value;
 
     if (!gameId) {
-        godspeedAlert('Please select a game first.', 'Validation');
+        godspeedAlert('Please pick a game from the list first.', 'Validation');
         return;
     }
 
@@ -2395,7 +2399,7 @@ window.switchWarRoomTab = function (tabName) {
  */
 window.sendTrainingReportEmail = async function(athleteId) {
     if (!window.coachEmailService) {
-        godspeedAlert('Email service not loaded. Please refresh the page.', 'Error');
+        godspeedAlert('Our email system hit a bump. Please reload the page and try again.', 'Error');
         return;
     }
     
@@ -2444,7 +2448,7 @@ window.sendTrainingReportEmail = async function(athleteId) {
  */
 window.sendPracticeInfoEmail = async function(athleteId) {
     if (!window.coachEmailService) {
-        godspeedAlert('Email service not loaded. Please refresh the page.', 'Error');
+        godspeedAlert('Our email system hit a bump. Please reload the page and try again.', 'Error');
         return;
     }
     
@@ -2662,7 +2666,7 @@ if (typeof document !== 'undefined' && !document.getElementById('email-spin-styl
  */
 window.sendBulkTrainingReports = async function() {
     if (!window.coachEmailService) {
-        godspeedAlert('Email service not loaded. Please refresh the page.', 'Error');
+        godspeedAlert('Our email system hit a bump. Please reload the page and try again.', 'Error');
         return;
     }
     
@@ -2721,7 +2725,7 @@ window.sendBulkTrainingReports = async function() {
  */
 window.sendBulkPracticeInfo = async function() {
     if (!window.coachEmailService) {
-        godspeedAlert('Email service not loaded. Please refresh the page.', 'Error');
+        godspeedAlert('Our email system hit a bump. Please reload the page and try again.', 'Error');
         return;
     }
     
@@ -2773,4 +2777,86 @@ window.sendBulkPracticeInfo = async function() {
         showEmailError(`Sent ${successCount} emails. ${errorCount} failed. Check console for details.`);
         console.error('Email errors:', errors);
     }
+};
+
+// ==========================================
+// PARENT TRACKING (ANALYTICS)
+// ==========================================
+window.renderParentTrackingTable = function() {
+    const tableBody = document.getElementById('tracking-table-body');
+    if (!tableBody) return;
+
+    const db = JSON.parse(localStorage.getItem('gba_db')) || window.GODSPEED_DATA || {};
+    
+    // Parse mock sources
+    const commits = db.commits || [];
+    const orders = db.orders || [];
+    // Docs can sometimes be an object indexed by document type in parent-portal.js, or array. Assume an array of objects for universal tracking.
+    const docsObj = JSON.parse(localStorage.getItem('gba_signed_docs')) || {};
+    const localDocsSigned = Object.keys(docsObj).length > 0;
+    const signatures = db.signatures || []; 
+    const payments = db.payments || [];
+    const rsvps = db.rsvps || [
+        { parentId: 'jewellShines@gmail.com', event: 'Practice', status: 'attending' },
+        { parentId: 'guest@godspeed.com', event: 'Game', status: 'absent' }
+    ];
+
+    // Collect identities
+    const allEmails = new Set();
+    commits.forEach(x => allEmails.add(x.parentId || x.email));
+    orders.forEach(x => allEmails.add(x.parentId || x.email));
+    if (Array.isArray(signatures)) signatures.forEach(x => allEmails.add(x.parentId || x.email));
+    payments.forEach(x => allEmails.add(x.parentId || x.email));
+    rsvps.forEach(x => allEmails.add(x.parentId || x.email));
+    
+    // Add current session parent if they successfully signed docs in local isolated memory
+    const guestEmail = localStorage.getItem('gba_user_email');
+    if (localDocsSigned && guestEmail) allEmails.add(guestEmail);
+
+    if (db.users) {
+        db.users.filter(u => u.role === 'parent').forEach(u => allEmails.add(u.email));
+    }
+
+    if (allEmails.size === 0) {
+        tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #888; padding: 2rem;">No parent tracking metrics available.</td></tr>';
+        return;
+    }
+
+    let html = '';
+    const sortedEmails = Array.from(allEmails).filter(e => e && typeof e === 'string').sort();
+
+    sortedEmails.forEach(email => {
+        const hasComm = commits.some(c => c.parentId === email || c.email === email) ? '✅ Committed' : '—';
+        const hasOrder = orders.some(o => o.parentId === email || o.email === email) ? '✅ Ordered' : '—';
+        
+        let hasDocs = '—';
+        if (Array.isArray(signatures) && signatures.some(s => s.parentId === email || s.email === email)) hasDocs = '✅ Signed';
+        if (localDocsSigned && email === guestEmail) hasDocs = '✅ Signed';
+
+        const hasPay = payments.some(p => p.parentId === email || p.email === email) ? '✅ Paid' : '—';
+        
+        // Target latest RSVP
+        const userRsvps = rsvps.filter(r => r.parentId === email || r.email === email);
+        const latestRsvp = userRsvps.length > 0 ? userRsvps[userRsvps.length - 1] : null;
+        let rsvpStatus = '—';
+        if (latestRsvp) {
+            rsvpStatus = latestRsvp.status === 'attending' ? '✅ Attending' : '❌ Absent';
+        }
+
+        html += `
+            <tr style="border-bottom: 1px solid rgba(0,0,0,0.05); cursor: default;" onmouseover="this.style.background='rgba(0,0,0,0.02)'" onmouseout="this.style.background='transparent'">
+                <td style="padding: 16px;">
+                    <div style="font-weight: 600; color: #1d1d1f; font-size: 14px;">${email.split('@')[0]}</div>
+                    <div style="font-size: 12px; color: #86868b; margin-top: 2px;">${email}</div>
+                </td>
+                <td style="padding: 16px; text-align: center; font-size: 13px; font-weight: 500;">${hasComm}</td>
+                <td style="padding: 16px; text-align: center; font-size: 13px; font-weight: 500;">${hasOrder}</td>
+                <td style="padding: 16px; text-align: center; font-size: 13px; font-weight: 500;">${hasDocs}</td>
+                <td style="padding: 16px; text-align: center; font-size: 13px; font-weight: 500;">${hasPay}</td>
+                <td style="padding: 16px; text-align: center; font-size: 13px; font-weight: 500;">${rsvpStatus}</td>
+            </tr>
+        `;
+    });
+
+    tableBody.innerHTML = html;
 };

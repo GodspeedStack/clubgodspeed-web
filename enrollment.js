@@ -193,7 +193,7 @@ function confirmEnrollment(programId, programName, isLoggedIn) {
         // Logged In Flow
         const selectedAthlete = document.querySelector('input[name="enroll-athlete"]:checked');
         if (!selectedAthlete && document.getElementById('enroll-athlete-list').children.length > 0) {
-            alert("Please select an athlete.");
+            alert("Please pick an athlete from the list first.");
             return;
         }
 
@@ -214,7 +214,7 @@ function confirmEnrollment(programId, programName, isLoggedIn) {
 
             showIOSAlert("Enrollment Confirmed", `Success! Enrollment complete for ${selectedSessions.length} session(s).`, "Done");
         } else {
-            alert("Please link an athlete in the portal first.");
+            alert("Please link an athlete in your portal first.");
             return;
         }
 
@@ -225,7 +225,7 @@ function confirmEnrollment(programId, programName, isLoggedIn) {
         const aName = document.getElementById('guest-athlete-name').value.trim();
 
         if (!pName || !pEmail || !aName) {
-            alert("Please fill in all guest details.");
+            alert("You missed a spot. Please fill out every box for the guest details.");
             return;
         }
 

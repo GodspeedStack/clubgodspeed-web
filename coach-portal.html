@@ -1041,8 +1041,8 @@
                 <a href="index.html">Home</a>
                 <a href="training.html">Training</a>
                 <a href="aau.html">AAU</a>
-                <a href="calendar-preview.html">Calendar</a>
-                <div style="position: relative; opacity: 0.5; cursor: not-allowed; display: flex; align-items: center;">
+                <a href="calendar-grid.html" class="auth-restricted" style="display: none;">Calendar</a>
+                <div style="position: relative; opacity: 0.5; cursor: not-allowed; display: none; align-items: center;">
                     <span>Academy</span>
                     <span style="position: absolute; top: -12px; right: -24px; font-size: 9px; background: #f3f4f6; color: #6b7280; padding: 2px 4px; border-radius: 4px; border: 1px solid #e5e7eb;">SOON</span>
                 </div>
@@ -1172,7 +1172,7 @@
                     <div class="header-actions">
                         <!-- Replaces "View War Room" button -->
                         <div class="view-tabs" id="view-tabs"
-                            style="display: grid; grid-template-columns: repeat(5, 1fr); padding: 2px; background: #e9e9eb; border-radius: 9px; width: 100%; max-width: 650px; margin: 0 auto;">
+                            style="display: grid; grid-template-columns: repeat(6, 1fr); padding: 2px; background: #e9e9eb; border-radius: 9px; width: 100%; max-width: 800px; margin: 0 auto;">
                             <button class="segment-btn active" onclick="switchTeamView('roster', this)"
                                 id="btn-view-roster">Roster</button>
                             <button class="segment-btn" onclick="switchTeamView('analytics', this)"
@@ -1183,6 +1183,8 @@
                                 id="btn-view-logistics">Logistics</button>
                             <button class="segment-btn" onclick="switchTeamView('postgame', this)"
                                 id="btn-view-postgame">Post-Game</button>
+                            <button class="segment-btn" onclick="switchTeamView('tracking', this)"
+                                id="btn-view-tracking">Parent Tracking</button>
                         </div>
                     </div>
                 </header>
@@ -1460,6 +1462,34 @@
                             <div style="text-align:center; color: #888; padding: 2rem;">Select a game to load roster...
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- PARENT TRACKING VIEW -->
+                <div id="tracking-view" style="display: none;">
+                    <div style="background: white; border-radius: 24px; padding: 2rem; border: 1px solid #d2d2d7; margin-bottom: 2rem; overflow-x: auto;">
+                        <div style="margin-bottom: 1.5rem; border-bottom: 1px solid #eee; padding-bottom: 1rem;">
+                            <h2 style="margin: 0;">Parent Directory & Tracking</h2>
+                            <p style="color: #666; margin-top: 0.5rem;">Monitor Document Signatures, Gear Orders, and Confirmations</p>
+                        </div>
+
+                        <table class="roster-table" style="min-width: 900px;">
+                            <thead>
+                                <tr>
+                                    <th style="padding: 14px 20px; text-align: left; font-size: 11px; text-transform: uppercase; color: #86868b; border-bottom: 1px solid #e5e5ea;">Parent Account</th>
+                                    <th style="padding: 14px 20px; text-align: center; font-size: 11px; text-transform: uppercase; color: #86868b; border-bottom: 1px solid #e5e5ea;">"Help Us Build" CTA</th>
+                                    <th style="padding: 14px 20px; text-align: center; font-size: 11px; text-transform: uppercase; color: #86868b; border-bottom: 1px solid #e5e5ea;">Required Gear Ordered</th>
+                                    <th style="padding: 14px 20px; text-align: center; font-size: 11px; text-transform: uppercase; color: #86868b; border-bottom: 1px solid #e5e5ea;">Documents Signed</th>
+                                    <th style="padding: 14px 20px; text-align: center; font-size: 11px; text-transform: uppercase; color: #86868b; border-bottom: 1px solid #e5e5ea;">Training Sessions Paid</th>
+                                    <th style="padding: 14px 20px; text-align: center; font-size: 11px; text-transform: uppercase; color: #86868b; border-bottom: 1px solid #e5e5ea;">Next Event RSVP</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tracking-table-body">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; color: #888; padding: 2rem;">Loading parent analytics...</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 

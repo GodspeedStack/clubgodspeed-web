@@ -1,46 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
+import os
+import re
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment Successful | GODSPEED BASKETBALL</title>
+html_files = [f for f in os.listdir('.') if f.endswith('.html') and not f.startswith('_')]
+html_files = [f for f in html_files if os.path.isfile(f)]
 
-    <!-- Resource Hints -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
-
-    <!-- CSS -->
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="responsive-nav.css">
-    <link rel="stylesheet" href="animations.css">
-
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
-
-    <!-- Tailwind -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="nav-unified.css">
-</head>
-
-<body class="bg-gray-50 text-black font-sans antialiased flex flex-col min-h-screen">
-
-    <!-- Navigation -->
-        <nav class="navbar">
+unified_nav_base = """    <nav class="navbar">
         <div class="logo">GODSPEED<span style="color: #2563eb;">BASKETBALL</span></div>
         <div class="nav-desktop-unified">
             <div class="nav-links-unified">
-                <a href="index.html">Home</a>
-                <a href="training.html">Training</a>
-                <a href="aau.html">AAU</a>
-                <a href="calendar-grid.html" class="auth-restricted" style="display: none;">Calendar</a>
-                <div style="position: relative; opacity: 0.5; cursor: not-allowed; display: none; align-items: center;">
+                <a href="index.html"__ACTIVE_HOME__>Home</a>
+                <a href="training.html"__ACTIVE_TRAINING__>Training</a>
+                <a href="aau.html"__ACTIVE_AAU__>AAU</a>
+                <a href="calendar-preview.html"__ACTIVE_CAL__>Calendar</a>
+                <div style="position: relative; opacity: 0.5; cursor: not-allowed; display: flex; align-items: center;">
                     <span>Academy</span>
                     <span style="position: absolute; top: -12px; right: -24px; font-size: 9px; background: #f3f4f6; color: #6b7280; padding: 2px 4px; border-radius: 4px; border: 1px solid #e5e7eb;">SOON</span>
                 </div>
-                <a href="store.html">Shop</a>
-                <a href="about.html">About</a>
+                <a href="store.html"__ACTIVE_SHOP__>Shop</a>
+                <a href="about.html"__ACTIVE_ABOUT__>About</a>
             </div>
             <!-- Right Side Icons -->
             <div class="nav-right-unified">
@@ -80,57 +57,35 @@
             </div>
         </div>
         <button class="mobile-menu-btn" aria-label="Menu" onclick="openMobileMenu()" style="background:none; border:none; font-size:24px; cursor:pointer;">☰</button>
-    </nav>
+    </nav>"""
 
-    <!-- Main Content -->
-    <main class="flex-grow flex items-center justify-center p-6">
-        <div class="max-w-xl w-full text-center">
+for file in html_files:
+    with open(file, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    # Check if there is a navbar to replace
+    if 'class="navbar' not in content and 'nav-unified.css' not in content:
+        continue
+        
+    mapped_nav = unified_nav_base
+    mapped_nav = mapped_nav.replace('__ACTIVE_HOME__', ' style="color: #2563eb;"' if file == 'index.html' else '')
+    mapped_nav = mapped_nav.replace('__ACTIVE_TRAINING__', ' style="color: #2563eb;"' if file == 'training.html' else '')
+    mapped_nav = mapped_nav.replace('__ACTIVE_AAU__', ' style="color: #2563eb;"' if file == 'aau.html' else '')
+    mapped_nav = mapped_nav.replace('__ACTIVE_CAL__', ' style="color: #2563eb;"' if file == 'calendar-preview.html' else '')
+    mapped_nav = mapped_nav.replace('__ACTIVE_SHOP__', ' style="color: #2563eb;"' if file == 'store.html' or file == 'shop.html' else '')
+    mapped_nav = mapped_nav.replace('__ACTIVE_ABOUT__', ' style="color: #2563eb;"' if file == 'about.html' else '')
+    
+    # Clean up empty markers
+    mapped_nav = mapped_nav.replace('__ACTIVE_HOME__', '').replace('__ACTIVE_TRAINING__', '').replace('__ACTIVE_AAU__', '').replace('__ACTIVE_CAL__', '').replace('__ACTIVE_SHOP__', '').replace('__ACTIVE_ABOUT__', '')
 
-            <div class="mb-8 scale-in" style="animation-delay: 0.1s;">
-                <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <svg class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                </div>
-            </div>
-
-            <h1 class="text-4xl md:text-5xl font-black uppercase mb-6 tracking-tight scale-in"
-                style="animation-delay: 0.2s;">
-                PAYMENT SUCCESSFUL
-            </h1>
-
-            <p class="text-gray-600 text-lg mb-10 leading-relaxed fade-in-up" style="animation-delay: 0.3s;">
-                Welcome to the family. Your spot is secured. <br>
-                A confirmation email has been sent to your inbox.
-            </p>
-
-            <div class="flex flex-col md:flex-row gap-4 justify-center fade-in-up" style="animation-delay: 0.4s;">
-                <a href="index.html"
-                    class="px-8 py-4 bg-black text-white font-bold rounded-full hover:bg-gray-900 transition uppercase tracking-wide">
-                    Return Home
-                </a>
-                <a href="training.html"
-                    class="px-8 py-4 border-2 border-gray-200 text-black font-bold rounded-full hover:border-gray-400 transition uppercase tracking-wide bg-white">
-                    View Schedule
-                </a>
-            </div>
-
-        </div>
-    </main>
-
-    <!-- Cart Cleanup Script -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Clear cart on successful payment
-            if (window.cartManager) {
-                window.cartManager.clear();
-            } else {
-                localStorage.removeItem('godspeed_cart');
-            }
-        });
-    </script>
-    <script src="cart-handler.js"></script>
-
-</body>
-
-</html>
+    # Regex to replace existing navbar. 
+    # Use robust dotall search
+    new_content = re.sub(r'<nav\b[^>]*class="[^"]*navbar[^"]*"[^>]*>.*?</nav>', mapped_nav, content, flags=re.DOTALL)
+    
+    # Insert CSS link if missing
+    if 'nav-unified.css' not in new_content and '</head>' in new_content:
+        new_content = new_content.replace('</head>', '    <link rel="stylesheet" href="nav-unified.css">\n</head>')
+        
+    with open(file, 'w', encoding='utf-8') as f:
+        f.write(new_content)
+    print(f"Updated {file}")

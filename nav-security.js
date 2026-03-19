@@ -15,17 +15,23 @@ async function checkAuthAndUpdateNav() {
         const isAuthenticated = checkUserAuthentication();
 
         // Get all calendar links in navigation
-        const calendarLinks = document.querySelectorAll('a[href="calendar-preview.html"]');
+        const calendarLinks = document.querySelectorAll('a[href="calendar-grid.html"]');
 
         calendarLinks.forEach(link => {
             if (!isAuthenticated) {
-                // Hide calendar link for public visitors
+                // Hide calendar link for public visitors directly
+                link.style.display = 'none';
+                
+                // Fallback for older pages that might still use li parents
                 const parentLi = link.closest('li');
                 if (parentLi) {
                     parentLi.style.display = 'none';
                 }
             } else {
                 // Show calendar link for authenticated users
+                link.style.display = 'block';
+                
+                // Fallback for older pages
                 const parentLi = link.closest('li');
                 if (parentLi) {
                     parentLi.style.display = '';
