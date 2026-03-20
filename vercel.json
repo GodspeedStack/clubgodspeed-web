@@ -1,5 +1,8 @@
 {
-    "buildCommand": null,
-    "outputDirectory": ".",
-    "cleanUrls": true
+  "crons": [
+    {
+      "path": "/api/cron-reminders",
+      "schedule": "0 8 * * *"
+    }
+  ]
 }

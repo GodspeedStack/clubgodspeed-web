@@ -5,7 +5,7 @@
 
 import { authenticator } from 'otplib';
 import QRCode from 'qrcode';
-import { supabase } from './supabaseClient';
+import { supabase } from './supabaseClient.js';
 
 // Configure TOTP
 authenticator.options = {

@@ -3,7 +3,7 @@
  * Integrates with Supabase for email verification
  */
 
-import { supabase } from './supabaseClient';
+import { supabase } from './supabaseClient.js';
 
 // Helper to get sendEmail function (lazy load)
 async function getSendEmail() {

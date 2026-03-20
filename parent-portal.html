@@ -244,6 +244,17 @@
                         </span>
                         <span class="label">Documents</span>
                     </a>
+                    <a href="#" class="nav-item" onclick="switchPortalView('aau-billing', this)">
+                        <span class="icon">
+                            <!-- Credit Card Icon -->
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                <line x1="1" y1="10" x2="23" y2="10"></line>
+                            </svg>
+                        </span>
+                        <span class="label">AAU Season Dues</span>
+                    </a>
                     <a href="#" class="nav-item" onclick="switchPortalView('calendar', this)">
                         <span class="icon">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -290,17 +301,6 @@
                         </span>
                         <span class="label">Gear & Uniforms</span>
                     </a>
-                    <a href="#" class="nav-item" onclick="switchPortalView('billing', this)">
-                        <span class="icon">
-                            <!-- Credit Card Icon -->
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-                                <line x1="1" y1="10" x2="23" y2="10"></line>
-                            </svg>
-                        </span>
-                        <span class="label">Payments & Billing</span>
-                    </a>
                     <a href="#" class="nav-item" onclick="switchPortalView('settings', this)">
                         <span class="icon">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -312,6 +312,16 @@
                             </svg>
                         </span>
                         <span class="label">Settings</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="openTrainingCart(); return false;">
+                        <span class="icon" style="position: relative;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                            <span id="training-cart-badge" style="display: none; position: absolute; top: -6px; right: -6px; background: #1A3A8F; color: white; font-size: 10px; font-weight: 700; width: 16px; height: 16px; border-radius: 50%; align-items: center; justify-content: center;">0</span>
+                        </span>
+                        <span class="label">Cart</span>
                     </a>
                 </nav>
 
@@ -669,7 +679,7 @@
                                 <span style="font-size: 0.8rem; font-weight: 600; opacity: 0.9;">Low balance? Keep the momentum going.</span>
                                 <div style="display: flex; gap: 8px;">
                                     <button onclick="if(window.analytics) window.analytics.trackDownload('training_report'); alert('Downloading Training Statement...')" style="background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; border-radius: 9999px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;">Download Report</button>
-                                    <button onclick="switchPortalView('billing', this)" style="background: white; color: #1d4ed8; padding: 8px 16px; border-radius: 9999px; font-weight: 800; font-size: 0.85rem; border: none; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Purchase Hours</button>
+                                    <button onclick="document.getElementById('buy-training-section').scrollIntoView({behavior: 'smooth'})" style="background: white; color: #1d4ed8; padding: 8px 16px; border-radius: 9999px; font-weight: 800; font-size: 0.85rem; border: none; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Purchase Hours</button>
                                 </div>
                             </div>
                         </div>
@@ -691,6 +701,30 @@
                                 class="bg-white rounded-xl p-5 text-center shadow-md hover:shadow-xl transition-shadow duration-200">
                                 <div class="text-3xl font-bold text-amber-500 mb-2" id="active-programs">0</div>
                                 <div class="text-sm text-gray-600">Active Programs</div>
+                            </div>
+                        </div>
+
+                        <!-- Purchase Training -->
+                        <div id="buy-training-section" class="bg-white rounded-xl p-6 mb-6 shadow-md hover:shadow-xl transition-shadow duration-200" style="scroll-margin-top: 24px;">
+                            <h3 class="text-xl font-semibold mb-5">Buy Training Programs</h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;">
+                                <div onclick="initiateTrainingPayment(1)" style="background: flex; padding: 16px; border-radius: 12px; cursor: pointer; border: 1px solid #e5e5e5; transition: all 0.2s; background: white;" onmouseover="this.style.borderColor='#0071e3'" onmouseout="this.style.borderColor='#e5e5e5'">
+                                    <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">1 Session</div>
+                                    <div style="color: #666; font-size: 0.9rem;">$45.00</div>
+                                </div>
+                                <div onclick="initiateTrainingPayment(5)" style="background: white; padding: 16px; border-radius: 12px; cursor: pointer; border: 1px solid #e5e5e5; transition: all 0.2s; position: relative;" onmouseover="this.style.borderColor='#0071e3'" onmouseout="this.style.borderColor='#e5e5e5'">
+                                    <div style="position: absolute; top: -8px; right: -8px; background: #0071e3; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 700;">POPULAR</div>
+                                    <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">5 Pack</div>
+                                    <div style="color: #666; font-size: 0.9rem;">$200.00</div>
+                                </div>
+                                <div onclick="initiateTrainingPayment(10)" style="background: white; padding: 16px; border-radius: 12px; cursor: pointer; border: 1px solid #e5e5e5; transition: all 0.2s;" onmouseover="this.style.borderColor='#0071e3'" onmouseout="this.style.borderColor='#e5e5e5'">
+                                    <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">10 Pack</div>
+                                    <div style="color: #666; font-size: 0.9rem;">$350.00</div>
+                                </div>
+                                <div onclick="initiateTrainingPayment('unlimited')" style="background: linear-gradient(135deg, #111, #333); color: white; padding: 16px; border-radius: 12px; cursor: pointer; border: 1px solid #000;">
+                                    <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">Unlimited</div>
+                                    <div style="color: #ccc; font-size: 0.9rem;">$250/mo</div>
+                                </div>
                             </div>
                         </div>
 
@@ -1017,11 +1051,11 @@
                         </div>
                     </div>
 
-                    <!-- VIEW: BILLING (Formerly Tuition) -->
-                    <div id="view-billing" class="portal-view"
+                    <!-- VIEW: AAU BILLING -->
+                    <div id="view-aau-billing" class="portal-view"
                         style="display: none; background-color: #F2F2F7; min-height: 100%; padding: 20px;">
                         <div class="section-header" style="margin-bottom: 20px;">
-                            <h2 style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 1.35rem; color: #111; letter-spacing: -0.02em; text-transform: uppercase; margin: 0;">Payments & Billing</h2>
+                            <h2 style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 1.35rem; color: #111; letter-spacing: -0.02em; text-transform: uppercase; margin: 0;">AAU Season Dues</h2>
                         </div>
 
                         <div
@@ -1052,48 +1086,7 @@
                                 </div>
                             </div>
 
-                            <!-- Purchase Training -->
-                            <div>
-                                <h3
-                                    style="font-size: 14px; text-transform: uppercase; color: #666; margin-bottom: 12px; font-weight: 600; letter-spacing: 0.05em;">
-                                    Buy Training</h3>
-                                <div
-                                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;">
-                                    <div onclick="initiateTrainingPayment(1)"
-                                        style="background: white; padding: 16px; border-radius: 12px; cursor: pointer; border: 1px solid #e5e5e5; transition: all 0.2s;"
-                                        onmouseover="this.style.borderColor='#0071e3'"
-                                        onmouseout="this.style.borderColor='#e5e5e5'">
-                                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">1 Session
-                                        </div>
-                                        <div style="color: #666; font-size: 0.9rem;">$45.00</div>
-                                    </div>
-                                    <div onclick="initiateTrainingPayment(5)"
-                                        style="background: white; padding: 16px; border-radius: 12px; cursor: pointer; border: 1px solid #e5e5e5; transition: all 0.2s; position: relative;"
-                                        onmouseover="this.style.borderColor='#0071e3'"
-                                        onmouseout="this.style.borderColor='#e5e5e5'">
-                                        <div
-                                            style="position: absolute; top: -8px; right: -8px; background: #0071e3; color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 700;">
-                                            POPULAR</div>
-                                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">5 Pack
-                                        </div>
-                                        <div style="color: #666; font-size: 0.9rem;">$200.00</div>
-                                    </div>
-                                    <div onclick="initiateTrainingPayment(10)"
-                                        style="background: white; padding: 16px; border-radius: 12px; cursor: pointer; border: 1px solid #e5e5e5; transition: all 0.2s;"
-                                        onmouseover="this.style.borderColor='#0071e3'"
-                                        onmouseout="this.style.borderColor='#e5e5e5'">
-                                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">10 Pack
-                                        </div>
-                                        <div style="color: #666; font-size: 0.9rem;">$350.00</div>
-                                    </div>
-                                    <div onclick="initiateTrainingPayment('unlimited')"
-                                        style="background: linear-gradient(135deg, #111, #333); color: white; padding: 16px; border-radius: 12px; cursor: pointer; border: 1px solid #000;">
-                                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">Unlimited
-                                        </div>
-                                        <div style="color: #ccc; font-size: 0.9rem;">$250/mo</div>
-                                    </div>
-                                </div>
-                            </div>
+                            <!-- Purchase Training Removed -> Moved to Training View -->
 
                             <!-- Invoices List -->
                             <div>
@@ -1122,6 +1115,8 @@
                                     <!-- Injected via JS -->
                                 </div>
                             </div>
+
+
 
                         </div>
                     </div>
@@ -1279,13 +1274,37 @@
     <script src="export-functions.js" defer></script>
     <script src="receipt-view.js" defer></script>
     <script src="parent-portal.js" defer></script>
-    <!-- auth.js removed - auth-supabase.js is the primary auth system -->
     <!-- Non-critical scripts (async for independent loading) -->
     <script src="branded-modal.js"></script>
     <script src="documents-view.js" defer></script>
     <script src="scripts/verify-setup.js" defer></script>
     <script src="src/components/MobileBottomNav.js" defer></script>
     <script src="nav-security.js" defer></script>
+    <script src="training-cart.js"></script>
+
+    <!-- Training Cart Drawer -->
+    <div id="training-cart-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 99998;" onclick="closeTrainingCart()"></div>
+    <div id="training-cart-drawer" style="position: fixed; top: 0; right: -400px; height: 100%; width: 100%; max-width: 380px; background: white; z-index: 99999; padding: 24px; display: flex; flex-direction: column; gap: 16px; box-shadow: -4px 0 24px rgba(0,0,0,0.1); transition: right 0.3s ease;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0;">Your order</h2>
+            <button onclick="closeTrainingCart()" style="background: none; border: none; cursor: pointer; font-size: 24px; color: #111; line-height: 1;">&times;</button>
+        </div>
+        <div id="training-cart-items-container" style="flex: 1; overflow-y: auto;">
+            <!-- Cart items injected here -->
+        </div>
+        <div>
+            <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 18px; padding-top: 8px; border-top: 1px solid #111; margin-bottom: 16px;">
+                <span>Total</span>
+                <span id="training-cart-total-amount">$0.00</span>
+            </div>
+            <div id="training-cart-error" style="display: none; background: #fff0f0; color: #cc0000; padding: 10px 14px; border-radius: 6px; font-size: 13px; margin-bottom: 16px;"></div>
+            <button id="training-cart-checkout-btn" onclick="TrainingCart.handleCheckout()" style="background: #1A3A8F; color: white; border: none; border-radius: 8px; padding: 14px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%;">Pay securely with card</button>
+            <p style="font-size: 12px; color: #888; text-align: center; margin-top: 12px;">Secured by Stripe. Your card info is never stored on our servers.</p>
+        </div>
+    </div>
+    <style>
+        #training-cart-drawer.open { right: 0 !important; }
+    </style>
 </body>
 
 </html>

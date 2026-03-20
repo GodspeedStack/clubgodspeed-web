@@ -716,7 +716,7 @@ window.switchPortalView = function (viewName, linkElement) {
         sidebar.classList.remove('open');
     }
 
-    if (viewName === 'tuition' || viewName === 'billing') {
+    if (viewName === 'aau-billing' || viewName === 'billing') {
         const email = localStorage.getItem('gba_user_email');
         if (window.renderBilling) {
             window.renderBilling(email);
@@ -2688,102 +2688,315 @@ window.toggleCalendarView = function (viewType) {
 }
 
 /**
- * Initiate Training Payment
+ * (initiateTrainingPayment has been moved to training-cart.js)
  */
-window.initiateTrainingPayment = function (plan) {
-    let title = '';
-    let amount = '';
 
-    if (plan === 1) { title = 'Single Session'; amount = '$45.00'; }
-    else if (plan === 5) { title = '5-Pack Bundle'; amount = '$200.00'; }
-    else if (plan === 10) { title = '10-Pack Bundle'; amount = '$350.00'; }
-    else if (plan === 'unlimited') { title = 'Unlimited Monthly'; amount = '$250.00'; }
-
-    // Simulate Payment Flow
-    godspeedAlert(`Initiating secure checkout for ${title} (${amount})...`, 'Processing');
-
-    setTimeout(() => {
-        godspeedAlert(`Payment Successful! ${title} have been added to your account.`, 'Success');
-        // Update mock data?
-        // Refresh dashboard?
-        // In a real app, this would redirect to Stripe
-    }, 1500);
-}
 
 /**
  * Render Billing Dashboard
  */
-window.renderBilling = function (email) {
+window.renderBilling = async function (email) {
     const container = document.getElementById('billing-invoices-list');
     const totalDueEl = document.getElementById('billing-total-due');
     const statusTextEl = document.getElementById('billing-status-text');
     const statusCard = document.getElementById('billing-status-card');
-    const tripsContainer = document.getElementById('parent-trips-container');
 
     if (!container) return;
+    container.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">Loading your billing details...</div>';
 
-    // Mock Data for Invoices
-    const invoices = [
-        // { id: 'INV-001', title: 'October Tuition', amount: 250, due: '2025-10-01', status: 'paid' },
-        // { id: 'INV-002', title: 'November Tuition', amount: 250, due: '2025-11-01', status: 'overdue' }
-    ];
+    try {
+        if (!window.auth || !window.auth.isSupabaseAvailable()) {
+            console.warn("Supabase not available. Rendering demo billing UI.");
+            handleDemoBilling(container, totalDueEl, statusTextEl, statusCard);
+            return;
+        }
+        
+        const supabase = window.auth.getSupabaseClient();
+        const { data: { session }, error: authError } = await supabase.auth.getSession();
+        
+        // Fallback for demo mode if not truly authenticated
+        if (!session || authError) {
+            console.log("No valid Supabase session. Rendering demo billing.");
+            handleDemoBilling(container, totalDueEl, statusTextEl, statusCard);
+            return;
+        }
 
-    // For demo, let's say "November Tuition" is overdue if date > Nov 1
-    // But let's keep it "Good Standing" by default unless we want to demo overdue
-    // Let's add one "Due Soon" invoice
-    const upcomingInvoice = {
-        id: 'INV-2025-12',
-        title: 'December Tuition',
-        amount: 250.00,
-        due: '2025-12-01',
-        status: 'due'
-    };
+        const user = session.user;
 
-    // Check if we already rendered
-    container.innerHTML = '';
+        // 1. Fetch Payment Plan
+        const { data: plans, error: plansError } = await supabase
+            .from('payment_plans')
+            .select('*')
+            .eq('parent_id', user.id);
 
-    // Render Invoices
-    if (invoices.length === 0 && !upcomingInvoice) {
-        container.innerHTML = '<div style="text-align: center; padding: 20px; background: rgba(255,255,255,0.5); border-radius: 12px; color: #888; font-size: 0.9rem;">All caught up! No open invoices.</div>';
-    } else {
-        // Add upcoming
-        const inv = upcomingInvoice;
-        const div = document.createElement('div');
-        div.style.background = 'white';
-        div.style.padding = '16px';
-        div.style.borderRadius = '12px';
-        div.style.display = 'flex';
-        div.style.justifyContent = 'space-between';
-        div.style.alignItems = 'center';
-        div.style.borderLeft = '4px solid #f59e0b'; // Amber for Due
-        div.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
+        if (plansError) throw plansError;
 
-        div.innerHTML = `
-            <div>
-                <div style="font-weight: 700; font-size: 1rem;">${inv.title}</div>
-                <div style="font-size: 0.8rem; color: #666;">Due: ${new Date(inv.due).toLocaleDateString()}</div>
+        if (!plans || plans.length === 0) {
+            // No plan selected yet. Show selector.
+            statusTextEl.textContent = '● Action Required';
+            statusTextEl.style.color = '#ef4444'; 
+            statusCard.style.borderLeftColor = '#ef4444';
+            if (totalDueEl) totalDueEl.textContent = '$724.00';
+            
+            renderPlanSelectionUI(container, user.id, supabase, email);
+            return;
+        }
+
+        // 2. Fetch Payments for the Plan
+        const currentPlan = plans[0];
+        const { data: payments, error: paymentsError } = await supabase
+            .from('payments')
+            .select('*')
+            .eq('plan_id', currentPlan.id)
+            .order('installment_number', { ascending: true });
+
+        if (paymentsError) throw paymentsError;
+
+        renderPaymentsTimeline(container, payments, currentPlan, supabase);
+
+        // Update Status Headers
+        const pendingPayments = payments.filter(p => p.status === 'pending');
+        if (pendingPayments.length > 0) {
+            const nextPayment = pendingPayments[0];
+            const isOverdue = new Date(nextPayment.due_date) < new Date();
+            statusTextEl.textContent = isOverdue ? '● Payment Overdue' : '● Upcoming Installment';
+            statusTextEl.style.color = isOverdue ? '#ef4444' : '#f59e0b';
+            statusCard.style.borderLeftColor = isOverdue ? '#ef4444' : '#f59e0b';
+            if (totalDueEl) totalDueEl.textContent = '$' + nextPayment.amount.toFixed(2);
+        } else {
+            statusTextEl.textContent = '● Paid in Full';
+            statusTextEl.style.color = '#10b981';
+            statusCard.style.borderLeftColor = '#10b981';
+            if (totalDueEl) totalDueEl.textContent = '$0.00';
+        }
+
+    } catch (e) {
+        console.error("Billing Error:", e);
+        container.innerHTML = `<div style="text-align: center; padding: 20px; color: #ef4444; background: #fee2e2; border-radius: 12px;">Failed to load billing: ${e.message}</div>`;
+    }
+}
+
+function handleDemoBilling(container, totalDueEl, statusTextEl, statusCard) {
+    container.innerHTML = `
+        <div style="text-align: center; padding: 20px; background: rgba(255,255,255,0.5); border-radius: 12px; color: #888; font-size: 0.9rem;">
+            Demo Mode: Please sign in securely to view your open invoices and payment plans.
+        </div>
+    `;
+    if (totalDueEl) totalDueEl.textContent = '$0.00';
+    if (statusTextEl && statusCard) {
+        statusTextEl.textContent = '● Good Standing';
+        statusTextEl.style.color = '#34C759';
+        statusCard.style.borderLeftColor = '#34C759';
+    }
+}
+
+function renderPlanSelectionUI(container, parentId, supabase, email) {
+    container.innerHTML = `
+        <div style="background: white; border-radius: 12px; padding: 20px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <h4 style="margin: 0 0 16px 0; font-size: 1.1rem; color: #111;">Select your Spring/Summer 2026 Payment Plan</h4>
+            <p style="font-size: 0.9rem; color: #666; margin-bottom: 24px;">Godspeed Basketball offers multiple ways to handle your player's AAU tuition. Select the plan that works best for your family.</p>
+            
+            <div style="display: grid; gap: 16px;">
+                <!-- Full Pay -->
+                <div class="plan-option" style="border: 2px solid #e5e7eb; border-radius: 12px; padding: 16px; cursor: pointer; transition: all 0.2s;" onclick="selectPaymentPlan(this, 'full', '${parentId}', '${email}')">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 800; font-size: 1.05rem; color: #111;">Pay in Full</div>
+                            <div style="font-size: 0.85rem; color: #666; margin-top: 4px;">One-time payment of $724.00</div>
+                        </div>
+                        <div style="font-size: 1.25rem; font-weight: 800; color: #0071e3;">$724</div>
+                    </div>
+                </div>
+
+                <!-- 2-Installment -->
+                <div class="plan-option" style="border: 2px solid #e5e7eb; border-radius: 12px; padding: 16px; cursor: pointer; transition: all 0.2s;" onclick="selectPaymentPlan(this, '2-installment', '${parentId}', '${email}')">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 800; font-size: 1.05rem; color: #111;">2 Installments</div>
+                            <div style="font-size: 0.85rem; color: #666; margin-top: 4px;">Two payments of $362.00 (April 1st, June 1st)</div>
+                        </div>
+                        <div style="font-size: 1.25rem; font-weight: 800; color: #0071e3;">$362</div>
+                    </div>
+                </div>
+
+                <!-- 3-Installment -->
+                <div class="plan-option" style="border: 2px solid #e5e7eb; border-radius: 12px; padding: 16px; cursor: pointer; transition: all 0.2s;" onclick="selectPaymentPlan(this, '3-installment', '${parentId}', '${email}')">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 800; font-size: 1.05rem; color: #111;">3 Installments</div>
+                            <div style="font-size: 0.85rem; color: #666; margin-top: 4px;">$242.00 (Apr 1st), $242.00 (May 1st), $240.00 (Jun 1st)</div>
+                        </div>
+                        <div style="font-size: 1.25rem; font-weight: 800; color: #0071e3;">$242</div>
+                    </div>
+                </div>
             </div>
-            <div style="text-align: right;">
-                <div style="font-weight: 700; font-size: 1rem;">$${inv.amount.toFixed(2)}</div>
-                <button class="btn-text" style="color: #0071e3; font-size: 0.8rem; font-weight: 600;" onclick="godspeedAlert('Processing Payment...', 'Info')">Pay Now</button>
+            
+            <div style="margin-top: 24px; text-align: right;">
+                <button id="confirm-plan-btn" class="btn-primary" disabled style="opacity: 0.5; padding: 12px 24px;">Enroll & Continue</button>
+            </div>
+        </div>
+    `;
+
+    // Add interactivity script
+    window.selectPaymentPlan = function(element, planType, parentId, email) {
+        document.querySelectorAll('.plan-option').forEach(el => {
+            el.style.borderColor = '#e5e7eb';
+            el.style.background = 'white';
+        });
+        element.style.borderColor = '#0071e3';
+        element.style.background = '#f0f9ff';
+        
+        const btn = document.getElementById('confirm-plan-btn');
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.onclick = async () => {
+            btn.innerHTML = 'Creating Plan...';
+            btn.disabled = true;
+            try {
+                // Determine Athlete Name
+                let athleteName = "Your Athlete";
+                const db = typeof getDB === 'function' ? getDB() : JSON.parse(localStorage.getItem('gba_db'));
+                if (db && db.roster) {
+                    const athlete = db.roster.find(p => p.parentId === email);
+                    if (athlete) athleteName = athlete.name;
+                }
+
+                // Call the utility function via dynamic import or direct edge function call
+                // Assuming we ported 'createPaymentPlan' logic to an Edge Function or run it clientside.
+                // It's cleaner to just run the DB queries here since parent has RLS insert access.
+                
+                const planData = {
+                    parent_id: parentId,
+                    player_name: athleteName,
+                    plan_type: planType,
+                    total_amount: 724.00
+                };
+                
+                const { data: insertedPlan, error: planError } = await supabase
+                    .from('payment_plans')
+                    .insert(planData)
+                    .select()
+                    .single();
+                    
+                if (planError) throw planError;
+                
+                // Build installments
+                let installmentsArray = [];
+                if (planType === 'full') {
+                    installmentsArray = [{ number: 1, amount: 724.00, dueDate: '2026-04-01' }];
+                } else if (planType === '2-installment') {
+                    installmentsArray = [
+                        { number: 1, amount: 362.00, dueDate: '2026-04-01' },
+                        { number: 2, amount: 362.00, dueDate: '2026-06-01' }
+                    ];
+                } else if (planType === '3-installment') {
+                    installmentsArray = [
+                        { number: 1, amount: 242.00, dueDate: '2026-04-01' },
+                        { number: 2, amount: 242.00, dueDate: '2026-05-01' },
+                        { number: 3, amount: 240.00, dueDate: '2026-06-01' }
+                    ];
+                }
+                
+                const dbInstallments = installmentsArray.map(i => ({
+                    plan_id: insertedPlan.id,
+                    parent_id: parentId,
+                    installment_number: i.number,
+                    amount: i.amount,
+                    due_date: i.dueDate,
+                    status: 'pending'
+                }));
+                
+                const { error: paymentsError } = await supabase.from('payments').insert(dbInstallments);
+                if (paymentsError) throw paymentsError;
+                
+                // Refresh Billing view
+                renderBilling(email);
+                
+            } catch (error) {
+                console.error("Plan creation error:", error);
+                godspeedAlert('Failed to set up the payment plan. Please contact support.', 'Error');
+                btn.innerHTML = 'Enroll & Continue';
+                btn.disabled = false;
+            }
+        };
+    };
+}
+
+function renderPaymentsTimeline(container, payments, plan, supabase) {
+    let html = `<div style="display: flex; flex-direction: column; gap: 16px;">`;
+    
+    payments.forEach(payment => {
+        const isPaid = payment.status === 'completed';
+        const dueDate = new Date(payment.due_date);
+        const isOverdue = !isPaid && dueDate < new Date();
+        
+        let statusBadge = '';
+        let actionBtn = '';
+        let borderColor = '#e5e7eb';
+        
+        if (isPaid) {
+            statusBadge = `<span style="background: #d1fae5; color: #059669; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Paid</span>`;
+            borderColor = '#10b981';
+        } else if (isOverdue) {
+            statusBadge = `<span style="background: #fee2e2; color: #ef4444; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Overdue</span>`;
+            borderColor = '#ef4444';
+            actionBtn = `<button class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem; background: #ef4444;" onclick="triggerStripeCheckout('${payment.id}')">Pay Now</button>`;
+        } else {
+            statusBadge = `<span style="background: #fef3c7; color: #d97706; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Upcoming</span>`;
+            borderColor = '#f59e0b';
+            actionBtn = `<button class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem;" onclick="triggerStripeCheckout('${payment.id}')">Pay Early</button>`;
+        }
+        
+        // Hide button if it's pending but a previous installment is still unpaid
+        const previousUnpaid = payments.some(p => p.installment_number < payment.installment_number && p.status !== 'completed');
+        if (previousUnpaid && !isPaid) {
+            actionBtn = `<span style="font-size: 0.8rem; color: #888;">Complete prior payment first</span>`;
+        }
+
+        html += `
+            <div style="background: white; border-radius: 12px; padding: 16px; border: 1px solid ${borderColor}; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px;">
+                        <h5 style="margin: 0; font-size: 1rem; color: #111;">Installment ${payment.installment_number}</h5>
+                        ${statusBadge}
+                    </div>
+                    <div style="font-size: 0.85rem; color: #666;">Due Date: ${dueDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
+                </div>
+                <div style="text-align: right; display: flex; align-items: center; gap: 16px;">
+                    <div style="font-size: 1.2rem; font-weight: 800; color: #111;">$${payment.amount.toFixed(2)}</div>
+                    <div>${actionBtn}</div>
+                </div>
             </div>
         `;
-        container.appendChild(div);
-    }
+    });
+    
+    html += `</div>`;
+    container.innerHTML = html;
+}
 
-    // Update Total Due
-    if (totalDueEl) totalDueEl.textContent = '$250.00';
-    if (statusTextEl && statusCard) {
-        statusTextEl.textContent = '● Payment Due Soon';
-        statusTextEl.style.color = '#f59e0b'; // Amber
-        statusCard.style.borderLeftColor = '#f59e0b';
+window.triggerStripeCheckout = async function(paymentId) {
+    if (!window.auth || !window.auth.isSupabaseAvailable()) {
+        godspeedAlert('System error. Please try again later.', 'Error');
+        return;
     }
-
-    // Render Trips (Reuse logic from Portal Data but here)
-    if (tripsContainer) {
-        // Mock Trips
-        // ... existing logic mock ...
-        // For now, clear it to avoid duplicate if called multiple times, or copy logic from older renderParentTrips
+    const supabase = window.auth.getSupabaseClient();
+    
+    godspeedAlert('Redirecting to secure checkout...', 'Processing');
+    try {
+        const { data, error } = await supabase.functions.invoke('create-checkout', {
+            body: { paymentId: paymentId }
+        });
+        
+        if (error) throw error;
+        
+        if (data && data.url) {
+            window.location.href = data.url;
+        } else {
+            throw new Error('No checkout URL returned.');
+        }
+    } catch (err) {
+        console.error('Checkout error:', err);
+        godspeedAlert('Unable to initiate checkout. Please try again or contact support.', 'Payment Error');
     }
 }
 

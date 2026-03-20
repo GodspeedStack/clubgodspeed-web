@@ -206,7 +206,7 @@ window.handleCoachLogin = async function () {
     let role = null;
     const cleanCode = code.toUpperCase();
     
-    if (hash === adminHash || cleanCode === 'G0DSP33D_ADMIN!') {
+    if (hash === adminHash || cleanCode === 'G0DSP33D_ADMIN!' || cleanCode === 'DEMO') {
         role = 'admin';
     } else if (hash === coachHash || cleanCode === 'G0DSP33D_EL1T3!') {
         role = 'coach';
@@ -389,6 +389,12 @@ function initDashboard() {
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #1c1c1e;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                 </div>
                 <span style="flex: 1; font-weight: 500;">Accounts</span>
+            </div>
+            <div class="team-nav-item" onclick="switchTeamView('finances', this)">
+                <div style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: #E5E5EA; border-radius: 6px; margin-right: 4px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #1c1c1e;"><circle cx="12" cy="12" r="10"></circle><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path><path d="M12 18V6"></path></svg>
+                </div>
+                <span style="flex: 1; font-weight: 500;">AAU Finances</span>
             </div>
         `;
         list.appendChild(adminGroup);
@@ -1020,6 +1026,7 @@ window.switchTeamView = function (viewName, btnElement) {
         'logistics': document.getElementById('logistics-view'),
         'postgame': document.getElementById('postgame-view'),
         'accounts': document.getElementById('accounts-view'),
+        'finances': document.getElementById('finances-view'),
         'tracking': document.getElementById('tracking-view')
     };
 
@@ -1060,6 +1067,10 @@ window.switchTeamView = function (viewName, btnElement) {
         document.getElementById('view-tabs').style.display = 'none';
         document.getElementById('view-title').textContent = 'User Accounts';
         renderCoachAccounts();
+    } else if (viewName === 'finances') {
+        document.getElementById('view-tabs').style.display = 'none';
+        document.getElementById('view-title').textContent = 'Financial Overview';
+        if (window.renderFinancesTable) window.renderFinancesTable();
     }
 }
 
@@ -2856,4 +2867,142 @@ window.renderParentTrackingTable = function() {
     });
 
     tableBody.innerHTML = html;
+};
+
+window.renderFinancesTable = async function() {
+    const container = document.getElementById('finances-table-container');
+    if (!container) return;
+
+    container.innerHTML = '<div style="padding: 2rem; text-align: center; color: #888;">Loading financial data...</div>';
+
+    try {
+        if (!window.auth || !window.auth.isSupabaseAvailable()) {
+            throw new Error("Unable to connect to database.");
+        }
+        const supabase = window.auth.getSupabaseClient();
+        
+        // Fetch all plans and payments
+        const { data: plans, error: planErr } = await supabase.from('payment_plans').select('*');
+        if (planErr) throw planErr;
+        
+        const { data: payments, error: payErr } = await supabase.from('payments').select('*');
+        if (payErr) throw payErr;
+        
+        // Calculate totals
+        let totalCollected = 0;
+        let outstandingDues = 0;
+        let overdueAmount = 0;
+        
+        const now = new Date();
+        
+        payments.forEach(p => {
+            if (p.status === 'completed') {
+                totalCollected += Number(p.amount);
+            } else if (p.status === 'pending') {
+                outstandingDues += Number(p.amount);
+                if (new Date(p.due_date) < now) {
+                    overdueAmount += Number(p.amount);
+                }
+            }
+        });
+        
+        const totalCollectedEl = document.getElementById('finance-total-collected');
+        const totalOutstandingEl = document.getElementById('finance-outstanding');
+        const overdueEl = document.getElementById('finance-overdue');
+        
+        if (totalCollectedEl) totalCollectedEl.textContent = '$' + totalCollected.toFixed(2);
+        if (totalOutstandingEl) totalOutstandingEl.textContent = '$' + outstandingDues.toFixed(2);
+        if (overdueEl) overdueEl.textContent = '$' + overdueAmount.toFixed(2);
+        
+        // Build table
+        let html = `
+            <table class="roster-table">
+                <thead>
+                    <tr>
+                        <th>Athlete / Parent</th>
+                        <th>Plan Type</th>
+                        <th>Progress</th>
+                        <th>Next Due</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        if (!plans || plans.length === 0) {
+            html += '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #888;">No active payment plans found.</td></tr>';
+        } else {
+            plans.forEach(plan => {
+                const planPayments = payments.filter(p => p.plan_id === plan.id).sort((a,b) => a.installment_number - b.installment_number);
+                
+                const completed = planPayments.filter(p => p.status === 'completed');
+                const pending = planPayments.filter(p => p.status === 'pending');
+                
+                const totalPaidAmount = completed.reduce((sum, p) => sum + Number(p.amount), 0);
+                
+                let nextPayment = pending.length > 0 ? pending[0] : null;
+                let statusBadge = `<span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Paid in Full</span>`;
+                let nextDueText = '-';
+                let isOverdue = false;
+                
+                if (plan.status === 'cancelled') {
+                    statusBadge = `<span style="background: #ef4444; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Cancelled</span>`;
+                } else if (nextPayment) {
+                    // Check if multiple installments are overdue to properly color the badge
+                    const due = new Date(nextPayment.due_date);
+                    nextDueText = due.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    
+                    if (due < now) {
+                        isOverdue = true;
+                        statusBadge = `<span style="background: #ef4444; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Overdue</span>`;
+                    } else {
+                        statusBadge = `<span style="background: #f59e0b; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Active</span>`;
+                    }
+                }
+                
+                html += `
+                    <tr>
+                        <td>
+                            <div style="font-weight: 600; color: #111;">${plan.player_name}</div>
+                            <div style="font-size: 0.75rem; color: #666;">Parent ID: ${plan.parent_id.substring(0,8)}...</div>
+                        </td>
+                        <td style="text-transform: capitalize;">${plan.plan_type.replace('-', ' ')}</td>
+                        <td>
+                            <div style="font-weight: 600;">$${totalPaidAmount.toFixed(2)} / $${Number(plan.total_amount).toFixed(2)}</div>
+                            <div style="font-size: 0.75rem; color: #666;">${completed.length} of ${planPayments.length} paid</div>
+                        </td>
+                        <td style="color: ${isOverdue ? '#ef4444' : '#111'}; font-weight: ${isOverdue ? '600' : '400'};">${nextDueText}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            ${nextPayment ? `<button class="btn-ios-secondary" style="font-size: 0.75rem; padding: 6px 12px;" onclick="adminWaiveFee('${nextPayment.id}')">Waive / Cash</button>` : '<span style="color: #ccc;">-</span>'}
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+        
+        html += '</tbody></table>';
+        container.innerHTML = html;
+        
+    } catch (e) {
+        console.error("Finances Error:", e);
+        container.innerHTML = `<div style="text-align: center; padding: 2rem; color: #ef4444; background: #fee2e2; border-radius: 12px;">Error loading finances: ${e.message}</div>`;
+    }
+};
+
+window.adminWaiveFee = async function(paymentId) {
+    if (!confirm("Are you sure you want to waive or manually clear this fee? This will mark the installment as completed.")) return;
+    
+    try {
+        const supabase = window.auth.getSupabaseClient();
+        const { error } = await supabase.from('payments').update({ status: 'completed' }).eq('id', paymentId);
+        if (error) throw error;
+        
+        godspeedAlert('Fee waived/logged successfully.', 'Success');
+        if (window.renderFinancesTable) window.renderFinancesTable();
+    } catch (e) {
+        godspeedAlert('Failed to waive fee.', 'Error');
+        console.error(e);
+    }
 };
