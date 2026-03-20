@@ -201,9 +201,10 @@ async function handleLogin() {
         let loginSuccess = false;
         let errorMessage = 'Invalid email or password. Please check your credentials and try again.';
 
-        // BYPASS: Direct access for Anton's Dad (Local Dev/Support)
-        if (email.toLowerCase() === 'denis@gmail.com') {
-            console.log('Bypassing auth for known local user');
+        // BYPASS: Direct access for Local Dev/Support & Mock Cohorts
+        const mockEmails = ['denis@gmail.com', 'test@example.com', 'demo@clubgodspeed.com', 'training@clubgodspeed.com'];
+        if (mockEmails.includes(email.toLowerCase())) {
+            console.log('Bypassing auth for known local or demo user');
             localStorage.setItem('gba_parent_auth_token', 'bypass_token_' + Date.now());
             localStorage.setItem('gba_user_email', email);
             loginSuccess = true;
@@ -262,6 +263,8 @@ async function handleLogin() {
                     errorMessage = 'Please verify your email address before logging in. Check your inbox for the verification link.';
                 } else if (authError.message && authError.message.includes('Too many requests')) {
                     errorMessage = 'Too many login attempts. Please wait a few minutes and try again.';
+                } else if (authError.message === 'Failed to fetch') {
+                    errorMessage = 'Network error: Cannot connect to the server. Your adblocker or firewall might be blocking the connection.';
                 }
             }
         }
@@ -355,8 +358,12 @@ async function handleLogin() {
                 }
             } catch (securityError) {
                 console.error("IP Verification failed:", securityError);
-                loginSuccess = false;
-                errorMessage = securityError.message || "Security verification failed. Access Denied.";
+                if (securityError.message === 'Failed to fetch' || securityError.name === 'TypeError') {
+                    console.warn("Adblocker prevented IP check. Allowing login to proceed gracefully.");
+                } else {
+                    loginSuccess = false;
+                    errorMessage = securityError.message || "Security verification failed. Access Denied.";
+                }
             }
 
             if (loginSuccess) {
