@@ -193,8 +193,8 @@ window.handleCoachLogin = async function () {
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
-    const adminHash = "e5792d476100987627a696348842af5832a87383a152da862db8068755034371"; // G0DSP33D_ADMIN!
-    const coachHash = "c7d74026858a7065971488c9ae8729577782b534b829af4666f777176461ba16"; // G0DSP33D_EL1T3!
+    const adminHash = "4792c7f3c8c1dba6c44f84106fea8e6f983eb02c6961384863719180d437a057"; // G0DSP33D_ADMIN!
+    const coachHash = "e550d0bfd3a72149b46a225a35927c0272eb4cd4796c550fdd899da66e508ae6"; // G0DSP33D_EL1T3!
 
     const hash = await sha256(code);
     let role = null;
