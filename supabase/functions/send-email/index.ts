@@ -35,6 +35,10 @@ function getEmailContent(type: string, data: any) {
     '7_day_overdue': {
       subject: `Balance outstanding — Godspeed Basketball`,
       body: `Hi,\n\nWe have not received payment ${installmentNumber} of $${amount} for ${playerName}. This was due on ${dueDate}.\n\nPlease settle this balance or reach out directly so we can work through it together.\n\nCoach Scott\nGodspeed Basketball`
+    },
+    'gear_order': {
+      subject: `New Gear Order: ${data.parentId || 'Parent'}`,
+      body: `A new gear order has been placed.\n\nParent Email: ${data.parentId}\nDate: ${new Date(data.date).toLocaleString()}\n\nITEMS TO COPY/PASTE TO PROVIDER:\n-------------------------------\n\n${data.items ? data.items.map((i: any) => `- ${i.name} | Size: ${i.size || 'N/A'} | Qty: ${i.qty}${(i.customName && i.customName !== 'No Name') ? ' | Name on item: ' + i.customName : ''}`).join('\n') : 'No items'}\n\n-------------------------------\n\nGodspeed Portal Automation`
     }
   }
 
@@ -42,22 +46,29 @@ function getEmailContent(type: string, data: any) {
 }
 
 Deno.serve(async (req) => {
-  const { paymentId, type, emailTo } = await req.json()
+  const body = await req.json()
+  const { paymentId, type, emailTo, orderObj } = body
 
-  const { data: payment } = await supabase
-    .from('payments')
-    .select('*, payment_plans(player_name, parent_id)')
-    .eq('id', paymentId)
-    .single()
+  let content;
 
-  if (!payment) return new Response('Payment not found', { status: 404 })
+  if (type === 'gear_order') {
+    content = getEmailContent(type, orderObj);
+  } else {
+    const { data: payment } = await supabase
+      .from('payments')
+      .select('*, payment_plans(player_name, parent_id)')
+      .eq('id', paymentId)
+      .single()
 
-  const content = getEmailContent(type, {
-    playerName: payment.payment_plans.player_name,
-    amount: payment.amount,
-    dueDate: payment.due_date,
-    installmentNumber: payment.installment_number
-  })
+    if (!payment) return new Response('Payment not found', { status: 404 })
+
+    content = getEmailContent(type, {
+      playerName: payment.payment_plans.player_name,
+      amount: payment.amount,
+      dueDate: payment.due_date,
+      installmentNumber: payment.installment_number
+    })
+  }
 
   await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -73,12 +84,14 @@ Deno.serve(async (req) => {
     })
   })
 
-  await supabase.from('payment_reminders').insert({
-    payment_id: paymentId,
-    parent_id: payment.parent_id,
-    reminder_type: type,
-    email_to: emailTo
-  })
+  if (type !== 'gear_order') {
+    await supabase.from('payment_reminders').insert({
+      payment_id: paymentId,
+      parent_id: body.payment ? body.payment.parent_id : null,
+      reminder_type: type,
+      email_to: emailTo
+    })
+  }
 
   return new Response('sent')
 })

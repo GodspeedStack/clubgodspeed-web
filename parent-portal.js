@@ -363,6 +363,16 @@ async function handleLogin() {
                 document.getElementById('portal-login').style.display = 'none';
                 document.getElementById('portal-dashboard').style.display = 'flex';
                 updateDashboardProfile(email);
+
+                // Cohort Designation Mock Setup
+                if (email.toLowerCase() === 'training@clubgodspeed.com') {
+                    localStorage.setItem('gba_user_cohort', 'training');
+                } else {
+                    // Default to AAU for all other users (including demo@clubgodspeed.com)
+                    localStorage.setItem('gba_user_cohort', 'aau');
+                }
+                updateUIForCohort();
+
                 loadSignedDocuments(email); // Load signed documents on successful login
     
                 // Clear any error messages
@@ -1373,7 +1383,7 @@ function handleSettingsSave() {
 }
 // --- Gear & Uniform Logic ---
 
-window.submitGearOrder = function () {
+window.submitGearOrder = async function () {
     const email = document.getElementById('settings-parent-email').value || localStorage.getItem('gba_user_email');
     if (!email) {
         godspeedAlert("Please sign in to your account to submit an order.", "GODSPEED BASKETBALL");
@@ -1436,6 +1446,26 @@ window.submitGearOrder = function () {
     db.orders.push(order);
     localStorage.setItem('gba_db', JSON.stringify(db));
 
+    // Send Email Notification via Edge Function
+    try {
+        const authEmail = localStorage.getItem('gba_user_email');
+        if (window.auth && window.auth.isSupabaseAvailable()) {
+            const supabase = window.auth.getSupabaseClient();
+            await supabase.functions.invoke('send-email', {
+                body: {
+                    type: 'gear_order',
+                    emailTo: 'coach@clubgodspeed.com',
+                    orderObj: order
+                }
+            });
+            console.log('Gear order email dispatched to Coach.');
+        } else {
+            console.log('Mock Mode: Simulate sending gear order email:', order);
+        }
+    } catch (err) {
+        console.error('Failed to dispatch gear order email:', err);
+    }
+
     // 4. UI Feedback
     const btn = document.querySelector('#view-gear button');
     const originalText = btn.innerText;
@@ -1466,6 +1496,31 @@ window.submitGearOrder = function () {
 /**
  * Render the training dashboard with hours, calendar, and documents
  */
+window.updateUIForCohort = function() {
+    const cohort = localStorage.getItem('gba_user_cohort') || 'aau'; // default to AAU
+    const aauNav = document.getElementById('nav-aau-billing');
+    const ctaBanner = document.getElementById('aau-dues-cta');
+    const aauDocs = document.querySelectorAll('.doc-aau');
+    
+    // Some documents might strictly belong to AAU
+    // In parent-portal.html we will tag them appropriately
+    
+    if (cohort === 'training') {
+        if (aauNav) aauNav.style.display = 'none';
+        if (ctaBanner) ctaBanner.style.display = 'none';
+        aauDocs.forEach(el => el.style.display = 'none');
+    } else {
+        if (aauNav) aauNav.style.display = 'flex';
+        // CTA is styled as flex, but inline styles in HTML will set it. Reset it back to flex.
+        if (ctaBanner) ctaBanner.style.display = 'flex';
+        aauDocs.forEach(el => el.style.display = 'block'); // or flex depending on original
+    }
+}
+
+// Ensure cohort update runs when portal is loaded automatically (cached login)
+document.addEventListener('DOMContentLoaded', () => {
+    updateUIForCohort();
+});
 async function renderTrainingDashboard() {
     const parentEmail = localStorage.getItem('gba_user_email');
     /* if (!parentEmail) {
@@ -1473,6 +1528,10 @@ async function renderTrainingDashboard() {
          return;
      } */
     // For demo "tomorrow", even if no email, show mock data
+    if (!parentEmail) { // Changed `email` to `parentEmail` to match scope
+        document.getElementById('welcome-user-name').textContent = "Demo User";
+        document.getElementById('dashboard-user-name').textContent = "Demo User";
+    }
 
     const db = getDB(); // Uses portal-data.js mock if need be
     const data = db.training;
@@ -2736,7 +2795,7 @@ window.renderBilling = async function (email) {
             statusTextEl.textContent = '● Action Required';
             statusTextEl.style.color = '#ef4444'; 
             statusCard.style.borderLeftColor = '#ef4444';
-            if (totalDueEl) totalDueEl.textContent = '$724.00';
+            if (totalDueEl) totalDueEl.textContent = '$745.00';
             
             renderPlanSelectionUI(container, user.id, supabase, email);
             return;
@@ -2802,9 +2861,9 @@ function renderPlanSelectionUI(container, parentId, supabase, email) {
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <div style="font-weight: 800; font-size: 1.05rem; color: #111;">Pay in Full</div>
-                            <div style="font-size: 0.85rem; color: #666; margin-top: 4px;">One-time payment of $724.00</div>
+                            <div style="font-size: 0.85rem; color: #666; margin-top: 4px;">One-time payment of $745.00</div>
                         </div>
-                        <div style="font-size: 1.25rem; font-weight: 800; color: #0071e3;">$724</div>
+                        <div style="font-size: 1.25rem; font-weight: 800; color: #0071e3;">$745</div>
                     </div>
                 </div>
 
@@ -2869,7 +2928,7 @@ function renderPlanSelectionUI(container, parentId, supabase, email) {
                     parent_id: parentId,
                     player_name: athleteName,
                     plan_type: planType,
-                    total_amount: 724.00
+                    total_amount: 745.00
                 };
                 
                 const { data: insertedPlan, error: planError } = await supabase
@@ -2883,17 +2942,17 @@ function renderPlanSelectionUI(container, parentId, supabase, email) {
                 // Build installments
                 let installmentsArray = [];
                 if (planType === 'full') {
-                    installmentsArray = [{ number: 1, amount: 724.00, dueDate: '2026-04-01' }];
+                    installmentsArray = [{ number: 1, amount: 745.00, dueDate: '2026-04-01' }];
                 } else if (planType === '2-installment') {
                     installmentsArray = [
-                        { number: 1, amount: 362.00, dueDate: '2026-04-01' },
-                        { number: 2, amount: 362.00, dueDate: '2026-06-01' }
+                        { number: 1, amount: 375.00, dueDate: '2026-04-01' },
+                        { number: 2, amount: 370.00, dueDate: '2026-06-01' }
                     ];
                 } else if (planType === '3-installment') {
                     installmentsArray = [
-                        { number: 1, amount: 242.00, dueDate: '2026-04-01' },
-                        { number: 2, amount: 242.00, dueDate: '2026-05-01' },
-                        { number: 3, amount: 240.00, dueDate: '2026-06-01' }
+                        { number: 1, amount: 250.00, dueDate: '2026-04-01' },
+                        { number: 2, amount: 250.00, dueDate: '2026-05-01' },
+                        { number: 3, amount: 245.00, dueDate: '2026-06-01' }
                     ];
                 }
                 

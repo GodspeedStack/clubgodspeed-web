@@ -1,21 +1,21 @@
 export const PLANS = {
   full: {
     label: 'Pay in full',
-    installments: [{ number: 1, amount: 724.00, dueDate: '2026-04-01' }]
+    installments: [{ number: 1, amount: 745.00, dueDate: '2026-04-01' }]
   },
   '2-installment': {
     label: '2 installments',
     installments: [
-      { number: 1, amount: 362.00, dueDate: '2026-04-01' },
-      { number: 2, amount: 362.00, dueDate: '2026-06-01' }
+      { number: 1, amount: 375.00, dueDate: '2026-04-01' },
+      { number: 2, amount: 370.00, dueDate: '2026-06-01' }
     ]
   },
   '3-installment': {
     label: '3 installments',
     installments: [
-      { number: 1, amount: 242.00, dueDate: '2026-04-01' },
-      { number: 2, amount: 242.00, dueDate: '2026-05-01' },
-      { number: 3, amount: 240.00, dueDate: '2026-06-01' }
+      { number: 1, amount: 250.00, dueDate: '2026-04-01' },
+      { number: 2, amount: 250.00, dueDate: '2026-05-01' },
+      { number: 3, amount: 245.00, dueDate: '2026-06-01' }
     ]
   }
 }
@@ -29,7 +29,7 @@ export async function createPaymentPlan(supabase, parentId, playerName, planType
       parent_id: parentId,
       player_name: playerName,
       plan_type: planType,
-      total_amount: 724.00
+      total_amount: 745.00
     })
     .select()
     .single()

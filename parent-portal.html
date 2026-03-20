@@ -244,7 +244,7 @@
                         </span>
                         <span class="label">Documents</span>
                     </a>
-                    <a href="#" class="nav-item" onclick="switchPortalView('aau-billing', this)">
+                    <a href="#" id="nav-aau-billing" class="nav-item" onclick="switchPortalView('aau-billing', this)">
                         <span class="icon">
                             <!-- Credit Card Icon -->
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -480,6 +480,17 @@
                                 <span id="committed-badge-mini" style="display: none; align-items: center; justify-content: center; width: 84px; height: 24px; background: #10b981; color: white; font-size: 9px; font-weight: 700; border-radius: 12px; letter-spacing: 0.05em; text-transform: uppercase; margin-left: 12px; box-shadow: 0 2px 8px rgba(16,185,129,0.3); opacity: 0; transform: scale(0.8); transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);">✓ COMMITTED</span>
                             </h1>
                             <p style="margin-top: 8px; opacity: 0.9; font-weight: 500;">Spring/Summer Season 2026 is underway. Stay updated on your athlete's progress.</p>
+                            
+                            <!-- AAU DUES CTA -->
+                            <div id="aau-dues-cta" style="display: none; margin-top: 24px; padding: 20px; background: linear-gradient(135deg, #FF3B30 0%, #D32F2F 100%); border-radius: 12px; color: white; box-shadow: 0 4px 15px rgba(255,59,48,0.3); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+                                <div>
+                                    <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                                        <span>🚨</span> 2026 AAU Spring/Summer Dues
+                                    </h3>
+                                    <p style="margin: 4px 0 0 0; font-size: 0.9rem; opacity: 0.95;">Action strictly required: Please select your season payment plan.</p>
+                                </div>
+                                <button onclick="switchPortalView('aau-billing', document.getElementById('nav-aau-billing'))" style="background: white; color: #D32F2F; font-weight: 800; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">Pay Team Dues</button>
+                            </div>
                         </div>
                         
                         <!-- COACH MEMO (Manifesto Letter) -->
@@ -526,7 +537,7 @@
                         </div>
                         <div class="documents-grid-v3">
                             <!-- Parent Guide -->
-                            <div class="doc-card-v3" id="card-parent-guide" onclick="document.querySelector('#card-parent-guide a').click()">
+                            <div class="doc-card-v3 doc-aau" id="card-parent-guide" onclick="document.querySelector('#card-parent-guide a').click()">
                                 <div class="card-status signed" style="background: #eef2ff; color: #0071e3;">Info</div>
                                 <div class="card-icon">
                                     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -581,7 +592,7 @@
                             </div>
 
                             <!-- 3. Practice Consent -->
-                            <div class="doc-card-v3" id="card-practice" onclick="openDocModal('practice')">
+                            <div class="doc-card-v3 doc-aau" id="card-practice" onclick="openDocModal('practice')">
                                 <div class="card-status pending">Pending</div>
                                 <div class="card-icon">
                                     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -597,7 +608,7 @@
                             </div>
 
                             <!-- 4. Conduct Policy -->
-                            <div class="doc-card-v3" id="card-conduct" onclick="openDocModal('conduct')">
+                            <div class="doc-card-v3 doc-aau" id="card-conduct" onclick="openDocModal('conduct')">
                                 <div class="card-status pending">Pending</div>
                                 <div class="card-icon">
                                     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
