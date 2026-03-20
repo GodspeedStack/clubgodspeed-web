@@ -2,305 +2,301 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Godspeed Trading Card Preview</title>
-    <!-- Tailwind CSS for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- html2canvas for functionality -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,800;0,900;1,800&display=swap"
-        rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #050505;
-        }
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Godspeed Trading Card Preview</title>
+ <!-- Tailwind CSS for styling -->
+ <script src="https://cdn.tailwindcss.com"></script>
+ <!-- html2canvas for functionality -->
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+ <!-- Fonts -->
+ <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,800;0,900;1,800&display=swap"
+ rel="stylesheet">
+ <style>
+ body {
+ font-family: 'Inter', sans-serif;
+ background-color: #050505;
+ }
 
-        /* Gloss effect animation */
-        @keyframes shine {
-            0% {
-                transform: translateX(-150%) skewX(-15deg);
-            }
+ /* Gloss effect animation */
+ @keyframes shine {
+ 0% {
+ transform: translateX(-150%) skewX(-15deg);
+ }
 
-            50% {
-                transform: translateX(150%) skewX(-15deg);
-            }
+ 50% {
+ transform: translateX(150%) skewX(-15deg);
+ }
 
-            100% {
-                transform: translateX(150%) skewX(-15deg);
-            }
-        }
+ 100% {
+ transform: translateX(150%) skewX(-15deg);
+ }
+ }
 
-        .gloss-animate {
-            animation: shine 3s infinite linear;
-        }
-    </style>
-    <link rel="stylesheet" href="mobile-fixes.css">
+ .gloss-animate {
+ animation: shine 3s infinite linear;
+ }
+ </style>
+ <link rel="stylesheet" href="mobile-fixes.css">
 </head>
 
 <body class="flex flex-col items-center min-h-screen p-8 bg-[#050505]">
 
-    <div class="mb-12 text-center">
-        <h1 class="text-4xl font-black text-white uppercase tracking-tighter mb-2">GODSPEED <span
-                class="text-[#2563eb]">VAULT</span></h1>
-        <p class="text-gray-500 text-sm">Tap a card to flip. Click 'Download' to save.</p>
-    </div>
+ <div class="mb-12 text-center">
+ <h1 class="text-4xl font-black text-white uppercase tracking-tighter mb-2">GODSPEED <span
+ class="text-[#2563eb]">VAULT</span></h1>
+ <p class="text-gray-500 text-sm">Tap a card to flip. Click 'Download' to save.</p>
+ </div>
 
-    <!-- Grid Container for Cards -->
-    <div id="cards-grid" class="flex flex-wrap justify-center gap-12 w-full max-w-7xl mb-24">
-        <!-- Cards injected via JS -->
-    </div>
+ <!-- Grid Container for Cards -->
+ <div id="cards-grid" class="flex flex-wrap justify-center gap-12 w-full max-w-7xl mb-24">
+ <!-- Cards injected via JS -->
+ </div>
 
-    <!-- CSS for 3D Transform -->
-    <style>
-        .perspective-1000 {
-            perspective: 1000px;
-        }
+ <!-- CSS for 3D Transform -->
+ <style>
+ .perspective-1000 {
+ perspective: 1000px;
+ }
 
-        .transform-style-3d {
-            transform-style: preserve-3d;
-        }
+ .transform-style-3d {
+ transform-style: preserve-3d;
+ }
 
-        .backface-hidden {
-            backface-visibility: hidden;
-        }
+ .backface-hidden {
+ backface-visibility: hidden;
+ }
 
-        .rotate-y-180 {
-            transform: rotateY(180deg);
-        }
+ .rotate-y-180 {
+ transform: rotateY(180deg);
+ }
 
-        /* Flip State */
-        .is-flipped .card-inner {
-            transform: rotateY(180deg);
-        }
-    </style>
+ /* Flip State */
+ .is-flipped .card-inner {
+ transform: rotateY(180deg);
+ }
+ </style>
 
-    <script>
-        // Rerunning script block to overwrite correctly
-        const playerList = [
-            {
-                id: 'quest',
-                name: 'Quest',
-                lastname: 'Scott',
-                image: 'src/assets/athletes/quest_scott_monster.png',
-                number: '4',
-                stats: { s1: '5.0', l1: 'PPG', s2: '3.0', l2: 'SPG', s3: '4.0', l3: 'DPG', s4: '8.8', l4: 'GRD' },
-                games: [
-                    { opp: 'vs. Weeks', stat: '5 PTS, 3 STL' },
-                    { opp: '@ Practice', stat: 'High Motor' },
-                    { opp: 'Trend', stat: 'Rising' }
-                ]
-            },
-            {
-                id: 'ashton',
-                name: 'Ashton',
-                lastname: 'Bowman',
-                image: 'src/assets/athletes/ashton_comic.jpg',
-                number: '2',
-                stats: { s1: '3.0', l1: 'PPG', s2: '1.0', l2: 'STL', s3: '1.0', l3: 'REB', s4: '7.6', l4: 'V2 RATING' },
-                games: [
-                    { opp: 'vs. Weeks', stat: '3 PTS, 100% FT' },
-                    { opp: '@ Practice 5', stat: 'Defensive Anchor' },
-                    { opp: 'Trend', stat: 'Steady Growth' }
-                ]
-            }
-        ];
+ <script>
+ // Rerunning script block to overwrite correctly
+ const playerList = [
+ {
+ id: 'quest',
+ name: 'Quest',
+ lastname: 'Scott',
+ image: 'src/assets/athletes/quest_scott_monster.png',
+ number: '4',
+ stats: { s1: '5.0', l1: 'PPG', s2: '3.0', l2: 'SPG', s3: '4.0', l3: 'DPG', s4: '8.8', l4: 'GRD' },
+ games: [
+ { opp: 'vs. Weeks', stat: '5 PTS, 3 STL' },
+ { opp: '@ Practice', stat: 'High Motor' },
+ { opp: 'Trend', stat: 'Rising' }
+ ]
+ },
+ {
+ id: 'ashton',
+ name: 'Ashton',
+ lastname: 'Bowman',
+ image: 'src/assets/athletes/ashton_comic.jpg',
+ number: '2',
+ stats: { s1: '3.0', l1: 'PPG', s2: '1.0', l2: 'STL', s3: '1.0', l3: 'REB', s4: '7.6', l4: 'V2 RATING' },
+ games: [
+ { opp: 'vs. Weeks', stat: '3 PTS, 100% FT' },
+ { opp: '@ Practice 5', stat: 'Defensive Anchor' },
+ { opp: 'Trend', stat: 'Steady Growth' }
+ ]
+ }
+ ];
 
-        function renderCards() {
-            const grid = document.getElementById('cards-grid');
-            let html = '';
+ function renderCards() {
+ const grid = document.getElementById('cards-grid');
+ let html = '';
 
-            playerList.forEach(p => {
-                html += `
-                <div class="card-container relative w-[320px] h-[450px] group perspective-1000 cursor-pointer" onclick="this.classList.toggle('is-flipped')">
-                    <div id="card-inner-${p.id}" class="card-inner relative w-full h-full transition-transform duration-700 transform-style-3d shadow-2xl rounded-xl">
-                        <!-- FRONT -->
-                        <div class="absolute inset-0 w-full h-full backface-hidden bg-black rounded-xl overflow-hidden border border-white/20">
-                            <div class="absolute inset-0 z-0">
-                                <img src="${p.image}" class="w-full h-full object-cover object-top opacity-100 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-1">
-                            </div>
-                            <div class="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/80 to-transparent z-0"></div>
-                            
-                            <div class="relative z-10 flex flex-col h-full p-4 justify-between">
-                                <div class="flex justify-between items-center mb-2">
-                                    <div class="bg-black/40 backdrop-blur-xl border border-white/20 rounded-lg px-3 py-1.5 shadow-[0_0_15px_rgba(76,201,240,0.3)]">
-                                        <div class="text-[9px] font-black tracking-[0.25em] text-[#4cc9f0] uppercase mb-0.5 drop-shadow-lg">Godspeed</div>
-                                        <div class="text-[10px] font-bold text-white uppercase tracking-wider">Mythic</div>
-                                    </div>
-                                    <div class="relative">
-                                        <div class="text-6xl font-black italic text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400"
-                                            style="font-family: 'Impact', sans-serif; -webkit-text-stroke: 1px rgba(255,255,255,0.3);">
-                                            ${p.number}
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="mt-auto relative z-20">
-                                    <div class="absolute -top-12 right-0 w-24 h-24 bg-purple-500 rounded-full blur-[60px] opacity-20 mix-blend-color-dodge"></div>
-                                    <div class="relative z-10 mb-2">
-                                        <h2 class="text-4xl font-black text-white uppercase tracking-tighter leading-[0.85] italic transform -skew-x-6 drop-shadow-[0_4px_4px_rgba(0,0,0,1)]">
-                                            ${p.name}<br>
-                                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#4cc9f0] to-[#f72585]">${p.lastname}</span>
-                                        </h2>
-                                    </div>
-                                    <div class="text-center mt-4">
-                                        <span class="text-[9px] font-bold text-white/50 uppercase tracking-widest border border-white/10 px-3 py-1 rounded-full backdrop-blur-md flex items-center justify-center gap-2">
-                                            <span>↺</span> Flip for Stats
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent w-[200%] h-full -translate-x-[150%] skew-x-12 gloss-animate pointer-events-none z-20"></div>
-                            <div class="absolute inset-0 border-[2px] border-white/20 rounded-xl pointer-events-none z-30"></div>
-                        </div>
+ playerList.forEach(p => {
+ html += `
+ <div class="card-container relative w-[320px] h-[450px] group perspective-1000 cursor-pointer" onclick="this.classList.toggle('is-flipped')">
+ <div id="card-inner-${p.id}" class="card-inner relative w-full h-full transition-transform duration-700 transform-style-3d shadow-2xl rounded-xl">
+ <!-- FRONT -->
+ <div class="absolute inset-0 w-full h-full backface-hidden bg-black rounded-xl overflow-hidden border border-white/20">
+ <div class="absolute inset-0 z-0">
+ <img src="${p.image}" class="w-full h-full object-cover object-top opacity-100 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-1">
+ </div>
+ <div class="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/80 to-transparent z-0"></div>
+ <div class="relative z-10 flex flex-col h-full p-4 justify-between">
+ <div class="flex justify-between items-center mb-2">
+ <div class="bg-black/40 backdrop-blur-xl border border-white/20 rounded-lg px-3 py-1.5 shadow-[0_0_15px_rgba(76,201,240,0.3)]">
+ <div class="text-[9px] font-black tracking-[0.25em] text-[#4cc9f0] uppercase mb-0.5 drop-shadow-lg">Godspeed</div>
+ <div class="text-[10px] font-bold text-white uppercase tracking-wider">Mythic</div>
+ </div>
+ <div class="relative">
+ <div class="text-6xl font-black italic text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400"
+ style="font-family: 'Impact', sans-serif; -webkit-text-stroke: 1px rgba(255,255,255,0.3);">
+ ${p.number}
+ </div>
+ </div>
+ </div>
+ <div class="mt-auto relative z-20">
+ <div class="absolute -top-12 right-0 w-24 h-24 bg-purple-500 rounded-full blur-[60px] opacity-20 mix-blend-color-dodge"></div>
+ <div class="relative z-10 mb-2">
+ <h2 class="text-4xl font-black text-white uppercase tracking-tighter leading-[0.85] italic transform -skew-x-6 drop-shadow-[0_4px_4px_rgba(0,0,0,1)]">
+ ${p.name}<br>
+ <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#4cc9f0] to-[#f72585]">${p.lastname}</span>
+ </h2>
+ </div>
+ <div class="text-center mt-4">
+ <span class="text-[9px] font-bold text-white/50 uppercase tracking-widest border border-white/10 px-3 py-1 rounded-full backdrop-blur-md flex items-center justify-center gap-2">
+ <span>↺</span> Flip for Stats
+ </span>
+ </div>
+ </div>
+ </div>
+ <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent w-[200%] h-full -translate-x-[150%] skew-x-12 gloss-animate pointer-events-none z-20"></div>
+ <div class="absolute inset-0 border-[2px] border-white/20 rounded-xl pointer-events-none z-30"></div>
+ </div>
 
-                        <!-- BACK -->
-                        <div class="absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-black rounded-xl overflow-hidden border border-white/20 p-5 flex flex-col">
-                             <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-30"></div>
-                             <div class="absolute inset-0 bg-gradient-to-br from-[#0a0a0a] to-[#111] -z-10"></div>
-                             
-                             <div class="relative z-10 flex flex-col h-full">
-                                <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
-                                    <div class="text-xl font-black text-white italic uppercase">Season Stats</div>
-                                    <div class="text-[#4cc9f0] text-xs font-bold tracking-widest">2024-25</div>
-                                </div>
-                                <div class="grid grid-cols-2 gap-4 mb-6">
-                                    <div class="bg-white/5 rounded-lg p-3 text-center border border-white/5">
-                                        <div class="text-3xl font-black text-white">${p.stats.s1}</div>
-                                        <div class="text-[9px] text-gray-400 uppercase tracking-widest font-bold">${p.stats.l1}</div>
-                                    </div>
-                                    <div class="bg-white/5 rounded-lg p-3 text-center border border-white/5">
-                                        <div class="text-3xl font-black text-white">${p.stats.s2}</div>
-                                        <div class="text-[9px] text-gray-400 uppercase tracking-widest font-bold">${p.stats.l2}</div>
-                                    </div>
-                                    <div class="bg-white/5 rounded-lg p-3 text-center border border-white/5">
-                                        <div class="text-3xl font-black text-white">${p.stats.s3}</div>
-                                        <div class="text-[9px] text-gray-400 uppercase tracking-widest font-bold">${p.stats.l3}</div>
-                                    </div>
-                                    <div class="bg-white/5 rounded-lg p-3 text-center border border-white/5">
-                                        <div class="text-3xl font-black text-white">${p.stats.s4}</div>
-                                        <div class="text-[9px] text-gray-400 uppercase tracking-widest font-bold">${p.stats.l4}</div>
-                                    </div>
-                                </div>
-                                <div class="flex-grow">
-                                    <div class="text-[10px] text-gray-500 uppercase font-bold mb-2">Last 3 Games</div>
-                                    <div class="space-y-2">
-                                        ${p.games.map(g => `
-                                            <div class="flex justify-between items-center bg-white/5 p-2 rounded text-xs">
-                                                <span class="text-gray-300">${g.opp}</span>
-                                                <span class="text-white font-bold">${g.stat}</span>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                </div>
-                                <button onclick="event.stopPropagation(); downloadCard('${p.id}', event)" class="mt-4 w-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white py-2 rounded font-bold text-xs tracking-wide transition-colors">
-                                    DOWNLOAD CARD
-                                </button>
-                             </div>
-                        </div>
-                    </div>
-                </div>
-                `;
-            });
-            grid.innerHTML = html;
-        }
+ <!-- BACK -->
+ <div class="absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-black rounded-xl overflow-hidden border border-white/20 p-5 flex flex-col">
+ <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-30"></div>
+ <div class="absolute inset-0 bg-gradient-to-br from-[#0a0a0a] to-[#111] -z-10"></div>
+ <div class="relative z-10 flex flex-col h-full">
+ <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
+ <div class="text-xl font-black text-white italic uppercase">Season Stats</div>
+ <div class="text-[#4cc9f0] text-xs font-bold tracking-widest">2024-25</div>
+ </div>
+ <div class="grid grid-cols-2 gap-4 mb-6">
+ <div class="bg-white/5 rounded-lg p-3 text-center border border-white/5">
+ <div class="text-3xl font-black text-white">${p.stats.s1}</div>
+ <div class="text-[9px] text-gray-400 uppercase tracking-widest font-bold">${p.stats.l1}</div>
+ </div>
+ <div class="bg-white/5 rounded-lg p-3 text-center border border-white/5">
+ <div class="text-3xl font-black text-white">${p.stats.s2}</div>
+ <div class="text-[9px] text-gray-400 uppercase tracking-widest font-bold">${p.stats.l2}</div>
+ </div>
+ <div class="bg-white/5 rounded-lg p-3 text-center border border-white/5">
+ <div class="text-3xl font-black text-white">${p.stats.s3}</div>
+ <div class="text-[9px] text-gray-400 uppercase tracking-widest font-bold">${p.stats.l3}</div>
+ </div>
+ <div class="bg-white/5 rounded-lg p-3 text-center border border-white/5">
+ <div class="text-3xl font-black text-white">${p.stats.s4}</div>
+ <div class="text-[9px] text-gray-400 uppercase tracking-widest font-bold">${p.stats.l4}</div>
+ </div>
+ </div>
+ <div class="flex-grow">
+ <div class="text-[10px] text-gray-500 uppercase font-bold mb-2">Last 3 Games</div>
+ <div class="space-y-2">
+ ${p.games.map(g => `
+ <div class="flex justify-between items-center bg-white/5 p-2 rounded text-xs">
+ <span class="text-gray-300">${g.opp}</span>
+ <span class="text-white font-bold">${g.stat}</span>
+ </div>
+ `).join('')}
+ </div>
+ </div>
+ <button onclick="event.stopPropagation(); downloadCard('${p.id}', event)" class="mt-4 w-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white py-2 rounded font-bold text-xs tracking-wide transition-colors">
+ DOWNLOAD CARD
+ </button>
+ </div>
+ </div>
+ </div>
+ </div>
+ `;
+ });
+ grid.innerHTML = html;
+ }
 
-        function downloadCard(id, event) {
-            const cardElement = document.getElementById('card-inner-' + id);
-            if (!cardElement) {
-                console.error('Card element not found for id:', id);
-                return;
-            }
-            
-            const btn = event ? event.currentTarget : document.querySelector(`button[onclick*="downloadCard('${id}')"]`);
-            if (!btn) {
-                console.error('Button not found for card:', id);
-                return;
-            }
+ function downloadCard(id, event) {
+ const cardElement = document.getElementById('card-inner-' + id);
+ if (!cardElement) {
+ console.error('Card element not found for id:', id);
+ return;
+ }
+ const btn = event ? event.currentTarget : document.querySelector(`button[onclick*="downloadCard('${id}')"]`);
+ if (!btn) {
+ console.error('Button not found for card:', id);
+ return;
+ }
 
-            const originalText = btn.innerHTML;
-            btn.innerHTML = 'GENERATING...';
-            btn.disabled = true;
+ const originalText = btn.innerHTML;
+ btn.innerHTML = 'GENERATING...';
+ btn.disabled = true;
 
-            html2canvas(cardElement, {
-                scale: 3,
-                backgroundColor: null,
-                useCORS: true
-            }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = id + '_Godspeed_Card.png';
-                link.href = canvas.toDataURL();
-                link.click();
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }).catch(error => {
-                console.error('Error generating card image:', error);
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            });
-        }
+ html2canvas(cardElement, {
+ scale: 3,
+ backgroundColor: null,
+ useCORS: true
+ }).then(canvas => {
+ const link = document.createElement('a');
+ link.download = id + '_Godspeed_Card.png';
+ link.href = canvas.toDataURL();
+ link.click();
+ btn.innerHTML = originalText;
+ btn.disabled = false;
+ }).catch(error => {
+ console.error('Error generating card image:', error);
+ btn.innerHTML = originalText;
+ btn.disabled = false;
+ });
+ }
 
-        // Init
-        window.onload = renderCards;
-    </script>
-    <footer class="bg-gray-50 pt-20 pb-16 border-t border-gray-100">
-        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-12">
-            <div class="md:col-span-4">
-                <div class="text-2xl font-black tracking-tighter mb-6">
-                    GODSPEED<span class="text-blue-600">BASKETBALL</span>
-                </div>
-                <p class="text-gray-500 leading-relaxed max-w-sm text-sm">
-                    Building the future of Denver basketball.<br>
-                    Character. Discipline. Excellence.
-                </p>
-            </div>
-            <div class="md:col-span-8 grid grid-cols-2 md:grid-cols-5 gap-8">
-                <div>
-                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Programs</h4>
-                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
-                        <li><a href="training.html" class="hover:text-blue-600 transition">Training</a></li>
-                        <li><a href="aau.html" class="hover:text-blue-600 transition">AAU Club</a></li>
-                        <li style="display: none;"><a href="#" class="text-gray-400 cursor-not-allowed block py-1" style="text-decoration: none;"  onclick="alert('Coming soon!'); return false;">Academy </a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Athletes</h4>
-                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
-                        <li><a href="#" class=" text-gray-400 cursor-not-allowed"  onclick="alert('Coming soon!'); return false;">Skill Assessment</a></li>
-                        <li><a href="card-preview.html"  class="hover:text-blue-600 transition" >Player Card</a></li>
-                        <li><a href="#" class="text-gray-400 cursor-not-allowed block py-1" style="text-decoration: none;"  onclick="alert('Coming soon!'); return false;">AAU Camps </a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Shop</h4>
-                    <ul class="space-y-4 text-sm text-gray-400 font-medium">
-                        <li class="cursor-not-allowed">Apparel</li>
-                        <li class="cursor-not-allowed">Footwear</li>
-                        <li class="cursor-not-allowed">Accessories</li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Parents</h4>
-                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
-                        <li><a href="#" class=" text-gray-400 cursor-not-allowed"  onclick="alert('Coming soon!'); return false;">Parent Assessment</a></li>
-                        <li><a href="parent-portal.html" class="hover:text-blue-600 transition">Parent Portal</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Company</h4>
-                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
-                        <li><a href="about.html" class="hover:text-blue-600 transition">About Us</a></li>
-                        <li><a href="#contact" class="hover:text-blue-600 transition">Contact</a></li>
-                        <li><a href="#" class=" text-gray-400 cursor-not-allowed"  onclick="alert('Coming soon!'); return false;">Coach Portal</a></li>
-                        <li><a href="#" class="text-gray-400 cursor-not-allowed block py-1" style="text-decoration: none;"  onclick="alert('Coming soon!'); return false;">Careers </a></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </footer>
-    <script src="auth.js"></script>
+ // Init
+ window.onload = renderCards;
+ </script>
+ <footer class="bg-gray-50 pt-20 pb-16 border-t border-gray-100">
+ <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-12">
+ <div class="md:col-span-4">
+ <div class="text-2xl font-black tracking-tighter mb-6">
+ GODSPEED<span class="text-blue-600">BASKETBALL</span>
+ </div>
+ <p class="text-gray-500 leading-relaxed max-w-sm text-sm">
+ Building the future of Denver basketball.<br>
+ Character. Discipline. Excellence.
+ </p>
+ </div>
+ <div class="md:col-span-8 grid grid-cols-2 md:grid-cols-5 gap-8">
+ <div>
+ <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Programs</h4>
+ <ul class="space-y-4 text-sm text-gray-600 font-medium">
+ <li><a href="training.html" class="hover:text-blue-600 transition">Training</a></li>
+ <li><a href="aau.html" class="hover:text-blue-600 transition">AAU Club</a></li>
+ <li style="display: none;"><a href="#" class="text-gray-400 cursor-not-allowed block py-1" style="text-decoration: none;" onclick="alert('Coming soon!'); return false;">Academy </a></li>
+ </ul>
+ </div>
+ <div>
+ <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Athletes</h4>
+ <ul class="space-y-4 text-sm text-gray-600 font-medium">
+ <li><a href="#" class=" text-gray-400 cursor-not-allowed" onclick="alert('Coming soon!'); return false;">Skill Assessment</a></li>
+ <li><a href="card-preview.html" class="hover:text-blue-600 transition" >Player Card</a></li>
+ <li><a href="#" class="text-gray-400 cursor-not-allowed block py-1" style="text-decoration: none;" onclick="alert('Coming soon!'); return false;">AAU Camps </a></li>
+ </ul>
+ </div>
+ <div>
+ <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Shop</h4>
+ <ul class="space-y-4 text-sm text-gray-400 font-medium">
+ <li class="cursor-not-allowed">Apparel</li>
+ <li class="cursor-not-allowed">Footwear</li>
+ <li class="cursor-not-allowed">Accessories</li>
+ </ul>
+ </div>
+ <div>
+ <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Parents</h4>
+ <ul class="space-y-4 text-sm text-gray-600 font-medium">
+ <li><a href="#" class=" text-gray-400 cursor-not-allowed" onclick="alert('Coming soon!'); return false;">Parent Assessment</a></li>
+ <li><a href="parent-portal.html" class="hover:text-blue-600 transition">Parent Portal</a></li>
+ </ul>
+ </div>
+ <div>
+ <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Company</h4>
+ <ul class="space-y-4 text-sm text-gray-600 font-medium">
+ <li><a href="about.html" class="hover:text-blue-600 transition">About Us</a></li>
+ <li><a href="#contact" class="hover:text-blue-600 transition">Contact</a></li>
+ <li><a href="#" class=" text-gray-400 cursor-not-allowed" onclick="alert('Coming soon!'); return false;">Coach Portal</a></li>
+ <li><a href="#" class="text-gray-400 cursor-not-allowed block py-1" style="text-decoration: none;" onclick="alert('Coming soon!'); return false;">Careers </a></li>
+ </ul>
+ </div>
+ </div>
+ </div>
+ </footer>
+ <script src="auth.js"></script>
 </body>
 
 </html>

@@ -2,579 +2,579 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Player Portal: Anton | GODSPEED</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-    </style>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Player Portal: Anton | GODSPEED</title>
+ <script src="https://cdn.tailwindcss.com"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+ <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+ <style>
+ body {
+ font-family: 'Inter', sans-serif;
+ }
+ </style>
 </head>
 
 <body class="bg-gray-50 text-black">
-    <nav class="bg-black text-white px-6 py-4 sticky top-0 z-50 flex justify-between items-center">
-        <div class="text-xl font-black tracking-tighter">GODSPEED<span class="text-blue-600">OS</span></div>
-        <div class="flex items-center gap-4">
-            <span class="text-xs font-bold text-gray-400 uppercase">Coach View</span>
-            <div class="h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center font-bold text-xs">CS</div>
-        </div>
-    </nav>
-    <header class="bg-white border-b border-gray-200 p-8">
-        <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-            <div class="flex items-center gap-6">
-                <div class="h-20 w-20 bg-gray-100 rounded-full overflow-hidden border-2 border-gray-100">
-                    <svg class="w-full h-full text-gray-300" fill="currentColor" viewBox="0 0 24 24">
-                        <path
-                            d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                </div>
-                <div>
-                    <h1 class="text-3xl font-black uppercase tracking-tight">Anton <span
-                            class="text-gray-400">#12</span></h1>
-                    <div class="flex gap-3 text-sm font-bold text-gray-500 mt-1">
-                        <span class="bg-black text-white px-2 py-0.5 rounded text-xs uppercase">Elite Guard
-                            Academy</span>
-                        <span>5th Grade</span>
-                        <span>Parent: Denis</span>
-                    </div>
-                </div>
-            </div>
-            <div class="flex gap-3">
-                <button onclick="generatePDF()"
-                    class="bg-gray-100 hover:bg-gray-200 text-black px-6 py-3 rounded-full font-bold text-sm transition flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                        </path>
-                    </svg>
-                    DOWNLOAD REPORT
-                </button>
-                <button onclick="sendMagicLink()"
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold text-sm transition flex items-center gap-2 shadow-lg shadow-blue-600/20">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
-                        </path>
-                    </svg>
-                    PUBLISH & NOTIFY
-                </button>
-            </div>
-        </div>
-    </header>
-    <main class="max-w-5xl mx-auto p-8" id="report-content">
+ <nav class="bg-black text-white px-6 py-4 sticky top-0 z-50 flex justify-between items-center">
+ <div class="text-xl font-black tracking-tighter">GODSPEED<span class="text-blue-600">OS</span></div>
+ <div class="flex items-center gap-4">
+ <span class="text-xs font-bold text-gray-400 uppercase">Coach View</span>
+ <div class="h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center font-bold text-xs">CS</div>
+ </div>
+ </nav>
+ <header class="bg-white border-b border-gray-200 p-8">
+ <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+ <div class="flex items-center gap-6">
+ <div class="h-20 w-20 bg-gray-100 rounded-full overflow-hidden border-2 border-gray-100">
+ <svg class="w-full h-full text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+ <path
+ d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+ </svg>
+ </div>
+ <div>
+ <h1 class="text-3xl font-black uppercase tracking-tight">Anton <span
+ class="text-gray-400">#12</span></h1>
+ <div class="flex gap-3 text-sm font-bold text-gray-500 mt-1">
+ <span class="bg-black text-white px-2 py-0.5 rounded text-xs uppercase">Elite Guard
+ Academy</span>
+ <span>5th Grade</span>
+ <span>Parent: Denis</span>
+ </div>
+ </div>
+ </div>
+ <div class="flex gap-3">
+ <button onclick="generatePDF()"
+ class="bg-gray-100 hover:bg-gray-200 text-black px-6 py-3 rounded-full font-bold text-sm transition flex items-center gap-2">
+ <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+ d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+ </path>
+ </svg>
+ DOWNLOAD REPORT
+ </button>
+ <button onclick="sendMagicLink()"
+ class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-bold text-sm transition flex items-center gap-2 shadow-lg shadow-blue-600/20">
+ <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+ d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+ </path>
+ </svg>
+ PUBLISH & NOTIFY
+ </button>
+ </div>
+ </div>
+ </header>
+ <main class="max-w-5xl mx-auto p-8" id="report-content">
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-                <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Total Hours Purchased</div>
-                <div class="text-4xl font-black text-black">10.0</div>
-                <div class="text-xs font-bold text-green-600 mt-2">Paid ($400)</div>
-            </div>
-            <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-                <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Hours Completed</div>
-                <div class="text-4xl font-black text-blue-600">10.0</div>
-                <div class="w-full bg-gray-100 h-1.5 mt-3 rounded-full overflow-hidden">
-                    <div class="bg-blue-600 h-full w-[100%]"></div>
-                </div>
-            </div>
-            <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-                <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Hours Remaining</div>
-                <div class="text-4xl font-black text-gray-800">0.0</div>
-                <div class="text-xs font-bold text-orange-500 mt-2">Package Complete</div>
-            </div>
-        </div>
+ <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+ <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+ <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Total Hours Purchased</div>
+ <div class="text-4xl font-black text-black">10.0</div>
+ <div class="text-xs font-bold text-green-600 mt-2">Paid ($400)</div>
+ </div>
+ <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+ <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Hours Completed</div>
+ <div class="text-4xl font-black text-blue-600">10.0</div>
+ <div class="w-full bg-gray-100 h-1.5 mt-3 rounded-full overflow-hidden">
+ <div class="bg-blue-600 h-full w-[100%]"></div>
+ </div>
+ </div>
+ <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+ <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Hours Remaining</div>
+ <div class="text-4xl font-black text-gray-800">0.0</div>
+ <div class="text-xs font-bold text-orange-500 mt-2">Package Complete</div>
+ </div>
+ </div>
 
-        <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-12">
-            <div class="p-6 border-b border-gray-100 flex justify-between items-center">
-                <h2 class="text-lg font-black uppercase">Training Log</h2>
-                <span class="text-xs font-bold bg-gray-100 px-2 py-1 rounded text-gray-600">FEB 2026</span>
-            </div>
-            <table class="w-full text-left text-sm">
-                <thead class="bg-gray-50 text-gray-500 font-bold uppercase text-xs">
-                    <tr>
-                        <th class="p-4">Date</th>
-                        <th class="p-4">Session Focus</th>
-                        <th class="p-4">Coach</th>
-                        <th class="p-4 text-right">Duration</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    <tr>
-                        <td class="p-4 font-bold">Feb 24, 2026</td>
-                        <td class="p-4">Dribbling, off hand activation, shooting, low man reads</td>
-                        <td class="p-4 text-gray-500">Coach Scott</td>
-                        <td class="p-4 text-right font-bold">2.0 Hrs</td>
-                    </tr>
-                    <tr>
-                        <td class="p-4 font-bold">Feb 22, 2026</td>
-                        <td class="p-4">Off hand activation, ball handling against pressure and free throws</td>
-                        <td class="p-4 text-gray-500">Coach Scott</td>
-                        <td class="p-4 text-right font-bold">1.0 Hrs</td>
-                    </tr>
-                    <tr>
-                        <td class="p-4 font-bold">Jan 25, 2026</td>
-                        <td class="p-4">Finishing, ballhandling, and reads off DHO</td>
-                        <td class="p-4 text-gray-500">Coach Scott</td>
-                        <td class="p-4 text-right font-bold">2.0 Hrs</td>
-                    </tr>
-                    <tr>
-                        <td class="p-4 font-bold">Jan 19, 2026</td>
-                        <td class="p-4">Long splits off post entry, passing to post, driving vs pressure, footwork
-                            separation</td>
-                        <td class="p-4 text-gray-500">Coach Scott</td>
-                        <td class="p-4 text-right font-bold">2.0 Hrs</td>
-                    </tr>
-                    <tr>
-                        <td class="p-4 font-bold">Jan 04, 2026</td>
-                        <td class="p-4">Ball handling, footwork, shot creation</td>
-                        <td class="p-4 text-gray-500">Coach Scott</td>
-                        <td class="p-4 text-right font-bold">1.0 Hrs</td>
-                    </tr>
-                    <tr>
-                        <td class="p-4 font-bold">Jan 03, 2026</td>
-                        <td class="p-4">Handling pressure defense, ballhandling, footwork</td>
-                        <td class="p-4 text-gray-500">Coach Scott</td>
-                        <td class="p-4 text-right font-bold">2.0 Hrs</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+ <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-12">
+ <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+ <h2 class="text-lg font-black uppercase">Training Log</h2>
+ <span class="text-xs font-bold bg-gray-100 px-2 py-1 rounded text-gray-600">FEB 2026</span>
+ </div>
+ <table class="w-full text-left text-sm">
+ <thead class="bg-gray-50 text-gray-500 font-bold uppercase text-xs">
+ <tr>
+ <th class="p-4">Date</th>
+ <th class="p-4">Session Focus</th>
+ <th class="p-4">Coach</th>
+ <th class="p-4 text-right">Duration</th>
+ </tr>
+ </thead>
+ <tbody class="divide-y divide-gray-100">
+ <tr>
+ <td class="p-4 font-bold">Feb 24, 2026</td>
+ <td class="p-4">Dribbling, off hand activation, shooting, low man reads</td>
+ <td class="p-4 text-gray-500">Coach Scott</td>
+ <td class="p-4 text-right font-bold">2.0 Hrs</td>
+ </tr>
+ <tr>
+ <td class="p-4 font-bold">Feb 22, 2026</td>
+ <td class="p-4">Off hand activation, ball handling against pressure and free throws</td>
+ <td class="p-4 text-gray-500">Coach Scott</td>
+ <td class="p-4 text-right font-bold">1.0 Hrs</td>
+ </tr>
+ <tr>
+ <td class="p-4 font-bold">Jan 25, 2026</td>
+ <td class="p-4">Finishing, ballhandling, and reads off DHO</td>
+ <td class="p-4 text-gray-500">Coach Scott</td>
+ <td class="p-4 text-right font-bold">2.0 Hrs</td>
+ </tr>
+ <tr>
+ <td class="p-4 font-bold">Jan 19, 2026</td>
+ <td class="p-4">Long splits off post entry, passing to post, driving vs pressure, footwork
+ separation</td>
+ <td class="p-4 text-gray-500">Coach Scott</td>
+ <td class="p-4 text-right font-bold">2.0 Hrs</td>
+ </tr>
+ <tr>
+ <td class="p-4 font-bold">Jan 04, 2026</td>
+ <td class="p-4">Ball handling, footwork, shot creation</td>
+ <td class="p-4 text-gray-500">Coach Scott</td>
+ <td class="p-4 text-right font-bold">1.0 Hrs</td>
+ </tr>
+ <tr>
+ <td class="p-4 font-bold">Jan 03, 2026</td>
+ <td class="p-4">Handling pressure defense, ballhandling, footwork</td>
+ <td class="p-4 text-gray-500">Coach Scott</td>
+ <td class="p-4 text-right font-bold">2.0 Hrs</td>
+ </tr>
+ </tbody>
+ </table>
+ </div>
 
-        <!-- Parent Connections Section -->
-        <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-            <div class="p-6 border-b border-gray-100 flex justify-between items-center">
-                <h2 class="text-lg font-black uppercase">Parent Connections <span
-                        class="hidden md:inline text-xs font-normal text-gray-400 ml-2 normal-case tracking-normal">Manage
-                        who receives updates</span></h2>
-                <button
-                    class="text-xs font-bold bg-gray-100 hover:bg-gray-200 text-black px-3 py-1.5 rounded transition flex items-center gap-1">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    Invite Parent
-                </button>
-            </div>
-            <div class="p-6">
-                <!-- Connected Parent -->
-                <div
-                    class="flex flex-col md:flex-row md:items-center justify-between p-4 border border-gray-100 rounded-lg bg-gray-50 mb-3 gap-4">
-                    <div class="flex items-center gap-4">
-                        <div
-                            class="h-10 w-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-sm">
-                            D</div>
-                        <div>
-                            <div class="font-bold text-sm text-gray-900">Denis (Dad)</div>
-                            <div class="text-xs text-gray-500">denis@example.com</div>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <span
-                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            Active
-                        </span>
-                        <div class="h-4 w-px bg-gray-300"></div>
-                        <button class="text-xs text-gray-500 hover:text-black font-semibold"
-                            onclick="alert('Latest report sent manually to Denis.')">Send Report</button>
-                        <button class="text-xs text-red-400 hover:text-red-600"
-                            onclick="alert('Access revoked for Denis.')">Revoke</button>
-                    </div>
-                </div>
+ <!-- Parent Connections Section -->
+ <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+ <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+ <h2 class="text-lg font-black uppercase">Parent Connections <span
+ class="hidden md:inline text-xs font-normal text-gray-400 ml-2 normal-case tracking-normal">Manage
+ who receives updates</span></h2>
+ <button
+ class="text-xs font-bold bg-gray-100 hover:bg-gray-200 text-black px-3 py-1.5 rounded transition flex items-center gap-1">
+ <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+ </svg>
+ Invite Parent
+ </button>
+ </div>
+ <div class="p-6">
+ <!-- Connected Parent -->
+ <div
+ class="flex flex-col md:flex-row md:items-center justify-between p-4 border border-gray-100 rounded-lg bg-gray-50 mb-3 gap-4">
+ <div class="flex items-center gap-4">
+ <div
+ class="h-10 w-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-sm">
+ D</div>
+ <div>
+ <div class="font-bold text-sm text-gray-900">Denis (Dad)</div>
+ <div class="text-xs text-gray-500">denis@example.com</div>
+ </div>
+ </div>
+ <div class="flex items-center gap-4">
+ <span
+ class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+ Active
+ </span>
+ <div class="h-4 w-px bg-gray-300"></div>
+ <button class="text-xs text-gray-500 hover:text-black font-semibold"
+ onclick="alert('Latest report sent manually to Denis.')">Send Report</button>
+ <button class="text-xs text-red-400 hover:text-red-600"
+ onclick="alert('Access revoked for Denis.')">Revoke</button>
+ </div>
+ </div>
 
-                <!-- Invite Sent Example -->
-                <div
-                    class="flex flex-col md:flex-row md:items-center justify-between p-4 border border-dashed border-gray-200 rounded-lg gap-4">
-                    <div class="flex items-center gap-4 opacity-75">
-                        <div
-                            class="h-10 w-10 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center font-bold text-sm">
-                            S</div>
-                        <div>
-                            <div class="font-bold text-sm text-gray-900">Sarah (Mom)</div>
-                            <div class="text-xs text-gray-500">sarah@example.com</div>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <span
-                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                            Invite Sent
-                        </span>
-                        <div class="h-4 w-px bg-gray-300"></div>
-                        <button class="text-xs text-blue-600 hover:text-blue-800 font-semibold"
-                            onclick="alert('Invite resent to Sarah.')">Resend Invite</button>
-                    </div>
-                </div>
-            </div>
-            <div
-                class="px-6 py-4 bg-gray-50 border-t border-gray-100 text-xs text-gray-500 flex justify-between items-center">
-                <span>Security: Magic Links expire in 7 days.</span>
-                <span class="font-mono text-[10px] text-gray-400">ID: USr_882910</span>
-            </div>
-        </div>
-    </main>
-    <script>
-        // 1. PDF GENERATOR
-        function generatePDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+ <!-- Invite Sent Example -->
+ <div
+ class="flex flex-col md:flex-row md:items-center justify-between p-4 border border-dashed border-gray-200 rounded-lg gap-4">
+ <div class="flex items-center gap-4 opacity-75">
+ <div
+ class="h-10 w-10 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center font-bold text-sm">
+ S</div>
+ <div>
+ <div class="font-bold text-sm text-gray-900">Sarah (Mom)</div>
+ <div class="text-xs text-gray-500">sarah@example.com</div>
+ </div>
+ </div>
+ <div class="flex items-center gap-4">
+ <span
+ class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+ Invite Sent
+ </span>
+ <div class="h-4 w-px bg-gray-300"></div>
+ <button class="text-xs text-blue-600 hover:text-blue-800 font-semibold"
+ onclick="alert('Invite resent to Sarah.')">Resend Invite</button>
+ </div>
+ </div>
+ </div>
+ <div
+ class="px-6 py-4 bg-gray-50 border-t border-gray-100 text-xs text-gray-500 flex justify-between items-center">
+ <span>Security: Magic Links expire in 7 days.</span>
+ <span class="font-mono text-[10px] text-gray-400">ID: USr_882910</span>
+ </div>
+ </div>
+ </main>
+ <script>
+ // 1. PDF GENERATOR
+ function generatePDF() {
+ const { jsPDF } = window.jspdf;
+ const doc = new jsPDF();
 
-            // Colors
-            const godspeedBlue = [37, 99, 235];
-            const black = [17, 24, 39];
-            const grayText = [107, 114, 128];
-            const lightGray = [243, 244, 246];
-            const borderGray = [229, 231, 235];
+ // Colors
+ const godspeedBlue = [37, 99, 235];
+ const black = [17, 24, 39];
+ const grayText = [107, 114, 128];
+ const lightGray = [243, 244, 246];
+ const borderGray = [229, 231, 235];
 
-            // --- HEADER (Godspeed Logo & Title) ---
-            doc.setFillColor(...black);
-            doc.rect(0, 0, 210, 45, 'F');
+ // --- HEADER (Godspeed Logo & Title) ---
+ doc.setFillColor(...black);
+ doc.rect(0, 0, 210, 45, 'F');
 
-            // "GODSPEED" text
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(32);
-            doc.setFont("helvetica", "bold");
-            doc.text("GODSPEED", 15, 22);
+ // "GODSPEED" text
+ doc.setTextColor(255, 255, 255);
+ doc.setFontSize(32);
+ doc.setFont("helvetica", "bold");
+ doc.text("GODSPEED", 15, 22);
 
-            // "BASKETBALL" text in blue
-            doc.setTextColor(...godspeedBlue);
-            doc.text("BASKETBALL", 82, 22);
+ // "BASKETBALL" text in blue
+ doc.setTextColor(...godspeedBlue);
+ doc.text("BASKETBALL", 82, 22);
 
-            // Subtitle
-            doc.setTextColor(200, 200, 200);
-            doc.setFontSize(9);
-            doc.setFont("helvetica", "normal");
-            doc.text("PLAYER DEVELOPMENT REPORT  //  CONFIDENTIAL", 15, 34);
+ // Subtitle
+ doc.setTextColor(200, 200, 200);
+ doc.setFontSize(9);
+ doc.setFont("helvetica", "normal");
+ doc.text("PLAYER DEVELOPMENT REPORT // CONFIDENTIAL", 15, 34);
 
-            // Print Date
-            doc.setFontSize(8);
-            doc.text(`Generated: ${new Date().toLocaleDateString()}`, 155, 34);
+ // Print Date
+ doc.setFontSize(8);
+ doc.text(`Generated: ${new Date().toLocaleDateString()}`, 155, 34);
 
-            // --- PLAYER PROFILE CARD ---
-            doc.setFillColor(255, 255, 255);
-            doc.roundedRect(15, 55, 180, 32, 4, 4, 'FD');
-            doc.setDrawColor(...borderGray);
-            doc.setLineWidth(0.5);
-            doc.roundedRect(15, 55, 180, 32, 4, 4, 'S');
+ // --- PLAYER PROFILE CARD ---
+ doc.setFillColor(255, 255, 255);
+ doc.roundedRect(15, 55, 180, 32, 4, 4, 'FD');
+ doc.setDrawColor(...borderGray);
+ doc.setLineWidth(0.5);
+ doc.roundedRect(15, 55, 180, 32, 4, 4, 'S');
 
-            // Avatar circle
-            doc.setFillColor(...lightGray);
-            doc.circle(35, 71, 12, 'F');
-            doc.setTextColor(150, 150, 150);
-            doc.setFontSize(14);
-            doc.setFont("helvetica", "bold");
-            doc.text("A", 32, 76);
+ // Avatar circle
+ doc.setFillColor(...lightGray);
+ doc.circle(35, 71, 12, 'F');
+ doc.setTextColor(150, 150, 150);
+ doc.setFontSize(14);
+ doc.setFont("helvetica", "bold");
+ doc.text("A", 32, 76);
 
-            // Player Name
-            doc.setTextColor(...black);
-            doc.setFontSize(24);
-            doc.text("ANTON", 55, 69);
+ // Player Name
+ doc.setTextColor(...black);
+ doc.setFontSize(24);
+ doc.text("ANTON", 55, 69);
 
-            // Player Number
-            doc.setTextColor(200, 200, 200);
-            doc.setFontSize(18);
-            doc.text("#12", 98, 69);
+ // Player Number
+ doc.setTextColor(200, 200, 200);
+ doc.setFontSize(18);
+ doc.text("#12", 98, 69);
 
-            // Tags
-            doc.setFillColor(...black);
-            doc.roundedRect(55, 75, 48, 6, 1, 1, 'F');
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(8);
-            doc.text("ELITE GUARD ACADEMY", 58, 79.5);
+ // Tags
+ doc.setFillColor(...black);
+ doc.roundedRect(55, 75, 48, 6, 1, 1, 'F');
+ doc.setTextColor(255, 255, 255);
+ doc.setFontSize(8);
+ doc.text("ELITE GUARD ACADEMY", 58, 79.5);
 
-            doc.setTextColor(...grayText);
-            doc.setFont("helvetica", "bold");
-            doc.text("Grade: 5th", 110, 79.5);
-            doc.text("Parent: Denis", 140, 79.5);
+ doc.setTextColor(...grayText);
+ doc.setFont("helvetica", "bold");
+ doc.text("Grade: 5th", 110, 79.5);
+ doc.text("Parent: Denis", 140, 79.5);
 
-            // --- STATS OVERVIEW ---
-            const startY = 98;
+ // --- STATS OVERVIEW ---
+ const startY = 98;
 
-            // Box 1: Total
-            doc.setDrawColor(...borderGray);
-            doc.setFillColor(255, 255, 255);
-            doc.roundedRect(15, startY, 55, 28, 3, 3, 'FD');
-            doc.setTextColor(...grayText);
-            doc.setFontSize(8);
-            doc.text("TOTAL HOURS", 20, startY + 8);
-            doc.setTextColor(...black);
-            doc.setFontSize(24);
-            doc.text("10.0", 20, startY + 22);
+ // Box 1: Total
+ doc.setDrawColor(...borderGray);
+ doc.setFillColor(255, 255, 255);
+ doc.roundedRect(15, startY, 55, 28, 3, 3, 'FD');
+ doc.setTextColor(...grayText);
+ doc.setFontSize(8);
+ doc.text("TOTAL HOURS", 20, startY + 8);
+ doc.setTextColor(...black);
+ doc.setFontSize(24);
+ doc.text("10.0", 20, startY + 22);
 
-            // Box 2: Completed (Highlighted Godspeed Blue)
-            doc.setFillColor(248, 250, 252);
-            doc.roundedRect(77, startY, 55, 28, 3, 3, 'FD');
-            doc.setDrawColor(...godspeedBlue);
-            doc.setLineWidth(1);
-            doc.roundedRect(77, startY, 55, 28, 3, 3, 'S');
+ // Box 2: Completed (Highlighted Godspeed Blue)
+ doc.setFillColor(248, 250, 252);
+ doc.roundedRect(77, startY, 55, 28, 3, 3, 'FD');
+ doc.setDrawColor(...godspeedBlue);
+ doc.setLineWidth(1);
+ doc.roundedRect(77, startY, 55, 28, 3, 3, 'S');
 
-            doc.setTextColor(...godspeedBlue);
-            doc.setFontSize(8);
-            doc.setFont("helvetica", "bold");
-            doc.text("COMPLETED", 82, startY + 8);
-            doc.setFontSize(24);
-            doc.text("10.0", 82, startY + 22);
-            doc.setLineWidth(0.5); // Reset
+ doc.setTextColor(...godspeedBlue);
+ doc.setFontSize(8);
+ doc.setFont("helvetica", "bold");
+ doc.text("COMPLETED", 82, startY + 8);
+ doc.setFontSize(24);
+ doc.text("10.0", 82, startY + 22);
+ doc.setLineWidth(0.5); // Reset
 
-            // Box 3: Remaining
-            doc.setDrawColor(...borderGray);
-            doc.setFillColor(255, 255, 255);
-            doc.roundedRect(140, startY, 55, 28, 3, 3, 'FD');
-            doc.setTextColor(...grayText);
-            doc.setFontSize(8);
-            doc.text("REMAINING", 145, startY + 8);
-            doc.setTextColor(...black);
-            doc.setFontSize(24);
-            doc.text("0.0", 145, startY + 22);
+ // Box 3: Remaining
+ doc.setDrawColor(...borderGray);
+ doc.setFillColor(255, 255, 255);
+ doc.roundedRect(140, startY, 55, 28, 3, 3, 'FD');
+ doc.setTextColor(...grayText);
+ doc.setFontSize(8);
+ doc.text("REMAINING", 145, startY + 8);
+ doc.setTextColor(...black);
+ doc.setFontSize(24);
+ doc.text("0.0", 145, startY + 22);
 
-            // --- TRAINING LOG TABLE ---
-            // Title
-            let yPos = 145;
-            doc.setFontSize(14);
-            doc.setTextColor(...black);
-            doc.text("Recent Activity Log", 15, yPos);
+ // --- TRAINING LOG TABLE ---
+ // Title
+ let yPos = 145;
+ doc.setFontSize(14);
+ doc.setTextColor(...black);
+ doc.text("Recent Activity Log", 15, yPos);
 
-            yPos += 8;
+ yPos += 8;
 
-            // Table Header Background
-            doc.setFillColor(...lightGray);
-            doc.rect(15, yPos, 180, 8, 'F');
+ // Table Header Background
+ doc.setFillColor(...lightGray);
+ doc.rect(15, yPos, 180, 8, 'F');
 
-            doc.setFontSize(8);
-            doc.setTextColor(...grayText);
-            doc.setFont("helvetica", "bold");
-            doc.text("DATE", 20, yPos + 5.5);
-            doc.text("SESSION FOCUS", 55, yPos + 5.5);
-            doc.text("DURATION", 170, yPos + 5.5);
+ doc.setFontSize(8);
+ doc.setTextColor(...grayText);
+ doc.setFont("helvetica", "bold");
+ doc.text("DATE", 20, yPos + 5.5);
+ doc.text("SESSION FOCUS", 55, yPos + 5.5);
+ doc.text("DURATION", 170, yPos + 5.5);
 
-            yPos += 8;
+ yPos += 8;
 
-            // Row Helper
-            function drawRow(date, focus, duration, isAlt) {
-                if (isAlt) {
-                    doc.setFillColor(250, 250, 250);
-                    doc.rect(15, yPos, 180, 12, 'F');
-                }
+ // Row Helper
+ function drawRow(date, focus, duration, isAlt) {
+ if (isAlt) {
+ doc.setFillColor(250, 250, 250);
+ doc.rect(15, yPos, 180, 12, 'F');
+ }
 
-                doc.setTextColor(...black);
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(9);
-                doc.text(date, 20, yPos + 7.5);
+ doc.setTextColor(...black);
+ doc.setFont("helvetica", "bold");
+ doc.setFontSize(9);
+ doc.text(date, 20, yPos + 7.5);
 
-                doc.setFont("helvetica", "normal");
-                doc.setTextColor(50, 50, 50);
-                doc.text(focus, 55, yPos + 7.5);
+ doc.setFont("helvetica", "normal");
+ doc.setTextColor(50, 50, 50);
+ doc.text(focus, 55, yPos + 7.5);
 
-                doc.setFont("helvetica", "bold");
-                doc.setTextColor(...black);
-                doc.text(duration, 170, yPos + 7.5);
+ doc.setFont("helvetica", "bold");
+ doc.setTextColor(...black);
+ doc.text(duration, 170, yPos + 7.5);
 
-                doc.setDrawColor(...borderGray);
-                doc.line(15, yPos + 12, 195, yPos + 12);
+ doc.setDrawColor(...borderGray);
+ doc.line(15, yPos + 12, 195, yPos + 12);
 
-                yPos += 12;
-            }
+ yPos += 12;
+ }
 
-            // Data Rows
-            drawRow("Feb 24, 2026", "Dribbling, off hand activation, shooting, low man reads", "2.0 Hrs", false);
-            drawRow("Feb 22, 2026", "Off hand activation, ball handling vs pressure, free throws", "1.0 Hrs", true);
-            drawRow("Jan 25, 2026", "Finishing, ballhandling, and reads off DHO", "2.0 Hrs", false);
-            drawRow("Jan 19, 2026", "Long splits off post entry, passing to post, driving vs pressure", "2.0 Hrs", true);
-            drawRow("Jan 04, 2026", "Ball handling, footwork, shot creation", "1.0 Hrs", false);
-            drawRow("Jan 03, 2026", "Handling pressure defense, ballhandling, footwork", "2.0 Hrs", true);
+ // Data Rows
+ drawRow("Feb 24, 2026", "Dribbling, off hand activation, shooting, low man reads", "2.0 Hrs", false);
+ drawRow("Feb 22, 2026", "Off hand activation, ball handling vs pressure, free throws", "1.0 Hrs", true);
+ drawRow("Jan 25, 2026", "Finishing, ballhandling, and reads off DHO", "2.0 Hrs", false);
+ drawRow("Jan 19, 2026", "Long splits off post entry, passing to post, driving vs pressure", "2.0 Hrs", true);
+ drawRow("Jan 04, 2026", "Ball handling, footwork, shot creation", "1.0 Hrs", false);
+ drawRow("Jan 03, 2026", "Handling pressure defense, ballhandling, footwork", "2.0 Hrs", true);
 
-            // --- TRAINING SUMMARY ---
-            yPos += 6;
-            doc.setFontSize(9);
-            doc.setTextColor(...grayText);
-            doc.setFont("helvetica", "bold");
-            doc.text("TOTAL HOURS LOGGED IN THIS REPORT:", 20, yPos);
-            doc.setTextColor(...godspeedBlue);
-            doc.text("10.0 Hrs  (6 Sessions)", 110, yPos);
+ // --- TRAINING SUMMARY ---
+ yPos += 6;
+ doc.setFontSize(9);
+ doc.setTextColor(...grayText);
+ doc.setFont("helvetica", "bold");
+ doc.text("TOTAL HOURS LOGGED IN THIS REPORT:", 20, yPos);
+ doc.setTextColor(...godspeedBlue);
+ doc.text("10.0 Hrs (6 Sessions)", 110, yPos);
 
-            // --- PAGE 2: COACH'S ASSESSMENT ---
-            doc.addPage();
+ // --- PAGE 2: COACH'S ASSESSMENT ---
+ doc.addPage();
 
-            // Page 2 Header Bar
-            doc.setFillColor(...black);
-            doc.rect(0, 0, 210, 30, 'F');
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(18);
-            doc.setFont("helvetica", "bold");
-            doc.text("COACH'S ASSESSMENT", 15, 20);
-            doc.setFontSize(9);
-            doc.setTextColor(150, 150, 150);
-            doc.text("DEVELOPMENT REPORT  //  CONFIDENTIAL", 130, 20);
+ // Page 2 Header Bar
+ doc.setFillColor(...black);
+ doc.rect(0, 0, 210, 30, 'F');
+ doc.setTextColor(255, 255, 255);
+ doc.setFontSize(18);
+ doc.setFont("helvetica", "bold");
+ doc.text("COACH'S ASSESSMENT", 15, 20);
+ doc.setFontSize(9);
+ doc.setTextColor(150, 150, 150);
+ doc.text("DEVELOPMENT REPORT // CONFIDENTIAL", 130, 20);
 
-            // Player Badge on Page 2
-            doc.setFillColor(248, 250, 252);
-            doc.setDrawColor(...borderGray);
-            doc.roundedRect(15, 38, 180, 20, 3, 3, 'FD');
-            doc.setTextColor(...black);
-            doc.setFontSize(13);
-            doc.setFont("helvetica", "bold");
-            doc.text("Anton  #12", 25, 51);
-            doc.setFontSize(8);
-            doc.setTextColor(...grayText);
-            doc.text("Elite Guard Academy  |  5th Grade  |  Season: 2025-2026", 68, 51);
+ // Player Badge on Page 2
+ doc.setFillColor(248, 250, 252);
+ doc.setDrawColor(...borderGray);
+ doc.roundedRect(15, 38, 180, 20, 3, 3, 'FD');
+ doc.setTextColor(...black);
+ doc.setFontSize(13);
+ doc.setFont("helvetica", "bold");
+ doc.text("Anton #12", 25, 51);
+ doc.setFontSize(8);
+ doc.setTextColor(...grayText);
+ doc.text("Elite Guard Academy | 5th Grade | Season: 2025 2026", 68, 51);
 
-            // --- SECTION: DEVELOPMENT GOAL ---
-            let aY = 70;
-            doc.setFillColor(...godspeedBlue);
-            doc.roundedRect(15, aY, 180, 8, 2, 2, 'F');
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(9);
-            doc.setFont("helvetica", "bold");
-            doc.text("DEVELOPMENT GOAL", 20, aY + 5.5);
-            aY += 14;
+ // --- SECTION: DEVELOPMENT GOAL ---
+ let aY = 70;
+ doc.setFillColor(...godspeedBlue);
+ doc.roundedRect(15, aY, 180, 8, 2, 2, 'F');
+ doc.setTextColor(255, 255, 255);
+ doc.setFontSize(9);
+ doc.setFont("helvetica", "bold");
+ doc.text("DEVELOPMENT GOAL", 20, aY + 5.5);
+ aY += 14;
 
-            doc.setTextColor(...black);
-            doc.setFontSize(10);
-            doc.setFont("helvetica", "bold");
-            doc.text("Next Role: Starting Point Guard", 20, aY);
-            aY += 8;
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(9);
-            doc.setTextColor(50, 50, 50);
-            const goalText = doc.splitTextToSize(
-                "Anton is being developed for a starting point guard role. His coach believes in his ability to reach that level and is committed to building the skill set required to get there.",
-                170
-            );
-            doc.text(goalText, 20, aY);
-            aY += goalText.length * 6 + 6;
+ doc.setTextColor(...black);
+ doc.setFontSize(10);
+ doc.setFont("helvetica", "bold");
+ doc.text("Next Role: Starting Point Guard", 20, aY);
+ aY += 8;
+ doc.setFont("helvetica", "normal");
+ doc.setFontSize(9);
+ doc.setTextColor(50, 50, 50);
+ const goalText = doc.splitTextToSize(
+ "Anton is being developed for a starting point guard role. His coach believes in his ability to reach that level and is committed to building the skill set required to get there.",
+ 170
+ );
+ doc.text(goalText, 20, aY);
+ aY += goalText.length * 6 + 6;
 
-            // --- SECTION: STRENGTHS ---
-            doc.setFillColor(...lightGray);
-            doc.rect(15, aY, 180, 8, 'F');
-            doc.setTextColor(...black);
-            doc.setFontSize(9);
-            doc.setFont("helvetica", "bold");
-            doc.text("STRENGTHS", 20, aY + 5.5);
-            aY += 13;
+ // --- SECTION: STRENGTHS ---
+ doc.setFillColor(...lightGray);
+ doc.rect(15, aY, 180, 8, 'F');
+ doc.setTextColor(...black);
+ doc.setFontSize(9);
+ doc.setFont("helvetica", "bold");
+ doc.text("STRENGTHS", 20, aY + 5.5);
+ aY += 13;
 
-            const strengths = [
-                { label: "Efficiency & IQ", body: "Anton is one of the most efficient and composed players on the roster. He possesses a high-level basketball IQ for his age - he plays at a good pace, makes smart decisions under pressure, and converts when fouled." },
-                { label: "Competitiveness", body: "His competitiveness is a defining quality. His coach repeatedly noted his poise in game situations. He does not dominate through flash or speed; he impacts the game through stability and control." },
-                { label: "Versatility", body: "Anton has fit seamlessly into both the 2nd unit and the starting role. Against mid-level competition, his control stands out - he plays under control, avoids forcing action, and is at his best when attacking closeouts and creating freely within the flow of the offense." },
-            ];
+ const strengths = [
+ { label: "Efficiency & IQ", body: "Anton is one of the most efficient and composed players on the roster. He possesses a high-level basketball IQ for his age he plays at a good pace, makes smart decisions under pressure, and converts when fouled." },
+ { label: "Competitiveness", body: "His competitiveness is a defining quality. His coach repeatedly noted his poise in game situations. He does not dominate through flash or speed; he impacts the game through stability and control." },
+ { label: "Versatility", body: "Anton has fit seamlessly into both the 2nd unit and the starting role. Against mid-level competition, his control stands out he plays under control, avoids forcing action, and is at his best when attacking closeouts and creating freely within the flow of the offense." },
+ ];
 
-            strengths.forEach(({ label, body }) => {
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(9);
-                doc.setTextColor(...godspeedBlue);
-                doc.text(`• ${label}`, 20, aY);
-                aY += 6;
-                doc.setFont("helvetica", "normal");
-                doc.setTextColor(50, 50, 50);
-                const lines = doc.splitTextToSize(body, 165);
-                doc.text(lines, 26, aY);
-                aY += lines.length * 5.5 + 5;
-            });
+ strengths.forEach(({ label, body }) => {
+ doc.setFont("helvetica", "bold");
+ doc.setFontSize(9);
+ doc.setTextColor(...godspeedBlue);
+ doc.text(`• ${label}`, 20, aY);
+ aY += 6;
+ doc.setFont("helvetica", "normal");
+ doc.setTextColor(50, 50, 50);
+ const lines = doc.splitTextToSize(body, 165);
+ doc.text(lines, 26, aY);
+ aY += lines.length * 5.5 + 5;
+ });
 
-            // --- SECTION: DEVELOPMENT AREAS ---
-            aY += 2;
-            doc.setFillColor(...lightGray);
-            doc.rect(15, aY, 180, 8, 'F');
-            doc.setTextColor(...black);
-            doc.setFontSize(9);
-            doc.setFont("helvetica", "bold");
-            doc.text("AREAS FOR DEVELOPMENT", 20, aY + 5.5);
-            aY += 13;
+ // --- SECTION: DEVELOPMENT AREAS ---
+ aY += 2;
+ doc.setFillColor(...lightGray);
+ doc.rect(15, aY, 180, 8, 'F');
+ doc.setTextColor(...black);
+ doc.setFontSize(9);
+ doc.setFont("helvetica", "bold");
+ doc.text("AREAS FOR DEVELOPMENT", 20, aY + 5.5);
+ aY += 13;
 
-            const improvements = [
-                { label: "On-Ball Defense", body: "Against high-level teams with faster guards, Anton struggles to stay in front of his opponent. Improving his lateral quickness and defensive positioning is essential for the starting PG role." },
-                { label: "Ball Handling Under Pressure", body: "His ball handling needs significant work in order to function as a lead guard at the next level. This is the primary focus of ongoing 1v1 training sessions." },
-            ];
+ const improvements = [
+ { label: "On-Ball Defense", body: "Against high-level teams with faster guards, Anton struggles to stay in front of his opponent. Improving his lateral quickness and defensive positioning is essential for the starting PG role." },
+ { label: "Ball Handling Under Pressure", body: "His ball handling needs significant work in order to function as a lead guard at the next level. This is the primary focus of ongoing 1v1 training sessions." },
+ ];
 
-            improvements.forEach(({ label, body }) => {
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(9);
-                doc.setTextColor(239, 68, 68);
-                doc.text(`• ${label}`, 20, aY);
-                aY += 6;
-                doc.setFont("helvetica", "normal");
-                doc.setTextColor(50, 50, 50);
-                const lines = doc.splitTextToSize(body, 165);
-                doc.text(lines, 26, aY);
-                aY += lines.length * 5.5 + 5;
-            });
+ improvements.forEach(({ label, body }) => {
+ doc.setFont("helvetica", "bold");
+ doc.setFontSize(9);
+ doc.setTextColor(239, 68, 68);
+ doc.text(`• ${label}`, 20, aY);
+ aY += 6;
+ doc.setFont("helvetica", "normal");
+ doc.setTextColor(50, 50, 50);
+ const lines = doc.splitTextToSize(body, 165);
+ doc.text(lines, 26, aY);
+ aY += lines.length * 5.5 + 5;
+ });
 
-            // --- SECTION: COACH'S OUTLOOK ---
-            aY += 4;
-            doc.setFillColor(240, 245, 255);
-            doc.setDrawColor(37, 99, 235);
-            doc.setLineWidth(0.5);
-            doc.roundedRect(15, aY, 180, 28, 3, 3, 'FD');
-            doc.setTextColor(...godspeedBlue);
-            doc.setFontSize(8);
-            doc.setFont("helvetica", "bold");
-            doc.text("COACH'S OUTLOOK", 20, aY + 7);
-            doc.setFont("helvetica", "italic");
-            doc.setTextColor(30, 30, 30);
-            doc.setFontSize(9);
-            const outlookText = doc.splitTextToSize(
-                "\"When Anton locks in on ball handling and on-ball defense, I am confident his game will flourish and he will earn more minutes as a starter. The foundation is there - the work ahead is targeted and achievable.\"",
-                168
-            );
-            doc.text(outlookText, 20, aY + 14);
-            aY += 35;
+ // --- SECTION: COACH'S OUTLOOK ---
+ aY += 4;
+ doc.setFillColor(240, 245, 255);
+ doc.setDrawColor(37, 99, 235);
+ doc.setLineWidth(0.5);
+ doc.roundedRect(15, aY, 180, 28, 3, 3, 'FD');
+ doc.setTextColor(...godspeedBlue);
+ doc.setFontSize(8);
+ doc.setFont("helvetica", "bold");
+ doc.text("COACH'S OUTLOOK", 20, aY + 7);
+ doc.setFont("helvetica", "italic");
+ doc.setTextColor(30, 30, 30);
+ doc.setFontSize(9);
+ const outlookText = doc.splitTextToSize(
+ "\"When Anton locks in on ball handling and on-ball defense, I am confident his game will flourish and he will earn more minutes as a starter. The foundation is there the work ahead is targeted and achievable.\"",
+ 168
+ );
+ doc.text(outlookText, 20, aY + 14);
+ aY += 35;
 
-            // Page 2 Footer
-            doc.setDrawColor(...borderGray);
-            doc.line(15, aY, 195, aY);
-            aY += 6;
-            doc.setFontSize(8);
-            doc.setTextColor(...grayText);
-            doc.setFont("helvetica", "normal");
-            doc.text("GodspeedOS Generated Report  //  Authorized Personnel Only  //  " + new Date().toLocaleDateString(), 15, aY);
+ // Page 2 Footer
+ doc.setDrawColor(...borderGray);
+ doc.line(15, aY, 195, aY);
+ aY += 6;
+ doc.setFontSize(8);
+ doc.setTextColor(...grayText);
+ doc.setFont("helvetica", "normal");
+ doc.text("GodspeedOS Generated Report // Authorized Personnel Only // " + new Date().toLocaleDateString(), 15, aY);
 
-            // Save File - named for easy filing: GODSPEED_PlayerReport_[Name]-No[Num]_[Mon-YYYY].pdf
-            const reportDate = new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }).replace(' ', '');
-            const playerName = document.querySelector('h1')?.textContent?.trim().split('#')[0].trim().replace(/\s+/g, '-') || 'Player';
-            const playerNum = document.querySelector('h1 .text-gray-400')?.textContent?.replace('#', '').trim() || '';
-            const numSuffix = playerNum ? `-No${playerNum}` : '';
-            doc.save(`GODSPEED_PlayerReport_${playerName}${numSuffix}_${reportDate}.pdf`);
-        }
+ // Save File named for easy filing: GODSPEED_PlayerReport_[Name]-No[Num]_[Mon-YYYY].pdf
+ const reportDate = new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }).replace(' ', '');
+ const playerName = document.querySelector('h1')?.textContent?.trim().split('#')[0].trim().replace(/\s+/g, '-') || 'Player';
+ const playerNum = document.querySelector('h1 .text-gray-400')?.textContent?.replace('#', '').trim() || '';
+ const numSuffix = playerNum ? `-No${playerNum}` : '';
+ doc.save(`GODSPEED_PlayerReport_${playerName}${numSuffix}_${reportDate}.pdf`);
+ }
 
-        // 2. MAGIC LINK NOTIFICATION
-        function sendMagicLink() {
-            const btn = document.querySelector('button[onclick="sendMagicLink()"]');
-            const originalText = btn.innerHTML;
+ // 2. MAGIC LINK NOTIFICATION
+ function sendMagicLink() {
+ const btn = document.querySelector('button[onclick="sendMagicLink()"]');
+ const originalText = btn.innerHTML;
 
-            btn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> SENDING...`;
-            btn.classList.add('opacity-75');
+ btn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> SENDING...`;
+ btn.classList.add('opacity-75');
 
-            // Simulate Data Payload from Backend
-            const payload = {
-                "recipient": "denis@example.com",
-                "sessions": [
-                    { "date": "2026-02-22", "focus": "Off hand activation..." },
-                    { "date": "2026-01-25", "focus": "Finishing, ballhandling..." },
-                    { "date": "2026-01-19", "focus": "Long splits off post entry..." },
-                    { "date": "2026-01-04", "focus": "Ball handling, footwork..." },
-                    { "date": "2026-01-03", "focus": "Handling pressure defense..." }
-                ],
-                "token": "mz_88192_sec_11"
-            };
+ // Simulate Data Payload from Backend
+ const payload = {
+ "recipient": "denis@example.com",
+ "sessions": [
+ { "date": "2026-02-22", "focus": "Off hand activation..." },
+ { "date": "2026-01-25", "focus": "Finishing, ballhandling..." },
+ { "date": "2026-01-19", "focus": "Long splits off post entry..." },
+ { "date": "2026-01-04", "focus": "Ball handling, footwork..." },
+ { "date": "2026-01-03", "focus": "Handling pressure defense..." }
+ ],
+ "token": "mz_88192_sec_11"
+ };
 
-            setTimeout(() => {
-                btn.innerHTML = "✅ NOTIFICATION SENT";
-                btn.classList.remove('bg-blue-600');
-                btn.classList.add('bg-green-600');
+ setTimeout(() => {
+ btn.innerHTML = "✅ NOTIFICATION SENT";
+ btn.classList.remove('bg-blue-600');
+ btn.classList.add('bg-green-600');
 
-                console.log("Magic Link Payload:", payload);
-                alert("📩 NOTIFICATION SENT \n\nRecipient: " + payload.recipient + "\nAction: Magic Link Generated\nData Payload Logged to Console.");
+ console.log("Magic Link Payload:", payload);
+ alert("📩 NOTIFICATION SENT \n\nRecipient: " + payload.recipient + "\nAction: Magic Link Generated\nData Payload Logged to Console.");
 
-                setTimeout(() => {
-                    btn.innerHTML = originalText;
-                    btn.classList.add('bg-blue-600');
-                    btn.classList.remove('bg-green-600');
-                    btn.classList.remove('opacity-75');
-                }, 3000);
-            }, 1000);
-        }
-    </script>
+ setTimeout(() => {
+ btn.innerHTML = originalText;
+ btn.classList.add('bg-blue-600');
+ btn.classList.remove('bg-green-600');
+ btn.classList.remove('opacity-75');
+ }, 3000);
+ }, 1000);
+ }
+ </script>
 </body>
 
 </html>
