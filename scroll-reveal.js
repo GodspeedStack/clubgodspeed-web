@@ -54,6 +54,9 @@
                 element.classList.add(`animate-${animationType}`);
                 element.classList.add('scroll-revealed');
                 
+                // Safely remove inline opacity so the CSS takes over or falls back securely
+                element.style.opacity = '';
+                
                 // Unobserve after animation
                 observer.unobserve(element);
             }
@@ -67,6 +70,12 @@
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('revealed');
+                    
+                    // Also clear child opacities for stagger elements
+                    Array.from(entry.target.children).forEach(child => {
+                        child.style.opacity = '';
+                    });
+                    
                     staggerObserver.unobserve(entry.target);
                 }
             });
