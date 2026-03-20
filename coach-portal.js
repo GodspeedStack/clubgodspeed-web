@@ -196,12 +196,19 @@ window.handleCoachLogin = async function () {
     const adminHash = "4792c7f3c8c1dba6c44f84106fea8e6f983eb02c6961384863719180d437a057"; // G0DSP33D_ADMIN!
     const coachHash = "e550d0bfd3a72149b46a225a35927c0272eb4cd4796c550fdd899da66e508ae6"; // G0DSP33D_EL1T3!
 
-    const hash = await sha256(code);
-    let role = null;
+    let hash = "";
+    try {
+        hash = await sha256(code);
+    } catch(e) {
+        console.warn("Hash calc failed");
+    }
     
-    if (hash === adminHash) {
+    let role = null;
+    const cleanCode = code.toUpperCase();
+    
+    if (hash === adminHash || cleanCode === 'G0DSP33D_ADMIN!') {
         role = 'admin';
-    } else if (hash === coachHash) {
+    } else if (hash === coachHash || cleanCode === 'G0DSP33D_EL1T3!') {
         role = 'coach';
     } else {
         godspeedAlert("That code doesn't match our records. Please try again.", "GODSPEED BASKETBALL");
