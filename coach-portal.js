@@ -2502,17 +2502,7 @@ async function sendEmailViaResend(emailData) {
     // Check if Resend API key is available
     // Try multiple ways to get the key
     let resendKey = window.VITE_RESEND_API_KEY || '';
-    // Check for Vite environment variable (only in module context)
-    try {
-        if (typeof import !== 'undefined' && typeof import.meta !== 'undefined') {
-            const metaEnv = import.meta.env;
-            if (metaEnv && metaEnv.VITE_RESEND_API_KEY) {
-                resendKey = metaEnv.VITE_RESEND_API_KEY;
-            }
-        }
-    } catch (e) {
-        // Not in module context, ignore
-    }
+    // Removed import.meta to prevent browser SyntaxError in non-module scripts
     
     if (!resendKey) {
         // Show helpful error with instructions
