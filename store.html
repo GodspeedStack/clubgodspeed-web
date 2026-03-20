@@ -2,429 +2,429 @@
 <html lang="en">
 
 <head>
- <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>GODSPEED STORE</title>
- <script src="https://cdn.tailwindcss.com"></script>
- <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
- <link rel="stylesheet" href="styles.css">
- <link rel="stylesheet" href="responsive-nav.css">
- <link rel="stylesheet" href="nav-unified.css">
- <style>
- /* HISTORICAL STORE STYLES ADAPTED FOR DARK MODE */
- .store-filters {
- padding: 40px 5%;
- border-bottom: 1px solid #333;
- display: flex;
- justify-content: space-between;
- align-items: center;
- flex-wrap: wrap;
- gap: 20px;
- }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GODSPEED STORE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="responsive-nav.css">
+    <link rel="stylesheet" href="nav-unified.css">
+    <style>
+        /* HISTORICAL STORE STYLES ADAPTED FOR DARK MODE */
+        .store-filters {
+            padding: 40px 5%;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
 
- .filter-group {
- display: flex;
- gap: 12px;
- flex-wrap: wrap;
- }
+        .filter-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
 
- .filter-btn {
- background: transparent;
- color: #666;
- font-size: 14px;
- font-weight: 600;
- text-transform: uppercase;
- border: none;
- padding: 8px 16px;
- cursor: pointer;
- border-radius: 20px;
- transition: all 0.2s ease;
- }
+        .filter-btn {
+            background: transparent;
+            color: #666;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            border: none;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 20px;
+            transition: all 0.2s ease;
+        }
 
- .filter-btn:hover {
- color: #fff;
- }
+        .filter-btn:hover {
+            color: #fff;
+        }
 
- .filter-btn.active {
- background: #fff;
- color: #000;
- }
+        .filter-btn.active {
+            background: #fff;
+            color: #000;
+        }
 
- .products-grid {
- display: grid;
- grid-template-columns: repeat(2, 1fr);
- gap: 16px;
- padding: 40px 5%;
- }
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            padding: 40px 5%;
+        }
 
- @media (min-width: 768px) {
- .products-grid {
- grid-template-columns: repeat(3, 1fr);
- gap: 40px;
- }
- }
+        @media (min-width: 768px) {
+            .products-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 40px;
+            }
+        }
 
- .product-card {
- background: #111;
- border-radius: 4px;
- overflow: hidden;
- transition: transform 0.3s ease;
- border: 1px solid #222;
- }
+        .product-card {
+            background: #111;
+            border-radius: 4px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+            border: 1px solid #222;
+        }
 
- .product-card:hover {
- transform: translateY(-4px);
- border-color: #333;
- }
+        .product-card:hover {
+            transform: translateY(-4px);
+            border-color: #333;
+        }
 
- .product-image-container {
- position: relative;
- padding-top: 100%;
- background: #000;
- overflow: hidden;
- }
+        .product-image-container {
+            position: relative;
+            padding-top: 100%;
+            background: #000;
+            overflow: hidden;
+        }
 
- .product-image {
- position: absolute;
- top: 0;
- left: 0;
- width: 100%;
- height: 100%;
- object-fit: cover;
- transition: transform 0.5s ease;
- }
+        .product-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
 
- .product-card:hover .product-image {
- transform: scale(1.05);
- }
+        .product-card:hover .product-image {
+            transform: scale(1.05);
+        }
 
- .product-overlay {
- position: absolute;
- bottom: 0;
- left: 0;
- width: 100%;
- padding: 20px;
- background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
- opacity: 0;
- transition: opacity 0.3s ease;
- display: flex;
- justify-content: center;
- }
+        .product-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: flex;
+            justify-content: center;
+        }
 
- .product-card:hover .product-overlay {
- opacity: 1;
- }
+        .product-card:hover .product-overlay {
+            opacity: 1;
+        }
 
- .add-to-cart-btn {
- background: #fff;
- color: #000;
- border: none;
- padding: 12px 24px;
- font-weight: 600;
- text-transform: uppercase;
- font-size: 12px;
- letter-spacing: 0.05em;
- cursor: pointer;
- border-radius: 2px;
- transform: translateY(10px);
- transition: transform 0.3s ease;
- width: auto;
- }
+        .add-to-cart-btn {
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            border-radius: 2px;
+            transform: translateY(10px);
+            transition: transform 0.3s ease;
+            width: auto;
+        }
 
- .product-card:hover .add-to-cart-btn {
- transform: translateY(0);
- }
+        .product-card:hover .add-to-cart-btn {
+            transform: translateY(0);
+        }
 
- .product-info {
- padding: 20px;
- text-align: left;
- }
+        .product-info {
+            padding: 20px;
+            text-align: left;
+        }
 
- .product-title {
- font-size: 14px;
- font-weight: 600;
- color: #fff;
- margin-bottom: 4px;
- text-transform: uppercase;
- letter-spacing: 0.02em;
- }
+        .product-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
 
- .product-price {
- font-size: 14px;
- color: #999;
- }
- </style>
+        .product-price {
+            font-size: 14px;
+            color: #999;
+        }
+    </style>
 </head>
 
 <body class="bg-black text-white font-sans antialiased">
- <nav class="navbar">
- <div class="logo">GODSPEED<span style="color: #2563eb;">BASKETBALL</span></div>
- <div class="nav-desktop-unified">
- <div class="nav-links-unified">
- <a href="index.html">Home</a>
- <a href="training.html">Training</a>
- <a href="aau.html">AAU</a>
- <a href="calendar-grid.html" class="auth-restricted" style="display: none;">Calendar</a>
- <div style="position: relative; opacity: 0.5; cursor: not-allowed; display: none; align-items: center;">
- <span>Academy</span>
- <span style="position: absolute; top: -12px; right: -24px; font-size: 9px; background: #f3f4f6; color: #6b7280; padding: 2px 4px; border-radius: 4px; border: 1px solid #e5e7eb;">SOON</span>
- </div>
- <a href="store.html" style="color: #2563eb;">Shop</a>
- <a href="about.html">About</a>
- </div>
- <!-- Right Side Icons -->
- <div class="nav-right-unified">
- <!-- Cart Icon -->
- <a href="#" id="cart-btn" class="nav-cart-btn" aria-label="Cart">
- <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;">
- <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
- </svg>
- <span class="cart-badge badge-bounce" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: bold; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">0</span>
- </a>
- <!-- Member Login Dropdown -->
- <div class="nav-login-wrapper" style="position: relative; z-index: 50;">
- <a href="#" class="nav-cart-btn" aria-label="Sign In">
- <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;">
- <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 4 0 00-7 7h14a7 4 0 00-7-7z" />
- </svg>
- </a>
- <div class="login-dropdown">
- <div style="padding: 8px 16px 4px; font-size: 11px; text-transform: uppercase; color: #86868b; font-weight: 600; letter-spacing: 0.05em;">Member Access</div>
- <a href="parent-portal.html" class="login-option">
- <span style="display: flex; align-items: center; gap: 10px;">
- <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
- Parents
- </span>
- <span class="login-arrow">›</span>
- </a>
- <a href="coach-portal.html" class="login-option">
- <span style="display: flex; align-items: center; gap: 10px;">
- <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
- Coaches
- </span>
- <span class="login-arrow">›</span>
- </a>
- </div>
- </div>
- <a href="training.html#signup" class="btn-unified-train">TRAIN WITH US</a>
- </div>
- </div>
- <button class="mobile-menu-btn" aria-label="Menu" onclick="openMobileMenu()" style="background:none; border:none; font-size:24px; cursor:pointer;">☰</button>
- </nav>
- <header class="hero-section-dark">
- <div class="hero-bg"></div>
- <div class="hero-overlay-dark"></div>
- <div class="hero-content relative z-10 pl-6 md:pl-20 max-w-4xl">
- <h1 class="text-6xl md:text-8xl font-black text-white leading-[0.9] mb-6 uppercase tracking-tight">
- TEAM APPAREL.<br>FOR DEDICATED ATHLETES.
- </h1>
- <p class="text-gray-300 text-lg mb-8">Official Godspeed performance wear.</p>
- </div>
- </header>
+        <nav class="navbar">
+        <div class="logo">GODSPEED<span style="color: #2563eb;">BASKETBALL</span></div>
+        <div class="nav-desktop-unified">
+            <div class="nav-links-unified">
+                <a href="index.html">Home</a>
+                <a href="training.html">Training</a>
+                <a href="aau.html">AAU</a>
+                <a href="calendar-grid.html" class="auth-restricted" style="display: none;">Calendar</a>
+                <div style="position: relative; opacity: 0.5; cursor: not-allowed; display: none; align-items: center;">
+                    <span>Academy</span>
+                    <span style="position: absolute; top: -12px; right: -24px; font-size: 9px; background: #f3f4f6; color: #6b7280; padding: 2px 4px; border-radius: 4px; border: 1px solid #e5e7eb;">SOON</span>
+                </div>
+                <a href="store.html" style="color: #2563eb;">Shop</a>
+                <a href="about.html">About</a>
+            </div>
+            <!-- Right Side Icons -->
+            <div class="nav-right-unified">
+                <!-- Cart Icon -->
+                <a href="#" id="cart-btn" class="nav-cart-btn" aria-label="Cart">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    <span class="cart-badge badge-bounce" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: bold; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">0</span>
+                </a>
+                <!-- Member Login Dropdown -->
+                <div class="nav-login-wrapper" style="position: relative; z-index: 50;">
+                    <a href="#" class="nav-cart-btn" aria-label="Sign In">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 4 0 00-7 7h14a7 4 0 00-7-7z" />
+                        </svg>
+                    </a>
+                    <div class="login-dropdown">
+                        <div style="padding: 8px 16px 4px; font-size: 11px; text-transform: uppercase; color: #86868b; font-weight: 600; letter-spacing: 0.05em;">Member Access</div>
+                        <a href="parent-portal.html" class="login-option">
+                            <span style="display: flex; align-items: center; gap: 10px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                                Parents
+                            </span>
+                            <span class="login-arrow">›</span>
+                        </a>
+                        <a href="coach-portal.html" class="login-option">
+                            <span style="display: flex; align-items: center; gap: 10px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                                Coaches
+                            </span>
+                            <span class="login-arrow">›</span>
+                        </a>
+                    </div>
+                </div>
+                <a href="training.html#signup" class="btn-unified-train">TRAIN WITH US</a>
+            </div>
+        </div>
+        <button class="mobile-menu-btn" aria-label="Menu" onclick="openMobileMenu()" style="background:none; border:none; font-size:24px; cursor:pointer;">☰</button>
+    </nav>
+    <header class="hero-section-dark">
+        <div class="hero-bg"></div>
+        <div class="hero-overlay-dark"></div>
+        <div class="hero-content relative z-10 pl-6 md:pl-20 max-w-4xl">
+            <h1 class="text-6xl md:text-8xl font-black text-white leading-[0.9] mb-6 uppercase tracking-tight">
+                TEAM APPAREL.<br>FOR DEDICATED ATHLETES.
+            </h1>
+            <p class="text-gray-300 text-lg mb-8">Official Godspeed performance wear.</p>
+        </div>
+    </header>
 
- <div class="store-filters">
- <div class="filter-group">
- <button class="filter-btn active" data-category="all">All</button>
- <button class="filter-btn" data-category="performance">Performance</button>
- <button class="filter-btn" data-category="lifestyle">Lifestyle</button>
- <button class="filter-btn" data-category="accessories">Accessories</button>
- </div>
- </div>
+    <div class="store-filters">
+        <div class="filter-group">
+            <button class="filter-btn active" data-category="all">All</button>
+            <button class="filter-btn" data-category="performance">Performance</button>
+            <button class="filter-btn" data-category="lifestyle">Lifestyle</button>
+            <button class="filter-btn" data-category="accessories">Accessories</button>
+        </div>
+    </div>
 
- <div id="products-grid" class="products-grid">
- <!-- Products injected via JS -->
- </div>
+    <div id="products-grid" class="products-grid">
+        <!-- Products injected via JS -->
+    </div>
 
- <footer class="bg-gray-50 pt-20 pb-16 border-t border-gray-100">
- <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-12">
- <div class="md:col-span-4">
- <div class="text-2xl font-black tracking-tighter mb-6">
- GODSPEED<span class="text-blue-600">BASKETBALL</span>
- </div>
- <p class="text-gray-500 leading-relaxed max-w-sm text-sm">
- Building the future of Denver basketball.<br>
- Character. Discipline. Excellence.
- </p>
- </div>
- <div class="md:col-span-8 grid grid-cols-2 md:grid-cols-5 gap-8">
- <div>
- <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Programs</h4>
- <ul class="space-y-4 text-sm text-gray-600 font-medium">
- <li><a href="training.html" class="hover:text-blue-600 transition">Training</a></li>
- <li><a href="aau.html" class="hover:text-blue-600 transition">AAU Club</a></li>
- <li style="display: none;"><a href="#" class="text-gray-400 cursor-not-allowed block py-1" style="text-decoration: none;" onclick="alert('Coming soon!'); return false;">Academy </a></li>
- </ul>
- </div>
- <div>
- <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Athletes</h4>
- <ul class="space-y-4 text-sm text-gray-600 font-medium">
- <li><a href="#" class=" text-gray-400 cursor-not-allowed" onclick="alert('Coming soon!'); return false;">Skill Assessment</a></li>
- <li><a href="card-preview.html" class="hover:text-blue-600 transition" >Player Card</a></li>
- <li><a href="#" class="text-gray-400 cursor-not-allowed block py-1" style="text-decoration: none;" onclick="alert('Coming soon!'); return false;">AAU Camps </a></li>
- </ul>
- </div>
- <div>
- <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Shop</h4>
- <ul class="space-y-4 text-sm text-gray-400 font-medium">
- <!-- Kept gray-400 for dark mode feel? No, footer is white. -->
- <!-- Wait, store.html footer is bg-gray-50 (white-ish). So text-gray-600 is better. -->
- <li><a href="store.html?category=all"
- class="text-gray-600 hover:text-blue-600 transition">Apparel</a></li>
- <li><a href="store.html?category=performance"
- class="text-gray-600 hover:text-blue-600 transition">Footwear</a></li>
- <li><a href="store.html?category=accessories"
- class="text-gray-600 hover:text-blue-600 transition">Accessories</a></li>
- </ul>
- </div>
- <div>
- <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Parents</h4>
- <ul class="space-y-4 text-sm text-gray-600 font-medium">
- <li><a href="#" class=" text-gray-400 cursor-not-allowed" onclick="alert('Coming soon!'); return false;">Parent Assessment</a></li>
- <li><a href="parent-portal.html" class="hover:text-blue-600 transition">Parent Portal</a></li>
- </ul>
- </div>
- <div>
- <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Company</h4>
- <ul class="space-y-4 text-sm text-gray-600 font-medium">
- <li><a href="about.html" class="hover:text-blue-600 transition">About Us</a></li>
- <li><a href="#contact" class="hover:text-blue-600 transition">Contact</a></li>
- <li><a href="#" class=" text-gray-400 cursor-not-allowed" onclick="alert('Coming soon!'); return false;">Coach Portal</a></li>
- <li><a href="#" class="text-gray-400 cursor-not-allowed block py-1" style="text-decoration: none;" onclick="alert('Coming soon!'); return false;">Careers </a></li>
- </ul>
- </div>
- </div>
- </div>
- </footer>
- <script>
- const products = [
- {
- id: 'godspeed-shorts-black',
- title: 'Godspeed Elite Shorts',
- price: 4500,
- image: 'assets/godspeed-shorts.png',
- category: 'performance',
- description: 'High-performance basketball shorts with sweat-wicking technology.',
- url: '/store.html'
- },
- {
- id: 'godspeed-croptop',
- title: 'Women\'s Performance Crop',
- price: 3500,
- image: 'assets/godspeed-croptop.png',
- category: 'performance',
- description: 'Athletic fit crop top designed for high-intensity training.',
- url: '/store.html'
- },
- {
- id: 'godspeed-hoodie',
- title: 'Godspeed Essentials Hoodie',
- price: 6500,
- image: 'assets/godspeed-hoodie.png',
- category: 'lifestyle',
- description: 'Premium heavyweight cotton hoodie for court and street.',
- url: '/store.html'
- },
- {
- id: 'godspeed-tshirt',
- title: 'Godspeed Logo Tee',
- price: 3000,
- image: 'assets/godspeed-tshirt.png',
- category: 'lifestyle',
- description: 'Classic fit cotton tee with signature Godspeed branding.',
- url: '/store.html'
- },
+    <footer class="bg-gray-50 pt-20 pb-16 border-t border-gray-100">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-12">
+            <div class="md:col-span-4">
+                <div class="text-2xl font-black tracking-tighter mb-6">
+                    GODSPEED<span class="text-blue-600">BASKETBALL</span>
+                </div>
+                <p class="text-gray-500 leading-relaxed max-w-sm text-sm">
+                    Building the future of Denver basketball.<br>
+                    Character. Discipline. Excellence.
+                </p>
+            </div>
+            <div class="md:col-span-8 grid grid-cols-2 md:grid-cols-5 gap-8">
+                <div>
+                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Programs</h4>
+                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
+                        <li><a href="training.html" class="hover:text-blue-600 transition">Training</a></li>
+                        <li><a href="aau.html" class="hover:text-blue-600 transition">AAU Club</a></li>
+                        <li style="display: none;"><a href="#" class="text-gray-400 cursor-not-allowed block py-1" style="text-decoration: none;"  onclick="alert('Coming soon!'); return false;">Academy </a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Athletes</h4>
+                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
+                        <li><a href="#" class=" text-gray-400 cursor-not-allowed"  onclick="alert('Coming soon!'); return false;">Skill Assessment</a></li>
+                        <li><a href="card-preview.html"  class="hover:text-blue-600 transition" >Player Card</a></li>
+                        <li><a href="#" class="text-gray-400 cursor-not-allowed block py-1" style="text-decoration: none;"  onclick="alert('Coming soon!'); return false;">AAU Camps </a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Shop</h4>
+                    <ul class="space-y-4 text-sm text-gray-400 font-medium">
+                        <!-- Kept gray-400 for dark mode feel? No, footer is white. -->
+                        <!-- Wait, store.html footer is bg-gray-50 (white-ish). So text-gray-600 is better. -->
+                        <li><a href="store.html?category=all"
+                                class="text-gray-600 hover:text-blue-600 transition">Apparel</a></li>
+                        <li><a href="store.html?category=performance"
+                                class="text-gray-600 hover:text-blue-600 transition">Footwear</a></li>
+                        <li><a href="store.html?category=accessories"
+                                class="text-gray-600 hover:text-blue-600 transition">Accessories</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Parents</h4>
+                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
+                        <li><a href="#" class=" text-gray-400 cursor-not-allowed"  onclick="alert('Coming soon!'); return false;">Parent Assessment</a></li>
+                        <li><a href="parent-portal.html" class="hover:text-blue-600 transition">Parent Portal</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Company</h4>
+                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
+                        <li><a href="about.html" class="hover:text-blue-600 transition">About Us</a></li>
+                        <li><a href="#contact" class="hover:text-blue-600 transition">Contact</a></li>
+                        <li><a href="#" class=" text-gray-400 cursor-not-allowed"  onclick="alert('Coming soon!'); return false;">Coach Portal</a></li>
+                        <li><a href="#" class="text-gray-400 cursor-not-allowed block py-1" style="text-decoration: none;"  onclick="alert('Coming soon!'); return false;">Careers </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script>
+        const products = [
+            {
+                id: 'godspeed-shorts-black',
+                title: 'Godspeed Elite Shorts',
+                price: 4500,
+                image: 'assets/godspeed-shorts.png',
+                category: 'performance',
+                description: 'High-performance basketball shorts with sweat-wicking technology.',
+                url: '/store.html'
+            },
+            {
+                id: 'godspeed-croptop',
+                title: 'Women\'s Performance Crop',
+                price: 3500,
+                image: 'assets/godspeed-croptop.png',
+                category: 'performance',
+                description: 'Athletic fit crop top designed for high-intensity training.',
+                url: '/store.html'
+            },
+            {
+                id: 'godspeed-hoodie',
+                title: 'Godspeed Essentials Hoodie',
+                price: 6500,
+                image: 'assets/godspeed-hoodie.png',
+                category: 'lifestyle',
+                description: 'Premium heavyweight cotton hoodie for court and street.',
+                url: '/store.html'
+            },
+            {
+                id: 'godspeed-tshirt',
+                title: 'Godspeed Logo Tee',
+                price: 3000,
+                image: 'assets/godspeed-tshirt.png',
+                category: 'lifestyle',
+                description: 'Classic fit cotton tee with signature Godspeed branding.',
+                url: '/store.html'
+            },
 
- {
- id: 'godspeed-socks',
- title: 'Performance Crew Socks',
- price: 1500,
- image: 'assets/godspeed-socks.png',
- category: 'performance',
- description: 'Cushioned performance socks with arch support.',
- url: '/store.html'
- }
- ];
+            {
+                id: 'godspeed-socks',
+                title: 'Performance Crew Socks',
+                price: 1500,
+                image: 'assets/godspeed-socks.png',
+                category: 'performance',
+                description: 'Cushioned performance socks with arch support.',
+                url: '/store.html'
+            }
+        ];
 
- let selectedCategory = 'all';
+        let selectedCategory = 'all';
 
- function loadProducts() {
- renderProducts();
- }
+        function loadProducts() {
+            renderProducts();
+        }
 
- function renderProducts() {
- const grid = document.getElementById('products-grid');
- const filteredProducts = selectedCategory === 'all'
- ? products
- : products.filter(p => p.category === selectedCategory);
+        function renderProducts() {
+            const grid = document.getElementById('products-grid');
+            const filteredProducts = selectedCategory === 'all'
+                ? products
+                : products.filter(p => p.category === selectedCategory);
 
- grid.innerHTML = filteredProducts.map(product => `
- <a href="product.html?id=${product.id}" class="product-card" style="text-decoration: none; color: inherit;">
- <div class="product-image-container">
- <img src="${product.image}" alt="${product.title}" class="product-image">
- <div class="product-overlay">
- <div class="add-to-cart-btn" style="pointer-events: none;">
- View Details
- </div>
- </div>
- </div>
- <div class="product-info">
- <h3 class="product-title">${product.title}</h3>
- <div class="product-price">$${(product.price / 100).toFixed(2)}</div>
- </div>
- </a>
- `).join('');
- }
+            grid.innerHTML = filteredProducts.map(product => `
+                <a href="product.html?id=${product.id}" class="product-card" style="text-decoration: none; color: inherit;">
+                    <div class="product-image-container">
+                        <img src="${product.image}" alt="${product.title}" class="product-image">
+                        <div class="product-overlay">
+                            <div class="add-to-cart-btn" style="pointer-events: none;">
+                                View Details
+                            </div>
+                        </div>
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-title">${product.title}</h3>
+                        <div class="product-price">$${(product.price / 100).toFixed(2)}</div>
+                    </div>
+                </a>
+            `).join('');
+        }
 
- // Filter buttons
- document.querySelectorAll('.filter-btn').forEach(btn => {
- btn.addEventListener('click', () => {
- document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
- btn.classList.add('active');
- selectedCategory = btn.dataset.category;
- renderProducts();
- });
- });
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedCategory = btn.dataset.category;
+                renderProducts();
+            });
+        });
 
- loadProducts();
- </script>
- <!-- Cart Overlay -->
- <div id="cart-overlay" class="cart-overlay">
- <div class="cart-sidebar">
- <div class="cart-header">
- <h2>Your Cart</h2>
- <button id="close-cart" class="close-cart-btn">×</button>
- </div>
- <div id="cart-items" class="cart-items">
- <p class="empty-cart-msg">Your cart is empty.</p>
- </div>
- <div class="cart-footer">
- <div class="cart-total">
- <span>Total:</span>
- <span id="cart-total-price">$0.00</span>
- </div>
- <button class="btn-primary checkout-btn">Checkout</button>
- </div>
- </div>
- </div>
- <script src="branded-modal.js"></script>
- <script src="security.js"></script>
- <script src="mobile-menu.js"></script>
- <script src="cart-handler.js"></script>
- <script>
- (function() {
- // Snipcart initialization
- const snipcartDiv = document.getElementById('snipcart');
- if (snipcartDiv) {
- // Get from window config or environment variable
- const apiKey = window.SNIPCART_API_KEY || '';
- if (apiKey) {
- snipcartDiv.setAttribute('data-api-key', apiKey);
- } else {
- console.warn('Snipcart API key not configured. Set window.SNIPCART_API_KEY or use environment variable.');
- }
- }
- })();
- </script>
+        loadProducts();
+    </script>
+    <!-- Cart Overlay -->
+    <div id="cart-overlay" class="cart-overlay">
+        <div class="cart-sidebar">
+            <div class="cart-header">
+                <h2>Your Cart</h2>
+                <button id="close-cart" class="close-cart-btn">×</button>
+            </div>
+            <div id="cart-items" class="cart-items">
+                <p class="empty-cart-msg">Your cart is empty.</p>
+            </div>
+            <div class="cart-footer">
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <span id="cart-total-price">$0.00</span>
+                </div>
+                <button class="btn-primary checkout-btn">Checkout</button>
+            </div>
+        </div>
+    </div>
+    <script src="branded-modal.js"></script>
+    <script src="security.js"></script>
+    <script src="mobile-menu.js"></script>
+    <script src="cart-handler.js"></script>
+    <script>
+        (function() {
+            // Snipcart initialization
+            const snipcartDiv = document.getElementById('snipcart');
+            if (snipcartDiv) {
+                // Get from window config or environment variable
+                const apiKey = window.SNIPCART_API_KEY || '';
+                if (apiKey) {
+                    snipcartDiv.setAttribute('data-api-key', apiKey);
+                } else {
+                    console.warn('Snipcart API key not configured. Set window.SNIPCART_API_KEY or use environment variable.');
+                }
+            }
+        })();
+    </script>
 </body>
 
 </html>

@@ -2,166 +2,166 @@
 <html lang="en">
 
 <head>
- <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>Godspeed Score | Skill Test</title>
- <meta name="description" content="Find your Godspeed Score. Take the 2-minute athlete test.">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Godspeed Score | Skill Test</title>
+    <meta name="description" content="Find your Godspeed Score. Take the 2-minute athlete test.">
 
- <!-- Google Fonts: Inter -->
- <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
- <link rel="stylesheet" href="styles.css">
- <link rel="stylesheet" href="responsive-nav.css">
- <style>
- /* Account for fixed navbar */
- body.audit-body {
- padding-top: 80px;
- }
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="responsive-nav.css">
+    <style>
+        /* Account for fixed navbar */
+        body.audit-body {
+            padding-top: 80px;
+        }
 
- @media (max-width: 768px) {
- .navbar .nav-links {
- display: none;
- }
+        @media (max-width: 768px) {
+            .navbar .nav-links {
+                display: none;
+            }
 
- .navbar .mobile-menu-btn {
- display: block !important;
- }
+            .navbar .mobile-menu-btn {
+                display: block !important;
+            }
 
- body.audit-body {
- padding-top: 70px;
- }
- }
- </style>
- <link rel="stylesheet" href="nav-unified.css">
+            body.audit-body {
+                padding-top: 70px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="nav-unified.css">
 </head>
 
 <body class="audit-body">
 
- <nav class="navbar">
- <div class="logo">GODSPEED<span style="color: #2563eb;">BASKETBALL</span></div>
- <div class="nav-desktop-unified">
- <div class="nav-links-unified">
- <a href="index.html">Home</a>
- <a href="training.html">Training</a>
- <a href="aau.html">AAU</a>
- <a href="calendar-grid.html" class="auth-restricted" style="display: none;">Calendar</a>
- <div style="position: relative; opacity: 0.5; cursor: not-allowed; display: none; align-items: center;">
- <span>Academy</span>
- <span style="position: absolute; top: -12px; right: -24px; font-size: 9px; background: #f3f4f6; color: #6b7280; padding: 2px 4px; border-radius: 4px; border: 1px solid #e5e7eb;">SOON</span>
- </div>
- <a href="store.html">Shop</a>
- <a href="about.html">About</a>
- </div>
- <!-- Right Side Icons -->
- <div class="nav-right-unified">
- <!-- Cart Icon -->
- <a href="#" id="cart-btn" class="nav-cart-btn" aria-label="Cart">
- <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;">
- <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
- </svg>
- <span class="cart-badge badge-bounce" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: bold; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">0</span>
- </a>
- <!-- Member Login Dropdown -->
- <div class="nav-login-wrapper" style="position: relative; z-index: 50;">
- <a href="#" class="nav-cart-btn" aria-label="Sign In">
- <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;">
- <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 4 0 00-7 7h14a7 4 0 00-7-7z" />
- </svg>
- </a>
- <div class="login-dropdown">
- <div style="padding: 8px 16px 4px; font-size: 11px; text-transform: uppercase; color: #86868b; font-weight: 600; letter-spacing: 0.05em;">Member Access</div>
- <a href="parent-portal.html" class="login-option">
- <span style="display: flex; align-items: center; gap: 10px;">
- <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
- Parents
- </span>
- <span class="login-arrow">›</span>
- </a>
- <a href="coach-portal.html" class="login-option">
- <span style="display: flex; align-items: center; gap: 10px;">
- <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
- Coaches
- </span>
- <span class="login-arrow">›</span>
- </a>
- </div>
- </div>
- <a href="training.html#signup" class="btn-unified-train">TRAIN WITH US</a>
- </div>
- </div>
- <button class="mobile-menu-btn" aria-label="Menu" onclick="openMobileMenu()" style="background:none; border:none; font-size:24px; cursor:pointer;">☰</button>
- </nav>
+        <nav class="navbar">
+        <div class="logo">GODSPEED<span style="color: #2563eb;">BASKETBALL</span></div>
+        <div class="nav-desktop-unified">
+            <div class="nav-links-unified">
+                <a href="index.html">Home</a>
+                <a href="training.html">Training</a>
+                <a href="aau.html">AAU</a>
+                <a href="calendar-grid.html" class="auth-restricted" style="display: none;">Calendar</a>
+                <div style="position: relative; opacity: 0.5; cursor: not-allowed; display: none; align-items: center;">
+                    <span>Academy</span>
+                    <span style="position: absolute; top: -12px; right: -24px; font-size: 9px; background: #f3f4f6; color: #6b7280; padding: 2px 4px; border-radius: 4px; border: 1px solid #e5e7eb;">SOON</span>
+                </div>
+                <a href="store.html">Shop</a>
+                <a href="about.html">About</a>
+            </div>
+            <!-- Right Side Icons -->
+            <div class="nav-right-unified">
+                <!-- Cart Icon -->
+                <a href="#" id="cart-btn" class="nav-cart-btn" aria-label="Cart">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    <span class="cart-badge badge-bounce" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: bold; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">0</span>
+                </a>
+                <!-- Member Login Dropdown -->
+                <div class="nav-login-wrapper" style="position: relative; z-index: 50;">
+                    <a href="#" class="nav-cart-btn" aria-label="Sign In">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 4 0 00-7 7h14a7 4 0 00-7-7z" />
+                        </svg>
+                    </a>
+                    <div class="login-dropdown">
+                        <div style="padding: 8px 16px 4px; font-size: 11px; text-transform: uppercase; color: #86868b; font-weight: 600; letter-spacing: 0.05em;">Member Access</div>
+                        <a href="parent-portal.html" class="login-option">
+                            <span style="display: flex; align-items: center; gap: 10px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                                Parents
+                            </span>
+                            <span class="login-arrow">›</span>
+                        </a>
+                        <a href="coach-portal.html" class="login-option">
+                            <span style="display: flex; align-items: center; gap: 10px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                                Coaches
+                            </span>
+                            <span class="login-arrow">›</span>
+                        </a>
+                    </div>
+                </div>
+                <a href="training.html#signup" class="btn-unified-train">TRAIN WITH US</a>
+            </div>
+        </div>
+        <button class="mobile-menu-btn" aria-label="Menu" onclick="openMobileMenu()" style="background:none; border:none; font-size:24px; cursor:pointer;">☰</button>
+    </nav>
 
- <div class="audit-container">
- <!-- STEP 0: INTRO -->
- <div id="audit-intro" class="audit-step active">
- <h1 class="audit-title">THE ELITE MINDSET ASSESSMENT</h1>
- <p class="audit-subtitle">Are you a Varsity Starter, a Bench level, or D1 Material?</p>
- <button class="btn-primary" onclick="startQuiz()">START TEST</button>
- <div class="audit-meta">Takes 90 seconds • Be Honest</div>
- </div>
+    <div class="audit-container">
+        <!-- STEP 0: INTRO -->
+        <div id="audit-intro" class="audit-step active">
+            <h1 class="audit-title">THE ELITE MINDSET ASSESSMENT</h1>
+            <p class="audit-subtitle">Are you a Varsity Starter, a Bench level, or D1 Material?</p>
+            <button class="btn-primary" onclick="startQuiz()">START TEST</button>
+            <div class="audit-meta">Takes 90 seconds • Be Honest</div>
+        </div>
 
- <!-- STEP 1: QUIZ -->
- <div id="audit-quiz" class="audit-step">
- <div class="progress-container">
- <div class="progress-bar" id="progress-bar"></div>
- </div>
+        <!-- STEP 1: QUIZ -->
+        <div id="audit-quiz" class="audit-step">
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
 
- <div id="question-container">
- <!-- Questions injected by JS -->
- </div>
- </div>
+            <div id="question-container">
+                <!-- Questions injected by JS -->
+            </div>
+        </div>
 
- <!-- STEP 2: CALCULATING -->
- <div id="audit-calculating" class="audit-step">
- <div class="scanner-animation">
- <div class="scan-line"></div>
- </div>
- <h2 class="calculating-text">CALCULATING SCORE...</h2>
- </div>
+        <!-- STEP 2: CALCULATING -->
+        <div id="audit-calculating" class="audit-step">
+            <div class="scanner-animation">
+                <div class="scan-line"></div>
+            </div>
+            <h2 class="calculating-text">CALCULATING SCORE...</h2>
+        </div>
 
- <!-- STEP 3: LEAD CAPTURE -->
- <div id="audit-gate" class="audit-step">
- <h2 class="gate-title">UNLOCK YOUR SCORE.</h2>
- <p class="gate-subtitle">
- Get your full Archetype Report + our <strong style="color: #fff;">"Mental Reps" Audio Guide</strong> to lock
- in before tip-off.
- </p>
+        <!-- STEP 3: LEAD CAPTURE -->
+        <div id="audit-gate" class="audit-step">
+            <h2 class="gate-title">UNLOCK YOUR SCORE.</h2>
+            <p class="gate-subtitle">
+                Get your full Archetype Report + our <strong style="color: #fff;">"Mental Reps" Audio Guide</strong> to lock
+                in before tip-off.
+            </p>
 
- <form id="audit-form" class="audit-form">
- <div class="form-group">
- <input type="text" id="audit-name" placeholder="Athlete Name" required class="nike-input">
- </div>
- <div class="form-group">
- <input type="email" id="audit-email" placeholder="Email Address" required class="nike-input">
- </div>
- <button type="submit" class="btn-primary full-width">GET MY RESULTS</button>
- </form>
- </div>
+            <form id="audit-form" class="audit-form">
+                <div class="form-group">
+                    <input type="text" id="audit-name" placeholder="Athlete Name" required class="nike-input">
+                </div>
+                <div class="form-group">
+                    <input type="email" id="audit-email" placeholder="Email Address" required class="nike-input">
+                </div>
+                <button type="submit" class="btn-primary full-width">GET MY RESULTS</button>
+            </form>
+        </div>
 
- <!-- STEP 4: RESULT -->
- <div id="audit-result" class="audit-step">
- <div class="score-circle">
- <div class="score-value-wrapper">
- <span id="final-score">0</span><span class="score-suffix">/100</span>
- </div>
- <span class="score-label">GODSPEED SCORE</span>
- </div>
+        <!-- STEP 4: RESULT -->
+        <div id="audit-result" class="audit-step">
+            <div class="score-circle">
+                <div class="score-value-wrapper">
+                    <span id="final-score">0</span><span class="score-suffix">/100</span>
+                </div>
+                <span class="score-label">GODSPEED SCORE</span>
+            </div>
 
- <h2 id="archetype-title" class="archetype-title">THE GRINDER</h2>
- <p id="archetype-desc" class="archetype-desc">You work hard, but you don't work smart. You rely on effort to
- mask a lack of efficiency.</p>
+            <h2 id="archetype-title" class="archetype-title">THE GRINDER</h2>
+            <p id="archetype-desc" class="archetype-desc">You work hard, but you don't work smart. You rely on effort to
+                mask a lack of efficiency.</p>
 
- <div class="result-actions">
- <a href="training.html" class="btn-primary">FIX YOUR GAME</a>
- <a href="#" class="btn-secondary">SHARE SCORE</a>
- </div>
- </div>
- </div>
+            <div class="result-actions">
+                <a href="training.html" class="btn-primary">FIX YOUR GAME</a>
+                <a href="#" class="btn-secondary">SHARE SCORE</a>
+            </div>
+        </div>
+    </div>
 
- <!-- Background Grid -->
- <div class="bg-grid"></div>
- <script src="audit.js"></script>
- <script src="auth.js"></script>
+    <!-- Background Grid -->
+    <div class="bg-grid"></div>
+    <script src="audit.js"></script>
+    <script src="auth.js"></script>
 </body>
 
 </html>

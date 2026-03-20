@@ -1,305 +1,312 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
- <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>Analytics Dashboard | Godspeed Admin</title>
- <link rel="stylesheet" href="styles.css">
- <link rel="stylesheet" href="responsive-nav.css">
- <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
- <style>
- :root {
- --ios-bg: #F5F5F7;
- --ios-card: #FFFFFF;
- --ios-text: #1D1D1F;
- --ios-text-secondary: #86868B;
- --ios-blue: #0071E3;
- --radius-l: 18px;
- --radius-m: 12px;
- --shadow-soft: 0 4px 20px rgba(0,0,0,0.04);
- --font-stack: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
- }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard | Godspeed Admin</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="responsive-nav.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --ios-bg: #F5F5F7;
+            --ios-card: #FFFFFF;
+            --ios-text: #1D1D1F;
+            --ios-text-secondary: #86868B;
+            --ios-blue: #0071E3;
+            --radius-l: 18px;
+            --radius-m: 12px;
+            --shadow-soft: 0 4px 20px rgba(0,0,0,0.04);
+            --font-stack: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+        }
 
- body {
- margin: 0; padding: 0;
- font-family: var(--font-stack);
- background-color: var(--ios-bg);
- color: var(--ios-text);
- display: flex;
- height: 100vh;
- }
+        body {
+            margin: 0; padding: 0;
+            font-family: var(--font-stack);
+            background-color: var(--ios-bg);
+            color: var(--ios-text);
+            display: flex;
+            height: 100vh;
+        }
 
- .dashboard-main {
- flex: 1;
- padding: 3rem;
- overflow-y: auto;
- }
+        .dashboard-main {
+            flex: 1;
+            padding: 3rem;
+            overflow-y: auto;
+        }
 
- .header-section {
- display: flex;
- justify-content: space-between;
- align-items: center;
- margin-bottom: 2rem;
- }
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
 
- .bento-grid {
- display: grid;
- grid-template-columns: repeat(3, 1fr);
- gap: 20px;
- margin-bottom: 24px;
- }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
 
- .bento-card {
- background: var(--ios-card);
- border-radius: var(--radius-l);
- padding: 24px;
- box-shadow: var(--shadow-soft);
- border: 1px solid rgba(0,0,0,0.05);
- }
+        .bento-card {
+            background: var(--ios-card);
+            border-radius: var(--radius-l);
+            padding: 24px;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
 
- .metric-value {
- font-size: 34px;
- font-weight: 700;
- margin-top: 8px;
- color: var(--ios-text);
- }
+        .metric-value {
+            font-size: 34px;
+            font-weight: 700;
+            margin-top: 8px;
+            color: var(--ios-text);
+        }
 
- .metric-label {
- font-size: 13px;
- font-weight: 600;
- text-transform: uppercase;
- color: var(--ios-text-secondary);
- letter-spacing: 0.05em;
- }
+        .metric-label {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--ios-text-secondary);
+            letter-spacing: 0.05em;
+        }
 
- .charts-grid {
- display: grid;
- grid-template-columns: 2fr 1fr;
- gap: 20px;
- margin-bottom: 24px;
- }
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
 
- .table-container {
- width: 100%;
- border-collapse: collapse;
- }
+        .table-container {
+            width: 100%;
+            border-collapse: collapse;
+        }
 
- .table-container th {
- text-align: left;
- padding: 12px;
- font-size: 12px;
- text-transform: uppercase;
- color: var(--ios-text-secondary);
- border-bottom: 1px solid rgba(0,0,0,0.1);
- }
+        .table-container th {
+            text-align: left;
+            padding: 12px;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--ios-text-secondary);
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
 
- .table-container td {
- padding: 14px 12px;
- border-bottom: 1px solid rgba(0,0,0,0.05);
- font-size: 14px;
- font-weight: 500;
- }
- </style>
+        .table-container td {
+            padding: 14px 12px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            font-size: 14px;
+            font-weight: 500;
+        }
+    </style>
 </head>
 <body>
 
- <nav class="dashboard-sidebar" style="width: 250px; background: white; border-right: 1px solid #eee; padding: 2rem 1.5rem;">
- <h2 style="font-weight: 800; letter-spacing: -0.05em; margin-bottom: 3rem;">GODSPEED</h2>
- <div style="font-size: 12px; color: #86868B; text-transform: uppercase; font-weight: 700; margin-bottom: 1rem;">Admin Controls</div>
- <a href="#" style="display: block; padding: 10px 14px; background: #0071E3; color: white; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">Platform Analytics</a>
- <a href="index.html" style="display: block; padding: 10px 14px; color: #1D1D1F; text-decoration: none; font-weight: 500; font-size: 14px; margin-top: 8px;">Back to Site</a>
- </nav>
+    <nav class="dashboard-sidebar" style="width: 250px; background: white; border-right: 1px solid #eee; padding: 2rem 1.5rem;">
+        <h2 style="font-weight: 800; letter-spacing: -0.05em; margin-bottom: 3rem;">GODSPEED</h2>
+        <div style="font-size: 12px; color: #86868B; text-transform: uppercase; font-weight: 700; margin-bottom: 1rem;">Admin Controls</div>
+        <a href="#" style="display: block; padding: 10px 14px; background: #0071E3; color: white; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">Platform Analytics</a>
+        <a href="index.html" style="display: block; padding: 10px 14px; color: #1D1D1F; text-decoration: none; font-weight: 500; font-size: 14px; margin-top: 8px;">Back to Site</a>
+    </nav>
 
- <main class="dashboard-main" id="dashboard-content" style="display: none;">
- <div class="header-section">
- <div>
- <h1 style="font-size: 32px; font-weight: 700; letter-spacing: -0.02em;">Analytics Matrix</h1>
- <p style="color: var(--ios-text-secondary); margin-top: 4px;">Real-time parent portal engagement telemetry.</p>
- </div>
- <button onclick="window.auth.logout()" style="padding: 10px 20px; border-radius: 20px; border: 1px solid #ccc; background: white; font-weight: 600; cursor: pointer;">Sign Out</button>
- </div>
+    <main class="dashboard-main" id="dashboard-content" style="display: none;">
+        <div class="header-section">
+            <div>
+                <h1 style="font-size: 32px; font-weight: 700; letter-spacing: -0.02em;">Analytics Matrix</h1>
+                <p style="color: var(--ios-text-secondary); margin-top: 4px;">Real-time parent portal engagement telemetry.</p>
+            </div>
+            <button onclick="window.auth.logout()" style="padding: 10px 20px; border-radius: 20px; border: 1px solid #ccc; background: white; font-weight: 600; cursor: pointer;">Sign Out</button>
+        </div>
 
- <!-- Top Metrics -->
- <div class="bento-grid">
- <div class="bento-card">
- <div class="metric-label">Total Authenticated Sessions</div>
- <div class="metric-value" id="val-sessions">--</div>
- </div>
- <div class="bento-card">
- <div class="metric-label">Average Session Origin (Time)</div>
- <div class="metric-value" id="val-duration">-- <span style="font-size: 16px; color: #888;">sec</span></div>
- </div>
- <div class="bento-card">
- <div class="metric-label">Global Portal Click Rate</div>
- <div class="metric-value" id="val-clicks">--</div>
- </div>
- </div>
+        <!-- Top Metrics -->
+        <div class="bento-grid">
+            <div class="bento-card">
+                <div class="metric-label">Total Authenticated Sessions</div>
+                <div class="metric-value" id="val-sessions">--</div>
+            </div>
+            <div class="bento-card">
+                <div class="metric-label">Average Session Origin (Time)</div>
+                <div class="metric-value" id="val-duration">-- <span style="font-size: 16px; color: #888;">sec</span></div>
+            </div>
+            <div class="bento-card">
+                <div class="metric-label">Global Portal Click Rate</div>
+                <div class="metric-value" id="val-clicks">--</div>
+            </div>
+        </div>
 
- <div class="charts-grid">
- <!-- Trajectory Graph -->
- <div class="bento-card">
- <div class="metric-label" style="margin-bottom: 16px;">Most Viewed Pages</div>
- <canvas id="pageViewChart" height="100"></canvas>
- </div>
- <!-- Features Pie -->
- <div class="bento-card">
- <div class="metric-label" style="margin-bottom: 16px;">System Feature Engagement</div>
- <canvas id="featureChart" height="200"></canvas>
- </div>
- </div>
+        <div class="charts-grid">
+            <!-- Trajectory Graph -->
+            <div class="bento-card">
+                <div class="metric-label" style="margin-bottom: 16px;">Most Viewed Pages</div>
+                <canvas id="pageViewChart" height="100"></canvas>
+            </div>
+            <!-- Features Pie -->
+            <div class="bento-card">
+                <div class="metric-label" style="margin-bottom: 16px;">System Feature Engagement</div>
+                <canvas id="featureChart" height="200"></canvas>
+            </div>
+        </div>
 
- <div class="bento-card">
- <div class="metric-label" style="margin-bottom: 16px;">Per-Parent Engagement Ledger</div>
- <table class="table-container" id="parent-ledger">
- <thead>
- <tr>
- <th>Parent ID (Auth UUID)</th>
- <th>Total Page Views</th>
- <th>Total Clicks</th>
- <th>File Downloads</th>
- <th>Avg Scroll Depth</th>
- </tr>
- </thead>
- <tbody>
- <!-- JS Injected -->
- </tbody>
- </table>
- </div>
- </main>
+        <div class="bento-card">
+            <div class="metric-label" style="margin-bottom: 16px;">Per-Parent Engagement Ledger</div>
+            <table class="table-container" id="parent-ledger">
+                <thead>
+                    <tr>
+                        <th>Parent ID (Auth UUID)</th>
+                        <th>Total Page Views</th>
+                        <th>Total Clicks</th>
+                        <th>File Downloads</th>
+                        <th>Avg Scroll Depth</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- JS Injected -->
+                </tbody>
+            </table>
+        </div>
+    </main>
 
- <div id="loading-state" style="display: flex; width: 100%; height: 100vh; align-items: center; justify-content: center;">
- <h2 style="color: #666;">Authenticating Admin Credentials...</h2>
- </div>
+    <div id="loading-state" style="display: flex; width: 100%; height: 100vh; align-items: center; justify-content: center;">
+        <h2 style="color: #666;">Authenticating Admin Credentials...</h2>
+    </div>
 
- <!-- Core Scripts -->
- <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
- <script src="auth-supabase.js" defer></script>
- <script>
- document.addEventListener('DOMContentLoaded', () => {
- setTimeout(async () => {
- const supabase = window.auth?.getSupabaseClient ? window.auth.getSupabaseClient() : null;
- if (!supabase) {
- alert('Supabase authentication environment missing.');
- return;
- }
+    <!-- Core Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="auth-supabase.js" defer></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(async () => {
+                const supabase = window.auth?.getSupabaseClient ? window.auth.getSupabaseClient() : null;
+                if (!supabase) {
+                    alert('Supabase authentication environment missing.');
+                    return;
+                }
 
- try {
- // Check authentication scope
- const user = await window.auth.getCurrentUser();
- if (!user) {
- window.location.href = 'index.html';
- return;
- }
+                try {
+                    // Check authentication scope
+                    const user = await window.auth.getCurrentUser();
+                    if (!user) {
+                        window.location.href = 'index.html';
+                        return;
+                    }
 
- // Security check (Admin Role)
- const { data: profileData, error: profileErr } = await supabase
- .from('user_profiles')
- .select('role')
- .eq('id', user.id)
- .single();
+                    // Security check (Admin Role)
+                    const { data: profileData, error: profileErr } = await supabase
+                        .from('user_profiles')
+                        .select('role')
+                        .eq('id', user.id)
+                        .single();
 
- if (profileErr || profileData?.role !== 'admin') {
- document.getElementById('loading-state').innerHTML = '<h2 style="color: red;">UNAUTHORIZED. ADMIN PRIVILEGES REQUIRED.</h2>';
- throw new Error('Not authorized for telemetry analytics.');
- }
+                    if (profileErr || profileData?.role !== 'admin') {
+                        document.getElementById('loading-state').innerHTML = '<h2 style="color: red;">UNAUTHORIZED. ADMIN PRIVILEGES REQUIRED.</h2>';
+                        throw new Error('Not authorized for telemetry analytics.');
+                    }
 
- // Approved. Reveal UI.
- document.getElementById('loading-state').style.display = 'none';
- document.getElementById('dashboard-content').style.display = 'block';
+                    // Approved. Reveal UI.
+                    document.getElementById('loading-state').style.display = 'none';
+                    document.getElementById('dashboard-content').style.display = 'block';
 
- // Fetch Telemetry Network Array
- const { data: events, error: eventsErr } = await supabase
- .from('analytics_events')
- .select('*');
+                    // Fetch Telemetry Network Array
+                    const { data: events, error: eventsErr } = await supabase
+                        .from('analytics_events')
+                        .select('*');
 
- if (eventsErr) throw eventsErr;
+                    if (eventsErr) throw eventsErr;
 
- compileDashboard(events);
+                    compileDashboard(events);
 
- } catch (e) {
- console.error('Analytics Loading Exception:', e);
- }
- }, 1000); // 1 second buffer mapping to allow `auth-supabase` sequential init
- });
+                } catch (e) {
+                    console.error('Analytics Loading Exception:', e);
+                }
+            }, 1000); // 1 second buffer mapping to allow `auth-supabase` sequential init
+        });
 
- function compileDashboard(events) {
- // Arrays
- const pageViews = events.filter(e => e.event_type === 'page_view');
- const exits = events.filter(e => e.event_type === 'page_exit' && e.duration_ms);
- const clicks = events.filter(e => e.event_type === 'click');
- const downloads = events.filter(e => e.event_type === 'download');
- // 1. Top Metrics Execution
- const uniqueSessions = new Set(events.map(e => e.session_id)).size;
- document.getElementById('val-sessions').innerText = uniqueSessions;
+        function compileDashboard(events) {
+            // Arrays
+            const pageViews = events.filter(e => e.event_type === 'page_view');
+            const exits = events.filter(e => e.event_type === 'page_exit' && e.duration_ms);
+            const clicks = events.filter(e => e.event_type === 'click');
+            const downloads = events.filter(e => e.event_type === 'download');
+            
+            // 1. Top Metrics Execution
+            const uniqueSessions = new Set(events.map(e => e.session_id)).size;
+            document.getElementById('val-sessions').innerText = uniqueSessions;
 
- const avgDurationMs = exits.length > 0 ? (exits.reduce((acc, curr) => acc + curr.duration_ms, 0) / exits.length) : 0;
- document.getElementById('val-duration').innerHTML = `${(avgDurationMs / 1000).toFixed(1)} <span style="font-size: 16px; color: #888;">sec</span>`;
- document.getElementById('val-clicks').innerText = clicks.length;
+            const avgDurationMs = exits.length > 0 ? (exits.reduce((acc, curr) => acc + curr.duration_ms, 0) / exits.length) : 0;
+            document.getElementById('val-duration').innerHTML = `${(avgDurationMs / 1000).toFixed(1)} <span style="font-size: 16px; color: #888;">sec</span>`;
+            document.getElementById('val-clicks').innerText = clicks.length;
 
- // 2. Bar Chart: Pages
- const pageCounts = {};
- pageViews.forEach(v => pageCounts[v.page] = (pageCounts[v.page] || 0) + 1);
- new Chart(document.getElementById('pageViewChart'), {
- type: 'bar',
- data: {
- labels: Object.keys(pageCounts).map(l => l.replace('/', '').toUpperCase() || 'HOME'),
- datasets: [{
- label: 'Organic Views',
- data: Object.values(pageCounts),
- backgroundColor: '#0071E3',
- borderRadius: 6
- }]
- },
- options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
- });
+            // 2. Bar Chart: Pages
+            const pageCounts = {};
+            pageViews.forEach(v => pageCounts[v.page] = (pageCounts[v.page] || 0) + 1);
+            
+            new Chart(document.getElementById('pageViewChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(pageCounts).map(l => l.replace('/', '').toUpperCase() || 'HOME'),
+                    datasets: [{
+                        label: 'Organic Views',
+                        data: Object.values(pageCounts),
+                        backgroundColor: '#0071E3',
+                        borderRadius: 6
+                    }]
+                },
+                options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+            });
 
- // 3. Doughnut Chart: Features
- const featureClickMap = {};
- clicks.forEach(c => featureClickMap[c.element_label] = (featureClickMap[c.element_label] || 0) + 1);
- new Chart(document.getElementById('featureChart'), {
- type: 'doughnut',
- data: {
- labels: Object.keys(featureClickMap).length > 0 ? Object.keys(featureClickMap) : ['No Clicks Logged'],
- datasets: [{
- data: Object.keys(featureClickMap).length > 0 ? Object.values(featureClickMap) : [1],
- backgroundColor: ['#0071E3', '#34C759', '#FF9500', '#5856D6']
- }]
- },
- options: { cutout: '65%', plugins: { legend: { position: 'bottom' } } }
- });
+            // 3. Doughnut Chart: Features
+            const featureClickMap = {};
+            clicks.forEach(c => featureClickMap[c.element_label] = (featureClickMap[c.element_label] || 0) + 1);
+            
+            new Chart(document.getElementById('featureChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(featureClickMap).length > 0 ? Object.keys(featureClickMap) : ['No Clicks Logged'],
+                    datasets: [{
+                        data: Object.keys(featureClickMap).length > 0 ? Object.values(featureClickMap) : [1],
+                        backgroundColor: ['#0071E3', '#34C759', '#FF9500', '#5856D6']
+                    }]
+                },
+                options: { cutout: '65%', plugins: { legend: { position: 'bottom' } } }
+            });
 
- // 4. Per-Parent Matrix Ledger
- const parentLedger = {};
- events.forEach(e => {
- if (!e.user_id) return;
- if (!parentLedger[e.user_id]) parentLedger[e.user_id] = { views: 0, clicks: 0, dls: 0, scrollMap: [] };
- if (e.event_type === 'page_view') parentLedger[e.user_id].views++;
- if (e.event_type === 'click') parentLedger[e.user_id].clicks++;
- if (e.event_type === 'download') parentLedger[e.user_id].dls++;
- if (e.event_type === 'scroll_depth') parentLedger[e.user_id].scrollMap.push(e.scroll_pct);
- });
+            // 4. Per-Parent Matrix Ledger
+            const parentLedger = {};
+            events.forEach(e => {
+                if (!e.user_id) return;
+                if (!parentLedger[e.user_id]) parentLedger[e.user_id] = { views: 0, clicks: 0, dls: 0, scrollMap: [] };
+                
+                if (e.event_type === 'page_view') parentLedger[e.user_id].views++;
+                if (e.event_type === 'click') parentLedger[e.user_id].clicks++;
+                if (e.event_type === 'download') parentLedger[e.user_id].dls++;
+                if (e.event_type === 'scroll_depth') parentLedger[e.user_id].scrollMap.push(e.scroll_pct);
+            });
 
- const tbody = document.querySelector('#parent-ledger tbody');
- tbody.innerHTML = '';
- Object.keys(parentLedger).forEach(uId => {
- const data = parentLedger[uId];
- const avgScroll = data.scrollMap.length > 0 ? (data.scrollMap.reduce((a,b)=>a+b,0) / data.scrollMap.length).toFixed(0) : 0;
- const tr = document.createElement('tr');
- tr.innerHTML = `
- <td style="font-family: monospace; color: #0071E3;">${uId.substring(0,8)}...</td>
- <td>${data.views}</td>
- <td>${data.clicks}</td>
- <td>${data.dls}</td>
- <td>${avgScroll}%</td>
- `;
- tbody.appendChild(tr);
- });
+            const tbody = document.querySelector('#parent-ledger tbody');
+            tbody.innerHTML = '';
+            
+            Object.keys(parentLedger).forEach(uId => {
+                const data = parentLedger[uId];
+                const avgScroll = data.scrollMap.length > 0 ? (data.scrollMap.reduce((a,b)=>a+b,0) / data.scrollMap.length).toFixed(0) : 0;
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-family: monospace; color: #0071E3;">${uId.substring(0,8)}...</td>
+                    <td>${data.views}</td>
+                    <td>${data.clicks}</td>
+                    <td>${data.dls}</td>
+                    <td>${avgScroll}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
 
- if(Object.keys(parentLedger).length === 0) {
- tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #888;">No authenticated parent telemetry captured yet.</td></tr>';
- }
- }
- </script>
+            if(Object.keys(parentLedger).length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #888;">No authenticated parent telemetry captured yet.</td></tr>';
+            }
+        }
+    </script>
 </body>
 </html>

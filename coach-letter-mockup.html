@@ -2,191 +2,191 @@
 <html lang="en">
 
 <head>
- <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>Godspeed Basketball - Manifesto Letter Mockup</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Godspeed Basketball - Manifesto Letter Mockup</title>
 
- <!-- Preconnect for Google Fonts -->
- <link rel="preconnect" href="https://fonts.googleapis.com">
- <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Preconnect for Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
- <!-- Editorial Serif & Aggressive Display Fonts -->
- <link
- href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Oswald:wght@500;700&display=swap"
- rel="stylesheet">
+    <!-- Editorial Serif & Aggressive Display Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Oswald:wght@500;700&display=swap"
+        rel="stylesheet">
 
- <style>
- :root {
- --gs-black: #0A0A0A;
- --gs-paper: #F9F9F6;
- --gs-blue: #1A3A8F;
- --gs-orange: #FF5722;
- }
+    <style>
+        :root {
+            --gs-black: #0A0A0A;
+            --gs-paper: #F9F9F6;
+            --gs-blue: #1A3A8F;
+            --gs-orange: #FF5722;
+        }
 
- body {
- background-color: var(--gs-black);
- margin: 0;
- padding: 4rem 1rem;
- min-height: 100vh;
- display: flex;
- justify-content: center;
- align-items: flex-start;
+        body {
+            background-color: var(--gs-black);
+            margin: 0;
+            padding: 4rem 1rem;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
 
- /* The desk/background setup */
- /* Adding a very subtle radial gradient to the black for depth */
- background-image: radial-gradient(circle at 50% 10%, rgba(20, 20, 25, 1) 0%, var(--gs-black) 80%);
- -webkit-font-smoothing: antialiased;
- -moz-osx-font-smoothing: grayscale;
- }
+            /* The desk/background setup */
+            /* Adding a very subtle radial gradient to the black for depth */
+            background-image: radial-gradient(circle at 50% 10%, rgba(20, 20, 25, 1) 0%, var(--gs-black) 80%);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
 
- /* The Printed Paper */
- .paper-container {
- background-color: var(--gs-paper);
- width: 100%;
- max-width: 800px;
- padding: 5rem 6rem;
- position: relative;
- box-sizing: border-box;
+        /* The Printed Paper */
+        .paper-container {
+            background-color: var(--gs-paper);
+            width: 100%;
+            max-width: 800px;
+            padding: 5rem 6rem;
+            position: relative;
+            box-sizing: border-box;
 
- /* Physical Paper Shadows */
- box-shadow:
- 0 25px 50px -12px rgba(0, 0, 0, 0.7),
- 0 0 0 1px rgba(255, 255, 255, 0.05);
+            /* Physical Paper Shadows */
+            box-shadow:
+                0 25px 50px -12px rgba(0, 0, 0, 0.7),
+                0 0 0 1px rgba(255, 255, 255, 0.05);
 
- /* Faint SVG Grain Texture to simulate paper consistency */
- background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
- }
+            /* Faint SVG Grain Texture to simulate paper consistency */
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+        }
 
- @media (max-width: 768px) {
- .paper-container {
- padding: 3rem 2rem;
- }
- }
+        @media (max-width: 768px) {
+            .paper-container {
+                padding: 3rem 2rem;
+            }
+        }
 
- /* Header Area */
- .header-area {
- border-bottom: 3px solid var(--gs-blue);
- padding-bottom: 1.5rem;
- margin-bottom: 4rem;
- display: flex;
- justify-content: space-between;
- align-items: flex-end;
- }
+        /* Header Area */
+        .header-area {
+            border-bottom: 3px solid var(--gs-blue);
+            padding-bottom: 1.5rem;
+            margin-bottom: 4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
 
- .header-title {
- font-family: 'Bebas Neue', sans-serif;
- font-size: clamp(3rem, 6vw, 4.5rem);
- line-height: 0.85;
- color: #111;
- margin: 0;
- letter-spacing: 0.02em;
- }
+        .header-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(3rem, 6vw, 4.5rem);
+            line-height: 0.85;
+            color: #111;
+            margin: 0;
+            letter-spacing: 0.02em;
+        }
 
- .header-meta {
- font-family: 'Oswald', sans-serif;
- font-size: clamp(0.9rem, 1.5vw, 1.1rem);
- color: var(--gs-blue);
- text-transform: uppercase;
- letter-spacing: 0.1em;
- font-weight: 700;
- text-align: right;
- margin-bottom: 0.25rem;
- line-height: 1.4;
- }
+        .header-meta {
+            font-family: 'Oswald', sans-serif;
+            font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+            color: var(--gs-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 700;
+            text-align: right;
+            margin-bottom: 0.25rem;
+            line-height: 1.4;
+        }
 
- /* Editorial Body */
- .body-text {
- font-family: 'Libre Baskerville', serif;
- font-size: 1.125rem;
- line-height: 1.85;
- color: #222;
- }
+        /* Editorial Body */
+        .body-text {
+            font-family: 'Libre Baskerville', serif;
+            font-size: 1.125rem;
+            line-height: 1.85;
+            color: #222;
+        }
 
- .body-text p {
- margin-top: 0;
- margin-bottom: 1.75rem;
- }
+        .body-text p {
+            margin-top: 0;
+            margin-bottom: 1.75rem;
+        }
 
- .body-text p:last-child {
- margin-bottom: 0;
- }
+        .body-text p:last-child {
+            margin-bottom: 0;
+        }
 
- /* Footer / Signature */
- .footer-area {
- margin-top: 4.5rem;
- padding-top: 2rem;
- border-top: 1px solid rgba(0, 0, 0, 0.15);
- }
+        /* Footer / Signature */
+        .footer-area {
+            margin-top: 4.5rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(0, 0, 0, 0.15);
+        }
 
- .signature {
- font-family: 'Bebas Neue', sans-serif;
- font-size: 2.75rem;
- color: var(--gs-blue);
- margin-bottom: 0.5rem;
- line-height: 1;
- letter-spacing: 0.02em;
- }
+        .signature {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.75rem;
+            color: var(--gs-blue);
+            margin-bottom: 0.5rem;
+            line-height: 1;
+            letter-spacing: 0.02em;
+        }
 
- .footer-tagline {
- font-family: 'Oswald', sans-serif;
- font-size: 0.95rem;
- color: var(--gs-orange);
- font-weight: 700;
- letter-spacing: 0.15em;
- }
- </style>
+        .footer-tagline {
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.95rem;
+            color: var(--gs-orange);
+            font-weight: 700;
+            letter-spacing: 0.15em;
+        }
+    </style>
 </head>
 
 <body>
 
- <div class="paper-container">
- <!-- HEADER AREA -->
- <header class="header-area">
- <h1 class="header-title">GODSPEED<br>BASKETBALL</h1>
- <div class="header-meta">MEMO: 001<br>// THE WINTER BEATING</div>
- </header>
+    <div class="paper-container">
+        <!-- HEADER AREA -->
+        <header class="header-area">
+            <h1 class="header-title">GODSPEED<br>BASKETBALL</h1>
+            <div class="header-meta">MEMO: 001<br>// THE WINTER BEATING</div>
+        </header>
 
- <!-- BODY -->
- <main class="body-text">
- <p>To the Godspeed Family:</p>
+        <!-- BODY -->
+        <main class="body-text">
+            <p>To the Godspeed Family:</p>
 
- <p>The winter season was brutal. I knew it would be. It was humiliating. It was a wake-up
- call. And it was exactly what we needed. I call it a blessing wrapped in mud.</p>
+            <p>The winter season was brutal. I knew it would be. It was humiliating. It was a wake-up
+                call. And it was exactly what we needed. I call it a blessing wrapped in mud.</p>
 
- <p>There is a scene in The Dark Knight Rises where Batman tries to use the shadows to intimidate his enemy,
- Bane. Bane doesn't flinch. He steps forward and says: "You merely adopted the dark. I was born
- in it, molded by it." He then hands Batman the most absolute, devastating defeat of his
- life.</p>
+            <p>There is a scene in The Dark Knight Rises where Batman tries to use the shadows to intimidate his enemy,
+                Bane. Bane doesn't flinch. He steps forward and says: "You merely adopted the dark. I was born
+                in it, molded by it." He then hands Batman the most absolute, devastating defeat of his
+                life.</p>
 
- <p>Why? Because you cannot break a man with the darkness when the darkness is what built
- him.</p>
+            <p>Why? Because you cannot break a man with the darkness when the darkness is what built
+                him.</p>
 
- <p>That is what this winter did for us. It molded us. When you take the kind of losses we took, it
- strips away your ego. There is nowhere to hide. Excuses burn away, and you are left looking
- in the mirror, forced to decide exactly who you are going to be.</p>
+            <p>That is what this winter did for us. It molded us. When you take the kind of losses we took, it
+                strips away your ego. There is nowhere to hide. Excuses burn away, and you are left looking
+                in the mirror, forced to decide exactly who you are going to be.</p>
 
- <p>I didn't run from that feeling. I sat in it. I let the frustration harden my resolve. Easy wins make you
- soft. Humiliation makes you dangerous, if you use it right. The darkness of this season
- showed us exactly where we were weak, so now we know exactly where to build.</p>
+            <p>I didn't run from that feeling. I sat in it. I let the frustration harden my resolve. Easy wins make you
+                soft. Humiliation makes you dangerous, if you use it right. The darkness of this season
+                showed us exactly where we were weak, so now we know exactly where to build.</p>
 
- <p>These losses did not break us. They sharpened me. A fire has been lit in the hardest
- season we've faced, and I am completely committed to the standard of excellence.</p>
+            <p>These losses did not break us. They sharpened me. A fire has been lit in the hardest
+                season we've faced, and I am completely committed to the standard of excellence.</p>
 
- <p>When things get tough, some people fold. Some jump ship. Godspeed will not. Parents, we need your
- full commitment.</p>
+            <p>When things get tough, some people fold. Some jump ship. Godspeed will not. Parents, we need your
+                full commitment.</p>
 
- <p>This is bigger than basketball. We are building.</p>
+            <p>This is bigger than basketball. We are building.</p>
 
- <p>Success is coming.</p>
- </main>
+            <p>Success is coming.</p>
+        </main>
 
- <!-- FOOTER / SIGNATURE -->
- <footer class="footer-area">
- <!-- No em dash utilized as per strict constraint rules -->
- <div class="signature">Coach Scott.</div>
- <div class="footer-tagline">BROTHERHOOD. HABITS. SUCCESS.</div>
- </footer>
- </div>
+        <!-- FOOTER / SIGNATURE -->
+        <footer class="footer-area">
+            <!-- No em dash utilized as per strict constraint rules -->
+            <div class="signature">Coach Scott.</div>
+            <div class="footer-tagline">BROTHERHOOD. HABITS. SUCCESS.</div>
+        </footer>
+    </div>
 
 </body>
 

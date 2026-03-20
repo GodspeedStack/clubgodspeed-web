@@ -6,24 +6,24 @@ import { getFirestore, collection, addDoc } from "https://www.gstatic.com/fireba
 // Your web app's Firebase configuration
 // UPDATE THESE WITH YOUR PRODUCTION KEYS
 const firebaseConfig = {
- apiKey: "YOUR_API_KEY",
- authDomain: "your-project.firebaseapp.com",
- projectId: "your-project-id",
- storageBucket: "your-project.appspot.com",
- messagingSenderId: "SENDER_ID",
- appId: "APP_ID"
+    apiKey: "YOUR_API_KEY",
+    authDomain: "your-project.firebaseapp.com",
+    projectId: "your-project-id",
+    storageBucket: "your-project.appspot.com",
+    messagingSenderId: "SENDER_ID",
+    appId: "APP_ID"
 };
 
 // Initialize Firebase
 let app, auth, db;
 
 try {
- app = initializeApp(firebaseConfig);
- auth = getAuth(app);
- db = getFirestore(app);
- console.log("Firebase Initialized");
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    console.log("Firebase Initialized");
 } catch (e) {
- console.warn("Firebase Config missing or invalid. Backend features will run in simulation mode.");
+    console.warn("Firebase Config missing or invalid. Backend features will run in simulation mode.");
 }
 
 export { app, auth, db, collection, addDoc };

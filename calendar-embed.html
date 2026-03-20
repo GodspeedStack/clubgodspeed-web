@@ -2,1120 +2,1127 @@
 <html lang="en">
 
 <head>
- <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>Team Schedule | Godspeed Basketball</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Schedule | Godspeed Basketball</title>
 
- <!-- Google Fonts: Inter -->
- <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
- <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
- <link rel="stylesheet" href="styles.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
 
- <style>
- /* Embedded Button Visibility Override */
- .calendar-controls .btn-secondary {
- color: #111 !important;
- background: #ffffff !important;
- border: 1px solid #d1d5db !important;
- box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
- font-weight: 600 !important;
- transition: all 0.2s ease !important;
- }
- .calendar-controls .btn-secondary:hover {
- background: #f3f4f6 !important;
- border-color: #9ca3af !important;
- }
- /* Calendar Specific Styles */
- .calendar-container {
- padding: 8rem 5% 5rem 5%;
- min-height: 100vh;
- background: #fbfbfd;
- /* Apple-esque standard background */
- animation: fadeIn 0.8s ease-out;
- }
+    <style>
+        /* Embedded Button Visibility Override */
+        .calendar-controls .btn-secondary {
+            color: #111 !important;
+            background: #ffffff !important;
+            border: 1px solid #d1d5db !important;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+            font-weight: 600 !important;
+            transition: all 0.2s ease !important;
+        }
+        .calendar-controls .btn-secondary:hover {
+            background: #f3f4f6 !important;
+            border-color: #9ca3af !important;
+        }
+        
+        /* Calendar Specific Styles */
+        .calendar-container {
+            padding: 8rem 5% 5rem 5%;
+            min-height: 100vh;
+            background: #fbfbfd;
+            /* Apple-esque standard background */
+            animation: fadeIn 0.8s ease-out;
+        }
 
- @keyframes fadeIn {
- from {
- opacity: 0;
- transform: translateY(10px);
- }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
 
- to {
- opacity: 1;
- transform: translateY(0);
- }
- }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
- .calendar-header {
- text-align: center;
- margin-bottom: 4rem;
- position: relative;
- }
+        .calendar-header {
+            text-align: center;
+            margin-bottom: 4rem;
+            position: relative;
+        }
 
- .calendar-grid {
- display: grid;
- grid-template-columns: repeat(7, 1fr);
- /* gap: 1px; Removed for border-based grid */
- background: rgba(255, 255, 255, 0.85);
- /* Exact feature-card background */
- backdrop-filter: blur(24px);
- /* Exact feature-card fuzz */
- -webkit-backdrop-filter: blur(24px);
- border: 1px solid rgba(0, 0, 0, 0.05);
- /* Exact feature-card border */
- border-radius: 24px;
- /* Exact feature-card radius */
- overflow: hidden;
- box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
- /* Exact feature-card shadow */
- opacity: 0;
- animation: fadeIn 0.8s ease-out 0.5s forwards;
- }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            /* gap: 1px; Removed for border-based grid */
+            background: rgba(255, 255, 255, 0.85);
+            /* Exact feature-card background */
+            backdrop-filter: blur(24px);
+            /* Exact feature-card fuzz */
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            /* Exact feature-card border */
+            border-radius: 24px;
+            /* Exact feature-card radius */
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            /* Exact feature-card shadow */
+            opacity: 0;
+            animation: fadeIn 0.8s ease-out 0.5s forwards;
+        }
 
- /* New Integrated Header */
- .calendar-header-cell {
- grid-column: 1 / -1;
- background: transparent;
- /* Let glass shine through */
- /* Keep pattern if desired, or remove to strictly match blank cards. User liked pattern previously, but "exactly like cards" might imply no pattern. I'll keep the pattern but make it subtle as it was part of the card look in index? No, index cards don't have patterns. Removing pattern to be "exactly" like cards. */
- padding: 2rem 2rem 1rem 2rem;
- display: flex;
- justify-content: space-between;
- align-items: flex-end;
- border-bottom: 1px solid rgba(0, 0, 0, 0.05);
- }
+        /* New Integrated Header */
+        .calendar-header-cell {
+            grid-column: 1 / -1;
+            background: transparent;
+            /* Let glass shine through */
+            /* Keep pattern if desired, or remove to strictly match blank cards. User liked pattern previously, but "exactly like cards" might imply no pattern. I'll keep the pattern but make it subtle as it was part of the card look in index? No, index cards don't have patterns. Removing pattern to be "exactly" like cards. */
+            padding: 2rem 2rem 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
 
- /* Re-adding pattern as a separate class if needed, but removing for "exactly like cards" request base */
+        /* Re-adding pattern as a separate class if needed, but removing for "exactly like cards" request base */
 
- .month-title {
- font-size: 2.5rem;
- font-weight: 800;
- color: #1d1d1f;
- line-height: 1.1;
- letter-spacing: -0.02em;
- }
+        .month-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #1d1d1f;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+        }
 
- .year-subtitle {
- font-size: 1.2rem;
- color: #86868b;
- font-weight: 500;
- margin-top: 0.2rem;
- }
+        .year-subtitle {
+            font-size: 1.2rem;
+            color: #86868b;
+            font-weight: 500;
+            margin-top: 0.2rem;
+        }
 
- .calendar-controls {
- display: flex;
- gap: 0.5rem;
- }
+        .calendar-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
 
- /* Import Tool in Header */
- .header-import {
- margin-top: 1rem;
- }
+        /* Import Tool in Header */
+        .header-import {
+            margin-top: 1rem;
+        }
 
- .calendar-day-header {
- background: transparent;
- padding: 1rem;
- text-align: center;
- font-weight: 600;
- color: #86868b;
- font-size: 0.75rem;
- text-transform: uppercase;
- letter-spacing: 0.05em;
- border-bottom: 1px solid rgba(0, 0, 0, 0.05);
- border-right: 1px solid rgba(0, 0, 0, 0.05);
- }
+        .calendar-day-header {
+            background: transparent;
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+            color: #86868b;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            border-right: 1px solid rgba(0, 0, 0, 0.05);
+        }
 
- /* Remove right border from the last header in the row */
- .calendar-grid .calendar-day-header:nth-child(8) {
- border-right: none;
- }
+        /* Remove right border from the last header in the row */
+        .calendar-grid .calendar-day-header:nth-child(8) {
+            border-right: none;
+        }
 
- .calendar-day {
- background: transparent;
- min-height: 160px;
- /* Taller cells */
- padding: 1rem;
- position: relative;
- transition: background 0.2s;
- border-right: 1px solid rgba(0, 0, 0, 0.05);
- border-bottom: 1px solid rgba(0, 0, 0, 0.05);
- }
+        .calendar-day {
+            background: transparent;
+            min-height: 160px;
+            /* Taller cells */
+            padding: 1rem;
+            position: relative;
+            transition: background 0.2s;
+            border-right: 1px solid rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
 
- /* Remove right border from the last column of days */
- .calendar-grid .calendar-day:nth-child(7n + 8) {
- border-right: none;
- }
+        /* Remove right border from the last column of days */
+        .calendar-grid .calendar-day:nth-child(7n + 8) {
+            border-right: none;
+        }
 
- /* Remove bottom border from the last row of days */
- /* This requires knowing the total number of days, or using a more complex selector */
- /* For now, we'll leave the bottom border on all days, as the outer grid border will cover it */
+        /* Remove bottom border from the last row of days */
+        /* This requires knowing the total number of days, or using a more complex selector */
+        /* For now, we'll leave the bottom border on all days, as the outer grid border will cover it */
 
- .calendar-day:hover {
- background: rgba(0, 0, 0, 0.02);
- }
+        .calendar-day:hover {
+            background: rgba(0, 0, 0, 0.02);
+        }
 
- /* Mobile List View */
- .calendar-list-view {
- background: rgba(255, 255, 255, 0.85);
- backdrop-filter: blur(24px);
- -webkit-backdrop-filter: blur(24px);
- border: 1px solid rgba(0, 0, 0, 0.05);
- border-radius: 24px;
- overflow: hidden;
- box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
- padding: 1rem;
- }
+        /* Mobile List View */
+        .calendar-list-view {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            padding: 1rem;
+        }
 
- .calendar-list-container {
- display: flex;
- flex-direction: column;
- gap: 0.5rem;
- max-height: 70vh;
- overflow-y: auto;
- -webkit-overflow-scrolling: touch;
- }
+        .calendar-list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-height: 70vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
 
- .calendar-list-item {
- display: flex;
- align-items: center;
- gap: 1rem;
- padding: 1rem;
- background: white;
- border-radius: 12px;
- cursor: pointer;
- transition: all 0.2s ease;
- border: 1px solid rgba(0, 0, 0, 0.05);
- }
+        .calendar-list-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
 
- .calendar-list-item:active {
- transform: scale(0.98);
- background: #f5f5f7;
- }
+        .calendar-list-item:active {
+            transform: scale(0.98);
+            background: #f5f5f7;
+        }
 
- .calendar-list-item.today {
- border-left: 3px solid #2563eb;
- }
+        .calendar-list-item.today {
+            border-left: 3px solid #2563eb;
+        }
 
- .list-item-date {
- display: flex;
- flex-direction: column;
- align-items: center;
- min-width: 50px;
- }
+        .list-item-date {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 50px;
+        }
 
- .list-item-day {
- font-size: 1.5rem;
- font-weight: 700;
- color: #1d1d1f;
- line-height: 1;
- }
+        .list-item-day {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1d1d1f;
+            line-height: 1;
+        }
 
- .list-item-weekday {
- font-size: 0.75rem;
- color: #86868b;
- text-transform: uppercase;
- letter-spacing: 0.05em;
- margin-top: 0.25rem;
- }
+        .list-item-weekday {
+            font-size: 0.75rem;
+            color: #86868b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.25rem;
+        }
 
- .list-item-content {
- flex: 1;
- }
+        .list-item-content {
+            flex: 1;
+        }
 
- .list-item-title {
- font-size: 1rem;
- font-weight: 600;
- color: #1d1d1f;
- margin-bottom: 0.25rem;
- }
+        .list-item-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 0.25rem;
+        }
 
- .list-item-meta {
- font-size: 0.875rem;
- color: #86868b;
- }
+        .list-item-meta {
+            font-size: 0.875rem;
+            color: #86868b;
+        }
 
- .list-item-indicator {
- width: 4px;
- height: 100%;
- border-radius: 2px;
- min-height: 40px;
- }
+        .list-item-indicator {
+            width: 4px;
+            height: 100%;
+            border-radius: 2px;
+            min-height: 40px;
+        }
 
- .calendar-list-empty {
- text-align: center;
- padding: 3rem 1rem;
- color: #86868b;
- font-size: 1rem;
- }
+        .calendar-list-empty {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #86868b;
+            font-size: 1rem;
+        }
 
- @media (max-width: 767px) {
- .calendar-grid {
- display: none !important;
- }
- .calendar-list-view {
- display: block !important;
- }
- }
+        @media (max-width: 767px) {
+            .calendar-grid {
+                display: none !important;
+            }
+            
+            .calendar-list-view {
+                display: block !important;
+            }
+        }
 
- @media (min-width: 768px) {
- .calendar-list-view {
- display: none !important;
- }
- }
+        @media (min-width: 768px) {
+            .calendar-list-view {
+                display: none !important;
+            }
+        }
 
- .day-number {
- font-weight: 600;
- color: #333;
- margin-bottom: 0.5rem;
- display: inline-block;
- width: 28px;
- height: 28px;
- text-align: center;
- line-height: 28px;
- border-radius: 50%;
- }
+        .day-number {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            text-align: center;
+            line-height: 28px;
+            border-radius: 50%;
+        }
 
- .day-number.today {
- background: #2563eb;
- color: white;
- }
+        .day-number.today {
+            background: #2563eb;
+            color: white;
+        }
 
- .day-number.muted {
- color: #ccc;
- }
+        .day-number.muted {
+            color: #ccc;
+        }
 
- .event-pill {
- display: block;
- padding: 6px 10px;
- border-radius: 8px;
- /* Softer, more modern radius */
- font-size: 0.75rem;
- font-weight: 600;
- margin-bottom: 6px;
- cursor: pointer;
- transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
- box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
- /* Subtle lift */
- line-height: 1.3;
- letter-spacing: -0.01em;
- position: relative;
- overflow: hidden;
- }
+        .event-pill {
+            display: block;
+            padding: 6px 10px;
+            border-radius: 8px;
+            /* Softer, more modern radius */
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            /* Subtle lift */
+            line-height: 1.3;
+            letter-spacing: -0.01em;
+            position: relative;
+            overflow: hidden;
+        }
 
- .event-pill:hover {
- transform: translateY(-1px);
- }
+        .event-pill:hover {
+            transform: translateY(-1px);
+        }
 
- .event-tournament {
- background: #1d1d1f;
- /* Slightly softer black */
- color: white;
- box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
- }
+        .event-tournament {
+            background: #1d1d1f;
+            /* Slightly softer black */
+            color: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
 
- .event-practice {
- background: #ffffff;
- color: #1d1d1f;
- border: 1px solid rgba(0, 0, 0, 0.05);
- box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
- }
+        .event-practice {
+            background: #ffffff;
+            color: #1d1d1f;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+        }
 
- .event-team-practice {
- background: #2563eb;
- color: white;
- box-shadow: 0 4px 10px rgba(0, 113, 227, 0.25);
- /* Glow shadow */
- }
+        .event-team-practice {
+            background: #2563eb;
+            color: white;
+            box-shadow: 0 4px 10px rgba(0, 113, 227, 0.25);
+            /* Glow shadow */
+        }
 
- .event-mandatory-skills {
- background: #ffffff;
- color: #2563eb;
- border: 1.5px solid #2563eb;
- box-shadow: 0 2px 5px rgba(0, 113, 227, 0.1);
- font-weight: 700;
- /* Extra weight for mandatory */
- }
+        .event-mandatory-skills {
+            background: #ffffff;
+            color: #2563eb;
+            border: 1.5px solid #2563eb;
+            box-shadow: 0 2px 5px rgba(0, 113, 227, 0.1);
+            font-weight: 700;
+            /* Extra weight for mandatory */
+        }
 
- .event-skills {
- background: #ffffff;
- color: #2563eb;
- border: 1px solid rgba(0, 113, 227, 0.3);
- box-shadow: 0 2px 5px rgba(0, 113, 227, 0.05);
- }
+        .event-skills {
+            background: #ffffff;
+            color: #2563eb;
+            border: 1px solid rgba(0, 113, 227, 0.3);
+            box-shadow: 0 2px 5px rgba(0, 113, 227, 0.05);
+        }
 
- .event-training {
- background: #dcfce7;
- /* Light Green */
- color: #166534;
- /* Dark Green */
- border: 1px solid #bbf7d0;
- box-shadow: 0 2px 5px rgba(22, 101, 52, 0.05);
- font-weight: 600;
- }
+        .event-training {
+            background: #dcfce7;
+            /* Light Green */
+            color: #166534;
+            /* Dark Green */
+            border: 1px solid #bbf7d0;
+            box-shadow: 0 2px 5px rgba(22, 101, 52, 0.05);
+            font-weight: 600;
+        }
 
- /* Import Section */
- .import-section {
- background: white;
- padding: 2rem;
- border-radius: 12px;
- margin-bottom: 3rem;
- border: 1px solid #e5e5e5;
- display: flex;
- align-items: center;
- gap: 2rem;
- box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
- }
+        /* Import Section */
+        .import-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 3rem;
+            border: 1px solid #e5e5e5;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+        }
 
- .import-input {
- flex-grow: 1;
- padding: 1rem;
- border: 1px solid #ddd;
- border-radius: 8px;
- font-family: 'Inter', sans-serif;
- font-size: 1rem;
- }
+        .import-input {
+            flex-grow: 1;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+        }
 
- /* Float Card Animation */
- .float-card {
- position: fixed;
- top: 50%;
- left: 50%;
- transform: translate(-50%, -50%) scale(0.9);
- width: 400px;
- background: rgba(255, 255, 255, 0.95);
- backdrop-filter: blur(20px);
- padding: 2rem;
- border-radius: 20px;
- box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
- opacity: 0;
- pointer-events: none;
- transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
- z-index: 2000;
- overflow: hidden;
- /* Ensure content clips to border radius */
- }
+        /* Float Card Animation */
+        .float-card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 400px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 2000;
+            overflow: hidden;
+            /* Ensure content clips to border radius */
+        }
 
- .float-card.active {
- opacity: 1;
- transform: translate(-50%, -50%) scale(1);
- pointer-events: all;
- }
+        .float-card.active {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            pointer-events: all;
+        }
 
- .overlay-dim {
- position: fixed;
- top: 0;
- left: 0;
- width: 100%;
- height: 100%;
- background: rgba(0, 0, 0, 0.3);
- opacity: 0;
- pointer-events: none;
- transition: opacity 0.3s;
- z-index: 1500;
- }
+        .overlay-dim {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 1500;
+        }
 
- .overlay-dim.active {
- opacity: 1;
- pointer-events: all;
- }
+        .overlay-dim.active {
+            opacity: 1;
+            pointer-events: all;
+        }
 
- /* Sync Modal */
- .sync-modal {
- position: fixed;
- top: 50%;
- left: 50%;
- transform: translate(-50%, -50%) scale(0.95);
- background: white;
- padding: 2rem;
- border-radius: 20px;
- box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
- width: 320px;
- text-align: center;
- opacity: 0;
- pointer-events: none;
- transition: all 0.2s ease;
- z-index: 2000;
- }
+        /* Sync Modal */
+        .sync-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            width: 320px;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.2s ease;
+            z-index: 2000;
+        }
 
- .sync-modal.active {
- opacity: 1;
- transform: translate(-50%, -50%) scale(1);
- pointer-events: all;
- }
+        .sync-modal.active {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            pointer-events: all;
+        }
 
- .sync-btn-option {
- display: block;
- width: 100%;
- padding: 1rem;
- margin-bottom: 0.8rem;
- border: 1px solid #e5e5e5;
- border-radius: 12px;
- background: white;
- color: #1d1d1f;
- font-weight: 600;
- cursor: pointer;
- transition: all 0.2s;
- text-align: left;
- display: flex;
- align-items: center;
- gap: 12px;
- }
+        .sync-btn-option {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            margin-bottom: 0.8rem;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            background: white;
+            color: #1d1d1f;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
- .sync-btn-option:hover {
- background: #f5f5f7;
- transform: scale(1.02);
- }
- </style>
- <link rel="stylesheet" href="mobile-fixes.css">
+        .sync-btn-option:hover {
+            background: #f5f5f7;
+            transform: scale(1.02);
+        }
+    </style>
+    <link rel="stylesheet" href="mobile-fixes.css">
 </head>
 
 <body>
- <!-- Navbar -->
- <!-- Embedded Calendar Mode: Navbar Removed -->
- <div class="calendar-container">
-
- <div class="calendar-grid">
- <!-- Integrated Header Cell -->
- <div class="calendar-header-cell">
- <div>
- <div class="month-title" id="monthTitle">DECEMBER</div>
- <div class="year-subtitle" id="yearSubtitle">2025 Schedule</div>
- <div id="calculated-hours"
- style="margin-top: 10px; display: inline-flex; gap: 8px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
- <!-- Stats injected by JS -->
- </div>
- </div>
- <div class="calendar-controls">
- <button class="btn-secondary" onclick="openSyncModal()"
- style="padding: 0.5rem 1rem; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
- <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
- stroke-width="2">
- <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
- <polyline points="7 10 12 15 17 10"></polyline>
- <line x1="12" y1="15" x2="12" y2="3"></line>
- </svg>
- Sync
- </button>
- <button class="btn-secondary" onclick="prevMonth()"
- style="padding: 0.5rem 1rem; font-size: 0.9rem;">&lt;</button>
- <button class="btn-secondary" onclick="gotoToday()"
- style="padding: 0.5rem 1rem; font-size: 0.9rem;">Today</button>
- <button class="btn-secondary" onclick="nextMonth()"
- style="padding: 0.5rem 1rem; font-size: 0.9rem;">&gt;</button>
- </div>
- </div>
-
- <!-- Headers -->
- <div class="calendar-day-header">SUN</div>
- <div class="calendar-day-header">MON</div>
- <div class="calendar-day-header">TUE</div>
- <div class="calendar-day-header">WED</div>
- <div class="calendar-day-header">THU</div>
- <div class="calendar-day-header">FRI</div>
- <div class="calendar-day-header">SAT</div>
-
- <!-- Dynamic Days Container -->
- <div id="calendarGridBody" style="display: contents;">
- <!-- Days injected by JS -->
- </div>
- </div>
-
- <!-- Mobile List View -->
- <div class="calendar-list-view" style="display: none;">
- <div class="calendar-header-cell">
- <div>
- <div class="month-title" id="monthTitle">DECEMBER</div>
- <div class="year-subtitle" id="yearSubtitle">2025 Schedule</div>
- <div id="calculated-hours"
- style="margin-top: 10px; display: inline-flex; gap: 8px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
- <!-- Stats injected by JS -->
- </div>
- </div>
- <div class="calendar-controls">
- <button class="btn-secondary" onclick="openSyncModal()"
- style="padding: 0.5rem 1rem; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
- <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
- stroke-width="2">
- <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
- <polyline points="7 10 12 15 17 10"></polyline>
- <line x1="12" y1="15" x2="12" y2="3"></line>
- </svg>
- Sync
- </button>
- <button class="btn-secondary" onclick="prevMonth()"
- style="padding: 0.5rem 1rem; font-size: 0.9rem;">&lt;</button>
- <button class="btn-secondary" onclick="gotoToday()"
- style="padding: 0.5rem 1rem; font-size: 0.9rem;">Today</button>
- <button class="btn-secondary" onclick="nextMonth()"
- style="padding: 0.5rem 1rem; font-size: 0.9rem;">&gt;</button>
- </div>
- </div>
- <div id="calendarListBody" class="calendar-list-container">
- <!-- List items injected by JS -->
- </div>
- </div>
- </div>
-
-
-
- <!-- Embedded Calendar Mode: Footer Removed -->
-
- <script src="branded-modal.js"></script>
- <script src="script.js"></script>
- <script type="module" src="backend.js"></script>
- <script>
- // Calendar State
- let currentDate = new Date(); // Start at current real date
- let enrolledPrograms = []; // Programs the athlete is enrolled in
- let filterAthleteId = null; // Current athlete filter
- let externalEvents = []; // External events injected from parent
-
- // Listen for filter and injection messages from parent portal
- window.addEventListener('message', (event) => {
- if (event.data) {
- if (event.data.type === 'filterByAthlete') {
- filterAthleteId = event.data.athleteId;
- if (window.parent && window.parent.trainingEnrolledPrograms) {
- enrolledPrograms = window.parent.trainingEnrolledPrograms;
- }
- renderCalendar();
- } else if (event.data.type === 'injectEvents') {
- // Inject external events (e.g. Purchased Training)
- // event.data.events should be an array of event objects
- if (Array.isArray(event.data.events)) {
- externalEvents = event.data.events;
- renderCalendar();
- }
- }
- }
- });
-
- // Load enrolled programs from parent window if available
- if (window.parent && window.parent.trainingEnrolledPrograms) {
- enrolledPrograms = window.parent.trainingEnrolledPrograms;
- }
-
- // Configuration
- const RECURRING_EVENTS = {
- 1: { // Monday
- type: 'mandatory-skills',
- title: 'Mandatory Skills @ Montbello',
- time: '6:00 PM',
- loc: 'Montbello Rec Center',
- desc: 'Mandatory for some players',
- pillClass: 'event-mandatory-skills',
- color: '#f0f0f0',
- textColor: 'dark',
- duration: 1,
- startDate: '2025-12-08' // Only active from this date
- },
- 2: { // Tuesday
- type: 'team-practice',
- title: 'TEAM PRACTICE',
- time: '6:00 PM - 8:00 PM',
- loc: 'B.F. Elementary School',
- desc: 'Regular Team Practice',
- pillClass: 'event-team-practice',
- color: '#2563eb',
- textColor: 'light',
- duration: 2
- },
- 3: { // Wednesday
- type: 'skills',
- title: 'Skills @ Montbello',
- time: '6:00 PM - 7:00 PM',
- loc: 'Montbello Rec Center',
- desc: 'Skills Development Session',
- pillClass: 'event-skills',
- color: '#f0f0f0',
- textColor: 'dark',
- duration: 1
- },
- 4: { // Thursday
- type: 'team-practice',
- title: 'TEAM PRACTICE',
- time: '6:00 PM - 8:00 PM',
- loc: 'B.F. Elementary School',
- desc: 'Regular Team Practice',
- pillClass: 'event-team-practice',
- color: '#2563eb',
- textColor: 'light',
- duration: 2
- }
- };
-
- const SPECIFIC_EVENTS = {
- '2025-10-18': [
- { type: 'game', title: 'L 22-32 vs RoughRiders', fullTitle: 'Oct 18 vs. 4/5 Green RoughRiders', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (22-32)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
- { type: 'game', title: 'L 21-26 vs CDA', fullTitle: 'Oct 18 vs. CDA 4th Orange', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (21-26)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
- ],
- '2025-10-19': [
- { type: 'game', title: 'L 26-29 vs CDA', fullTitle: 'Oct 19 vs. CDA 5th Green', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (26-29)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
- { type: 'game', title: 'W 25-10 vs RoughRiders', fullTitle: 'Oct 19 vs. 4/5 Green RoughRiders', time: 'TBD', loc: 'TBD', desc: 'Result: Win (25-10)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
- ],
- '2025-11-01': [
- { type: 'game', title: 'W 24-10 vs Hardwood', fullTitle: 'Nov 01 vs. Hardwood Boys 5th Elite', time: 'TBD', loc: 'TBD', desc: 'Result: Win (24-10)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
- { type: 'game', title: 'L 14-25 vs 7070', fullTitle: 'Nov 01 vs. 7070 Elite 12U', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (14-25)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
- { type: 'game', title: 'L 12-42 vs Hardwood', fullTitle: 'Nov 01 vs. Hardwood Boys 6th Elite', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (12-42)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
- ],
- '2025-11-08': [
- { type: 'game', title: 'L 20-23 vs State 38', fullTitle: 'Nov 08 vs. State 38 11U Boys Black', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (20-23)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
- { type: 'game', title: 'L 18-26 vs Legend', fullTitle: 'Nov 08 vs. Legend 5th - BLACK', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (18-26)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
- ],
- '2025-11-09': [
- { type: 'game', title: 'W 23-9 vs Titans', fullTitle: 'Nov 09 vs. Colorado Titans U11 Black', time: 'TBD', loc: 'TBD', desc: 'Result: Win (23-9)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
- { type: 'game', title: 'W 15-8 vs Titans', fullTitle: 'Nov 09 vs. Colorado Titans U11 Black', time: 'TBD', loc: 'TBD', desc: 'Result: Win (15-8)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
- ],
- '2025-11-16': [
- { type: 'game', title: 'L 16-21 vs Titans', fullTitle: 'Nov 16 vs. Colorado Titans U11 Black', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (16-21)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
- { type: 'game', title: 'W 15-8 vs Coyote', fullTitle: 'Nov 16 vs. Coyote Elite 5th/11U', time: 'TBD', loc: 'TBD', desc: 'Result: Win (15-8)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
- { type: 'game', title: 'L 6-18 vs Magic', fullTitle: 'Nov 16 vs. Colorado Magic Jr. 3SSB', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (6-18)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
- ],
- '2025-11-27': 'SKIP',
- '2025-12-07': [
- { type: 'game', title: 'W 20-2 vs Amplify', fullTitle: 'Game vs Amplify Hoops 6 Gray', time: '10:00 AM', loc: 'Legacy High School', desc: 'Pool A - Result: Win (20-2)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
- { type: 'game', title: 'W 29-5 vs Erie Tigers', fullTitle: 'Game vs Erie Tigers 5th Garcia', time: '11:00 AM', loc: 'Legacy High School', desc: 'Pool A - Result: Win (29-5)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
- { type: 'game', title: 'L 21-35 vs Sidney', fullTitle: 'Game vs Sidney 6th 6th/12U', time: '1:00 PM', loc: 'Legacy High School', desc: 'Pool A - Result: Loss (21-35)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
- ],
- '2025-12-13': [
- { type: 'game', title: 'W 23-15 vs Heritage', fullTitle: 'Dec 13 vs. Heritage 5th Grade Silver', time: 'TBD', loc: 'TBD', desc: 'Result: Win (23-15)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
- ],
- '2025-12-14': [
- { type: 'game', title: 'W 13-9 vs B&B', fullTitle: 'Dec 14 vs. B and B 5th White', time: 'TBD', loc: 'TBD', desc: 'Result: Win (13-9)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
- { type: 'game', title: 'L 20-21 vs Slavens', fullTitle: 'Dec 14 vs. Slavens Storm 5th/11U', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (20-21)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
- { type: 'game', title: '🏆 W 22-20 (CHAMPIONSHIP)', fullTitle: 'CHAMPIONSHIP vs Slavens Storm', time: 'TBD', loc: 'TBD', desc: 'Result: Win (22-20) - MVP: ASHTON BOWMAN', pillClass: 'event-tournament', color: '#FFD700', textColor: 'dark', duration: 1 }
- ],
- '2025-12-24': 'SKIP',
- '2025-12-25': [
- { type: 'holiday', title: 'CHRISTMAS', pillClass: 'event-pill', style: 'background: transparent; color: #cc0000; font-weight: 600; padding-left: 0; box-shadow: none;' }
- ],
- '2025-12-31': 'SKIP',
- '2026-01-01': 'SKIP',
- '2026-01-07': [
- { type: 'info', title: 'Winter League Begins', pillClass: 'event-pill', style: 'background: #1d1d1f; color: white; text-align:center;' },
- // Add regular Wednesday practice too? Usually yes.
- { recurring: true }
- ],
- '2026-02-27': [
- { type: 'info', title: 'Winter League Ends', pillClass: 'event-pill', style: 'background: white; color: #cc0000; border: 1.5px solid #cc0000; text-align:center; font-weight: 700;' },
- { type: 'info', title: 'Post-Season Starts', pillClass: 'event-pill', style: 'background: #1d1d1f; color: white; text-align:center;' }
- ],
- '2026-03-01': [
- { type: 'info', title: 'Post-Season Ends', pillClass: 'event-pill', style: 'background: white; color: #cc0000; border: 1.5px solid #cc0000; text-align:center; font-weight: 700;' }
- ]
- };
-
- const MONTH_NAMES = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
-
- function getEventsForDate(date) {
- const dateStr = date.toISOString().split('T')[0];
- const dayOfWeek = date.getDay(); // 0=Sun, 1=Mon...
-
- let events = [];
-
- // 1. External Events (Injected)
- const daysExternal = externalEvents.filter(e => e.date === dateStr);
- if (daysExternal.length > 0) {
- events = events.concat(daysExternal);
- }
-
- // 2. Check Specific Overrides first
- if (SPECIFIC_EVENTS[dateStr] === 'SKIP') return [];
-
- if (SPECIFIC_EVENTS[dateStr] && Array.isArray(SPECIFIC_EVENTS[dateStr])) {
- SPECIFIC_EVENTS[dateStr].forEach(ev => {
- if (ev.recurring) {
- // Include recurring
- const recurring = RECURRING_EVENTS[dayOfWeek];
- if (recurring) {
- if (!recurring.startDate || date >= new Date(recurring.startDate)) {
- events.push(recurring);
- }
- }
- } else {
- events.push(ev);
- }
- });
- // Logic above allows mixing specific + recurring if specific array has {recurring:true}
- if (!SPECIFIC_EVENTS[dateStr].some(e => e.recurring) && events.length > 0) {
- return filterEventsByEnrollment(events);
- }
- }
-
- // Fallback to Recurring
- if (RECURRING_EVENTS[dayOfWeek]) {
- const recurring = RECURRING_EVENTS[dayOfWeek];
- // Check if recurring event has a start date requirement
- if (!recurring.startDate || date >= new Date(recurring.startDate)) {
- events.push(recurring);
- }
- }
-
- return filterEventsByEnrollment(events);
- }
-
- /**
- * Filter events based on athlete's enrolled programs
- * If enrolledPrograms is empty, show all events
- */
- function filterEventsByEnrollment(events) {
- // If no filter is set, show all events
- if (!filterAthleteId && enrolledPrograms.length === 0) {
- return events;
- }
-
- // If filter is set but no enrolled programs, show nothing
- if (filterAthleteId && enrolledPrograms.length === 0) {
- return [];
- }
-
- // Filter events based on program type matching enrolled programs
- return events.filter(event => {
- // Map event types to program IDs
- const eventTypeToProgram = {
- 'skills': 'skills-program',
- 'mandatory-skills': 'skills-program',
- 'team-practice': 'team-practice',
- 'practice': 'team-practice'
- };
-
- const programId = eventTypeToProgram[event.type];
-
- // If event type doesn't map to a program, show it (e.g., games)
- if (!programId) return true;
-
- // Check if athlete is enrolled in this program type
- return enrolledPrograms.some(ep =>
- ep.includes(programId) ||
- ep.includes(event.type) ||
- ep === programId
- );
- });
- }
-
- function renderCalendar() {
- const year = currentDate.getFullYear();
- const month = currentDate.getMonth();
- const isMobile = window.innerWidth < 768;
-
- // Update Header
- document.getElementById('monthTitle').innerText = MONTH_NAMES[month];
- document.getElementById('yearSubtitle').innerText = `${year} Schedule`;
-
- const grid = document.getElementById('calendarGridBody');
- const listContainer = document.getElementById('calendarListBody');
-
- // Stats Calculation (Season Total)
- const stats = calculateSeasonStats(year, month);
- document.getElementById('calculated-hours').innerHTML = `
- <span style="background: rgba(37,99,235,0.1); color: #2563eb; padding: 4px 10px; border-radius: 99px;">${stats.practice} Practice Hours</span>
- <span style="background: rgba(0,0,0,0.05); color: #1d1d1f; padding: 4px 10px; border-radius: 99px;">${stats.game} Game Hours</span>
- `;
-
- // Mobile: Render as list
- if (isMobile && listContainer) {
- renderCalendarList(year, month, listContainer);
- document.querySelector('.calendar-grid').style.display = 'none';
- document.querySelector('.calendar-list-view').style.display = 'block';
- return;
- }
-
- // Desktop: Render as grid
- if (listContainer) {
- document.querySelector('.calendar-list-view').style.display = 'none';
- }
- document.querySelector('.calendar-grid').style.display = 'grid';
- grid.innerHTML = ''; // Clear
-
- // Days Generation
- const firstDay = new Date(year, month, 1);
- const lastDay = new Date(year, month + 1, 0);
-
- // Pad start
- let startPadding = firstDay.getDay(); // 0 is Sunday
- // If we want consistent rows, we just fill empty divs
- for (let i = 0; i < startPadding; i++) {
- const pad = document.createElement('div');
- pad.className = 'calendar-day';
- grid.appendChild(pad);
- }
-
- // Days
- for (let i = 1; i <= lastDay.getDate(); i++) {
- const cell = document.createElement('div');
- cell.className = 'calendar-day';
-
- const currentDayDate = new Date(year, month, i);
- const isToday = (currentDayDate.toDateString() === new Date().toDateString());
-
- // Day Number
- const numSpan = document.createElement('span');
- numSpan.className = `day-number ${isToday ? 'today' : ''}`;
- numSpan.innerText = i;
- cell.appendChild(numSpan);
-
- // Events
- const events = getEventsForDate(currentDayDate);
- events.forEach(ev => {
- const pill = document.createElement('span');
- if (ev.style) {
- pill.className = ev.pillClass;
- pill.style = ev.style;
- pill.innerText = ev.title;
- } else {
- pill.className = `event-pill ${ev.pillClass}`;
- pill.innerText = ev.title;
- // Onclick
- pill.onclick = () => openEvent(
- ev.fullTitle || ev.title,
- ev.desc ? 'Event' : 'Info',
- ev.time || 'All Day',
- ev.loc || 'TBD',
- ev.desc || '',
- ev.color,
- ev.textColor
- );
- }
- cell.appendChild(pill);
- });
-
- grid.appendChild(cell);
- }
- }
-
- function renderCalendarList(year, month, container) {
- container.innerHTML = '';
- const lastDay = new Date(year, month + 1, 0);
- const today = new Date();
- // Collect all events for the month
- const eventsByDate = [];
- for (let i = 1; i <= lastDay.getDate(); i++) {
- const currentDayDate = new Date(year, month, i);
- const events = getEventsForDate(currentDayDate);
- if (events.length > 0) {
- eventsByDate.push({
- date: currentDayDate,
- day: i,
- events: events,
- isToday: currentDayDate.toDateString() === today.toDateString()
- });
- }
- }
- // Render list items
- if (eventsByDate.length === 0) {
- container.innerHTML = '<div class="calendar-list-empty">No events scheduled for this month.</div>';
- return;
- }
- eventsByDate.forEach(({date, day, events, isToday}) => {
- const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
- const monthName = MONTH_NAMES[month].substring(0, 3);
- events.forEach(ev => {
- const listItem = document.createElement('div');
- listItem.className = `calendar-list-item ${isToday ? 'today' : ''}`;
- listItem.onclick = () => openEvent(
- ev.fullTitle || ev.title,
- ev.desc ? 'Event' : 'Info',
- ev.time || 'All Day',
- ev.loc || 'TBD',
- ev.desc || '',
- ev.color,
- ev.textColor
- );
- const bgColor = ev.color || '#2563eb';
- listItem.innerHTML = `
- <div class="list-item-date">
- <div class="list-item-day">${day}</div>
- <div class="list-item-weekday">${dayName}</div>
- </div>
- <div class="list-item-content">
- <div class="list-item-title">${ev.fullTitle || ev.title}</div>
- <div class="list-item-meta">${ev.time || 'All Day'} ${ev.loc ? '• ' + ev.loc : ''}</div>
- </div>
- <div class="list-item-indicator" style="background: ${bgColor};"></div>
- `;
- container.appendChild(listItem);
- });
- });
- }
-
- function calculateSeasonStats(targetYear, targetMonth) {
- // Calculate season stats dynamically from start (Sept 25, 2025)
- let practice = 0;
- let game = 0;
-
- // Iterate from Sept 25, 2025 to End of Target Month
- let iterDate = new Date(2025, 8, 25);
- let endDate = new Date(targetYear, targetMonth + 1, 0);
-
- while (iterDate <= endDate) {
- const evs = getEventsForDate(iterDate);
- evs.forEach(e => {
- if (e.duration) {
- if (e.type === 'game' || e.type === 'tournament') game += e.duration;
- else practice += e.duration;
- }
- });
- iterDate.setDate(iterDate.getDate() + 1);
- }
- return { practice, game };
- }
-
- function prevMonth() {
- currentDate.setMonth(currentDate.getMonth() - 1);
- renderCalendar();
- }
-
- function nextMonth() {
- currentDate.setMonth(currentDate.getMonth() + 1);
- renderCalendar();
- }
-
- function gotoToday() {
- currentDate = new Date(2025, 11, 1);
- renderCalendar();
- }
-
- // Overlay & Modal Logic
- function openEvent(title, type, time, loc, details, color, textColor) {
- document.getElementById('eventTitle').innerText = title;
- document.getElementById('eventType').innerText = type;
- document.getElementById('eventTime').innerText = time;
- document.getElementById('eventLocation').innerHTML = loc;
- document.getElementById('eventDetails').innerText = details;
-
- const header = document.querySelector('#eventCard > div:first-child');
- header.style.background = color || '#2563eb';
-
- const titleEl = document.getElementById('eventTitle');
- const typeEl = document.querySelector('#eventType');
-
- if (textColor === 'dark') {
- titleEl.style.color = '#1d1d1f';
- typeEl.style.color = '#86868b';
- } else {
- titleEl.style.color = 'white';
- typeEl.style.color = 'rgba(255,255,255,0.8)';
- }
-
- document.getElementById('overlay').classList.add('active');
- document.getElementById('eventCard').classList.add('active');
- }
-
- function closeEvent() {
- document.getElementById('overlay').classList.remove('active');
- document.getElementById('eventCard').classList.remove('active');
- }
-
- // Sync & Modal Logic
- function openSyncModal() {
- document.getElementById('syncModal').classList.add('active');
- document.getElementById('overlay').classList.add('active');
-
- // Override overlay click to close sync modal if it's open
- const overlay = document.getElementById('overlay');
- overlay.onclick = () => {
- closeEvent();
- closeSyncModal();
- };
- }
-
- function closeSyncModal() {
- document.getElementById('syncModal').classList.remove('active');
- document.getElementById('overlay').classList.remove('active');
- // Reset overlay click
- document.getElementById('overlay').onclick = closeEvent;
- }
-
- function processSync(platform) {
- const icsContent = generateSeasonICS();
- const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
- const link = document.createElement('a');
- link.href = window.URL.createObjectURL(blob);
- link.setAttribute('download', 'godspeed-season-2025-26.ics');
- document.body.appendChild(link);
- link.click();
- document.body.removeChild(link);
-
- closeSyncModal();
-
- if (platform === 'google') {
- godspeedAlert("File downloaded! To finish syncing with Google Calendar:\n\n1. Open Google Calendar on your computer.\n2. Go to Settings > Import & Export.\n3. Upload the 'godspeed-season.ics' file.", "Calendar Sync");
- }
- }
-
- function generateSeasonICS() {
- let ics = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Godspeed//NONSGML v1.0//EN\nCALSCALE:GREGORIAN\nMETHOD:PUBLISH\n";
-
- // Loop from Dec 1, 2025 to April 30, 2026
- let iterDate = new Date(2025, 11, 1);
- const endDate = new Date(2026, 3, 30); // April 30
-
- while (iterDate <= endDate) {
- const events = getEventsForDate(iterDate);
- events.forEach(e => {
- // Skip INFO pills, only real events
- if (e.type === 'info') return;
-
- const dateStr = iterDate.toISOString().replace(/-/g, '').split('T')[0];
- let startTime = '090000'; // Default
- let endTime = '100000';
-
- // Parse time helper
- if (e.time && e.time.includes(':')) {
- // Very basic parser for 6:00 PM
- try {
- const [timeRange, ampm] = e.time.split('M')[0].split(' '); // simple hack
- // Better: use specific data in config if available.
- // For simplicity, we'll try to guess start time or default
- // 6:00 PM -> 180000
- if (e.time.includes('6:00 PM')) { startTime = '180000'; endTime = '190000'; }
- if (e.time.includes('6:00 PM - 8:00 PM')) { startTime = '180000'; endTime = '200000'; }
- if (e.time.includes('10:00 AM')) { startTime = '100000'; endTime = '110000'; }
- if (e.time.includes('11:00 AM')) { startTime = '110000'; endTime = '120000'; }
- if (e.time.includes('1:00 PM')) { startTime = '130000'; endTime = '140000'; }
- } catch (err) { }
- }
-
- ics += "BEGIN:VEVENT\n";
- ics += `DTSTART;TZID=America/Denver:${dateStr}T${startTime}\n`;
- ics += `DTEND;TZID=America/Denver:${dateStr}T${endTime}\n`;
- ics += `SUMMARY:${e.fullTitle || e.title}\n`;
- ics += `DESCRIPTION:${e.desc || ''}\n`;
- ics += `LOCATION:${e.loc || 'TBD'}\n`;
- ics += "END:VEVENT\n";
- });
- iterDate.setDate(iterDate.getDate() + 1);
- }
-
- ics += "END:VCALENDAR";
- return ics;
- }
-
- // Shared Modal Logic
- function openContactModal() {
- document.getElementById('contactModal').classList.add('active');
- document.body.style.overflow = 'hidden';
- }
- function closeContactModal() {
- document.getElementById('contactModal').classList.remove('active');
- document.body.style.overflow = '';
- }
-
- // Re-render on window resize to switch between grid/list
- let resizeTimer;
- window.addEventListener('resize', () => {
- clearTimeout(resizeTimer);
- resizeTimer = setTimeout(() => {
- renderCalendar();
- }, 250);
- });
-
- // Init
- document.addEventListener('DOMContentLoaded', renderCalendar);
- </script>
- <script src="branded-modal.js"></script>
- <script src="security.js"></script>
- <script src="auth.js"></script>
+    <!-- Navbar -->
+    <!-- Embedded Calendar Mode: Navbar Removed -->
+    <div class="calendar-container">
+
+        <div class="calendar-grid">
+            <!-- Integrated Header Cell -->
+            <div class="calendar-header-cell">
+                <div>
+                    <div class="month-title" id="monthTitle">DECEMBER</div>
+                    <div class="year-subtitle" id="yearSubtitle">2025 Schedule</div>
+                    <div id="calculated-hours"
+                        style="margin-top: 10px; display: inline-flex; gap: 8px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+                        <!-- Stats injected by JS -->
+                    </div>
+                </div>
+                <div class="calendar-controls">
+                    <button class="btn-secondary" onclick="openSyncModal()"
+                        style="padding: 0.5rem 1rem; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Sync
+                    </button>
+                    <button class="btn-secondary" onclick="prevMonth()"
+                        style="padding: 0.5rem 1rem; font-size: 0.9rem;">&lt;</button>
+                    <button class="btn-secondary" onclick="gotoToday()"
+                        style="padding: 0.5rem 1rem; font-size: 0.9rem;">Today</button>
+                    <button class="btn-secondary" onclick="nextMonth()"
+                        style="padding: 0.5rem 1rem; font-size: 0.9rem;">&gt;</button>
+                </div>
+            </div>
+
+            <!-- Headers -->
+            <div class="calendar-day-header">SUN</div>
+            <div class="calendar-day-header">MON</div>
+            <div class="calendar-day-header">TUE</div>
+            <div class="calendar-day-header">WED</div>
+            <div class="calendar-day-header">THU</div>
+            <div class="calendar-day-header">FRI</div>
+            <div class="calendar-day-header">SAT</div>
+
+            <!-- Dynamic Days Container -->
+            <div id="calendarGridBody" style="display: contents;">
+                <!-- Days injected by JS -->
+            </div>
+        </div>
+
+        <!-- Mobile List View -->
+        <div class="calendar-list-view" style="display: none;">
+            <div class="calendar-header-cell">
+                <div>
+                    <div class="month-title" id="monthTitle">DECEMBER</div>
+                    <div class="year-subtitle" id="yearSubtitle">2025 Schedule</div>
+                    <div id="calculated-hours"
+                        style="margin-top: 10px; display: inline-flex; gap: 8px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+                        <!-- Stats injected by JS -->
+                    </div>
+                </div>
+                <div class="calendar-controls">
+                    <button class="btn-secondary" onclick="openSyncModal()"
+                        style="padding: 0.5rem 1rem; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Sync
+                    </button>
+                    <button class="btn-secondary" onclick="prevMonth()"
+                        style="padding: 0.5rem 1rem; font-size: 0.9rem;">&lt;</button>
+                    <button class="btn-secondary" onclick="gotoToday()"
+                        style="padding: 0.5rem 1rem; font-size: 0.9rem;">Today</button>
+                    <button class="btn-secondary" onclick="nextMonth()"
+                        style="padding: 0.5rem 1rem; font-size: 0.9rem;">&gt;</button>
+                </div>
+            </div>
+            <div id="calendarListBody" class="calendar-list-container">
+                <!-- List items injected by JS -->
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Embedded Calendar Mode: Footer Removed -->
+
+    <script src="branded-modal.js"></script>
+    <script src="script.js"></script>
+    <script type="module" src="backend.js"></script>
+    <script>
+        // Calendar State
+        let currentDate = new Date(); // Start at current real date
+        let enrolledPrograms = []; // Programs the athlete is enrolled in
+        let filterAthleteId = null; // Current athlete filter
+        let externalEvents = []; // External events injected from parent
+
+        // Listen for filter and injection messages from parent portal
+        window.addEventListener('message', (event) => {
+            if (event.data) {
+                if (event.data.type === 'filterByAthlete') {
+                    filterAthleteId = event.data.athleteId;
+                    if (window.parent && window.parent.trainingEnrolledPrograms) {
+                        enrolledPrograms = window.parent.trainingEnrolledPrograms;
+                    }
+                    renderCalendar();
+                } else if (event.data.type === 'injectEvents') {
+                    // Inject external events (e.g. Purchased Training)
+                    // event.data.events should be an array of event objects
+                    if (Array.isArray(event.data.events)) {
+                        externalEvents = event.data.events;
+                        renderCalendar();
+                    }
+                }
+            }
+        });
+
+        // Load enrolled programs from parent window if available
+        if (window.parent && window.parent.trainingEnrolledPrograms) {
+            enrolledPrograms = window.parent.trainingEnrolledPrograms;
+        }
+
+        // Configuration
+        const RECURRING_EVENTS = {
+            1: { // Monday
+                type: 'mandatory-skills',
+                title: 'Mandatory Skills @ Montbello',
+                time: '6:00 PM',
+                loc: 'Montbello Rec Center',
+                desc: 'Mandatory for some players',
+                pillClass: 'event-mandatory-skills',
+                color: '#f0f0f0',
+                textColor: 'dark',
+                duration: 1,
+                startDate: '2025-12-08' // Only active from this date
+            },
+            2: { // Tuesday
+                type: 'team-practice',
+                title: 'TEAM PRACTICE',
+                time: '6:00 PM - 8:00 PM',
+                loc: 'B.F. Elementary School',
+                desc: 'Regular Team Practice',
+                pillClass: 'event-team-practice',
+                color: '#2563eb',
+                textColor: 'light',
+                duration: 2
+            },
+            3: { // Wednesday
+                type: 'skills',
+                title: 'Skills @ Montbello',
+                time: '6:00 PM - 7:00 PM',
+                loc: 'Montbello Rec Center',
+                desc: 'Skills Development Session',
+                pillClass: 'event-skills',
+                color: '#f0f0f0',
+                textColor: 'dark',
+                duration: 1
+            },
+            4: { // Thursday
+                type: 'team-practice',
+                title: 'TEAM PRACTICE',
+                time: '6:00 PM - 8:00 PM',
+                loc: 'B.F. Elementary School',
+                desc: 'Regular Team Practice',
+                pillClass: 'event-team-practice',
+                color: '#2563eb',
+                textColor: 'light',
+                duration: 2
+            }
+        };
+
+        const SPECIFIC_EVENTS = {
+            '2025-10-18': [
+                { type: 'game', title: 'L 22-32 vs RoughRiders', fullTitle: 'Oct 18 vs. 4/5 Green RoughRiders', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (22-32)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
+                { type: 'game', title: 'L 21-26 vs CDA', fullTitle: 'Oct 18 vs. CDA 4th Orange', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (21-26)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
+            ],
+            '2025-10-19': [
+                { type: 'game', title: 'L 26-29 vs CDA', fullTitle: 'Oct 19 vs. CDA 5th Green', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (26-29)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
+                { type: 'game', title: 'W 25-10 vs RoughRiders', fullTitle: 'Oct 19 vs. 4/5 Green RoughRiders', time: 'TBD', loc: 'TBD', desc: 'Result: Win (25-10)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
+            ],
+            '2025-11-01': [
+                { type: 'game', title: 'W 24-10 vs Hardwood', fullTitle: 'Nov 01 vs. Hardwood Boys 5th Elite', time: 'TBD', loc: 'TBD', desc: 'Result: Win (24-10)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
+                { type: 'game', title: 'L 14-25 vs 7070', fullTitle: 'Nov 01 vs. 7070 Elite 12U', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (14-25)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
+                { type: 'game', title: 'L 12-42 vs Hardwood', fullTitle: 'Nov 01 vs. Hardwood Boys 6th Elite', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (12-42)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
+            ],
+            '2025-11-08': [
+                { type: 'game', title: 'L 20-23 vs State 38', fullTitle: 'Nov 08 vs. State 38 11U Boys Black', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (20-23)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
+                { type: 'game', title: 'L 18-26 vs Legend', fullTitle: 'Nov 08 vs. Legend 5th - BLACK', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (18-26)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
+            ],
+            '2025-11-09': [
+                { type: 'game', title: 'W 23-9 vs Titans', fullTitle: 'Nov 09 vs. Colorado Titans U11 Black', time: 'TBD', loc: 'TBD', desc: 'Result: Win (23-9)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
+                { type: 'game', title: 'W 15-8 vs Titans', fullTitle: 'Nov 09 vs. Colorado Titans U11 Black', time: 'TBD', loc: 'TBD', desc: 'Result: Win (15-8)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
+            ],
+            '2025-11-16': [
+                { type: 'game', title: 'L 16-21 vs Titans', fullTitle: 'Nov 16 vs. Colorado Titans U11 Black', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (16-21)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
+                { type: 'game', title: 'W 15-8 vs Coyote', fullTitle: 'Nov 16 vs. Coyote Elite 5th/11U', time: 'TBD', loc: 'TBD', desc: 'Result: Win (15-8)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
+                { type: 'game', title: 'L 6-18 vs Magic', fullTitle: 'Nov 16 vs. Colorado Magic Jr. 3SSB', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (6-18)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
+            ],
+            '2025-11-27': 'SKIP',
+            '2025-12-07': [
+                { type: 'game', title: 'W 20-2 vs Amplify', fullTitle: 'Game vs Amplify Hoops 6 Gray', time: '10:00 AM', loc: 'Legacy High School', desc: 'Pool A - Result: Win (20-2)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
+                { type: 'game', title: 'W 29-5 vs Erie Tigers', fullTitle: 'Game vs Erie Tigers 5th Garcia', time: '11:00 AM', loc: 'Legacy High School', desc: 'Pool A - Result: Win (29-5)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
+                { type: 'game', title: 'L 21-35 vs Sidney', fullTitle: 'Game vs Sidney 6th 6th/12U', time: '1:00 PM', loc: 'Legacy High School', desc: 'Pool A - Result: Loss (21-35)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
+            ],
+            '2025-12-13': [
+                { type: 'game', title: 'W 23-15 vs Heritage', fullTitle: 'Dec 13 vs. Heritage 5th Grade Silver', time: 'TBD', loc: 'TBD', desc: 'Result: Win (23-15)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 }
+            ],
+            '2025-12-14': [
+                { type: 'game', title: 'W 13-9 vs B&B', fullTitle: 'Dec 14 vs. B and B 5th White', time: 'TBD', loc: 'TBD', desc: 'Result: Win (13-9)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
+                { type: 'game', title: 'L 20-21 vs Slavens', fullTitle: 'Dec 14 vs. Slavens Storm 5th/11U', time: 'TBD', loc: 'TBD', desc: 'Result: Loss (20-21)', pillClass: 'event-tournament', color: '#1d1d1f', textColor: 'light', duration: 1 },
+                { type: 'game', title: '🏆 W 22-20 (CHAMPIONSHIP)', fullTitle: 'CHAMPIONSHIP vs Slavens Storm', time: 'TBD', loc: 'TBD', desc: 'Result: Win (22-20) - MVP: ASHTON BOWMAN', pillClass: 'event-tournament', color: '#FFD700', textColor: 'dark', duration: 1 }
+            ],
+            '2025-12-24': 'SKIP',
+            '2025-12-25': [
+                { type: 'holiday', title: 'CHRISTMAS', pillClass: 'event-pill', style: 'background: transparent; color: #cc0000; font-weight: 600; padding-left: 0; box-shadow: none;' }
+            ],
+            '2025-12-31': 'SKIP',
+            '2026-01-01': 'SKIP',
+            '2026-01-07': [
+                { type: 'info', title: 'Winter League Begins', pillClass: 'event-pill', style: 'background: #1d1d1f; color: white; text-align:center;' },
+                // Add regular Wednesday practice too? Usually yes.
+                { recurring: true }
+            ],
+            '2026-02-27': [
+                { type: 'info', title: 'Winter League Ends', pillClass: 'event-pill', style: 'background: white; color: #cc0000; border: 1.5px solid #cc0000; text-align:center; font-weight: 700;' },
+                { type: 'info', title: 'Post-Season Starts', pillClass: 'event-pill', style: 'background: #1d1d1f; color: white; text-align:center;' }
+            ],
+            '2026-03-01': [
+                { type: 'info', title: 'Post-Season Ends', pillClass: 'event-pill', style: 'background: white; color: #cc0000; border: 1.5px solid #cc0000; text-align:center; font-weight: 700;' }
+            ]
+        };
+
+        const MONTH_NAMES = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+
+        function getEventsForDate(date) {
+            const dateStr = date.toISOString().split('T')[0];
+            const dayOfWeek = date.getDay(); // 0=Sun, 1=Mon...
+
+            let events = [];
+
+            // 1. External Events (Injected)
+            const daysExternal = externalEvents.filter(e => e.date === dateStr);
+            if (daysExternal.length > 0) {
+                events = events.concat(daysExternal);
+            }
+
+            // 2. Check Specific Overrides first
+            if (SPECIFIC_EVENTS[dateStr] === 'SKIP') return [];
+
+            if (SPECIFIC_EVENTS[dateStr] && Array.isArray(SPECIFIC_EVENTS[dateStr])) {
+                SPECIFIC_EVENTS[dateStr].forEach(ev => {
+                    if (ev.recurring) {
+                        // Include recurring
+                        const recurring = RECURRING_EVENTS[dayOfWeek];
+                        if (recurring) {
+                            if (!recurring.startDate || date >= new Date(recurring.startDate)) {
+                                events.push(recurring);
+                            }
+                        }
+                    } else {
+                        events.push(ev);
+                    }
+                });
+                // Logic above allows mixing specific + recurring if specific array has {recurring:true}
+                if (!SPECIFIC_EVENTS[dateStr].some(e => e.recurring) && events.length > 0) {
+                    return filterEventsByEnrollment(events);
+                }
+            }
+
+            // Fallback to Recurring
+            if (RECURRING_EVENTS[dayOfWeek]) {
+                const recurring = RECURRING_EVENTS[dayOfWeek];
+                // Check if recurring event has a start date requirement
+                if (!recurring.startDate || date >= new Date(recurring.startDate)) {
+                    events.push(recurring);
+                }
+            }
+
+            return filterEventsByEnrollment(events);
+        }
+
+        /**
+         * Filter events based on athlete's enrolled programs
+         * If enrolledPrograms is empty, show all events
+         */
+        function filterEventsByEnrollment(events) {
+            // If no filter is set, show all events
+            if (!filterAthleteId && enrolledPrograms.length === 0) {
+            return events;
+            }
+
+            // If filter is set but no enrolled programs, show nothing
+            if (filterAthleteId && enrolledPrograms.length === 0) {
+                return [];
+            }
+
+            // Filter events based on program type matching enrolled programs
+            return events.filter(event => {
+                // Map event types to program IDs
+                const eventTypeToProgram = {
+                    'skills': 'skills-program',
+                    'mandatory-skills': 'skills-program',
+                    'team-practice': 'team-practice',
+                    'practice': 'team-practice'
+                };
+
+                const programId = eventTypeToProgram[event.type];
+
+                // If event type doesn't map to a program, show it (e.g., games)
+                if (!programId) return true;
+
+                // Check if athlete is enrolled in this program type
+                return enrolledPrograms.some(ep =>
+                    ep.includes(programId) ||
+                    ep.includes(event.type) ||
+                    ep === programId
+                );
+            });
+        }
+
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const isMobile = window.innerWidth < 768;
+
+            // Update Header
+            document.getElementById('monthTitle').innerText = MONTH_NAMES[month];
+            document.getElementById('yearSubtitle').innerText = `${year} Schedule`;
+
+            const grid = document.getElementById('calendarGridBody');
+            const listContainer = document.getElementById('calendarListBody');
+
+            // Stats Calculation (Season Total)
+            const stats = calculateSeasonStats(year, month);
+            document.getElementById('calculated-hours').innerHTML = `
+                <span style="background: rgba(37,99,235,0.1); color: #2563eb; padding: 4px 10px; border-radius: 99px;">${stats.practice} Practice Hours</span>
+                <span style="background: rgba(0,0,0,0.05); color: #1d1d1f; padding: 4px 10px; border-radius: 99px;">${stats.game} Game Hours</span>
+            `;
+
+            // Mobile: Render as list
+            if (isMobile && listContainer) {
+                renderCalendarList(year, month, listContainer);
+                document.querySelector('.calendar-grid').style.display = 'none';
+                document.querySelector('.calendar-list-view').style.display = 'block';
+                return;
+            }
+
+            // Desktop: Render as grid
+            if (listContainer) {
+                document.querySelector('.calendar-list-view').style.display = 'none';
+            }
+            document.querySelector('.calendar-grid').style.display = 'grid';
+            grid.innerHTML = ''; // Clear
+
+            // Days Generation
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+
+            // Pad start
+            let startPadding = firstDay.getDay(); // 0 is Sunday
+            // If we want consistent rows, we just fill empty divs
+            for (let i = 0; i < startPadding; i++) {
+                const pad = document.createElement('div');
+                pad.className = 'calendar-day';
+                grid.appendChild(pad);
+            }
+
+            // Days
+            for (let i = 1; i <= lastDay.getDate(); i++) {
+                const cell = document.createElement('div');
+                cell.className = 'calendar-day';
+
+                const currentDayDate = new Date(year, month, i);
+                const isToday = (currentDayDate.toDateString() === new Date().toDateString());
+
+                // Day Number
+                const numSpan = document.createElement('span');
+                numSpan.className = `day-number ${isToday ? 'today' : ''}`;
+                numSpan.innerText = i;
+                cell.appendChild(numSpan);
+
+                // Events
+                const events = getEventsForDate(currentDayDate);
+                events.forEach(ev => {
+                    const pill = document.createElement('span');
+                    if (ev.style) {
+                        pill.className = ev.pillClass;
+                        pill.style = ev.style;
+                        pill.innerText = ev.title;
+                    } else {
+                        pill.className = `event-pill ${ev.pillClass}`;
+                        pill.innerText = ev.title;
+                        // Onclick
+                        pill.onclick = () => openEvent(
+                            ev.fullTitle || ev.title,
+                            ev.desc ? 'Event' : 'Info',
+                            ev.time || 'All Day',
+                            ev.loc || 'TBD',
+                            ev.desc || '',
+                            ev.color,
+                            ev.textColor
+                        );
+                    }
+                    cell.appendChild(pill);
+                });
+
+                grid.appendChild(cell);
+            }
+        }
+
+        function renderCalendarList(year, month, container) {
+            container.innerHTML = '';
+            const lastDay = new Date(year, month + 1, 0);
+            const today = new Date();
+            
+            // Collect all events for the month
+            const eventsByDate = [];
+            for (let i = 1; i <= lastDay.getDate(); i++) {
+                const currentDayDate = new Date(year, month, i);
+                const events = getEventsForDate(currentDayDate);
+                if (events.length > 0) {
+                    eventsByDate.push({
+                        date: currentDayDate,
+                        day: i,
+                        events: events,
+                        isToday: currentDayDate.toDateString() === today.toDateString()
+                    });
+                }
+            }
+            
+            // Render list items
+            if (eventsByDate.length === 0) {
+                container.innerHTML = '<div class="calendar-list-empty">No events scheduled for this month.</div>';
+                return;
+            }
+            
+            eventsByDate.forEach(({date, day, events, isToday}) => {
+                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                const monthName = MONTH_NAMES[month].substring(0, 3);
+                
+                events.forEach(ev => {
+                    const listItem = document.createElement('div');
+                    listItem.className = `calendar-list-item ${isToday ? 'today' : ''}`;
+                    listItem.onclick = () => openEvent(
+                        ev.fullTitle || ev.title,
+                        ev.desc ? 'Event' : 'Info',
+                        ev.time || 'All Day',
+                        ev.loc || 'TBD',
+                        ev.desc || '',
+                        ev.color,
+                        ev.textColor
+                    );
+                    
+                    const bgColor = ev.color || '#2563eb';
+                    listItem.innerHTML = `
+                        <div class="list-item-date">
+                            <div class="list-item-day">${day}</div>
+                            <div class="list-item-weekday">${dayName}</div>
+                        </div>
+                        <div class="list-item-content">
+                            <div class="list-item-title">${ev.fullTitle || ev.title}</div>
+                            <div class="list-item-meta">${ev.time || 'All Day'} ${ev.loc ? '• ' + ev.loc : ''}</div>
+                        </div>
+                        <div class="list-item-indicator" style="background: ${bgColor};"></div>
+                    `;
+                    container.appendChild(listItem);
+                });
+            });
+        }
+
+        function calculateSeasonStats(targetYear, targetMonth) {
+            // Calculate season stats dynamically from start (Sept 25, 2025)
+            let practice = 0;
+            let game = 0;
+
+            // Iterate from Sept 25, 2025 to End of Target Month
+            let iterDate = new Date(2025, 8, 25);
+            let endDate = new Date(targetYear, targetMonth + 1, 0);
+
+            while (iterDate <= endDate) {
+                const evs = getEventsForDate(iterDate);
+                evs.forEach(e => {
+                    if (e.duration) {
+                        if (e.type === 'game' || e.type === 'tournament') game += e.duration;
+                        else practice += e.duration;
+                    }
+                });
+                iterDate.setDate(iterDate.getDate() + 1);
+            }
+            return { practice, game };
+        }
+
+        function prevMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        }
+
+        function gotoToday() {
+            currentDate = new Date(2025, 11, 1);
+            renderCalendar();
+        }
+
+        // Overlay & Modal Logic
+        function openEvent(title, type, time, loc, details, color, textColor) {
+            document.getElementById('eventTitle').innerText = title;
+            document.getElementById('eventType').innerText = type;
+            document.getElementById('eventTime').innerText = time;
+            document.getElementById('eventLocation').innerHTML = loc;
+            document.getElementById('eventDetails').innerText = details;
+
+            const header = document.querySelector('#eventCard > div:first-child');
+            header.style.background = color || '#2563eb';
+
+            const titleEl = document.getElementById('eventTitle');
+            const typeEl = document.querySelector('#eventType');
+
+            if (textColor === 'dark') {
+                titleEl.style.color = '#1d1d1f';
+                typeEl.style.color = '#86868b';
+            } else {
+                titleEl.style.color = 'white';
+                typeEl.style.color = 'rgba(255,255,255,0.8)';
+            }
+
+            document.getElementById('overlay').classList.add('active');
+            document.getElementById('eventCard').classList.add('active');
+        }
+
+        function closeEvent() {
+            document.getElementById('overlay').classList.remove('active');
+            document.getElementById('eventCard').classList.remove('active');
+        }
+
+        // Sync & Modal Logic
+        function openSyncModal() {
+            document.getElementById('syncModal').classList.add('active');
+            document.getElementById('overlay').classList.add('active');
+
+            // Override overlay click to close sync modal if it's open
+            const overlay = document.getElementById('overlay');
+            overlay.onclick = () => {
+                closeEvent();
+                closeSyncModal();
+            };
+        }
+
+        function closeSyncModal() {
+            document.getElementById('syncModal').classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
+            // Reset overlay click
+            document.getElementById('overlay').onclick = closeEvent;
+        }
+
+        function processSync(platform) {
+            const icsContent = generateSeasonICS();
+            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.setAttribute('download', 'godspeed-season-2025-26.ics');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            closeSyncModal();
+
+            if (platform === 'google') {
+                godspeedAlert("File downloaded! To finish syncing with Google Calendar:\n\n1. Open Google Calendar on your computer.\n2. Go to Settings > Import & Export.\n3. Upload the 'godspeed-season.ics' file.", "Calendar Sync");
+            }
+        }
+
+        function generateSeasonICS() {
+            let ics = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Godspeed//NONSGML v1.0//EN\nCALSCALE:GREGORIAN\nMETHOD:PUBLISH\n";
+
+            // Loop from Dec 1, 2025 to April 30, 2026
+            let iterDate = new Date(2025, 11, 1);
+            const endDate = new Date(2026, 3, 30); // April 30
+
+            while (iterDate <= endDate) {
+                const events = getEventsForDate(iterDate);
+                events.forEach(e => {
+                    // Skip INFO pills, only real events
+                    if (e.type === 'info') return;
+
+                    const dateStr = iterDate.toISOString().replace(/-/g, '').split('T')[0];
+                    let startTime = '090000'; // Default
+                    let endTime = '100000';
+
+                    // Parse time helper
+                    if (e.time && e.time.includes(':')) {
+                        // Very basic parser for 6:00 PM
+                        try {
+                            const [timeRange, ampm] = e.time.split('M')[0].split(' '); // simple hack
+                            // Better: use specific data in config if available.
+                            // For simplicity, we'll try to guess start time or default
+                            // 6:00 PM -> 180000
+                            if (e.time.includes('6:00 PM')) { startTime = '180000'; endTime = '190000'; }
+                            if (e.time.includes('6:00 PM - 8:00 PM')) { startTime = '180000'; endTime = '200000'; }
+                            if (e.time.includes('10:00 AM')) { startTime = '100000'; endTime = '110000'; }
+                            if (e.time.includes('11:00 AM')) { startTime = '110000'; endTime = '120000'; }
+                            if (e.time.includes('1:00 PM')) { startTime = '130000'; endTime = '140000'; }
+                        } catch (err) { }
+                    }
+
+                    ics += "BEGIN:VEVENT\n";
+                    ics += `DTSTART;TZID=America/Denver:${dateStr}T${startTime}\n`;
+                    ics += `DTEND;TZID=America/Denver:${dateStr}T${endTime}\n`;
+                    ics += `SUMMARY:${e.fullTitle || e.title}\n`;
+                    ics += `DESCRIPTION:${e.desc || ''}\n`;
+                    ics += `LOCATION:${e.loc || 'TBD'}\n`;
+                    ics += "END:VEVENT\n";
+                });
+                iterDate.setDate(iterDate.getDate() + 1);
+            }
+
+            ics += "END:VCALENDAR";
+            return ics;
+        }
+
+        // Shared Modal Logic
+        function openContactModal() {
+            document.getElementById('contactModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeContactModal() {
+            document.getElementById('contactModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Re-render on window resize to switch between grid/list
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                renderCalendar();
+            }, 250);
+        });
+
+        // Init
+        document.addEventListener('DOMContentLoaded', renderCalendar);
+    </script>
+    <script src="branded-modal.js"></script>
+    <script src="security.js"></script>
+    <script src="auth.js"></script>
 </body>
 
 </html>

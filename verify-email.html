@@ -1,150 +1,151 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
- <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>Verify Email - Godspeed Basketball</title>
- <link rel="stylesheet" href="styles.css">
- <style>
- body {
- display: flex;
- align-items: center;
- justify-content: center;
- min-height: 100vh;
- background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
- font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
- }
- .verification-card {
- background: white;
- border-radius: 16px;
- padding: 40px;
- max-width: 500px;
- width: 90%;
- box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
- text-align: center;
- }
- .verification-card h1 {
- color: #111827;
- margin: 0 0 10px 0;
- font-size: 28px;
- }
- .verification-card p {
- color: #6b7280;
- margin: 20px 0;
- line-height: 1.6;
- }
- .status-icon {
- width: 80px;
- height: 80px;
- margin: 0 auto 20px;
- border-radius: 50%;
- display: flex;
- align-items: center;
- justify-content: center;
- font-size: 40px;
- }
- .status-icon.success {
- background: #d1fae5;
- color: #059669;
- }
- .status-icon.error {
- background: #fee2e2;
- color: #dc2626;
- }
- .status-icon.loading {
- background: #dbeafe;
- color: #2563eb;
- animation: spin 1s linear infinite;
- }
- @keyframes spin {
- from { transform: rotate(0deg); }
- to { transform: rotate(360deg); }
- }
- .btn {
- display: inline-block;
- background: #2563eb;
- color: white;
- padding: 12px 24px;
- border-radius: 8px;
- text-decoration: none;
- font-weight: 600;
- margin-top: 20px;
- }
- .btn:hover {
- background: #1d4ed8;
- }
- </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email - Godspeed Basketball</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .verification-card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        .verification-card h1 {
+            color: #111827;
+            margin: 0 0 10px 0;
+            font-size: 28px;
+        }
+        .verification-card p {
+            color: #6b7280;
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+        .status-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+        .status-icon.success {
+            background: #d1fae5;
+            color: #059669;
+        }
+        .status-icon.error {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        .status-icon.loading {
+            background: #dbeafe;
+            color: #2563eb;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .btn {
+            display: inline-block;
+            background: #2563eb;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 20px;
+        }
+        .btn:hover {
+            background: #1d4ed8;
+        }
+    </style>
 </head>
 <body>
- <div class="verification-card">
- <div class="status-icon loading" id="status-icon">⏳</div>
- <h1 id="title">Verifying Email...</h1>
- <p id="message">Please wait while we verify your email address.</p>
- <div id="actions" style="display: none;">
- <a href="parent-portal.html" class="btn" id="continue-btn">Continue to Portal</a>
- </div>
- </div>
+    <div class="verification-card">
+        <div class="status-icon loading" id="status-icon">⏳</div>
+        <h1 id="title">Verifying Email...</h1>
+        <p id="message">Please wait while we verify your email address.</p>
+        <div id="actions" style="display: none;">
+            <a href="parent-portal.html" class="btn" id="continue-btn">Continue to Portal</a>
+        </div>
+    </div>
 
- <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
- <script src="auth-supabase.js"></script>
- <script src="security.js"></script>
- <script type="module">
- // Import email verification service
- import { verifyEmailToken, isEmailVerified } from './src/lib/emailVerification.js';
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth-supabase.js"></script>
+    <script src="security.js"></script>
+    <script type="module">
+        // Import email verification service
+        import { verifyEmailToken, isEmailVerified } from './src/lib/emailVerification.js';
 
- // Get token and email from URL
- const urlParams = new URLSearchParams(window.location.search);
- const token = urlParams.get('token');
- const email = urlParams.get('email');
+        // Get token and email from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        const email = urlParams.get('email');
 
- const statusIcon = document.getElementById('status-icon');
- const title = document.getElementById('title');
- const message = document.getElementById('message');
- const actions = document.getElementById('actions');
- const continueBtn = document.getElementById('continue-btn');
+        const statusIcon = document.getElementById('status-icon');
+        const title = document.getElementById('title');
+        const message = document.getElementById('message');
+        const actions = document.getElementById('actions');
+        const continueBtn = document.getElementById('continue-btn');
 
- async function verifyEmail() {
- if (!token) {
- showError('No verification token provided. Please check your email for the verification link.');
- return;
- }
+        async function verifyEmail() {
+            if (!token) {
+                showError('No verification token provided. Please check your email for the verification link.');
+                return;
+            }
 
- try {
- // Verify token
- const verified = await verifyEmailToken(token);
- if (verified) {
- showSuccess();
- } else {
- showError('Invalid or expired verification token. Please request a new verification email.');
- }
- } catch (error) {
- console.error('Verification error:', error);
- showError('An error occurred during verification. Please try again.');
- }
- }
+            try {
+                // Verify token
+                const verified = await verifyEmailToken(token);
+                
+                if (verified) {
+                    showSuccess();
+                } else {
+                    showError('Invalid or expired verification token. Please request a new verification email.');
+                }
+            } catch (error) {
+                console.error('Verification error:', error);
+                showError('An error occurred during verification. Please try again.');
+            }
+        }
 
- function showSuccess() {
- statusIcon.className = 'status-icon success';
- statusIcon.textContent = '✓';
- title.textContent = 'Email Verified!';
- message.textContent = 'Your email has been successfully verified. You can now access all features.';
- actions.style.display = 'block';
- }
+        function showSuccess() {
+            statusIcon.className = 'status-icon success';
+            statusIcon.textContent = '✓';
+            title.textContent = 'Email Verified!';
+            message.textContent = 'Your email has been successfully verified. You can now access all features.';
+            actions.style.display = 'block';
+        }
 
- function showError(errorMessage) {
- statusIcon.className = 'status-icon error';
- statusIcon.textContent = '✗';
- title.textContent = 'Verification Failed';
- message.textContent = errorMessage;
- actions.innerHTML = `
- <a href="parent-portal.html" class="btn">Go to Portal</a>
- <a href="resend-verification.html?email=${encodeURIComponent(email || '')}" class="btn" style="background: #6b7280; margin-left: 10px;">Resend Verification</a>
- `;
- actions.style.display = 'block';
- }
+        function showError(errorMessage) {
+            statusIcon.className = 'status-icon error';
+            statusIcon.textContent = '✗';
+            title.textContent = 'Verification Failed';
+            message.textContent = errorMessage;
+            actions.innerHTML = `
+                <a href="parent-portal.html" class="btn">Go to Portal</a>
+                <a href="resend-verification.html?email=${encodeURIComponent(email || '')}" class="btn" style="background: #6b7280; margin-left: 10px;">Resend Verification</a>
+            `;
+            actions.style.display = 'block';
+        }
 
- // Start verification on load
- verifyEmail();
- </script>
+        // Start verification on load
+        verifyEmail();
+    </script>
 </body>
 </html>

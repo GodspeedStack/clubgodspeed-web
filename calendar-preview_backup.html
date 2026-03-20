@@ -2,540 +2,540 @@
 <html lang="en">
 
 <head>
- <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>Season Schedule | GODSPEED BASKETBALL</title>
- <!-- Tailwind CDN (defer to prevent blocking) -->
- <script src="https://cdn.tailwindcss.com" defer></script>
- <link rel="stylesheet" href="styles.css">
- <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
- <link rel="stylesheet" href="responsive-nav.css">
- <style>
- body {
- font-family: 'Inter', sans-serif;
- }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Season Schedule | GODSPEED BASKETBALL</title>
+    <!-- Tailwind CDN (defer to prevent blocking) -->
+    <script src="https://cdn.tailwindcss.com" defer></script>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="responsive-nav.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
 
- /* Navbar styles to match index.html */
- .navbar {
- display: flex;
- justify-content: space-between;
- align-items: center;
- padding: 1.25rem 2rem;
- position: sticky;
- top: 0;
- z-index: 1000;
- background: white;
- box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
- width: 100%;
- }
+        /* Navbar styles to match index.html */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
 
- .logo {
- font-size: 1.5rem;
- font-weight: 900;
- font-family: 'Inter', sans-serif;
- letter-spacing: -0.03em;
- color: #000;
- line-height: 1;
- -webkit-font-smoothing: antialiased;
- -moz-osx-font-smoothing: grayscale;
- }
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 900;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: -0.03em;
+            color: #000;
+            line-height: 1;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
 
- /* ---------------------------------------------------------
- TAILWIND POLYFILLS (Essential styles if CDN fails)
- --------------------------------------------------------- */
+        /* ---------------------------------------------------------
+           TAILWIND POLYFILLS (Essential styles if CDN fails)
+           --------------------------------------------------------- */
 
- /* Layout & Flexbox */
- .hidden {
- display: none;
- }
+        /* Layout & Flexbox */
+        .hidden {
+            display: none;
+        }
 
- .flex {
- display: flex;
- }
+        .flex {
+            display: flex;
+        }
 
- .items-center {
- align-items: center;
- }
+        .items-center {
+            align-items: center;
+        }
 
- .justify-between {
- justify-content: space-between;
- }
+        .justify-between {
+            justify-content: space-between;
+        }
 
- .space-x-8>*+* {
- margin-left: 2rem;
- }
+        .space-x-8>*+* {
+            margin-left: 2rem;
+        }
 
- .space-x-6>*+* {
- margin-left: 1.5rem;
- }
+        .space-x-6>*+* {
+            margin-left: 1.5rem;
+        }
 
- @media (min-width: 768px) {
- .md\:flex {
- display: flex !important;
- }
+        @media (min-width: 768px) {
+            .md\:flex {
+                display: flex !important;
+            }
 
- .md\:hidden {
- display: none !important;
- }
+            .md\:hidden {
+                display: none !important;
+            }
 
- .md\:block {
- display: block !important;
- }
- }
+            .md\:block {
+                display: block !important;
+            }
+        }
 
- /* Colors & Backgrounds */
- .bg-black {
- background-color: black;
- }
+        /* Colors & Backgrounds */
+        .bg-black {
+            background-color: black;
+        }
 
- .text-white {
- color: white;
- }
+        .text-white {
+            color: white;
+        }
 
- .bg-gray-50 {
- background-color: #f9fafb;
- }
+        .bg-gray-50 {
+            background-color: #f9fafb;
+        }
 
- .text-black {
- color: black;
- }
+        .text-black {
+            color: black;
+        }
 
- .text-gray-400 {
- color: #9ca3af;
- }
+        .text-gray-400 {
+            color: #9ca3af;
+        }
 
- .bg-white {
- background-color: white;
- }
+        .bg-white {
+            background-color: white;
+        }
 
- /* Typography */
- .uppercase {
- text-transform: uppercase;
- }
+        /* Typography */
+        .uppercase {
+            text-transform: uppercase;
+        }
 
- .font-black {
- font-weight: 900;
- }
+        .font-black {
+            font-weight: 900;
+        }
 
- .font-bold {
- font-weight: 700;
- }
+        .font-bold {
+            font-weight: 700;
+        }
 
- .text-4xl {
- font-size: 2.25rem;
- }
+        .text-4xl {
+            font-size: 2.25rem;
+        }
 
- .text-6xl {
- font-size: 3.75rem;
- }
+        .text-6xl {
+            font-size: 3.75rem;
+        }
 
- .text-sm {
- font-size: 0.875rem;
- }
+        .text-sm {
+            font-size: 0.875rem;
+        }
 
- .text-center {
- text-align: center;
- }
+        .text-center {
+            text-align: center;
+        }
 
- /* Spacing & Sizing */
- .w-6 {
- width: 1.5rem;
- }
+        /* Spacing & Sizing */
+        .w-6 {
+            width: 1.5rem;
+        }
 
- .h-6 {
- height: 1.5rem;
- }
+        .h-6 {
+            height: 1.5rem;
+        }
 
- .py-20 {
- padding-top: 5rem;
- padding-bottom: 5rem;
- }
+        .py-20 {
+            padding-top: 5rem;
+            padding-bottom: 5rem;
+        }
 
- .px-6 {
- padding-left: 1.5rem;
- padding-right: 1.5rem;
- }
+        .px-6 {
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+        }
 
- .p-6 {
- padding: 1.5rem;
- }
+        .p-6 {
+            padding: 1.5rem;
+        }
 
- .mb-4 {
- margin-bottom: 1rem;
- }
+        .mb-4 {
+            margin-bottom: 1rem;
+        }
 
- /* Table Styles */
- .w-full {
- width: 100%;
- }
+        /* Table Styles */
+        .w-full {
+            width: 100%;
+        }
 
- .border-collapse {
- border-collapse: collapse;
- }
+        .border-collapse {
+            border-collapse: collapse;
+        }
 
- th.text-left {
- text-align: left;
- }
+        th.text-left {
+            text-align: left;
+        }
 
- /* Fix Icons inside Buttons/Links */
- button svg,
- a svg {
- display: inline-block;
- vertical-align: middle;
- }
+        /* Fix Icons inside Buttons/Links */
+        button svg,
+        a svg {
+            display: inline-block;
+            vertical-align: middle;
+        }
 
- /* Absolute Positioning Fix */
- .absolute {
- position: absolute;
- }
+        /* Absolute Positioning Fix */
+        .absolute {
+            position: absolute;
+        }
 
- .relative {
- position: relative;
- }
+        .relative {
+            position: relative;
+        }
 
- .top-4 {
- top: 1rem;
- }
+        .top-4 {
+            top: 1rem;
+        }
 
- .right-6 {
- right: 1.5rem;
- }
+        .right-6 {
+            right: 1.5rem;
+        }
 
- /* Cart Badge */
- .cart-badge {
- position: absolute;
- top: -0.25rem;
- right: -0.25rem;
- background-color: #ef4444;
- color: white;
- font-size: 10px;
- font-weight: bold;
- padding: 0 4px;
- border-radius: 9999px;
- }
+        /* Cart Badge */
+        .cart-badge {
+            position: absolute;
+            top: -0.25rem;
+            right: -0.25rem;
+            background-color: #ef4444;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 0 4px;
+            border-radius: 9999px;
+        }
 
- /* Rounded Full Utility */
- .rounded-full {
- border-radius: 9999px;
- }
+        /* Rounded Full Utility */
+        .rounded-full {
+            border-radius: 9999px;
+        }
 
- .rounded-xl {
- border-radius: 0.75rem;
- }
+        .rounded-xl {
+            border-radius: 0.75rem;
+        }
 
- .shadow-lg {
- box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
- }
+        .shadow-lg {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
 
- /* Ensure Navbar links don't wrap strangely */
- .navbar .flex.space-x-8 {
- display: flex;
- gap: 2rem;
- }
+        /* Ensure Navbar links don't wrap strangely */
+        .navbar .flex.space-x-8 {
+            display: flex;
+            gap: 2rem;
+        }
 
- .navbar .flex.space-x-8>*+* {
- margin-left: 0;
- }
+        .navbar .flex.space-x-8>*+* {
+            margin-left: 0;
+        }
 
- /* Reset space-x if using gap */
- /* Button & Form Utilities */
- .inline-flex {
- display: inline-flex;
- }
+        /* Reset space-x if using gap */
+        /* Button & Form Utilities */
+        .inline-flex {
+            display: inline-flex;
+        }
 
- .px-4 {
- padding-left: 1rem;
- padding-right: 1rem;
- }
+        .px-4 {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
 
- .py-2 {
- padding-top: 0.5rem;
- padding-bottom: 0.5rem;
- }
+        .py-2 {
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
 
- .rounded-lg {
- border-radius: 0.5rem;
- }
+        .rounded-lg {
+            border-radius: 0.5rem;
+        }
 
- .border {
- border: 1px solid #e5e7eb;
- }
+        .border {
+            border: 1px solid #e5e7eb;
+        }
 
- .border-gray-300 {
- border-color: #d1d5db;
- }
+        .border-gray-300 {
+            border-color: #d1d5db;
+        }
 
- .text-gray-700 {
- color: #374151;
- }
+        .text-gray-700 {
+            color: #374151;
+        }
 
- .shadow-sm {
- box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
- }
+        .shadow-sm {
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
 
- .font-medium {
- font-weight: 500;
- }
+        .font-medium {
+            font-weight: 500;
+        }
 
- .gap-2 {
- gap: 0.5rem;
- }
- </style>
- <link rel="stylesheet" href="nav-unified.css">
+        .gap-2 {
+            gap: 0.5rem;
+        }
+    </style>
+    <link rel="stylesheet" href="nav-unified.css">
 </head>
 
 <body class="bg-gray-50 text-black">
 
- <nav class="navbar">
- <div class="logo">GODSPEED<span style="color: #2563eb;">BASKETBALL</span></div>
- <div class="nav-desktop-unified">
- <div class="nav-links-unified">
- <a href="index.html">Home</a>
- <a href="training.html">Training</a>
- <a href="aau.html">AAU</a>
- <a href="calendar-grid.html" class="auth-restricted" style="display: none;">Calendar</a>
- <div style="position: relative; opacity: 0.5; cursor: not-allowed; display: none; align-items: center;">
- <span>Academy</span>
- <span style="position: absolute; top: -12px; right: -24px; font-size: 9px; background: #f3f4f6; color: #6b7280; padding: 2px 4px; border-radius: 4px; border: 1px solid #e5e7eb;">SOON</span>
- </div>
- <a href="store.html">Shop</a>
- <a href="about.html">About</a>
- </div>
- <!-- Right Side Icons -->
- <div class="nav-right-unified">
- <!-- Cart Icon -->
- <a href="#" id="cart-btn" class="nav-cart-btn" aria-label="Cart">
- <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;">
- <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
- </svg>
- <span class="cart-badge badge-bounce" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: bold; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">0</span>
- </a>
- <!-- Member Login Dropdown -->
- <div class="nav-login-wrapper" style="position: relative; z-index: 50;">
- <a href="#" class="nav-cart-btn" aria-label="Sign In">
- <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;">
- <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 4 0 00-7 7h14a7 4 0 00-7-7z" />
- </svg>
- </a>
- <div class="login-dropdown">
- <div style="padding: 8px 16px 4px; font-size: 11px; text-transform: uppercase; color: #86868b; font-weight: 600; letter-spacing: 0.05em;">Member Access</div>
- <a href="parent-portal.html" class="login-option">
- <span style="display: flex; align-items: center; gap: 10px;">
- <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
- Parents
- </span>
- <span class="login-arrow">›</span>
- </a>
- <a href="coach-portal.html" class="login-option">
- <span style="display: flex; align-items: center; gap: 10px;">
- <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
- Coaches
- </span>
- <span class="login-arrow">›</span>
- </a>
- </div>
- </div>
- <a href="training.html#signup" class="btn-unified-train">TRAIN WITH US</a>
- </div>
- </div>
- <button class="mobile-menu-btn" aria-label="Menu" onclick="openMobileMenu()" style="background:none; border:none; font-size:24px; cursor:pointer;">☰</button>
- </nav>
+        <nav class="navbar">
+        <div class="logo">GODSPEED<span style="color: #2563eb;">BASKETBALL</span></div>
+        <div class="nav-desktop-unified">
+            <div class="nav-links-unified">
+                <a href="index.html">Home</a>
+                <a href="training.html">Training</a>
+                <a href="aau.html">AAU</a>
+                <a href="calendar-grid.html" class="auth-restricted" style="display: none;">Calendar</a>
+                <div style="position: relative; opacity: 0.5; cursor: not-allowed; display: none; align-items: center;">
+                    <span>Academy</span>
+                    <span style="position: absolute; top: -12px; right: -24px; font-size: 9px; background: #f3f4f6; color: #6b7280; padding: 2px 4px; border-radius: 4px; border: 1px solid #e5e7eb;">SOON</span>
+                </div>
+                <a href="store.html">Shop</a>
+                <a href="about.html">About</a>
+            </div>
+            <!-- Right Side Icons -->
+            <div class="nav-right-unified">
+                <!-- Cart Icon -->
+                <a href="#" id="cart-btn" class="nav-cart-btn" aria-label="Cart">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    <span class="cart-badge badge-bounce" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: bold; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">0</span>
+                </a>
+                <!-- Member Login Dropdown -->
+                <div class="nav-login-wrapper" style="position: relative; z-index: 50;">
+                    <a href="#" class="nav-cart-btn" aria-label="Sign In">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 4 0 00-7 7h14a7 4 0 00-7-7z" />
+                        </svg>
+                    </a>
+                    <div class="login-dropdown">
+                        <div style="padding: 8px 16px 4px; font-size: 11px; text-transform: uppercase; color: #86868b; font-weight: 600; letter-spacing: 0.05em;">Member Access</div>
+                        <a href="parent-portal.html" class="login-option">
+                            <span style="display: flex; align-items: center; gap: 10px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                                Parents
+                            </span>
+                            <span class="login-arrow">›</span>
+                        </a>
+                        <a href="coach-portal.html" class="login-option">
+                            <span style="display: flex; align-items: center; gap: 10px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                                Coaches
+                            </span>
+                            <span class="login-arrow">›</span>
+                        </a>
+                    </div>
+                </div>
+                <a href="training.html#signup" class="btn-unified-train">TRAIN WITH US</a>
+            </div>
+        </div>
+        <button class="mobile-menu-btn" aria-label="Menu" onclick="openMobileMenu()" style="background:none; border:none; font-size:24px; cursor:pointer;">☰</button>
+    </nav>
 
- <header class="bg-black text-white py-20 px-6 text-center relative">
- <h1 class="text-4xl md:text-6xl font-black uppercase mb-4 tracking-tight">2026 Season Schedule</h1>
- <p class="text-gray-400 max-w-2xl mx-auto">Focus. Preparation. Execution.</p>
- </header>
+    <header class="bg-black text-white py-20 px-6 text-center relative">
+        <h1 class="text-4xl md:text-6xl font-black uppercase mb-4 tracking-tight">2026 Season Schedule</h1>
+        <p class="text-gray-400 max-w-2xl mx-auto">Focus. Preparation. Execution.</p>
+    </header>
 
- <main class="max-w-7xl mx-auto px-6 py-16 mt-8">
+    <main class="max-w-7xl mx-auto px-6 py-16 mt-8">
 
- <!-- Controls Toolbar -->
- <!-- High-End iOS Controls Toolbar -->
- <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
+        <!-- Controls Toolbar -->
+        <!-- High-End iOS Controls Toolbar -->
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
 
- <!-- View Switcher (Segmented Control) -->
- <div class="ios-segmented-control">
- <span class="ios-segment-option active">
- <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
- <line x1="8" y1="6" x2="21" y2="6"></line>
- <line x1="8" y1="12" x2="21" y2="12"></line>
- <line x1="8" y1="18" x2="21" y2="18"></line>
- <line x1="3" y1="6" x2="3.01" y2="6"></line>
- <line x1="3" y1="12" x2="3.01" y2="12"></line>
- <line x1="3" y1="18" x2="3.01" y2="18"></line>
- </svg>
- List
- </span>
- <a href="#" class="ios-segment-option" aria-label="Switch to Grid View" onclick="accessGrid(event)">
- <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
- <rect x="3" y="3" width="7" height="7"></rect>
- <rect x="14" y="3" width="7" height="7"></rect>
- <rect x="14" y="14" width="7" height="7"></rect>
- <rect x="3" y="14" width="7" height="7"></rect>
- </svg>
- Grid
- </a>
- </div>
+            <!-- View Switcher (Segmented Control) -->
+            <div class="ios-segmented-control">
+                <span class="ios-segment-option active">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                    </svg>
+                    List
+                </span>
+                <a href="#" class="ios-segment-option" aria-label="Switch to Grid View" onclick="accessGrid(event)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    Grid
+                </a>
+            </div>
 
- <!-- Action Actions -->
- <button onclick="syncCalendar()" class="btn-sync-premium">
- <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
- <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
- <polyline points="7 10 12 15 17 10"></polyline>
- <line x1="12" y1="15" x2="12" y2="3"></line>
- </svg>
- Sync Calendar
- </button>
- </div>
+            <!-- Action Actions -->
+            <button onclick="syncCalendar()" class="btn-sync-premium">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Sync Calendar
+            </button>
+        </div>
 
- <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
- <div class="overflow-x-auto">
- <table class="w-full text-left border-collapse">
- <thead>
- <tr class="bg-gray-100 text-gray-600 text-xs uppercase tracking-wider">
- <th class="px-6 py-4 font-bold">Date</th>
- <th class="px-6 py-4 font-bold">Matchup</th>
- <th class="px-6 py-4 font-bold text-right">Result</th>
- </tr>
- </thead>
- <tbody id="schedule-body" class="divide-y divide-gray-100 text-sm">
- </tbody>
- </table>
- </div>
- </div>
- </main>
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-600 text-xs uppercase tracking-wider">
+                            <th class="px-6 py-4 font-bold">Date</th>
+                            <th class="px-6 py-4 font-bold">Matchup</th>
+                            <th class="px-6 py-4 font-bold text-right">Result</th>
+                        </tr>
+                    </thead>
+                    <tbody id="schedule-body" class="divide-y divide-gray-100 text-sm">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
 
- <footer class="bg-gray-50 pt-20 pb-16 border-t border-gray-100">
- <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-12">
- <div class="md:col-span-4">
- <div class="text-2xl font-black tracking-tighter mb-6">
- GODSPEED<span class="text-blue-600">BASKETBALL</span>
- </div>
- <p class="text-gray-500 leading-relaxed max-w-sm text-sm">
- Building the future of Denver basketball.<br>
- Character. Discipline. Excellence.
- </p>
- </div>
- <div class="md:col-span-8 grid grid-cols-2 md:grid-cols-5 gap-8">
- <div>
- <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Programs</h4>
- <ul class="space-y-4 text-sm text-gray-600 font-medium">
- <li><a href="training.html" class="hover:text-blue-600 transition">Training</a></li>
- <li><a href="aau.html" class="hover:text-blue-600 transition">AAU Club</a></li>
- <li style="display: none;"><a href="#" class="text-gray-400 cursor-not-allowed block py-1" style="text-decoration: none;" onclick="alert('Coming soon!'); return false;">Academy </a></li>
- </ul>
- </div>
- <div>
- <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Athletes</h4>
- <ul class="space-y-4 text-sm text-gray-600 font-medium">
- <li><a href="#" class="text-gray-400 cursor-not-allowed block py-1" style="text-decoration: none;" onclick="alert('Coming soon!'); return false;">Skill Assessment </a></li>
- <li><a href="#" class="text-gray-400 cursor-not-allowed block py-1" style="text-decoration: none;" onclick="alert('Coming soon!'); return false;">Player Card </a></li>
- <li><a href="#" class="text-gray-400 cursor-not-allowed block py-1" style="text-decoration: none;" onclick="alert('Coming soon!'); return false;">AAU Camps </a></li>
- </ul>
- </div>
- <div>
- <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Shop</h4>
- <ul class="space-y-4 text-sm text-gray-600 font-medium">
- <li><a href="store.html?category=all" class="hover:text-blue-600 transition">Apparel</a></li>
- <li><a href="store.html?category=performance"
- class="hover:text-blue-600 transition">Footwear</a></li>
- <li><a href="store.html?category=accessories"
- class="hover:text-blue-600 transition">Accessories</a></li>
- </ul>
- </div>
- <div>
- <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Parents</h4>
- <ul class="space-y-4 text-sm text-gray-600 font-medium">
- <li><a href="#" class=" text-gray-400 cursor-not-allowed" onclick="alert('Coming soon!'); return false;">Parent Assessment</a></li>
- <li><a href="parent-portal.html" class="hover:text-blue-600 transition">Parent Portal</a></li>
- </ul>
- </div>
- <div>
- <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Company</h4>
- <ul class="space-y-4 text-sm text-gray-600 font-medium">
- <li><a href="about.html" class="hover:text-blue-600 transition">About Us</a></li>
- <li><a href="#contact" class="hover:text-blue-600 transition">Contact</a></li>
- <li><a href="coach-portal.html" class="hover:text-blue-600 transition">Coach Portal</a></li>
- <li><a href="#" class="text-gray-400 cursor-not-allowed block py-1" style="text-decoration: none;" onclick="alert('Coming soon!'); return false;">Careers </a></li>
- </ul>
- </div>
- </div>
- </div>
- </footer>
+    <footer class="bg-gray-50 pt-20 pb-16 border-t border-gray-100">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-12">
+            <div class="md:col-span-4">
+                <div class="text-2xl font-black tracking-tighter mb-6">
+                    GODSPEED<span class="text-blue-600">BASKETBALL</span>
+                </div>
+                <p class="text-gray-500 leading-relaxed max-w-sm text-sm">
+                    Building the future of Denver basketball.<br>
+                    Character. Discipline. Excellence.
+                </p>
+            </div>
+            <div class="md:col-span-8 grid grid-cols-2 md:grid-cols-5 gap-8">
+                <div>
+                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Programs</h4>
+                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
+                        <li><a href="training.html" class="hover:text-blue-600 transition">Training</a></li>
+                        <li><a href="aau.html" class="hover:text-blue-600 transition">AAU Club</a></li>
+                        <li style="display: none;"><a href="#" class="text-gray-400 cursor-not-allowed block py-1" style="text-decoration: none;"  onclick="alert('Coming soon!'); return false;">Academy </a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Athletes</h4>
+                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
+                        <li><a href="#" class="text-gray-400 cursor-not-allowed block py-1" style="text-decoration: none;"  onclick="alert('Coming soon!'); return false;">Skill Assessment </a></li>
+                        <li><a href="#" class="text-gray-400 cursor-not-allowed block py-1" style="text-decoration: none;"  onclick="alert('Coming soon!'); return false;">Player Card </a></li>
+                        <li><a href="#" class="text-gray-400 cursor-not-allowed block py-1" style="text-decoration: none;"  onclick="alert('Coming soon!'); return false;">AAU Camps </a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Shop</h4>
+                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
+                        <li><a href="store.html?category=all" class="hover:text-blue-600 transition">Apparel</a></li>
+                        <li><a href="store.html?category=performance"
+                                class="hover:text-blue-600 transition">Footwear</a></li>
+                        <li><a href="store.html?category=accessories"
+                                class="hover:text-blue-600 transition">Accessories</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Parents</h4>
+                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
+                        <li><a href="#" class=" text-gray-400 cursor-not-allowed"  onclick="alert('Coming soon!'); return false;">Parent Assessment</a></li>
+                        <li><a href="parent-portal.html" class="hover:text-blue-600 transition">Parent Portal</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Company</h4>
+                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
+                        <li><a href="about.html" class="hover:text-blue-600 transition">About Us</a></li>
+                        <li><a href="#contact" class="hover:text-blue-600 transition">Contact</a></li>
+                        <li><a href="coach-portal.html" class="hover:text-blue-600 transition">Coach Portal</a></li>
+                        <li><a href="#" class="text-gray-400 cursor-not-allowed block py-1" style="text-decoration: none;"  onclick="alert('Coming soon!'); return false;">Careers </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
 
- <script src="script.js"></script>
- <script type="module" src="backend.js"></script>
- <script src="schedule-data.js"></script>
- <script>
- // AUTHENTICATION CHECK
- function isLoggedIn() {
- // Check for either Coach or Parent login tokens
- return localStorage.getItem('isCoachLoggedIn') === 'true' ||
- localStorage.getItem('isParentLoggedIn') === 'true';
- }
+    <script src="script.js"></script>
+    <script type="module" src="backend.js"></script>
+    <script src="schedule-data.js"></script>
+    <script>
+        // AUTHENTICATION CHECK
+        function isLoggedIn() {
+            // Check for either Coach or Parent login tokens
+            return localStorage.getItem('isCoachLoggedIn') === 'true' ||
+                localStorage.getItem('isParentLoggedIn') === 'true';
+        }
 
- // GRID ACCESS HANDLER
- function accessGrid(e) {
- e.preventDefault();
- if (isLoggedIn()) {
- window.location.href = 'calendar-grid.html';
- } else {
- alert("🔒 MEMBER ONLY CONTENT\n\nPlease log in to the Parent or Coach portal to view the full calendar grid.");
- }
- }
+        // GRID ACCESS HANDLER
+        function accessGrid(e) {
+            e.preventDefault();
+            if (isLoggedIn()) {
+                window.location.href = 'calendar-grid.html';
+            } else {
+                alert("🔒 MEMBER ONLY CONTENT\n\nPlease log in to the Parent or Coach portal to view the full calendar grid.");
+            }
+        }
 
- // RENDER GAMES
- const gameContainer = document.getElementById('schedule-body');
- const userLoggedIn = isLoggedIn();
+        // RENDER GAMES
+        const gameContainer = document.getElementById('schedule-body');
+        const userLoggedIn = isLoggedIn();
 
- gameSchedule.forEach(game => {
- // Logic for Badges
- let statusBadge = '';
+        gameSchedule.forEach(game => {
+            // Logic for Badges
+            let statusBadge = '';
 
- if (game.status === 'Final') {
- if (userLoggedIn) {
- // SHOW RESULT for Logged In Users
- const resultColor = game.result.includes('Won') ? 'text-green-600' : 'text-red-600';
- statusBadge = `<span class="font-black ${resultColor}">${game.result.toUpperCase()}</span>`;
- } else {
- // HIDE RESULT for Guests
- statusBadge = `<span class="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">Login to View Result</span>`;
- }
- } else {
- statusBadge = `<span class="text-gray-400 italic text-xs">${game.status}</span>`;
- }
+            if (game.status === 'Final') {
+                if (userLoggedIn) {
+                    // SHOW RESULT for Logged In Users
+                    const resultColor = game.result.includes('Won') ? 'text-green-600' : 'text-red-600';
+                    statusBadge = `<span class="font-black ${resultColor}">${game.result.toUpperCase()}</span>`;
+                } else {
+                    // HIDE RESULT for Guests
+                    statusBadge = `<span class="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">Login to View Result</span>`;
+                }
+            } else {
+                statusBadge = `<span class="text-gray-400 italic text-xs">${game.status}</span>`;
+            }
 
- // MVP Badge Logic (Hide MVP if not logged in too, usually part of result breakdown)
- let mvpBadge = '';
- if (game.mvp) {
- if (userLoggedIn) {
- mvpBadge = `<div class="mt-1 text-[10px] font-bold text-blue-600 bg-blue-50 inline-block px-1.5 py-0.5 rounded border border-blue-100">🏆 MVP: ${game.mvp}</div>`;
- }
- }
+            // MVP Badge Logic (Hide MVP if not logged in too, usually part of result breakdown)
+            let mvpBadge = '';
+            if (game.mvp) {
+                if (userLoggedIn) {
+                    mvpBadge = `<div class="mt-1 text-[10px] font-bold text-blue-600 bg-blue-50 inline-block px-1.5 py-0.5 rounded border border-blue-100">🏆 MVP: ${game.mvp}</div>`;
+                }
+            }
 
- // Championship Tag Logic
- let typeDisplay = `<div class="text-xs text-gray-500">${game.time}</div>`;
- if (game.type === 'Championship') {
- typeDisplay += `<div class="mt-1 text-[10px] font-bold text-yellow-600 bg-yellow-50 inline-block px-1.5 py-0.5 rounded border border-yellow-200">🏆 CHAMPIONSHIP</div>`;
- }
+            // Championship Tag Logic
+            let typeDisplay = `<div class="text-xs text-gray-500">${game.time}</div>`;
+            if (game.type === 'Championship') {
+                typeDisplay += `<div class="mt-1 text-[10px] font-bold text-yellow-600 bg-yellow-50 inline-block px-1.5 py-0.5 rounded border border-yellow-200">🏆 CHAMPIONSHIP</div>`;
+            }
 
- gameContainer.innerHTML += `
- <tr class="hover:bg-blue-50 transition border-b border-gray-50 last:border-0">
- <td class="px-6 py-4 align-top">
- <div class="font-bold text-black text-sm">${game.date}</div>
- ${typeDisplay}
- </td>
- <td class="px-6 py-4 align-top">
- <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">${game.team}</div>
- <span class="font-bold text-gray-900 text-sm block">${game.opponent}</span>
- ${mvpBadge}
- </td>
- <td class="px-6 py-4 text-right align-top">
- ${statusBadge}
- </td>
- </tr>
- `;
- });
- </script>
+            gameContainer.innerHTML += `
+            <tr class="hover:bg-blue-50 transition border-b border-gray-50 last:border-0">
+                <td class="px-6 py-4 align-top">
+                    <div class="font-bold text-black text-sm">${game.date}</div>
+                    ${typeDisplay}
+                </td>
+                <td class="px-6 py-4 align-top">
+                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">${game.team}</div>
+                    <span class="font-bold text-gray-900 text-sm block">${game.opponent}</span>
+                    ${mvpBadge}
+                </td>
+                <td class="px-6 py-4 text-right align-top">
+                    ${statusBadge}
+                </td>
+            </tr>
+        `;
+        });
+    </script>
 </body>
 
 </html>
