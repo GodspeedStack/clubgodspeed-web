@@ -2823,19 +2823,19 @@ window.renderParentTrackingTable = function() {
     const sortedEmails = Array.from(allEmails).filter(e => e && typeof e === 'string').sort();
 
     sortedEmails.forEach(email => {
-        const hasComm = commits.some(c => c.parentId === email || c.email === email) ? '✅ Committed' : '—';
-        const hasOrder = orders.some(o => o.parentId === email || o.email === email) ? '✅ Ordered' : '—';
+        const hasComm = commits.some(c => c.parentId === email || c.email === email) ? '✅ Committed' : '-';
+        const hasOrder = orders.some(o => o.parentId === email || o.email === email) ? '✅ Ordered' : '-';
         
-        let hasDocs = '—';
+        let hasDocs = '-';
         if (Array.isArray(signatures) && signatures.some(s => s.parentId === email || s.email === email)) hasDocs = '✅ Signed';
         if (localDocsSigned && email === guestEmail) hasDocs = '✅ Signed';
 
-        const hasPay = payments.some(p => p.parentId === email || p.email === email) ? '✅ Paid' : '—';
+        const hasPay = payments.some(p => p.parentId === email || p.email === email) ? '✅ Paid' : '-';
         
         // Target latest RSVP
         const userRsvps = rsvps.filter(r => r.parentId === email || r.email === email);
         const latestRsvp = userRsvps.length > 0 ? userRsvps[userRsvps.length - 1] : null;
-        let rsvpStatus = '—';
+        let rsvpStatus = '-';
         if (latestRsvp) {
             rsvpStatus = latestRsvp.status === 'attending' ? '✅ Attending' : '❌ Absent';
         }

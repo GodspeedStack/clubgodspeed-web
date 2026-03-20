@@ -74,7 +74,7 @@
     const QuoteDatabase = {
         coach: [
             {
-                text: "Great coaches don't just teach plays—they build character.",
+                text: "Great coaches don't just teach plays-they build character.",
                 author: "The Godspeed Way",
                 theme: 'leadership'
             },
@@ -101,7 +101,7 @@
                 theme: 'support'
             },
             {
-                text: "Every practice, every game—you're building more than an athlete.",
+                text: "Every practice, every game-you're building more than an athlete.",
                 author: "Character First",
                 theme: 'growth'
             },
@@ -118,7 +118,7 @@
         ],
         athlete: [
             {
-                text: "Excellence isn't a destination—it's a daily choice.",
+                text: "Excellence isn't a destination-it's a daily choice.",
                 author: "The Grind",
                 theme: 'discipline'
             },

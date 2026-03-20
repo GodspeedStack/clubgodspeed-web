@@ -454,9 +454,9 @@
             aY += 13;
 
             const strengths = [
-                { label: "Efficiency & IQ", body: "Anton is one of the most efficient and composed players on the roster. He possesses a high-level basketball IQ for his age — he plays at a good pace, makes smart decisions under pressure, and converts when fouled." },
+                { label: "Efficiency & IQ", body: "Anton is one of the most efficient and composed players on the roster. He possesses a high-level basketball IQ for his age - he plays at a good pace, makes smart decisions under pressure, and converts when fouled." },
                 { label: "Competitiveness", body: "His competitiveness is a defining quality. His coach repeatedly noted his poise in game situations. He does not dominate through flash or speed; he impacts the game through stability and control." },
-                { label: "Versatility", body: "Anton has fit seamlessly into both the 2nd unit and the starting role. Against mid-level competition, his control stands out — he plays under control, avoids forcing action, and is at his best when attacking closeouts and creating freely within the flow of the offense." },
+                { label: "Versatility", body: "Anton has fit seamlessly into both the 2nd unit and the starting role. Against mid-level competition, his control stands out - he plays under control, avoids forcing action, and is at his best when attacking closeouts and creating freely within the flow of the offense." },
             ];
 
             strengths.forEach(({ label, body }) => {
@@ -514,7 +514,7 @@
             doc.setTextColor(30, 30, 30);
             doc.setFontSize(9);
             const outlookText = doc.splitTextToSize(
-                "\"When Anton locks in on ball handling and on-ball defense, I am confident his game will flourish and he will earn more minutes as a starter. The foundation is there — the work ahead is targeted and achievable.\"",
+                "\"When Anton locks in on ball handling and on-ball defense, I am confident his game will flourish and he will earn more minutes as a starter. The foundation is there - the work ahead is targeted and achievable.\"",
                 168
             );
             doc.text(outlookText, 20, aY + 14);
@@ -529,7 +529,7 @@
             doc.setFont("helvetica", "normal");
             doc.text("GodspeedOS Generated Report  //  Authorized Personnel Only  //  " + new Date().toLocaleDateString(), 15, aY);
 
-            // Save File — named for easy filing: GODSPEED_PlayerReport_[Name]-No[Num]_[Mon-YYYY].pdf
+            // Save File - named for easy filing: GODSPEED_PlayerReport_[Name]-No[Num]_[Mon-YYYY].pdf
             const reportDate = new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }).replace(' ', '');
             const playerName = document.querySelector('h1')?.textContent?.trim().split('#')[0].trim().replace(/\s+/g, '-') || 'Player';
             const playerNum = document.querySelector('h1 .text-gray-400')?.textContent?.replace('#', '').trim() || '';

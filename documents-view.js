@@ -239,7 +239,7 @@ function generateReceiptPDFDocument(receipt) {
     yPos += 6;
     doc.text('Denver Basketball Center | Godspeed HQ, Denver, CO', margin, yPos);
 
-    // Download — named for easy filing: GODSPEED_Receipt_[Name]_[ID]_[Date].pdf
+    // Download - named for easy filing: GODSPEED_Receipt_[Name]_[ID]_[Date].pdf
     const receiptId = receipt.receipt_number || receipt.transaction_id || 'Unknown';
     const parentName = (receipt.parent_name || localStorage.getItem('gba_user_email') || 'Parent').split('@')[0].replace(/\s+/g, '-');
     const receiptDate = receipt.payment_date ? new Date(receipt.payment_date).toISOString().slice(0, 7) : new Date().toISOString().slice(0, 7);
@@ -407,7 +407,7 @@ function generateInvoicePDFDocument(invoice) {
     yPos += 6;
     doc.text('Denver Basketball Center | Godspeed HQ, Denver, CO', margin, yPos);
 
-    // Download — named for easy filing: GODSPEED_Invoice_[Name]_[ID]_[Date].pdf
+    // Download - named for easy filing: GODSPEED_Invoice_[Name]_[ID]_[Date].pdf
     const invoiceId = invoice.invoice_number || 'Unknown';
     const invoiceParentName = (invoice.parent_name || localStorage.getItem('gba_user_email') || 'Parent').split('@')[0].replace(/\s+/g, '-');
     const invoiceDate = invoice.issue_date ? new Date(invoice.issue_date).toISOString().slice(0, 7) : new Date().toISOString().slice(0, 7);

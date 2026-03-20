@@ -166,7 +166,7 @@ function showResult() {
     if (finalScore >= 80) {
         // Result 1: D1 Prospect
         title = "THE D1 PROSPECT";
-        desc = "You understand that basketball is 90% mental. You value the 'boring' details—footwork, spacing, bad calls, and defensive rotations. You don't play for highlights; you play for wins.";
+        desc = "You understand that basketball is 90% mental. You value the 'boring' details-footwork, spacing, bad calls, and defensive rotations. You don't play for highlights; you play for wins.";
         fix = "The Gap: You have the mindset, now you need the refined skill package to match it.";
     } else if (finalScore >= 40) {
         // Result 3: Gym Rat (The Grinder) - Renaming to Gym Rat as per request logic ordering (usually middle, though prompt put it as 3)

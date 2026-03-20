@@ -28,15 +28,15 @@ const GODSPEED_DATA = {
                 developmentGoal: "Starting Point Guard",
                 coachNote: "I believe in Anton and love his competitiveness. The goal is clear: earn the starting point guard role.",
                 strengths: [
-                    { label: "Efficiency & IQ", detail: "One of the most efficient and composed players on the roster. High-level basketball IQ for his age — plays at a good pace, makes smart decisions under pressure, and converts when fouled." },
-                    { label: "Competitiveness & Poise", detail: "His competitiveness is a defining quality. Repeatedly noted for poise in game situations. Does not dominate through flash or speed — impacts the game through stability and control." },
+                    { label: "Efficiency & IQ", detail: "One of the most efficient and composed players on the roster. High-level basketball IQ for his age - plays at a good pace, makes smart decisions under pressure, and converts when fouled." },
+                    { label: "Competitiveness & Poise", detail: "His competitiveness is a defining quality. Repeatedly noted for poise in game situations. Does not dominate through flash or speed - impacts the game through stability and control." },
                     { label: "Versatility", detail: "Fits seamlessly into both the 2nd unit and the starting role. Against mid-level competition, his control stands out. At his best attacking closeouts and creating freely without forcing action." }
                 ],
                 areasForDevelopment: [
                     { label: "On-Ball Defense", detail: "Against high-level teams with faster guards, struggles to stay in front of his opponent. Lateral quickness and defensive positioning are essential to lock in the starting PG role." },
                     { label: "Ball Handling Under Pressure", detail: "Ball handling needs significant work to function as a lead guard at the next level. Primary focus of ongoing 1v1 training sessions." }
                 ],
-                outlook: "When Anton improves his ball handling and on-ball defense, I am confident his game will flourish and he will earn more minutes. The foundation is there — the work ahead is targeted and achievable."
+                outlook: "When Anton improves his ball handling and on-ball defense, I am confident his game will flourish and he will earn more minutes. The foundation is there - the work ahead is targeted and achievable."
             }
         },
         { athleteId: "p11", teamId: 'TEAM-10U-DEV-BLACK', name: "Oliver", initials: "O", tier: "Rotation/Starter", avg_grade: 8.12, trend: "Rocket", notes: "Huge jump in Practice 8" }, // PROMOTED
