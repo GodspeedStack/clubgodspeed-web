@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: sans-serif; padding: 40px; }
+  </style>
+</head>
+<body>
+  <h1>Widget Isolation Test</h1>
+  <div id="dues-transparency-root"></div>
+  
+  <script>
+    window.onerror = function(msg, url, line, col, error) {
+      console.error("BOOM ERROR CAUGHT:", msg);
+      if (error && error.stack) console.error(error.stack);
+    };
+    window.addEventListener('unhandledrejection', function(event) {
+      console.error("UNHANDLED PROMISE REJECTION:", event.reason);
+    });
+  </script>
+  <link rel="stylesheet" href="/build/style.css">
+  <script src="/build/dues-widget.js"></script>
+</body>
+</html>

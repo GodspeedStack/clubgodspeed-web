@@ -5,15 +5,18 @@
     "main": "seed_firestore.js",
     "scripts": {
         "seed": "node seed_firestore.js",
-        "dev": "python3 -m http.server 8000",
-        "build": "echo 'Static HTML site - no build required'",
-        "preview": "python3 -m http.server 8000"
+        "dev": "vite",
+        "dev:static": "python3 -m http.server 8000",
+        "build": "vite build",
+        "preview": "vite preview"
     },
     "dependencies": {
         "@supabase/supabase-js": "^2.89.0",
         "docx": "^9.6.1",
         "firebase-admin": "^11.5.0",
         "lucide-react": "^0.263.1",
+        "otplib": "^13.4.0",
+        "qrcode": "^1.5.4",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "recharts": "^2.7.2",
@@ -22,7 +25,7 @@
     "devDependencies": {
         "@types/react": "^18.2.15",
         "@types/react-dom": "^18.2.7",
-        "@vitejs/plugin-react": "^4.0.3",
+        "@vitejs/plugin-react": "^4.7.0",
         "vite": "^4.4.5"
     }
 }

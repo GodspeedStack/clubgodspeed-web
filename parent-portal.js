@@ -179,6 +179,11 @@ async function handleLogin() {
             errorMsg.textContent = "Your password needs to be at least 6 characters long.";
             errorMsg.style.display = 'block';
         }
+        if (passwordInput) {
+            passwordInput.style.borderColor = '#ef4444';
+            passwordInput.style.backgroundColor = '#fef2f2';
+            passwordInput.addEventListener('input', function() { this.style.borderColor = ''; this.style.backgroundColor = ''; }, { once: true });
+        }
         return;
     }
 
@@ -440,14 +445,16 @@ async function handleLogin() {
     }
 }
 
-async function handleSignup() {
+window.handleSignup = async function() {
     const emailInput = document.getElementById('signup-email');
+    const passwordInput = document.getElementById('signup-password');
     const parentNameInput = document.getElementById('signup-parent-name');
     const playerNameInput = document.getElementById('signup-player-name');
     const playerAgeInput = document.getElementById('signup-player-age');
     const phoneInput = document.getElementById('signup-phone');
 
     const email = emailInput ? emailInput.value.trim() : '';
+    const password = passwordInput ? passwordInput.value : '';
     const parentName = parentNameInput ? parentNameInput.value.trim() : '';
     const playerName = playerNameInput ? playerNameInput.value.trim() : '';
     const playerAge = playerAgeInput ? parseInt(playerAgeInput.value, 10) : 0;
@@ -455,11 +462,13 @@ async function handleSignup() {
 
     const btn = document.querySelector('.signup-form button[type="submit"]') || document.querySelector('#portal-signup button[type="submit"]');
     const errorMsg = document.querySelector('#portal-signup .login-error');
+    if (errorMsg) errorMsg.style.display = 'none';
 
-    // Input validation
+    // 1. Input validation & visual HIGHLIGHTING
     let hasEmpty = false;
     [
         {input: emailInput, val: email},
+        {input: passwordInput, val: password},
         {input: parentNameInput, val: parentName},
         {input: playerNameInput, val: playerName},
         {input: playerAgeInput, val: playerAge},
@@ -493,14 +502,26 @@ async function handleSignup() {
         return;
     }
 
+    if (password.length < 6) {
+        if (errorMsg) {
+            errorMsg.textContent = "Your password must be at least 6 characters long.";
+            errorMsg.style.display = 'block';
+        }
+        if (passwordInput) {
+            passwordInput.style.borderColor = '#ef4444';
+            passwordInput.style.backgroundColor = '#fef2f2';
+            passwordInput.addEventListener('input', function() { this.style.borderColor = ''; this.style.backgroundColor = ''; }, { once: true });
+        }
+        return;
+    }
+
     // Check rate limiting if available
     if (window.Security && window.Security.RateLimiter) {
         const rateCheck = window.Security.RateLimiter.check('signup', email);
         if (!rateCheck.allowed) {
-            if (typeof godspeedAlert === 'function') {
-                godspeedAlert(rateCheck.message || "You've tried too many times! Please wait a little bit and try again.");
-            } else {
-                alert('Too many attempts. Please try again later.');
+            if (errorMsg) {
+                errorMsg.textContent = rateCheck.message || "You've tried too many times! Please wait a little bit and try again.";
+                errorMsg.style.display = 'block';
             }
             return;
         }
@@ -508,70 +529,61 @@ async function handleSignup() {
 
     try {
         if (btn) {
-            btn.innerHTML = 'Submitting Request...';
+            btn.innerHTML = 'Creating Account...';
             btn.disabled = true;
         }
 
-        if (errorMsg) errorMsg.style.display = 'none';
-
-        if (window.auth && window.auth.isSupabaseAvailable()) {
-            // Insert into access_requests table directly
-            const supabaseObj = window.auth.getSupabaseClient();
-            const { error: insertError } = await supabaseObj.from('access_requests').insert([{
+        let signupSuccess = false;
+        
+        // Use Supabase Auth if available
+        if (window.auth && typeof window.auth.signup === 'function') {
+            const metadata = {
                 parent_name: parentName,
-                email: email,
-                phone: phone,
                 player_name: playerName,
                 player_age: playerAge,
-                status: 'pending'
-            }]);
-
-            if (insertError) {
-                console.error('Supabase access_request insert error:', insertError);
-                throw new Error(insertError.message || 'Failed to submit the request to the database.');
+                phone: phone,
+                role: 'parent',
+                cohort: 'aau' // Default to AAU for pristine setup
+            };
+            const result = await window.auth.signup(email, password, metadata);
+            if (result && result.success) {
+                signupSuccess = true;
             }
         } else {
-            console.warn('Supabase not available. Mocking access request locally.');
-            localStorage.setItem('pending_access_request', JSON.stringify({ parentName, email, phone, playerName, playerAge, status: 'pending' }));
+            console.warn('Auth module not available. Mocking signup locally.');
+            localStorage.setItem('pending_access_request', JSON.stringify({ parentName, email, phone, playerName, playerAge, status: 'approved' }));
+            signupSuccess = true;
         }
 
-        // Success UI
-        if (typeof godspeedAlert === 'function') {
-            godspeedAlert(`Your access request for ${playerName} has been submitted. Our staff will review it shortly. Please check your email for the approval link.`, "Request Received");
-        } else {
-            alert("Request Received! Admin review is pending.");
-        }
-        
-        // Switch back to login form naturally
-        if (typeof showLoginForm === 'function') showLoginForm();
-
-        // Clear inputs
-        if (emailInput) emailInput.value = '';
-        if (parentNameInput) parentNameInput.value = '';
-        if (playerNameInput) playerNameInput.value = '';
-        if (playerAgeInput) playerAgeInput.value = '';
-        if (phoneInput) phoneInput.value = '';
-        
-        if (btn) {
-            btn.innerHTML = 'Submit Access Request';
-            btn.disabled = false;
+        if (signupSuccess) {
+            // Success UI
+            if (typeof godspeedAlert === 'function') {
+                godspeedAlert(`Your account has been successfully created! Check your inbox for a verification email to complete your registration.`, "Account Created");
+            } else {
+                alert("Account Created! Check your email to verify your account.");
+            }
+            
+            // Clear inputs
+            [emailInput, passwordInput, parentNameInput, playerNameInput, playerAgeInput, phoneInput].forEach(el => {
+                if (el) el.value = '';
+            });
+            
+            // Switch back to login form naturally
+            if (typeof showLoginForm === 'function') showLoginForm();
         }
     } catch (error) {
-        console.error('Access Request error:', error);
-        btn.innerHTML = 'Submit Access Request';
-        btn.disabled = false;
-
+        console.error('Signup error:', error);
+        
         if (errorMsg) {
             let userFriendlyMessage = "Something went wrong on our end. Please try again!";
             if (error.message) {
-                if (error.message.includes('not connected') || error.message.includes('not a function') || error.message.includes('supabase')) {
-                    userFriendlyMessage = "We couldn't reach the database right now. Please test again in a moment.";
-                } else if (error.message.includes('rate limit') || error.message.includes('Too many')) {
-                    userFriendlyMessage = "You've tried this too many times. Please wait a little bit and try again!";
-                } else if (error.message.includes('duplicate') || error.message.includes('already exists')) {
+                if (error.message.includes('already exists') || error.message.includes('already registered')) {
                     userFriendlyMessage = "Looks like someone with that email is already signed up! Try logging in.";
+                } else if (error.message.includes('not connected') || error.message.includes('fetch')) {
+                    userFriendlyMessage = "We couldn't reach the database right now. Your adblocker or firewall might be blocking the connection.";
                 } else {
-                    userFriendlyMessage = "Something went wrong on our end. Please try again!";
+                    // Bubble up specific readable auth errors
+                    userFriendlyMessage = error.message;
                 }
             }
             errorMsg.textContent = userFriendlyMessage;
@@ -582,6 +594,11 @@ async function handleSignup() {
                 form.classList.add('shake');
                 setTimeout(() => form.classList.remove('shake'), 500);
             }
+        }
+    } finally {
+        if (btn) {
+            btn.innerHTML = 'Create Account';
+            btn.disabled = false;
         }
     }
 }
@@ -1312,15 +1329,15 @@ function loadSettings(email) {
     }
 }
 
-function handleSettingsSave() {
-    const email = document.getElementById('settings-parent-email').value;
-    const pName = document.getElementById('settings-parent-name').value;
-    const pPhone = document.getElementById('settings-parent-phone').value;
+window.handleSettingsSave = function() {
+    const email = document.getElementById('settings-parent-email')?.value || '';
+    const pName = document.getElementById('settings-parent-name')?.value || '';
+    const pPhone = document.getElementById('settings-parent-phone')?.value || '';
 
     // Athlete Inputs
-    const cName = document.getElementById('settings-athlete-name').value.trim();
-    const cTeam = document.getElementById('settings-athlete-team').value;
-    const cDob = document.getElementById('settings-athlete-dob').value;
+    const cName = (document.getElementById('settings-athlete-name')?.value || '').trim();
+    const cTeam = document.getElementById('settings-athlete-team')?.value || '';
+    const cDob = document.getElementById('settings-athlete-dob')?.value || '';
 
     if (!email) {
         godspeedAlert("We couldn't find your email address. Please sign in again.", 'Error');
@@ -1379,14 +1396,21 @@ function handleSettingsSave() {
     const originalText = btn.innerText;
 
     btn.innerText = 'Profile Linked & Saved ✓';
-    btn.style.background = '#34C759'; // Success Green
     btn.disabled = true;
 
     setTimeout(() => {
         btn.innerText = originalText;
-        btn.style.background = ''; // Reset
         btn.disabled = false;
-    }, 2000);
+        
+        // Redirect user back to documents view as requested
+        const docsNav = document.querySelector('.nav-item[onclick*="documents"]');
+        if (docsNav) {
+            switchPortalView('documents', docsNav);
+        } else {
+            // Fallback if nav item not found
+            switchPortalView('documents', document.querySelector('.nav-item'));
+        }
+    }, 1200);
 }
 // --- Gear & Uniform Logic ---
 
@@ -2848,11 +2872,11 @@ function handleDemoBilling(container, totalDueEl, statusTextEl, statusCard) {
             Demo Mode: Please sign in securely to view your open invoices and payment plans.
         </div>
     `;
-    if (totalDueEl) totalDueEl.textContent = '$0.00';
+    if (totalDueEl) totalDueEl.textContent = 'Pending';
     if (statusTextEl && statusCard) {
-        statusTextEl.textContent = '● Good Standing';
-        statusTextEl.style.color = '#34C759';
-        statusCard.style.borderLeftColor = '#34C759';
+        statusTextEl.textContent = '● Action Required';
+        statusTextEl.style.color = '#ef4444';
+        statusCard.style.borderLeftColor = '#ef4444';
     }
 }
 
@@ -3082,22 +3106,7 @@ window.checkPaymentReminders = function (email) {
     }
 }
 
-/**
- * Save Settings
- */
-window.handleSettingsSave = function () {
-    const pName = document.getElementById('settings-parent-name').value;
-    const pPhone = document.getElementById('settings-parent-phone').value;
-    const notifyPayment = document.getElementById('settings-notify-payment').checked;
-    const notifyOverdue = document.getElementById('settings-notify-overdue').checked;
 
-    if (pName) localStorage.setItem('gba_parent_name', pName);
-    if (pPhone) localStorage.setItem('gba_parent_phone', pPhone);
-    localStorage.setItem('gba_notify_payment', notifyPayment);
-    localStorage.setItem('gba_notify_overdue', notifyOverdue);
-
-    godspeedAlert('Settings saved successfully.', 'Success');
-}
 
 /**
  * Render Sidebar Stats
