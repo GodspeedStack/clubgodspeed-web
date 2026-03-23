@@ -565,13 +565,23 @@ window.handleSignup = async function() {
         
         // Use Supabase Auth if available
         if (window.auth && typeof window.auth.signup === 'function') {
+            // Derive grade from age (age 9→4th, 10→5th, etc.)
+            const ageNum = parseInt(playerAge, 10);
+            const gradeNum = ageNum >= 5 ? ageNum - 5 : null;
+            const gradeSuffix = gradeNum === 1 ? 'st' : gradeNum === 2 ? 'nd' : gradeNum === 3 ? 'rd' : 'th';
+            const grade = (gradeNum !== null && gradeNum >= 0 && gradeNum <= 12)
+                ? `${gradeNum}${gradeSuffix}`
+                : null;
+
             const metadata = {
                 parent_name: parentName,
+                full_name: parentName,
                 player_name: playerName,
                 player_age: playerAge,
+                grade: grade,
                 phone: phone,
                 role: 'parent',
-                cohort: 'aau' // Default to AAU for pristine setup
+                cohort: 'aau'
             };
             const result = await window.auth.signup(email, password, metadata);
             if (result && result.success) {
