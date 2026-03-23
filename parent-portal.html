@@ -225,6 +225,25 @@
             </div>
         </div>
 
+        <!-- WAITING ROOM VIEW (Hidden initially) -->
+        <div id="portal-waiting-room" class="portal-login-view" style="display: none;">
+            <div class="login-card" style="text-align: center; padding: 40px 30px;">
+                <div style="margin-bottom: 24px;">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto;">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                </div>
+                <h2 style="font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; letter-spacing: 0.05em; margin-bottom: 12px; color: #111;">Account <span style="color: #f59e0b;">Under Review</span></h2>
+                <p style="color: #666; font-size: 1.05rem; line-height: 1.6; margin-bottom: 32px;">
+                    Welcome to Godspeed. To protect the privacy and security of our athletes, your account is currently being reviewed by our administration. 
+                    <br><br>
+                    You will receive an email as soon as your account is approved and unlocked.
+                </p>
+                <button onclick="handleLogout()" class="btn-primary" style="background: transparent; border: 2px solid #e5e7eb; color: #4b5563; box-shadow: none;">Sign Out</button>
+            </div>
+        </div>
+
         <!-- DASHBOARD VIEW (Hidden initially) -->
         <div id="portal-dashboard" class="portal-dashboard-v3" style="display: none;">
 
@@ -1299,7 +1318,7 @@
     <!-- Footer Removed per User Request -->
     <!-- Supabase Client (load with defer for non-blocking) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <!-- Content removed: Offline DB mode active -->
+    <script type="module" src="src/lib/env-injector.js"></script>
     <script src="auth-supabase.js" defer></script>
     <script src="analytics.js" defer></script>
     <script src="security.js" defer></script>
@@ -1341,8 +1360,9 @@
     </style>
 
     <!-- DuesTransparency React Component (Pre-compiled for all browsers/servers) -->
-    <link rel="stylesheet" href="/build/style.css?v=12">
-    <script src="/build/dues-widget.js?v=12"></script>
+    <link rel="stylesheet" href="/build/style.css?v=13">
+    <script src="/build/dues-widget.js?v=13"></script>
+    <script src="mobile-menu.js"></script>
 </body>
 
 </html>

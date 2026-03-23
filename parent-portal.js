@@ -337,11 +337,11 @@ async function handleLogin() {
                 const currentIp = ipData.ip;
                 
                 if (window.auth && window.auth.isSupabaseAvailable()) {
-                    // 2. Look up their allowed_ip in the database
+                    // 2. Look up their allowed_ip and approval status in the database
                     const supabaseClient = window.auth.getSupabaseClient();
                     const { data: parentData, error: parentError } = await supabaseClient
                         .from('parent_accounts')
-                        .select('allowed_ip, id')
+                        .select('allowed_ip, id, approval_status')
                         .eq('email', email)
                         .single();
                         
@@ -359,16 +359,40 @@ async function handleLogin() {
                             }
                             throw new Error(`Access blocked: Unrecognized IP address. This account is locked to a different secure network.`);
                         }
+
+                        // STATUS ENFORCEMENT (Waiting Room)
+                        if (parentData.approval_status === 'pending') {
+                            document.getElementById('portal-login').style.display = 'none';
+                            document.getElementById('portal-waiting-room').style.display = 'flex';
+                            btn.innerHTML = 'Sign In';
+                            btn.disabled = false;
+                            return; // Halt execution, do not show dashboard
+                        } else if (parentData.approval_status === 'rejected') {
+                            if (window.auth && typeof window.auth.logout === 'function') {
+                                await window.auth.logout();
+                            }
+                            throw new Error('Your account access has been denied by administration.');
+                        }
                     }
                 }
             } catch (securityError) {
-                console.error("IP Verification failed:", securityError);
+                console.error("Security Verification failed:", securityError);
                 if (securityError.message === 'Failed to fetch' || securityError.name === 'TypeError') {
-                    console.warn("Adblocker prevented IP check. Allowing login to proceed gracefully.");
-                } else {
-                    loginSuccess = false;
-                    errorMessage = securityError.message || "Security verification failed. Access Denied.";
+                    console.warn("Adblocker prevented security check. Allowing login to proceed gracefully.");
                 }
+            }
+
+            // LOCAL DEMO ENFORCEMENT
+            let localReqs = JSON.parse(localStorage.getItem('pending_access_requests') || '[]');
+            let matchedLocal = localReqs.find(x => x.email === email);
+            if (matchedLocal && matchedLocal.status === 'pending') {
+                document.getElementById('portal-login').style.display = 'none';
+                document.getElementById('portal-waiting-room').style.display = 'flex';
+                btn.innerHTML = 'Sign In';
+                btn.disabled = false;
+                return;
+            } else if (matchedLocal && matchedLocal.status === 'rejected') {
+                throw new Error('Your account access has been denied by administration.');
             }
 
             if (loginSuccess) {
@@ -551,9 +575,20 @@ window.handleSignup = async function() {
             }
         } else {
             console.warn('Auth module not available. Mocking signup locally.');
-            localStorage.setItem('pending_access_request', JSON.stringify({ parentName, email, phone, playerName, playerAge, status: 'approved' }));
             signupSuccess = true;
         }
+
+        // Store in LocalStorage Demo Array so Admin Dashboard can see the signup
+        let localReqs = JSON.parse(localStorage.getItem('pending_access_requests') || '[]');
+        localReqs.push({
+            id: 'mock-' + Date.now().toString(),
+            email: email,
+            parentName: parentName,
+            playerName: playerName,
+            created_at: new Date().toISOString(),
+            status: 'pending'
+        });
+        localStorage.setItem('pending_access_requests', JSON.stringify(localReqs));
 
         if (signupSuccess) {
             // Success UI

@@ -119,9 +119,9 @@ export function DuesTransparency() {
   const segments = [
     { id: 't4', label: '4th Grade Tourneys', amount: t4, color: '#185FA5', desc: `Covers entry fees for ${tournaments.length} premium tournaments.` },
     { id: 't5', label: '5th Grade Tourneys', amount: t5, color: '#10B981', desc: `Covers entry fees for ${tournaments.length} premium tournaments.` },
-    { id: 'gs', label: 'Spring Gym', amount: gymSpring, color: '#8B5CF6', desc: 'Premium hardwood rental 3x/week.' },
-    { id: 'gsu', label: 'Summer Gym', amount: gymSummer, color: '#F59E0B', desc: 'Summer training facility costs.' },
-    { id: 'surplus', label: 'Fall Surplus', amount: surplus, color: '#F43F5E', desc: 'Rolled over into the fall season fund.' },
+    { id: 'gs', label: 'Spring Gym', amount: gymSpring, color: '#8B5CF6', desc: 'A safe, high-quality environment for players to practice 3x/week.' },
+    { id: 'gsu', label: 'Summer Gym', amount: gymSummer, color: '#F59E0B', desc: 'Consistent summer training to keep our skills sharp.' },
+    { id: 'surplus', label: 'Future Season Fund', amount: surplus, color: '#F43F5E', desc: 'Directly subsidizes the upcoming fall season to help keep future costs lower.' },
   ].filter(s => s.amount > 0)
 
   return (
@@ -160,8 +160,8 @@ export function DuesTransparency() {
 
       {/* Apple-Style Beautiful Progress Bar */}
       <div className="dues-viz-container">
-        <div className="dues-viz-title">Where your ${season_fee} goes</div>
-        <div className="dues-viz-subtitle">Hover over segments or cards below to isolate costs. Every dollar is accounted for.</div>
+        <div className="dues-viz-title">Investing in the Season</div>
+        <div className="dues-viz-subtitle">We believe in total transparency. Here is exactly how your season dues support the athletes. Every dollar is accounted for.</div>
 
         <div className="pb-wrapper">
           {segments.map(seg => (
@@ -221,11 +221,11 @@ export function DuesTransparency() {
 
       {/* The Big Objective Metric at end */}
       <div className="goal-gauge-container">
-        <div className="goal-gauge-badge">The Master Objective</div>
+        <div className="goal-gauge-badge">Our Community Promise</div>
         <div className="goal-gauge-title">Fundraising Target</div>
         <div className="goal-gauge-amount">${program_cost.toLocaleString()}</div>
         <div style={{ maxWidth: 500, lineHeight: 1.6, color: 'rgba(255,255,255,0.8)' }}>
-          To run a premium facility and travel program for {total_families} players, breaking even requires over $30k. Even if zero families pay dues this season, our fundraiser ensures 100% of these program costs are completely covered. That is Godspeed.
+          To run a top-tier travel program for {total_families} players, our actual costs exceed ${program_cost.toLocaleString()}. We aggressively fundraise the difference so we never have to pass that massive burden onto you. We want financial stress out of the way so the focus stays entirely on the kids.
         </div>
       </div>
     </div>
