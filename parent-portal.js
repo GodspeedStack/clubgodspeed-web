@@ -116,10 +116,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Check for existing session
+    // Check for existing session and route based on approval status
     if (window.auth && window.auth.isLoggedIn()) {
         const savedEmail = localStorage.getItem('gba_user_email');
-        if (savedEmail) updateDashboardProfile(savedEmail);
+        const approved = localStorage.getItem('gba_user_approved');
+        if (savedEmail) {
+            if (approved === 'false') {
+                // Show waiting room for unapproved users
+                document.getElementById('portal-login').style.display = 'none';
+                document.getElementById('portal-waiting-room').style.display = 'flex';
+            } else {
+                document.getElementById('portal-login').style.display = 'none';
+                document.getElementById('portal-dashboard').style.display = 'flex';
+                updateDashboardProfile(savedEmail);
+            }
+        }
     }
 
     // Attach form listener
@@ -337,42 +348,35 @@ async function handleLogin() {
                 const currentIp = ipData.ip;
                 
                 if (window.auth && window.auth.isSupabaseAvailable()) {
-                    // 2. Look up their allowed_ip and approval status in the database
-                    const supabaseClient = window.auth.getSupabaseClient();
-                    const { data: parentData, error: parentError } = await supabaseClient
-                        .from('parent_accounts')
-                        .select('allowed_ip, id, approval_status')
-                        .eq('email', email)
-                        .single();
-                        
-                    if (parentData) {
-                        if (!parentData.allowed_ip) {
-                            // First login ever: Lock this IP to their account
-                            await supabaseClient
-                                .from('parent_accounts')
-                                .update({ allowed_ip: currentIp })
-                                .eq('id', parentData.id);
-                        } else if (parentData.allowed_ip !== currentIp) {
-                            // IP MISMATCH: BLOCK ACCESS
-                            if (window.auth && typeof window.auth.logout === 'function') {
-                                await window.auth.logout(); // Force sign out
+                    // 2. Check approval status from the profiles table (v2 schema)
+                    const approved = localStorage.getItem('gba_user_approved');
+                    if (approved === 'false') {
+                        // Check if there's a denied login_request
+                        const supabaseClient = window.auth.getSupabaseClient();
+                        if (supabaseClient) {
+                            const userId = localStorage.getItem('gba_user_id');
+                            const { data: reqData } = await supabaseClient
+                                .from('login_requests')
+                                .select('status')
+                                .eq('user_id', userId)
+                                .order('created_at', { ascending: false })
+                                .limit(1)
+                                .single();
+
+                            if (reqData?.status === 'denied') {
+                                if (window.auth && typeof window.auth.logout === 'function') {
+                                    await window.auth.logout();
+                                }
+                                throw new Error('Your account access has been denied by administration.');
                             }
-                            throw new Error(`Access blocked: Unrecognized IP address. This account is locked to a different secure network.`);
                         }
 
-                        // STATUS ENFORCEMENT (Waiting Room)
-                        if (parentData.approval_status === 'pending') {
-                            document.getElementById('portal-login').style.display = 'none';
-                            document.getElementById('portal-waiting-room').style.display = 'flex';
-                            btn.innerHTML = 'Sign In';
-                            btn.disabled = false;
-                            return; // Halt execution, do not show dashboard
-                        } else if (parentData.approval_status === 'rejected') {
-                            if (window.auth && typeof window.auth.logout === 'function') {
-                                await window.auth.logout();
-                            }
-                            throw new Error('Your account access has been denied by administration.');
-                        }
+                        // Not yet approved — show waiting room
+                        document.getElementById('portal-login').style.display = 'none';
+                        document.getElementById('portal-waiting-room').style.display = 'flex';
+                        btn.innerHTML = 'Sign In';
+                        btn.disabled = false;
+                        return;
                     }
                 }
             } catch (securityError) {
@@ -1790,7 +1794,7 @@ async function calculateRemainingHours(parentEmail) {
     if (supabase && window.auth?.isSupabaseAvailable?.()) {
         try {
             const { data: parentAccount, error: accountError } = await supabase
-                .from('parent_accounts')
+                .from('profiles')
                 .select('id')
                 .eq('email', parentEmail)
                 .single();
@@ -2044,7 +2048,7 @@ async function loadSessionCounts(parentEmail) {
         if (supabase && window.auth?.isSupabaseAvailable?.()) {
             try {
                 const { data: parentAccount, error: accountError } = await supabase
-                    .from('parent_accounts')
+                    .from('profiles')
                     .select('id')
                     .eq('email', parentEmail)
                     .single();
@@ -2172,7 +2176,7 @@ async function loadTrainingCalendar(parentEmail) {
         if (supabase && window.auth?.isSupabaseAvailable?.()) {
             try {
                 const { data: parentAccount, error: accountError } = await supabase
-                    .from('parent_accounts')
+                    .from('profiles')
                     .select('id')
                     .eq('email', parentEmail)
                     .single();
@@ -2291,7 +2295,7 @@ async function loadSkillsPrograms(parentEmail) {
         if (supabase && window.auth?.isSupabaseAvailable?.()) {
             try {
                 const { data: parentAccount, error: accountError } = await supabase
-                    .from('parent_accounts')
+                    .from('profiles')
                     .select('id')
                     .eq('email', parentEmail)
                     .single();
@@ -2397,7 +2401,7 @@ async function loadReceipts(parentEmail) {
         if (supabase && window.auth?.isSupabaseAvailable?.()) {
             try {
                 const { data: parentAccount, error: accountError } = await supabase
-                    .from('parent_accounts')
+                    .from('profiles')
                     .select('id')
                     .eq('email', parentEmail)
                     .single();
@@ -2528,7 +2532,7 @@ async function loadInvoices(parentEmail) {
         if (supabase && window.auth?.isSupabaseAvailable?.()) {
             try {
                 const { data: parentAccount, error: accountError } = await supabase
-                    .from('parent_accounts')
+                    .from('profiles')
                     .select('id')
                     .eq('email', parentEmail)
                     .single();
@@ -3174,6 +3178,16 @@ const originalInitPortal = window.initPortal;
 window.initPortal = function () {
     if (originalInitPortal) originalInitPortal();
 
+    // INTERCEPT RECOVERY FLOW
+    if (window.location.hash.includes('type=recovery')) {
+        console.log("Recovery token detected! Intercepting dashboard load...");
+        setTimeout(() => {
+            document.body.classList.remove('logged-in'); 
+            if (window.showUpdatePasswordForm) window.showUpdatePasswordForm();
+        }, 300);
+        return; // Abort standard billing/dashboard loads
+    }
+
     const email = localStorage.getItem('gba_user_email');
 
     // Always try to render stats for demo/preview
@@ -3192,6 +3206,8 @@ window.showLoginForm = function () {
     document.getElementById('portal-login').style.display = 'flex';
     document.getElementById('portal-signup').style.display = 'none';
     document.getElementById('portal-reset').style.display = 'none';
+    const updatePwd = document.getElementById('portal-update-password');
+    if (updatePwd) updatePwd.style.display = 'none';
 
     // Clear any error messages
     const errorMsg = document.querySelector('#portal-login .login-error');
@@ -3205,6 +3221,8 @@ window.showSignupForm = function () {
     document.getElementById('portal-login').style.display = 'none';
     document.getElementById('portal-signup').style.display = 'flex';
     document.getElementById('portal-reset').style.display = 'none';
+    const updatePwd = document.getElementById('portal-update-password');
+    if (updatePwd) updatePwd.style.display = 'none';
 
     // Clear any error messages
     const errorMsg = document.querySelector('#portal-signup .login-error');
@@ -3218,10 +3236,38 @@ window.showPasswordResetForm = function () {
     document.getElementById('portal-login').style.display = 'none';
     document.getElementById('portal-signup').style.display = 'none';
     document.getElementById('portal-reset').style.display = 'flex';
+    const updatePwd = document.getElementById('portal-update-password');
+    if (updatePwd) updatePwd.style.display = 'none';
 
     // Clear any messages
     const errorMsg = document.querySelector('#portal-reset .login-error');
     const successMsg = document.querySelector('#portal-reset .login-success');
+    if (errorMsg) {
+        errorMsg.style.display = 'none';
+        errorMsg.textContent = '';
+    }
+    if (successMsg) {
+        successMsg.style.display = 'none';
+        successMsg.textContent = '';
+    }
+}
+
+window.showUpdatePasswordForm = function () {
+    document.getElementById('portal-login').style.setProperty('display', 'none', 'important');
+    document.getElementById('portal-signup').style.setProperty('display', 'none', 'important');
+    document.getElementById('portal-reset').style.setProperty('display', 'none', 'important');
+    
+    // Hide dashboard if it was visible
+    const dashboard = document.getElementById('portal-dashboard');
+    if (dashboard) dashboard.style.setProperty('display', 'none', 'important');
+    
+    const updatePwd = document.getElementById('portal-update-password');
+    if (updatePwd) updatePwd.style.setProperty('display', 'flex', 'important');
+
+    // Clear any messages
+    const errorMsg = document.querySelector('#portal-update-password .login-error');
+    const successMsg = document.querySelector('#portal-update-password .login-success');
+
     if (errorMsg) {
         errorMsg.style.display = 'none';
         errorMsg.textContent = '';
@@ -3281,7 +3327,7 @@ window.handlePasswordReset = async function () {
 
         // Send password reset email
         const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-            redirectTo: 'https://clubgodspeed.com/parent-portal.html'
+            redirectTo: window.location.origin + window.location.pathname
         });
 
         if (error) {
@@ -3335,5 +3381,64 @@ window.handlePasswordReset = async function () {
     } finally {
         btn.innerHTML = 'Send Reset Link';
         btn.disabled = false;
+    }
+}
+
+/**
+ * Handle Update Password (from recovery link)
+ */
+window.handleUpdatePassword = async function () {
+    const pwdInput = document.getElementById('update-password');
+    const newPassword = pwdInput ? pwdInput.value : '';
+
+    const btn = document.getElementById('update-password-btn');
+    const errorMsg = document.querySelector('#portal-update-password .login-error');
+    const successMsg = document.querySelector('#portal-update-password .login-success');
+
+    if (newPassword.length < 6) {
+        if (errorMsg) {
+            errorMsg.textContent = 'Password must be at least 6 characters.';
+            errorMsg.style.display = 'block';
+        }
+        return;
+    }
+
+    if (btn) {
+        btn.innerHTML = 'Saving...';
+        btn.disabled = true;
+    }
+
+    try {
+        const supabaseClient = window.auth?.getSupabaseClient();
+        if (!supabaseClient) throw new Error('System unavailable.');
+
+        const { data, error } = await supabaseClient.auth.updateUser({
+            password: newPassword
+        });
+
+        if (error) throw error;
+
+        if (errorMsg) errorMsg.style.display = 'none';
+        if (successMsg) {
+            successMsg.textContent = 'Password updated successfully! Redirecting to your dashboard...';
+            successMsg.style.display = 'block';
+        }
+
+        setTimeout(() => {
+            // Force a reload to clear the hash and drop them back into the normal flow
+            window.location.hash = '';
+            window.location.reload();
+        }, 1500);
+
+    } catch (error) {
+        console.error('Update password error:', error);
+        if (errorMsg) {
+            errorMsg.textContent = error.message || 'Failed to update password.';
+            errorMsg.style.display = 'block';
+        }
+        if (btn) {
+            btn.innerHTML = 'Save New Password';
+            btn.disabled = false;
+        }
     }
 }

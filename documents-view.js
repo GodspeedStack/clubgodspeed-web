@@ -28,7 +28,7 @@ window.generateReceiptPDF = async function (receiptId) {
     if (supabase && window.auth?.isSupabaseAvailable?.()) {
         try {
             const { data: parentAccount } = await supabase
-                .from('parent_accounts')
+                .from('profiles')
                 .select('id')
                 .eq('email', parentEmail)
                 .single();
@@ -92,7 +92,7 @@ window.generateInvoicePDF = async function (invoiceNumber) {
     if (supabase && window.auth?.isSupabaseAvailable?.()) {
         try {
             const { data: parentAccount } = await supabase
-                .from('parent_accounts')
+                .from('profiles')
                 .select('id')
                 .eq('email', parentEmail)
                 .single();

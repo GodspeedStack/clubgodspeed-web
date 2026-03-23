@@ -30,7 +30,7 @@ export async function authenticateCoach(email, password) {
 
         // Get user role from profile
         const { data: profile, error: profileError } = await supabase
-            .from('user_profiles')
+            .from('profiles')
             .select('role')
             .eq('id', data.user.id)
             .single();
@@ -123,18 +123,14 @@ export async function createCoachAccount(email, password, firstName, lastName, r
             throw new Error('Failed to create coach account');
         }
 
-        // Update user profile role (trigger should create it, but ensure role is set)
+        // Update user profile role (trigger creates the row, but ensure role is set)
         const { error: profileError } = await supabase
-            .from('user_profiles')
-            .upsert({
-                id: data.user.id,
-                email,
+            .from('profiles')
+            .update({
                 role,
-                first_name: firstName,
-                last_name: lastName
-            }, {
-                onConflict: 'id'
-            });
+                full_name: [firstName, lastName].filter(Boolean).join(' ') || null
+            })
+            .eq('id', data.user.id);
 
         if (profileError) {
             console.error('Failed to update user profile:', profileError);
@@ -162,7 +158,7 @@ export async function migrateCoachToSupabase(email, password, role = 'coach') {
     try {
         // Check if user already exists
         const { data: existing } = await supabase
-            .from('user_profiles')
+            .from('profiles')
             .select('id, email')
             .eq('email', email)
             .single();

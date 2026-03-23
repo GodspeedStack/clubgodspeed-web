@@ -38,7 +38,7 @@ async function verifySetup() {
         console.log('\n3. Testing database connection...');
         try {
             const { data, error } = await supabase
-                .from('parent_accounts')
+                .from('profiles')
                 .select('count')
                 .limit(1);
             

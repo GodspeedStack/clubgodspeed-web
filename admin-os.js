@@ -39,6 +39,22 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(init, 900);
 });
 
+/**
+ * Build or retrieve a Supabase client. Falls back to constructing one from
+ * the CDN global + SUPABASE_CONFIG (set by env-injector.js).
+ */
+function getOrCreateSupabaseClient() {
+  const fromAuth = window.auth?.getSupabaseClient?.();
+  if (fromAuth) return fromAuth;
+  const cfg = window.SUPABASE_CONFIG;
+  if (cfg?.url && cfg?.anonKey && window.supabase?.createClient) {
+    return window.supabase.createClient(cfg.url, cfg.anonKey, {
+      auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
+    });
+  }
+  return null;
+}
+
 async function init() {
   const loading = document.getElementById('loading');
   const loginScreen = document.getElementById('admin-login-screen');
@@ -46,24 +62,22 @@ async function init() {
 
   try {
     const isPreview = window.location.search.includes('preview=1');
-    osSupabase = (!isPreview && window.auth?.getSupabaseClient) ? window.auth.getSupabaseClient() : null;
+    osSupabase = isPreview ? null : getOrCreateSupabaseClient();
 
     if (osSupabase) {
       msg.textContent = 'Verifying session...';
-      const user = await window.auth.getCurrentUser();
+      const { data: { session } } = await osSupabase.auth.getSession();
 
-      if (!user) {
-        // Not logged in -> Show login screen
+      if (!session) {
         loading.style.display = 'none';
         loginScreen.style.display = 'flex';
         return;
       }
 
       msg.textContent = 'Verifying director credentials...';
-      const {data, error} = await osSupabase.from('profiles').select('role,approved,full_name,email').eq('id',user.id).single();
+      const {data, error} = await osSupabase.from('profiles').select('role,approved,full_name,email').eq('id',session.user.id).single();
 
       if (data?.role === 'director' && data?.approved) {
-        // Success
         document.getElementById('director-name').textContent = data.full_name || 'Director';
         document.getElementById('director-email').textContent = data.email;
         if(document.getElementById('director-initials')) {
@@ -75,11 +89,10 @@ async function init() {
         await loadDashboard();
         return;
       } else {
-        // Logged in, but NOT a director
         msg.textContent = 'Unauthorized: Director access required.';
         loading.querySelector('h2').style.webkitTextFillColor = '#ef4444';
         setTimeout(async () => {
-          if (window.auth?.logout) await window.auth.logout();
+          await osSupabase.auth.signOut();
           window.location.reload();
         }, 2000);
         return;
@@ -111,14 +124,19 @@ window.handleAdminLogin = async function() {
   errBox.style.display = 'none';
 
   try {
-    if (!osSupabase) throw new Error('Supabase client not initialized');
+    // Ensure we have a client (may have been null on first init)
+    if (!osSupabase) osSupabase = getOrCreateSupabaseClient();
+    if (!osSupabase) throw new Error('Cannot connect to authentication service. Check your network connection.');
+
     const { error } = await osSupabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
-    
-    // Auth successful, reload to run init() which checks director status
+
+    // Auth successful — reload to run init() which checks director status
     window.location.reload();
   } catch (error) {
-    errBox.textContent = error.message;
+    let msg = error.message;
+    if (msg === 'Invalid login credentials') msg = 'Invalid email or password.';
+    errBox.textContent = msg;
     errBox.style.display = 'block';
     btn.textContent = 'Secure Login';
     btn.disabled = false;

@@ -65,7 +65,7 @@ window.getTrainingHours = async function(parentEmail) {
 
     try {
         const { data: parentAccount } = await supabase
-            .from('parent_accounts')
+            .from('profiles')
             .select('id')
             .eq('email', parentEmail)
             .single();
@@ -211,7 +211,7 @@ window.createTrainingPurchase = async function(purchaseData) {
 
     try {
         const { data: parentAccount } = await supabase
-            .from('parent_accounts')
+            .from('profiles')
             .select('id')
             .eq('email', purchaseData.parentEmail)
             .single();

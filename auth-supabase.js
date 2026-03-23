@@ -7,11 +7,13 @@
 (function () {
     'use strict';
 
-    // Supabase configuration - can be overridden via window.SUPABASE_CONFIG
-    const SUPABASE_CONFIG = window.SUPABASE_CONFIG || {
-        url: window.VITE_SUPABASE_URL || '',
-        anonKey: window.VITE_SUPABASE_ANON_KEY || ''
-    };
+    // Supabase configuration — prefer window.SUPABASE_CONFIG (set by env-injector),
+    // fall back to hardcoded anon credentials (safe for client-side).
+    const _FALLBACK_URL  = 'https://nnqokhqennuxalamnvps.supabase.co';
+    const _FALLBACK_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis';
+    const SUPABASE_CONFIG = (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.url)
+        ? window.SUPABASE_CONFIG
+        : { url: _FALLBACK_URL, anonKey: _FALLBACK_KEY };
 
     let supabaseClient = null;
     let isSupabaseAvailable = false;
@@ -140,15 +142,15 @@
                         localStorage.setItem('gba_user_email', email);
                         localStorage.setItem('gba_user_id', userId);
 
-                        // Set role from user metadata
-                        const role = data.user.user_metadata?.role || 'parent';
+                        // Fetch role + approval status from profiles table
+                        const profile = await this.getProfile(userId);
+                        const role = profile?.role || data.user.user_metadata?.role || 'parent';
+                        const approved = profile?.approved ?? false;
                         localStorage.setItem('gba_user_role', role);
-
-                        // Create or update parent account
-                        await this.ensureParentAccount(userId, email);
+                        localStorage.setItem('gba_user_approved', String(approved));
 
                         updateUI(true);
-                        return { success: true };
+                        return { success: true, role, approved };
                     }
                 } catch (error) {
                     console.error('Supabase login failed:', error);
@@ -186,6 +188,8 @@
             localStorage.removeItem(AUTH_KEY);
             localStorage.removeItem('gba_user_email');
             localStorage.removeItem('gba_user_id');
+            localStorage.removeItem('gba_user_role');
+            localStorage.removeItem('gba_user_approved');
             updateUI(false);
             window.location.href = 'index.html';
         },
@@ -241,57 +245,27 @@
         },
 
         /**
-         * Ensure parent account exists in database
-         * @private
+         * Fetch user profile from the profiles table.
+         * Profile is auto-created by a database trigger on signup.
+         * @param {string} userId
+         * @returns {Promise<Object|null>} { role, approved, full_name, ... }
          */
-        ensureParentAccount: async function (userId, email) {
-            if (!isSupabaseAvailable || !supabaseClient) return;
-
+        getProfile: async function (userId) {
+            if (!isSupabaseAvailable || !supabaseClient) return null;
             try {
-                // Check if parent account exists
-                const { data: existing } = await supabaseClient
-                    .from('parent_accounts')
-                    .select('id')
-                    .eq('user_id', userId)
-                    .single();
-
-                if (!existing) {
-                    // Create parent account
-                    const { error } = await supabaseClient
-                        .from('parent_accounts')
-                        .insert({
-                            user_id: userId,
-                            email: email
-                        });
-
-                    if (error) {
-                        console.error('Failed to create parent account:', error);
-                    }
-                }
-
-                // Ensure user profile exists (for unified role system)
-                const { data: profile } = await supabaseClient
-                    .from('user_profiles')
-                    .select('id')
+                const { data, error } = await supabaseClient
+                    .from('profiles')
+                    .select('role, approved, full_name, email, phone, player_name, grade')
                     .eq('id', userId)
                     .single();
-
-                if (!profile) {
-                    // Profile will be created by trigger, but ensure it exists
-                    const { error: profileError } = await supabaseClient
-                        .from('user_profiles')
-                        .insert({
-                            id: userId,
-                            email: email,
-                            role: 'parent'
-                        });
-
-                    if (profileError && !profileError.message.includes('duplicate')) {
-                        console.error('Failed to create user profile:', profileError);
-                    }
+                if (error) {
+                    console.warn('Could not fetch profile:', error.message);
+                    return null;
                 }
-            } catch (error) {
-                console.error('Error ensuring parent account:', error);
+                return data;
+            } catch (err) {
+                console.error('getProfile error:', err);
+                return null;
             }
         },
 
@@ -306,6 +280,12 @@
                     localStorage.setItem(AUTH_KEY, 'supabase_session');
                     localStorage.setItem('gba_user_email', session.user.email);
                     localStorage.setItem('gba_user_id', session.user.id);
+                    // Refresh profile data (role + approval) on every init
+                    const profile = await this.getProfile(session.user.id);
+                    if (profile) {
+                        localStorage.setItem('gba_user_role', profile.role || 'parent');
+                        localStorage.setItem('gba_user_approved', String(profile.approved ?? false));
+                    }
                     updateUI(true);
                 } else {
                     updateUI(false);

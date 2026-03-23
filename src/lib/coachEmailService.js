@@ -28,13 +28,13 @@ async function getParentEmail(athleteId) {
             // Get training purchases for this athlete to find parent
             const { data: purchases } = await supabase
                 .from('training_purchases')
-                .select('parent_id, parent_accounts(email)')
+                .select('parent_id, profiles(email)')
                 .eq('athlete_id', athleteId)
                 .limit(1)
                 .single();
             
-            if (purchases?.parent_accounts?.email) {
-                return purchases.parent_accounts.email;
+            if (purchases?.profiles?.email) {
+                return purchases.profiles.email;
             }
         } catch (error) {
             console.error('Error fetching parent email from Supabase:', error);
@@ -66,7 +66,7 @@ async function getTrainingData(athleteId) {
             // Get purchases
             const { data: purchases } = await supabase
                 .from('training_purchases')
-                .select('*, parent_accounts(email)')
+                .select('*, profiles(email)')
                 .eq('athlete_id', athleteId)
                 .eq('status', 'active');
             
