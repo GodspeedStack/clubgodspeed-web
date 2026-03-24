@@ -39,6 +39,10 @@ function getEmailContent(type: string, data: any) {
     'gear_order': {
       subject: `New Gear Order: ${data.parentId || 'Parent'}`,
       body: `A new gear order has been placed.\n\nParent Email: ${data.parentId}\nDate: ${new Date(data.date).toLocaleString()}\n\nITEMS TO COPY/PASTE TO PROVIDER:\n-------------------------------\n\n${data.items ? data.items.map((i: any) => `- ${i.name} | Size: ${i.size || 'N/A'} | Qty: ${i.qty}${(i.customName && i.customName !== 'No Name') ? ' | Name on item: ' + i.customName : ''}`).join('\n') : 'No items'}\n\n-------------------------------\n\nGodspeed Portal Automation`
+    },
+    'new_registration': {
+      subject: `New Parent Registration — ${data.parentName || data.email || 'Unknown'}`,
+      body: `A new parent has registered on the portal and is awaiting your approval.\n\nParent Name: ${data.parentName || 'Not provided'}\nEmail: ${data.email || 'Not provided'}\nPlayer Name: ${data.playerName || 'Not provided'}\nGrade: ${data.grade || 'Not provided'}\nPhone: ${data.phone || 'Not provided'}\n\nLog in to the Admin Dashboard to approve or deny this request:\nhttps://www.clubgodspeed.com/admin-os.html\n\nGodspeed Portal`
     }
   }
 
@@ -53,6 +57,8 @@ Deno.serve(async (req) => {
 
   if (type === 'gear_order') {
     content = getEmailContent(type, orderObj);
+  } else if (type === 'new_registration') {
+    content = getEmailContent(type, body);
   } else {
     const { data: payment } = await supabase
       .from('payments')
@@ -84,7 +90,7 @@ Deno.serve(async (req) => {
     })
   })
 
-  if (type !== 'gear_order') {
+  if (type !== 'gear_order' && type !== 'new_registration') {
     await supabase.from('payment_reminders').insert({
       payment_id: paymentId,
       parent_id: body.payment ? body.payment.parent_id : null,

@@ -562,17 +562,17 @@ window.handleSignup = async function() {
         }
 
         let signupSuccess = false;
-        
+
+        // Derive grade from age (age 9→4th, 10→5th, etc.)
+        const ageNum = parseInt(playerAge, 10);
+        const gradeNum = ageNum >= 5 ? ageNum - 5 : null;
+        const gradeSuffix = gradeNum === 1 ? 'st' : gradeNum === 2 ? 'nd' : gradeNum === 3 ? 'rd' : 'th';
+        const grade = (gradeNum !== null && gradeNum >= 0 && gradeNum <= 12)
+            ? `${gradeNum}${gradeSuffix}`
+            : null;
+
         // Use Supabase Auth if available
         if (window.auth && typeof window.auth.signup === 'function') {
-            // Derive grade from age (age 9→4th, 10→5th, etc.)
-            const ageNum = parseInt(playerAge, 10);
-            const gradeNum = ageNum >= 5 ? ageNum - 5 : null;
-            const gradeSuffix = gradeNum === 1 ? 'st' : gradeNum === 2 ? 'nd' : gradeNum === 3 ? 'rd' : 'th';
-            const grade = (gradeNum !== null && gradeNum >= 0 && gradeNum <= 12)
-                ? `${gradeNum}${gradeSuffix}`
-                : null;
-
             const metadata = {
                 parent_name: parentName,
                 full_name: parentName,
@@ -605,6 +605,26 @@ window.handleSignup = async function() {
         localStorage.setItem('pending_access_requests', JSON.stringify(localReqs));
 
         if (signupSuccess) {
+            // Notify admin of new registration (fire-and-forget)
+            try {
+                const sb = window.auth && window.auth.getSupabaseClient ? window.auth.getSupabaseClient() : null;
+                if (sb) {
+                    sb.functions.invoke('send-email', {
+                        body: {
+                            type: 'new_registration',
+                            emailTo: 'jewellsco@gmail.com',
+                            email: email,
+                            parentName: parentName,
+                            playerName: playerName,
+                            grade: grade || '',
+                            phone: phone
+                        }
+                    }).catch(err => console.warn('Admin notification failed (non-blocking):', err));
+                }
+            } catch (notifyErr) {
+                console.warn('Admin notification skipped:', notifyErr);
+            }
+
             // Success UI
             if (typeof godspeedAlert === 'function') {
                 godspeedAlert(`Your account has been successfully created! Check your inbox for a verification email to complete your registration.`, "Account Created");
@@ -2773,14 +2793,20 @@ function viewTrainingStatement(email) {
                     </tr>
                 </thead>
                 <tbody>
-                    ${record.logs.map(l => `
-                        <tr>
-                            <td>${l.date}</td>
-                            <td>${l.activity}</td>
-                            <td>${l.notes}</td>
-                            <td style="text-align:right; font-weight:600;">-${l.time}</td>
+                    ${record.logs.map((l, index) => {
+                        const isRecent = index === 0;
+                        const rowStyle = isRecent ? 'background: #eff6ff;' : '';
+                        const badge = isRecent ? '<span style="background:#2563eb; color:white; padding:2px 6px; border-radius:4px; font-size:9px; margin-left:8px; font-weight:bold; letter-spacing:0.5px; vertical-align:middle;">LATEST</span>' : '';
+                        
+                        return `
+                        <tr style="${rowStyle}">
+                            <td style="${isRecent ? 'font-weight:700; color:#1d4ed8;' : ''}">${l.date}${badge}</td>
+                            <td style="${isRecent ? 'font-weight:600;' : ''}">${l.activity}</td>
+                            <td style="${isRecent ? 'font-weight:500;' : ''}">${l.notes}</td>
+                            <td style="text-align:right; font-weight:700; ${isRecent ? 'color:#1d4ed8;' : ''}">-${l.time}</td>
                         </tr>
-                    `).join('')}
+                        `;
+                    }).join('')}
                 </tbody>
             </table>
 
