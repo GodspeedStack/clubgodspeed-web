@@ -3079,11 +3079,11 @@ function renderPaymentsTimeline(container, payments, plan, supabase) {
         } else if (isOverdue) {
             statusBadge = `<span style="background: #fee2e2; color: #ef4444; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Overdue</span>`;
             borderColor = '#ef4444';
-            actionBtn = `<button class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem; background: #ef4444;" onclick="triggerStripeCheckout('${payment.id}')">Pay Now</button>`;
+            actionBtn = `<button class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem; background: #ef4444;" onclick="triggerStripeCheckout('${payment.id}', ${payment.amount}, ${payment.installment_number})">Pay Now</button>`;
         } else {
             statusBadge = `<span style="background: #fef3c7; color: #d97706; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Upcoming</span>`;
             borderColor = '#f59e0b';
-            actionBtn = `<button class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem;" onclick="triggerStripeCheckout('${payment.id}')">Pay Early</button>`;
+            actionBtn = `<button class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem;" onclick="triggerStripeCheckout('${payment.id}', ${payment.amount}, ${payment.installment_number})">Pay Early</button>`;
         }
         
         // Hide button if it's pending but a previous installment is still unpaid
@@ -3113,17 +3113,26 @@ function renderPaymentsTimeline(container, payments, plan, supabase) {
     container.innerHTML = html;
 }
 
-window.triggerStripeCheckout = async function(paymentId) {
+window.triggerStripeCheckout = async function(paymentId, amount, installmentNumber) {
     if (!window.auth || !window.auth.isSupabaseAvailable()) {
         godspeedAlert('System error. Please try again later.', 'Error');
         return;
     }
     const supabase = window.auth.getSupabaseClient();
-    
+    const parentEmail = localStorage.getItem('gba_user_email') || '';
+    const playerName = localStorage.getItem('gba_selected_athlete_name') || 'Athlete';
+
     godspeedAlert('Redirecting to secure checkout...', 'Processing');
     try {
         const { data, error } = await supabase.functions.invoke('create-checkout', {
-            body: { paymentId: paymentId }
+            body: {
+                paymentType: 'aau_payment',
+                paymentId,
+                amount,
+                installmentNumber,
+                parentEmail,
+                playerName
+            }
         });
         
         if (error) throw error;

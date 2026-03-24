@@ -104,6 +104,7 @@ window.TrainingCart = {
             
             const { data, error } = await supabase.functions.invoke('create-checkout', {
                 body: {
+                    paymentType: 'training_package',
                     items: this.items,
                     parentEmail: email,
                     userId: user.id,
@@ -147,7 +148,7 @@ const SESSION_PRODUCTS = {
     1: { id: '1-session', name: '1 Session', price: 45.00, hours: 1 },
     5: { id: '5-pack', name: '5 Pack', price: 200.00, hours: 5 },
     10: { id: '10-pack', name: '10 Pack', price: 350.00, hours: 10 },
-    'unlimited': { id: 'unlimited', name: 'Unlimited', price: 250.00, hours: 'unlimited', recurring: true, stripePriceId: 'price_xxx_unlimited' }
+    'unlimited': { id: 'unlimited', name: 'Unlimited Monthly', price: 250.00, hours: 'unlimited', recurring: true }
 };
 
 window.initiateTrainingPayment = function(planKey) {
