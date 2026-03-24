@@ -90,19 +90,20 @@ window.TrainingCart = {
         errorContainer.style.display = 'none';
 
         try {
+            const sbClient = window.auth?.getSupabaseClient?.();
+            if (!sbClient) throw new Error('Not authenticated. Please log in first.');
+
             let user = null;
-            if (window.supabase && supabase.auth && typeof supabase.auth.getUser === 'function') {
-                const { data, error: authError } = await supabase.auth.getUser();
-                if (data && data.user) user = data.user;
-            }
-            if (!user) user = { id: 'local-test-id' };
+            const { data: userData, error: authError } = await sbClient.auth.getUser();
+            if (userData && userData.user) user = userData.user;
+            if (!user) user = { id: 'anonymous' };
 
             // Attempt to get selected athlete
             const athleteSelect = document.getElementById('training-athlete-select');
             const athleteId = (athleteSelect && athleteSelect.value) ? athleteSelect.value : null;
-            const email = localStorage.getItem('gba_user_email');
-            
-            const { data, error } = await supabase.functions.invoke('create-checkout', {
+            const email = localStorage.getItem('gba_user_email') || user.email;
+
+            const { data, error } = await sbClient.functions.invoke('create-checkout', {
                 body: {
                     paymentType: 'training_package',
                     items: this.items,
