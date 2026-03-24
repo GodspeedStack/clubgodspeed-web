@@ -337,12 +337,8 @@
         signup: async function (email, password, metadata = {}) {
             if (await ensureSupabaseClient()) {
                 try {
-                    // Use SecureAuth wrapper if available
-                    if (window.Security && window.Security.SecureAuth) {
-                        return await window.Security.SecureAuth.signup(email, password, metadata);
-                    }
-
-                    // Basic signup
+                    // Supabase handles email verification natively — bypass
+                    // SecureAuth wrapper which never calls supabaseClient.auth.signUp
                     const { data, error } = await supabaseClient.auth.signUp({
                         email: email,
                         password: password,
