@@ -1,5 +1,10 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -50,6 +55,10 @@ function getEmailContent(type: string, data: any) {
 }
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
   const body = await req.json()
   const { paymentId, type, emailTo, orderObj } = body
 
@@ -66,7 +75,7 @@ Deno.serve(async (req) => {
       .eq('id', paymentId)
       .single()
 
-    if (!payment) return new Response('Payment not found', { status: 404 })
+    if (!payment) return new Response('Payment not found', { status: 404, headers: corsHeaders })
 
     content = getEmailContent(type, {
       playerName: payment.payment_plans.player_name,
@@ -76,7 +85,7 @@ Deno.serve(async (req) => {
     })
   }
 
-  await fetch('https://api.resend.com/emails', {
+  const resendRes = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${RESEND_API_KEY}`,
@@ -90,6 +99,16 @@ Deno.serve(async (req) => {
     })
   })
 
+  const resendBody = await resendRes.text()
+  console.log(`Resend ${resendRes.status}: ${resendBody}`)
+
+  if (!resendRes.ok) {
+    return new Response(JSON.stringify({ error: 'Resend API error', status: resendRes.status, detail: resendBody }), {
+      status: 502,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    })
+  }
+
   if (type !== 'gear_order' && type !== 'new_registration') {
     await supabase.from('payment_reminders').insert({
       payment_id: paymentId,
@@ -99,5 +118,5 @@ Deno.serve(async (req) => {
     })
   }
 
-  return new Response('sent')
+  return new Response('sent', { headers: corsHeaders })
 })
