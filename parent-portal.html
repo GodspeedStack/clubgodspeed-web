@@ -914,19 +914,19 @@
                                 
                                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 1rem;">
                                     <div style="text-align: left; background: #f9fafb; padding: 12px 16px; border-radius: 12px; border: 1px solid #f3f4f6;">
-                                        <div style="font-size: 1.5rem; font-weight: 900; color: #111;">18.5</div>
+                                        <div id="stat-mins" style="font-size: 1.5rem; font-weight: 900; color: #111;">N/A</div>
                                         <div style="font-size: 0.75rem; font-weight: 800; color: #6b7280; letter-spacing: 0.05em;">MINS</div>
                                     </div>
                                     <div style="text-align: left; background: #f9fafb; padding: 12px 16px; border-radius: 12px; border: 1px solid #f3f4f6;">
-                                        <div style="font-size: 1.5rem; font-weight: 900; color: #111;">12.4</div>
+                                        <div id="stat-ppg" style="font-size: 1.5rem; font-weight: 900; color: #111;">N/A</div>
                                         <div style="font-size: 0.75rem; font-weight: 800; color: #6b7280; letter-spacing: 0.05em;">PPG</div>
                                     </div>
                                     <div style="text-align: left; background: #f9fafb; padding: 12px 16px; border-radius: 12px; border: 1px solid #f3f4f6;">
-                                        <div style="font-size: 1.5rem; font-weight: 900; color: #111;">4.1</div>
+                                        <div id="stat-apg" style="font-size: 1.5rem; font-weight: 900; color: #111;">N/A</div>
                                         <div style="font-size: 0.75rem; font-weight: 800; color: #6b7280; letter-spacing: 0.05em;">APG</div>
                                     </div>
                                     <div style="text-align: left; background: #f9fafb; padding: 12px 16px; border-radius: 12px; border: 1px solid #f3f4f6;">
-                                        <div style="font-size: 1.5rem; font-weight: 900; color: #111;">6.8</div>
+                                        <div id="stat-rpg" style="font-size: 1.5rem; font-weight: 900; color: #111;">N/A</div>
                                         <div style="font-size: 0.75rem; font-weight: 800; color: #6b7280; letter-spacing: 0.05em;">RPG</div>
                                     </div>
                                 </div>
@@ -940,6 +940,34 @@
                                     </div>
                                 </div>
                             </div>
+                            <!-- Dynamic stat population: reads from DB, respects null vs 0 -->
+                            <script>
+                                document.addEventListener('DOMContentLoaded', () => {
+                                    try {
+                                        const db = typeof getDB === 'function' ? getDB() : JSON.parse(localStorage.getItem('gba_db') || '{}');
+                                        const athleteId = localStorage.getItem('gba_current_athlete') || 'p6';
+
+                                        // Look for aggregate stats (ppg, apg, rpg, mins) on the athlete record
+                                        const athlete = (db.roster || []).find(p => p.athleteId === athleteId);
+                                        const stats = athlete?.seasonStats || athlete?.aggregateStats || null;
+
+                                        // Strict N/A fallback: null/undefined → "N/A", 0 → "0" (played, scored nothing)
+                                        const displayStat = (val) => (val !== null && val !== undefined && val !== '') ? val : 'N/A';
+
+                                        const elMins = document.getElementById('stat-mins');
+                                        const elPpg = document.getElementById('stat-ppg');
+                                        const elApg = document.getElementById('stat-apg');
+                                        const elRpg = document.getElementById('stat-rpg');
+
+                                        if (elMins) elMins.textContent = displayStat(stats?.mins ?? null);
+                                        if (elPpg) elPpg.textContent = displayStat(stats?.ppg ?? null);
+                                        if (elApg) elApg.textContent = displayStat(stats?.apg ?? null);
+                                        if (elRpg) elRpg.textContent = displayStat(stats?.rpg ?? null);
+                                    } catch (e) {
+                                        console.warn('[GameAnalytics] Failed to load stats:', e);
+                                    }
+                                });
+                            </script>
                         </div>
 
                         <!-- Coaches Notes -->

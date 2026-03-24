@@ -719,6 +719,40 @@ window.submit2FA = async function () {
     }
 };
 
+// --- Dynamic Ledger Interceptor ---
+function getLedgerProfile(rawRecord) {
+    if (!rawRecord || !rawRecord.packages) return rawRecord;
+
+    const activePackages = rawRecord.packages.filter(p => p.status === 'Active');
+    const activeIds = activePackages.map(p => p.id);
+    const activeSessions = rawRecord.sessions ? rawRecord.sessions.filter(s => activeIds.includes(s.package_id)) : [];
+    
+    // Battle Royale Rule: Lifetime mapping across EVERYTHING
+    const lifetimePurchased = rawRecord.packages.reduce((sum, p) => sum + p.total_hours, 0);
+    const lifetimeUsed = rawRecord.sessions ? rawRecord.sessions.reduce((sum, s) => sum + s.duration, 0) : 0;
+    
+    // PDF Rule: Active mapping across only ACTIVE packages
+    const activePurchased = activePackages.reduce((sum, p) => sum + p.total_hours, 0);
+    const activeUsed = activeSessions.reduce((sum, s) => sum + s.duration, 0);
+    const activeRemaining = activePurchased - activeUsed;
+    
+    return {
+        hours: {
+            totalPurchased: lifetimePurchased, // Required for Battle Royale lifetime stats
+            used: lifetimeUsed,                // Overall lifetime utilized
+            remaining: activeRemaining         // Active balance pool
+        },
+        purchases: rawRecord.packages.map(p => ({
+            id: p.id,
+            date: p.purchase_date,
+            item: p.item,
+            amount: p.amount,
+            status: p.status
+        })),
+        logs: activeSessions // Native loops will now ONLY iterate active sessions!
+    };
+}
+
 function updateDashboardProfile(email) {
     const namePart = email.split('@')[0];
     const displayName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
@@ -1643,7 +1677,8 @@ async function renderTrainingDashboard() {
 
     // 1. Training Hours & Counts
     // CHECK FOR USER SPECIFIC RECORD
-    const userRecord = db.trainingRecords ? db.trainingRecords[parentEmail] : null;
+    const rawUserRecord = db.trainingRecords ? db.trainingRecords[parentEmail] : null;
+    const userRecord = getLedgerProfile(rawUserRecord);
     let displayHours = data.hours;
 
     if (userRecord) {
@@ -1855,10 +1890,12 @@ async function calculateRemainingHours(parentEmail) {
 
     // Fallback to Mock Data from trainingRecords
     if (totalPurchased === 0) {
-        const userRecords = db.trainingRecords ? db.trainingRecords[parentEmail] : null;
+        const rawUserRecords = db.trainingRecords ? db.trainingRecords[parentEmail] : null;
+        const userRecords = getLedgerProfile(rawUserRecords);
         if (userRecords && userRecords.hours) {
             totalPurchased = userRecords.hours.totalPurchased;
-            totalUsed = userRecords.hours.used;
+            // UI relies on active progress
+            totalUsed = userRecords.hours.totalPurchased - userRecords.hours.remaining; 
         }
     }
 
@@ -1886,7 +1923,8 @@ async function loadTrainingHours(parentEmail) {
 
     // --- User-Specific Usage & Purchase History ---
     const db = getDB();
-    const userRecords = db.trainingRecords ? db.trainingRecords[parentEmail] : null;
+    const rawUserRecords = db.trainingRecords ? db.trainingRecords[parentEmail] : null;
+    const userRecords = getLedgerProfile(rawUserRecords);
 
     if (userRecords) {
         // Set purchased hours
@@ -2690,7 +2728,8 @@ window.loadInvoices = () => loadInvoices(localStorage.getItem('gba_user_email'))
  */
 function viewTrainingStatement(email) {
     const db = getDB();
-    const record = db.trainingRecords ? db.trainingRecords[email] : null;
+    const rawRecord = db.trainingRecords ? db.trainingRecords[email] : null;
+    const record = getLedgerProfile(rawRecord);
 
     if (!record) {
         godspeedAlert('No training record found for this user.', 'Info');
@@ -3202,19 +3241,25 @@ window.renderSidebarStats = function (email) {
     // Show container
     div.style.display = 'block';
 
-    // Mock Data or fetch from DB
-    // For demo, we use hardcoded or random stats
+    // Strict N/A fallback: pull from DB, null/undefined → "N/A", 0 → "0"
+    const displayStat = (val) => (val !== null && val !== undefined && val !== '') ? val : 'N/A';
+
+    const db = typeof getDB === 'function' ? getDB() : JSON.parse(localStorage.getItem('gba_db') || '{}');
+    const athleteId = localStorage.getItem('gba_current_athlete') || 'p6';
+    const athlete = (db.roster || []).find(p => p.athleteId === athleteId);
+    const stats = athlete?.seasonStats || athlete?.aggregateStats || null;
+
     const gp = document.getElementById('sidebar-stat-gp');
     const ppg = document.getElementById('sidebar-stat-ppg');
 
-    if (gp) gp.textContent = '12';
-    if (ppg) ppg.textContent = '14.5';
+    if (gp) gp.textContent = displayStat(stats?.gamesPlayed ?? null);
+    if (ppg) ppg.textContent = displayStat(stats?.ppg ?? null);
 
     const att = document.getElementById('sidebar-stat-attendance');
     const attBar = document.getElementById('sidebar-stat-attendance-bar');
 
-    if (att) att.textContent = '92%';
-    if (attBar) setTimeout(() => attBar.style.width = '92%', 100);
+    if (att) att.textContent = displayStat(stats?.attendance ?? null);
+    if (attBar) setTimeout(() => attBar.style.width = stats?.attendance ?? '0%', 100);
 }
 
 // Hook into initPortal

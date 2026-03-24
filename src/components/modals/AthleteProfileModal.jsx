@@ -64,15 +64,15 @@ const AthleteProfileModal = ({ player, onClose }) => {
                     <div className="grid grid-cols-3 gap-4">
                         <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-center">
                             <div className="text-gray-400 text-xs font-bold uppercase">Points</div>
-                            <div className="text-2xl font-black text-gray-900">{playerStats.stats.points || 0}</div>
+                            <div className="text-2xl font-black text-gray-900">{playerStats.stats.points ?? 'N/A'}</div>
                         </div>
                         <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-center">
                             <div className="text-gray-400 text-xs font-bold uppercase">Steals</div>
-                            <div className="text-2xl font-black text-gray-900">{playerStats.stats.steals || 0}</div>
+                            <div className="text-2xl font-black text-gray-900">{playerStats.stats.steals ?? 'N/A'}</div>
                         </div>
                         <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-center">
                             <div className="text-gray-400 text-xs font-bold uppercase">Rebounds</div>
-                            <div className="text-2xl font-black text-gray-900">{playerStats.stats.rebounds || 0}</div>
+                            <div className="text-2xl font-black text-gray-900">{playerStats.stats.rebounds ?? 'N/A'}</div>
                         </div>
                     </div>
                 )}

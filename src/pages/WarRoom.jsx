@@ -57,7 +57,7 @@ const WarRoom = () => {
                     ))}
                 </div>
                 <p className="mt-4 text-gray-400 text-sm">
-                    Net Rating: <span className="text-green-400 font-bold">+18.5</span> | Identity: "High Motor / Switch Everything"
+                    Net Rating: <span className="text-green-400 font-bold">N/A</span> | Identity: "High Motor / Switch Everything"
                 </p>
             </div>
         </div>
