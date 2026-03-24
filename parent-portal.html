@@ -732,10 +732,9 @@
                                     <div class="text-sm opacity-80 mt-1">hours</div>
                                 </div>
                                 <div class="text-right">
-                                    <div class="text-xs opacity-80 mb-1">Purchased</div>
+                                    <div class="text-xs opacity-80 mb-1">Lifetime Purchased</div>
                                     <div id="hours-purchased" class="text-xl font-semibold">--</div>
-                                    <div class="text-xs opacity-80 mt-2 mb-1">
-                                        Used</div>
+                                    <div class="text-xs opacity-80 mt-2 mb-1">Lifetime Used</div>
                                     <div id="training-utilized-display" class="text-xl font-semibold">--
                                     </div>
                                 </div>
@@ -748,7 +747,7 @@
                             <div style="margin-top: 1.25rem; justify-content: space-between; align-items: center; display: flex; flex-wrap: wrap; gap: 12px;">
                                 <span style="font-size: 0.8rem; font-weight: 600; opacity: 0.9;">Low balance? Keep the momentum going.</span>
                                 <div style="display: flex; gap: 8px;">
-                                    <button onclick="if(window.analytics) window.analytics.trackDownload('training_report'); alert('Downloading Training Statement...')" style="background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; border-radius: 9999px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;">Download Report</button>
+                                    <button onclick="if(window.analytics) window.analytics.trackDownload('training_report'); viewTrainingStatement(localStorage.getItem('gba_user_email'));" style="background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; border-radius: 9999px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;">Download Report (PDF)</button>
                                     <button onclick="document.getElementById('buy-training-section').scrollIntoView({behavior: 'smooth'})" style="background: white; color: #1d4ed8; padding: 8px 16px; border-radius: 9999px; font-weight: 800; font-size: 0.85rem; border: none; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">Purchase Hours</button>
                                 </div>
                             </div>

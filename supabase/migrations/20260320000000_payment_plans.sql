@@ -1,4 +1,9 @@
-create table public.payment_plans (
+-- Payment Plans & Installments Migration
+-- NOTE: public.payments already exists (season_fee payments).
+-- This migration adds installment-based payment plan support alongside it.
+
+-- 1. Create payment_plans table
+create table if not exists public.payment_plans (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz default now(),
   parent_id uuid references auth.users(id) on delete cascade,
@@ -10,23 +15,23 @@ create table public.payment_plans (
     check (status in ('active','completed','cancelled'))
 );
 
-create table public.payments (
-  id uuid primary key default gen_random_uuid(),
-  created_at timestamptz default now(),
-  plan_id uuid references public.payment_plans(id) on delete cascade,
-  parent_id uuid references auth.users(id) on delete cascade,
-  installment_number int not null,
-  amount numeric(10,2) not null,
-  due_date date not null,
-  paid_at timestamptz,
-  status text not null default 'pending'
-    check (status in ('pending','paid','overdue','waived')),
-  payment_method text check (payment_method in ('card','venmo')),
-  stripe_payment_intent_id text,
-  receipt_sent_at timestamptz
-);
+-- 2. Extend existing payments table with installment columns
+-- Make legacy NOT NULL columns nullable so new payment types can coexist
+alter table public.payments alter column season_fee_id drop not null;
+alter table public.payments alter column profile_id drop not null;
 
-create table public.payment_reminders (
+-- Add installment-specific columns
+alter table public.payments add column if not exists plan_id uuid references public.payment_plans(id) on delete cascade;
+alter table public.payments add column if not exists parent_id uuid references auth.users(id) on delete cascade;
+alter table public.payments add column if not exists installment_number int;
+alter table public.payments add column if not exists due_date date;
+alter table public.payments add column if not exists paid_at timestamptz;
+alter table public.payments add column if not exists payment_method text;
+alter table public.payments add column if not exists stripe_payment_intent_id text;
+alter table public.payments add column if not exists receipt_sent_at timestamptz;
+
+-- 3. Create payment_reminders table
+create table if not exists public.payment_reminders (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz default now(),
   payment_id uuid references public.payments(id) on delete cascade,
@@ -38,12 +43,12 @@ create table public.payment_reminders (
   sent_at timestamptz default now()
 );
 
-create index idx_payments_due_date on public.payments(due_date);
-create index idx_payments_status on public.payments(status);
-create index idx_payments_parent on public.payments(parent_id);
+-- 4. Indexes
+create index if not exists idx_payments_due_date on public.payments(due_date);
+create index if not exists idx_payments_parent on public.payments(parent_id);
 
+-- 5. RLS
 alter table public.payment_plans enable row level security;
-alter table public.payments enable row level security;
 alter table public.payment_reminders enable row level security;
 
 create policy "Parents view own plans" on public.payment_plans
@@ -51,18 +56,3 @@ create policy "Parents view own plans" on public.payment_plans
 
 create policy "Parents view own payments" on public.payments
   for select using (auth.uid() = parent_id);
-
-create policy "Admin all plans" on public.payment_plans
-  for all using (
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
-  );
-
-create policy "Admin all payments" on public.payments
-  for all using (
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
-  );
-
-create policy "Admin all reminders" on public.payment_reminders
-  for all using (
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
-  );

@@ -22,7 +22,7 @@ const GODSPEED_DATA = {
         { athleteId: "p4", teamId: 'TEAM-10U-DEV-BLACK', name: "A.D.", initials: "AD", tier: "Rotation/Starter", avg_grade: 8.00, trend: "Steady", notes: "Needs coachability" },
         { athleteId: "p5", teamId: 'TEAM-10U-DEV-BLACK', name: "Howard", initials: "H", tier: "Rotation/Starter", avg_grade: 8.86, trend: "Up", notes: "Defensive Anchor" },
         {
-            athleteId: "p6", teamId: 'TEAM-10U-DEV-BLACK', name: "Anton", initials: "A", tier: "Rotation/Starter", avg_grade: 8.35, trend: "New", notes: "Plays under control", parentId: "denis@gmail.com",
+            athleteId: "p6", teamId: 'TEAM-10U-DEV-BLACK', name: "Anton", initials: "A", tier: "Rotation/Starter", avg_grade: 8.35, trend: "New", notes: "Plays under control", parentId: "denisblyakhman@gmail.com",
             coachAssessment: {
                 updatedDate: "2026-02-25",
                 developmentGoal: "Starting Point Guard",
@@ -60,7 +60,7 @@ const GODSPEED_DATA = {
         { athleteId: "p9", teamId: 'TEAM-10U-DEV-BLACK', name: "Junior", initials: "J", tier: "Limited", avg_grade: 6.65, trend: "Declining", notes: "Scheme IQ / Conditioning" }, // "down" maps to Declining/Red arrow
         { athleteId: "p10", teamId: 'TEAM-10U-DEV-BLACK', name: "Kyrie", initials: "K", tier: "Limited", avg_grade: 7.55, trend: "Up", notes: "Improving closeouts" },
         { athleteId: "p12", teamId: 'TEAM-10U-DEV-BLACK', name: "Khalik", initials: "K", tier: "Limited", avg_grade: 6.93, trend: "Steady", notes: "Learning help defense" },
-        { athleteId: "14414235", teamId: 'TEAM-10U-DEV-BLACK', name: "Test Athlete (14414235)", initials: "T", tier: "6+", avg_grade: 0.0, trend: "New", notes: "Test account", parentId: "denis@gmail.com" }
+        { athleteId: "14414235", teamId: 'TEAM-10U-DEV-BLACK', name: "Test Athlete (14414235)", initials: "T", tier: "6+", avg_grade: 0.0, trend: "New", notes: "Test account", parentId: "denisblyakhman@gmail.com" }
     ],
 
     // 3. Reports & Analytics (Merged V2 Structure)
@@ -159,19 +159,20 @@ const GODSPEED_DATA = {
         { id: "acc_3", parentName: "Mike Jones", email: "mike.j@example.com", phone: "(555) 555-5555", athletes: ["p4", "p5"], status: "Active", balance: "$0.00" },
         { id: "acc_4", parentName: "Lisa Johnson", email: "lisa.j@example.com", phone: "(555) 111-2222", athletes: ["p6"], status: "Active", balance: "$0.00" },
         { id: "acc_5", parentName: "David Brown", email: "david.b@example.com", phone: "(555) 333-4444", athletes: ["p11"], status: "Pending", balance: "$0.00" },
-        { id: "acc_6", parentName: "Denis (Anton's Dad)", email: "denis@gmail.com", phone: "(555) 666-7777", athletes: ["p6", "14414235"], status: "Active", balance: "$0.00" }
+        { id: "acc_6", parentName: "Denis (Anton's Dad)", email: "denisblyakhman@gmail.com", phone: "(555) 666-7777", athletes: ["p6", "14414235"], status: "Active", balance: "$0.00" }
     ],
 
     // 9. Training Records (User Specific - New)
     trainingRecords: {
-        "denis@gmail.com": {
+        "denisblyakhman@gmail.com": {
             hours: {
-                totalPurchased: 10.0,
-                used: 10.0,
-                remaining: 0.0,
-                expiryDate: "2026-12-31"
+                totalPurchased: 20.0,
+                used: 12.0,
+                remaining: 8.0,
+                expiryDate: "2027-03-21"
             },
             logs: [
+                { date: "2026-03-21", time: "2 Hours", duration: 2, activity: "1v1 Training (Coach Scott & Coach True)", notes: "Ball handling, foot speed, leg strength, floater finishes, and defense." },
                 { date: "2026-02-24", time: "TBD", duration: 2, activity: "1v1 Training", notes: "Dribbling, off hand activation, shooting, low man reads" },
                 { date: "2026-02-22", time: "6:00 PM - 7:00 PM", duration: 1, activity: "1v1 Training", notes: "Off hand activation, ball handling against pressure and free throws" },
                 { date: "2026-01-25", time: "10:00 AM - 12:00 PM", duration: 2, activity: "1v1 Training", notes: "Finishing, ballhandling, and reads off DHO" },
@@ -180,6 +181,7 @@ const GODSPEED_DATA = {
                 { date: "2026-01-03", time: "2:00 PM - 4:00 PM", duration: 2, activity: "1v1 Training (Coach Scott)", notes: "Focus on ball handling" }
             ],
             purchases: [
+                { id: "rcpt_003", date: "2026-03-21", item: "10 Hour Training Package", amount: "$400.00", status: "Paid", link: "#" },
                 { id: "rcpt_002", date: "2026-01-03", item: "Training Credit Top-Up", amount: "$400.00", status: "Paid", link: "#" }
             ]
         }

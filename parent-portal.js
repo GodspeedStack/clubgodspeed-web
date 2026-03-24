@@ -218,7 +218,7 @@ async function handleLogin() {
         let errorMessage = 'Invalid email or password. Please check your credentials and try again.';
 
         // BYPASS: Direct access for Local Dev/Support & Mock Cohorts
-        const mockEmails = ['denis@gmail.com', 'test@example.com', 'demo@clubgodspeed.com', 'training@clubgodspeed.com'];
+        const mockEmails = ['denisblyakhman@gmail.com', 'test@example.com', 'demo@clubgodspeed.com', 'training@clubgodspeed.com'];
         if (mockEmails.includes(email.toLowerCase())) {
             console.log('Bypassing auth for known local or demo user');
             localStorage.setItem('gba_parent_auth_token', 'bypass_token_' + Date.now());
@@ -2728,11 +2728,11 @@ function viewTrainingStatement(email) {
             <div class="summary-grid">
                 <div class="stat-box">
                     <span class="stat-val">${record.hours.totalPurchased}</span>
-                    <span class="stat-label">Total Purchased</span>
+                    <span class="stat-label">Lifetime Purchased</span>
                 </div>
                 <div class="stat-box">
                     <span class="stat-val">${record.hours.used.toFixed(1)}</span>
-                    <span class="stat-label">Hours Used</span>
+                    <span class="stat-label">Lifetime Used</span>
                 </div>
                 <div class="stat-box">
                     <span class="stat-val" style="color: #0071e3;">${record.hours.remaining.toFixed(1)}</span>
