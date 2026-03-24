@@ -33,3 +33,5 @@ export default defineConfig({
   },
   publicDir: 'public'
 });
+// Triggering Vite restart to flush stale ENV cache
+// flushing 2
