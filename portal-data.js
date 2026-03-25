@@ -165,24 +165,12 @@ const GODSPEED_DATA = {
     // 9. Training Records (User Specific - New)
     trainingRecords: {
         "denisblyakhman@gmail.com": {
-            hours: {
-                totalPurchased: 20.0,
-                used: 12.0,
-                remaining: 8.0,
-                expiryDate: "2027-03-21"
-            },
-            logs: [
-                { date: "2026-03-21", time: "2 Hours", duration: 2, activity: "1v1 Training (Coach Scott & Coach True)", notes: "Ball handling, foot speed, leg strength, floater finishes, and defense." },
-                { date: "2026-02-24", time: "TBD", duration: 2, activity: "1v1 Training", notes: "Dribbling, off hand activation, shooting, low man reads" },
-                { date: "2026-02-22", time: "6:00 PM - 7:00 PM", duration: 1, activity: "1v1 Training", notes: "Off hand activation, ball handling against pressure and free throws" },
-                { date: "2026-01-25", time: "10:00 AM - 12:00 PM", duration: 2, activity: "1v1 Training", notes: "Finishing, ballhandling, and reads off DHO" },
-                { date: "2026-01-19", time: "11:00 AM - 1:00 PM", duration: 2, activity: "Elite Guard Academy", notes: "Long splits off post entry, passing to post, driving vs pressure, footwork" },
-                { date: "2026-01-04", time: "2:00 PM - 3:00 PM", duration: 1, activity: "1v1 Training", notes: "Self-guided session" },
-                { date: "2026-01-03", time: "2:00 PM - 4:00 PM", duration: 2, activity: "1v1 Training (Coach Scott)", notes: "Focus on ball handling" }
+            packages: [
+                { id: "pkg_1", total_hours: 10.0, status: "Completed", purchase_date: "2026-01-03", item: "10 Hour Training Package", amount: "$400.00", link: "#" },
+                { id: "pkg_2", total_hours: 10.0, status: "Active", purchase_date: "2026-03-21", item: "10 Hour Training Package", amount: "$400.00", link: "#" }
             ],
-            purchases: [
-                { id: "rcpt_003", date: "2026-03-21", item: "10 Hour Training Package", amount: "$400.00", status: "Paid", link: "#" },
-                { id: "rcpt_002", date: "2026-01-03", item: "Training Credit Top-Up", amount: "$400.00", status: "Paid", link: "#" }
+            sessions: [
+                { package_id: "pkg_2", date: "2026-03-21", time: "2 Hours", duration: 2, activity: "1v1 Training (Coach Scott & Coach True)", notes: "Ball handling, foot speed, leg strength, floater finishes, and defense." }
             ]
         }
     }

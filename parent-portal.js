@@ -627,9 +627,9 @@ window.handleSignup = async function() {
 
             // Success UI
             if (typeof godspeedAlert === 'function') {
-                godspeedAlert(`Your account has been successfully created! Check your inbox for a verification email to complete your registration.`, "Account Created");
+                godspeedAlert(`Your account has been created! A coach will review and approve your access shortly. You can log in now.`, "Account Created");
             } else {
-                alert("Account Created! Check your email to verify your account.");
+                alert("Account Created! A coach will review and approve your access shortly. You can log in now.");
             }
             
             // Clear inputs

@@ -354,9 +354,10 @@
 
                     if (data.user) {
                         // User profile will be created by trigger
+                        // Email confirmation is disabled — users can log in immediately
                         return {
                             success: true,
-                            requiresVerification: true,
+                            requiresVerification: false,
                             userId: data.user.id
                         };
                     }
