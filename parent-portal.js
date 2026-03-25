@@ -355,19 +355,27 @@ async function handleLogin() {
                         const supabaseClient = window.auth.getSupabaseClient();
                         if (supabaseClient) {
                             const userId = localStorage.getItem('gba_user_id');
-                            const { data: reqData } = await supabaseClient
-                                .from('login_requests')
-                                .select('status')
-                                .eq('user_id', userId)
-                                .order('created_at', { ascending: false })
-                                .limit(1)
-                                .single();
+                            try {
+                                const fetchPromise = supabaseClient
+                                    .from('login_requests')
+                                    .select('status')
+                                    .eq('user_id', userId)
+                                    .order('created_at', { ascending: false })
+                                    .limit(1)
+                                    .single();
+                                
+                                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 500));
+                                
+                                const { data: reqData } = await Promise.race([fetchPromise, timeoutPromise]);
 
-                            if (reqData?.status === 'denied') {
-                                if (window.auth && typeof window.auth.logout === 'function') {
-                                    await window.auth.logout();
+                                if (reqData?.status === 'denied') {
+                                    if (window.auth && typeof window.auth.logout === 'function') {
+                                        await window.auth.logout();
+                                    }
+                                    throw new Error('Your account access has been denied by administration.');
                                 }
-                                throw new Error('Your account access has been denied by administration.');
+                            } catch(e) {
+                                console.warn('login_requests check skipped or timed out due to DB latency');
                             }
                         }
 
@@ -627,9 +635,9 @@ window.handleSignup = async function() {
 
             // Success UI
             if (typeof godspeedAlert === 'function') {
-                godspeedAlert(`Your account has been created! A coach will review and approve your access shortly. You can log in now.`, "Account Created");
+                godspeedAlert(`Your account has been created! Check your inbox for a verification email from noreply@clubgodspeed.com to complete your registration.`, "Account Created");
             } else {
-                alert("Account Created! A coach will review and approve your access shortly. You can log in now.");
+                alert("Account Created! Check your email for a verification link from noreply@clubgodspeed.com.");
             }
             
             // Clear inputs

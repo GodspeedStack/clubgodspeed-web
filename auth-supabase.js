@@ -354,10 +354,10 @@
 
                     if (data.user) {
                         // User profile will be created by trigger
-                        // Email confirmation is disabled — users can log in immediately
+                        // Email confirmation enabled — users must verify via branded email from noreply@clubgodspeed.com
                         return {
                             success: true,
-                            requiresVerification: false,
+                            requiresVerification: true,
                             userId: data.user.id
                         };
                     }
