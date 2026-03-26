@@ -344,7 +344,7 @@
                         password: password,
                         options: {
                             data: metadata,
-                            emailRedirectTo: 'https://clubgodspeed.com/verify-email.html'
+                            emailRedirectTo: 'https://www.clubgodspeed.com/parent-portal.html'
                         }
                     });
 
@@ -391,6 +391,11 @@
         } else {
             document.body.classList.remove(LOGGED_IN_CLASS);
         }
+
+        // Dispatch custom event so page-specific code (e.g. parent-portal.js) can react
+        window.dispatchEvent(new CustomEvent('gba:authStateChanged', {
+            detail: { isLoggedIn }
+        }));
 
         // Dropdown Update
         const dropdown = document.querySelector('.login-dropdown');
