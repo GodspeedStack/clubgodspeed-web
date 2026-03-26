@@ -256,7 +256,7 @@ async function handleLogin() {
         let errorMessage = 'Invalid email or password. Please check your credentials and try again.';
 
         // BYPASS: Direct access for Local Dev/Support & Mock Cohorts
-        const mockEmails = ['denisblyakhman@gmail.com', 'test@example.com', 'demo@clubgodspeed.com', 'training@clubgodspeed.com', 'anton@example.com'];
+        const mockEmails = ['denisblyakhman@gmail.com', 'test@example.com', 'demo@clubgodspeed.com', 'training@clubgodspeed.com'];
         if (mockEmails.includes(email.toLowerCase())) {
             console.log('Bypassing auth for known local or demo user');
             localStorage.setItem('gba_parent_auth_token', 'bypass_token_' + Date.now());
@@ -784,18 +784,20 @@ function getLedgerProfile(rawRecord) {
     
     return {
         hours: {
-            totalPurchased: lifetimePurchased, // Required for Battle Royale lifetime stats
-            used: lifetimeUsed,                // Overall lifetime utilized
-            remaining: activeRemaining         // Active balance pool
+            totalPurchased: activePurchased, // UI now requests active hours only
+            used: activeUsed,                // Active hours utilized
+            remaining: activeRemaining,      // Active balance pool
+            lifetimePurchased: lifetimePurchased, // Kept for backend/battle royale fallback
+            lifetimeUsed: lifetimeUsed
         },
-        purchases: rawRecord.packages.map(p => ({
+        purchases: activePackages.map(p => ({
             id: p.id,
             date: p.purchase_date,
             item: p.item,
             amount: p.amount,
             status: p.status
         })),
-        logs: activeSessions // Native loops will now ONLY iterate active sessions!
+        logs: activeSessions // Native loops will now ONLY iterate active sessions
     };
 }
 
@@ -2776,29 +2778,9 @@ window.loadInvoices = () => loadInvoices(localStorage.getItem('gba_user_email'))
  * Generate and print a training statement/receipt with hours summary
  */
 function viewTrainingStatement(email) {
-    let record;
-    
-    // BYPASS: Provide Anton's specific data payload for PDF generation
-    if (email === 'anton@example.com') {
-        record = {
-            hours: { totalPurchased: 24, used: 18.5, remaining: 5.5 },
-            purchases: [
-                { date: '2026-01-15', item: 'Winter Training Package (12 hrs)', status: 'paid', amount: '$450.00' },
-                { date: '2026-03-01', item: 'Spring Pre-Season Package (12 hrs)', status: 'paid', amount: '$450.00' }
-            ],
-            usage: [
-                { date: '2026-03-25', session: 'Defensive Rotations Focus (Team Practice)', duration: '1.5 hrs', coach: 'Coach Blyakhman' },
-                { date: '2026-03-20', session: 'Transition Offense & Guard Reads', duration: '1.5 hrs', coach: 'Coach Blyakhman' },
-                { date: '2026-03-18', session: 'Shooting Mechanics & Reps', duration: '1.0 hrs', coach: 'Coach Blyakhman' },
-                { date: '2026-03-13', session: 'Pick & Roll Read Progression', duration: '1.5 hrs', coach: 'Coach Blyakhman' },
-                { date: '2026-03-10', session: 'Full Court Scrimmage Evaluation', duration: '2.0 hrs', coach: 'Coach Blyakhman' }
-            ]
-        };
-    } else {
-        const db = getDB();
-        const rawRecord = db.trainingRecords ? db.trainingRecords[email] : null;
-        record = getLedgerProfile(rawRecord);
-    }
+    const db = getDB();
+    const rawRecord = db.trainingRecords ? db.trainingRecords[email] : null;
+    const record = getLedgerProfile(rawRecord);
 
     if (!record) {
         godspeedAlert('No training record found for this user.', 'Info');
@@ -2856,14 +2838,14 @@ function viewTrainingStatement(email) {
             <div class="summary-grid">
                 <div class="stat-box">
                     <span class="stat-val">${record.hours.totalPurchased}</span>
-                    <span class="stat-label">Lifetime Purchased</span>
+                    <span class="stat-label">Active Purchased</span>
                 </div>
                 <div class="stat-box">
-                    <span class="stat-val">${record.hours.used.toFixed(1)}</span>
-                    <span class="stat-label">Lifetime Used</span>
+                    <span class="stat-val">${Number(record.hours.used).toFixed(1)}</span>
+                    <span class="stat-label">Active Used</span>
                 </div>
                 <div class="stat-box">
-                    <span class="stat-val" style="color: #0071e3;">${record.hours.remaining.toFixed(1)}</span>
+                    <span class="stat-val" style="color: #0071e3;">${Number(record.hours.remaining).toFixed(1)}</span>
                     <span class="stat-label">Hours Remaining</span>
                 </div>
             </div>

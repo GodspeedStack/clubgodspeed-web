@@ -601,14 +601,14 @@
         const RECURRING_EVENTS = {
             1: { // Monday
                 type: 'mandatory-skills',
-                title: 'Mandatory Skills @ Montbello',
-                time: '6:00 PM',
-                loc: 'Montbello Rec Center',
-                desc: 'Mandatory for some players',
+                title: 'Mandatory Skills',
+                time: '6:00 PM - 8:00 PM',
+                loc: 'NEC',
+                desc: 'Mandatory for players',
                 pillClass: 'event-mandatory-skills',
                 color: '#f0f0f0',
                 textColor: 'dark',
-                duration: 1,
+                duration: 2,
                 startDate: '2025-12-08' // Only active from this date
             },
             2: { // Tuesday
@@ -621,17 +621,6 @@
                 color: '#2563eb',
                 textColor: 'light',
                 duration: 2
-            },
-            3: { // Wednesday
-                type: 'skills',
-                title: 'Skills @ Montbello',
-                time: '6:00 PM - 7:00 PM',
-                loc: 'Montbello Rec Center',
-                desc: 'Skills Development Session',
-                pillClass: 'event-skills',
-                color: '#f0f0f0',
-                textColor: 'dark',
-                duration: 1
             },
             4: { // Thursday
                 type: 'team-practice',
@@ -809,10 +798,21 @@
 
             // Stats Calculation (Season Total)
             const stats = calculateSeasonStats(year, month);
-            document.getElementById('calculated-hours').innerHTML = `
-                <span style="background: rgba(37,99,235,0.1); color: #2563eb; padding: 4px 10px; border-radius: 99px;">${stats.practice} Practice Hours</span>
-                <span style="background: rgba(0,0,0,0.05); color: #1d1d1f; padding: 4px 10px; border-radius: 99px;">${stats.game} Game Hours</span>
-            `;
+            // Check Role from URL to conditionally hide hours for parents
+            const urlParams = new URLSearchParams(window.location.search);
+            const isParent = urlParams.get('role') === 'parent';
+
+            const hoursContainers = document.querySelectorAll('#calculated-hours');
+            hoursContainers.forEach(container => {
+                if (!isParent) {
+                    container.innerHTML = `
+                        <span style="background: rgba(37,99,235,0.1); color: #2563eb; padding: 4px 10px; border-radius: 99px;">${stats.practice} Practice Hours</span>
+                        <span style="background: rgba(0,0,0,0.05); color: #1d1d1f; padding: 4px 10px; border-radius: 99px;">${stats.game} Game Hours</span>
+                    `;
+                } else {
+                    container.innerHTML = '';
+                }
+            });
 
             // Mobile: Render as list
             if (isMobile && listContainer) {

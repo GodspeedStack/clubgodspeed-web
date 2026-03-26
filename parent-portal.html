@@ -104,7 +104,7 @@
     </nav>
 
     <!-- Portal Container -->
-    <div class="portal-container">
+    <div class="portal-container" id="main-portal-wrap" style="opacity: 0; transition: opacity 0.3s ease;">
 
         <!-- LOGIN VIEW (Default) -->
         <div id="portal-login" class="portal-login-view">
@@ -610,8 +610,8 @@
                                 </div>
                                 <h3>2026 Parent Guide</h3>
                                 <p>Season info, costs, and expectations.</p>
-                                <a href="Godspeed_Parent_Guide_2026.docx" download class="btn-card"
-                                    style="display: block; text-align: center; text-decoration: none; padding: 12px; background: white;">Download
+                                <a href="season-guide.html" target="_blank" class="btn-card"
+                                    style="display: block; text-align: center; text-decoration: none; padding: 12px; background: white;">View
                                     Guide</a>
                             </div>
                             <!-- 1. Athletic Waiver -->
@@ -709,7 +709,7 @@
                             <h2 style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 1.35rem; color: #111; letter-spacing: -0.02em; text-transform: uppercase;">Schedule</h2>
                         </div>
                         <div class="calendar-wrapper-v3">
-                            <iframe src="calendar-embed.html" id="main-calendar-iframe"
+                            <iframe src="calendar-embed.html?role=parent" id="main-calendar-iframe"
                                 style="width: 100%; height: 100%; border: none;"></iframe>
                         </div>
                     </div>
@@ -808,7 +808,7 @@
                                 </select>
                             </div>
                             <div id="training-calendar-container" class="min-h-[400px]">
-                                <iframe id="training-calendar-iframe" src="calendar-embed.html"
+                                <iframe id="training-calendar-iframe" src="calendar-embed.html?role=parent"
                                     class="w-full h-[500px] border-none rounded-lg"></iframe>
                             </div>
                         </div>
@@ -880,19 +880,19 @@
                                 </div>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                                     <div style="background: #f9fafb; padding: 1rem; border-radius: 12px; border: 1px solid #f3f4f6;">
-                                        <div style="font-size: 1.75rem; font-weight: 900; color: #111;">98%</div>
+                                        <div id="stat-attendance" style="font-size: 1.75rem; font-weight: 900; color: #111;">N/A</div>
                                         <div style="font-size: 0.75rem; font-weight: 700; color: #6b7280; text-transform: uppercase;">Attendance</div>
                                     </div>
                                     <div style="background: #f9fafb; padding: 1rem; border-radius: 12px; border: 1px solid #f3f4f6;">
-                                        <div style="font-size: 1.75rem; font-weight: 900; color: #059669;">A-</div>
+                                        <div id="stat-effort" style="font-size: 1.75rem; font-weight: 900; color: #059669;">N/A</div>
                                         <div style="font-size: 0.75rem; font-weight: 700; color: #6b7280; text-transform: uppercase;">Average Effort Rating</div>
                                     </div>
                                     <div style="background: #f9fafb; padding: 1rem; border-radius: 12px; border: 1px solid #f3f4f6; grid-column: span 2;">
                                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                            <span style="font-size: 0.85rem; font-weight: 700; color: #111;">Agility Drills</span>
-                                            <span style="font-size: 0.85rem; font-weight: 700; color: #2563eb;">Top 15%</span>
+                                            <span id="stat-drill-name" style="font-size: 0.85rem; font-weight: 700; color: #111;">Agility Drills</span>
+                                            <span id="stat-drill-score" style="font-size: 0.85rem; font-weight: 700; color: #2563eb;">Pending Data</span>
                                         </div>
-                                        <div style="width: 100%; height: 6px; background: #e5e7eb; border-radius: 4px; overflow: hidden;"><div style="width: 85%; height: 100%; background: #2563eb;"></div></div>
+                                        <div style="width: 100%; height: 6px; background: #e5e7eb; border-radius: 4px; overflow: hidden;"><div id="stat-drill-bar" style="width: 0%; height: 100%; background: #2563eb;"></div></div>
                                     </div>
                                 </div>
                             </div>
@@ -939,57 +939,16 @@
                                         <div style="font-size: 0.8rem; color: #333; line-height: 1.4; font-weight: 500;">Game film indicates a need for stronger weak-side defensive rotations.</div>
                                     </div>
                                 </div>
+                                </div>
                             </div>
-                            <!-- Dynamic stat population: reads from DB, respects null vs 0 -->
-                            <script>
-                                document.addEventListener('DOMContentLoaded', () => {
-                                    try {
-                                        const db = typeof getDB === 'function' ? getDB() : JSON.parse(localStorage.getItem('gba_db') || '{}');
-                                        const athleteId = localStorage.getItem('gba_current_athlete') || 'p6';
-
-                                        // Look for aggregate stats (ppg, apg, rpg, mins) on the athlete record
-                                        const athlete = (db.roster || []).find(p => p.athleteId === athleteId);
-                                        const stats = athlete?.seasonStats || athlete?.aggregateStats || null;
-
-                                        // Strict N/A fallback: null/undefined → "N/A", 0 → "0" (played, scored nothing)
-                                        const displayStat = (val) => (val !== null && val !== undefined && val !== '') ? val : 'N/A';
-
-                                        const elMins = document.getElementById('stat-mins');
-                                        const elPpg = document.getElementById('stat-ppg');
-                                        const elApg = document.getElementById('stat-apg');
-                                        const elRpg = document.getElementById('stat-rpg');
-
-                                        if (elMins) elMins.textContent = displayStat(stats?.mins ?? null);
-                                        if (elPpg) elPpg.textContent = displayStat(stats?.ppg ?? null);
-                                        if (elApg) elApg.textContent = displayStat(stats?.apg ?? null);
-                                        if (elRpg) elRpg.textContent = displayStat(stats?.rpg ?? null);
-                                    } catch (e) {
-                                        console.warn('[GameAnalytics] Failed to load stats:', e);
-                                    }
-                                });
-                            </script>
-                        </div>
+                        <!-- Dynamic stats are now handled centrally by parent-portal.js -->
 
                         <!-- Coaches Notes -->
-                        <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e5e7eb;">
+                        <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; margin-top: 1.5rem;">
                             <h3 style="font-weight: 800; font-size: 1.25rem; color: #111; margin-bottom: 1.25rem;">Recent Coach Notes</h3>
-                            <div style="display: flex; flex-direction: column; gap: 1rem;">
-                                <!-- Note 1 -->
-                                <div style="border-left: 3px solid #2563eb; padding-left: 1rem;">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                        <div style="font-weight: 700; font-size: 1rem; color: #111;">Coach Scott</div>
-                                        <div style="font-size: 0.75rem; color: #6b7280; font-weight: 600;">March 15, 2026</div>
-                                    </div>
-                                    <p style="font-size: 0.95rem; color: #374151; line-height: 1.5; margin: 0;">Excellent energy closing out passing lanes today. Need to see the same intensity translating to free-throw mechanics under fatigue. Keep working the baseline drive.</p>
-                                </div>
-                                <!-- Note 2 -->
-                                <div style="border-left: 3px solid #d1d5db; padding-left: 1rem;">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                        <div style="font-weight: 700; font-size: 1rem; color: #111;">Coach Jordan</div>
-                                        <div style="font-size: 0.75rem; color: #6b7280; font-weight: 600;">February 28, 2026</div>
-                                    </div>
-                                    <p style="font-size: 0.95rem; color: #374151; line-height: 1.5; margin: 0;">Solid performance in the weekend tournament. Shot selection is improving drastically. Let's focus on boxing out heavier forwards next week in training.</p>
-                                </div>
+                            <div id="coach-notes-container" style="display: flex; flex-direction: column; gap: 1rem;">
+                                <!-- Live Coach Notes will be dynamically injected here -->
+                                <div style="font-size: 0.95rem; color: #6b7280; font-style: italic;">No recent notes available.</div>
                             </div>
                         </div>
                     </div>
@@ -1171,14 +1130,18 @@
                                     </div>
                                     <div style="text-align: right;">
                                         <div style="font-size: 0.8rem; color: #666;">Total Due</div>
-                                        <div id="billing-total-due" style="font-size: 24px; font-weight: 700;">Pending
+                                        <div id="billing-total-due" style="font-size: 24px; font-weight: 700;">$745
                                         </div>
                                     </div>
                                 </div>
-                                <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #f3f4f6; display: flex; justify-content: flex-end;">
-                                    <button onclick="if(window.analytics) window.analytics.trackDownload('billing_invoice'); alert('Downloading Current Invoice...')" style="display: flex; align-items: center; gap: 8px; background: #f3f4f6; color: #374151; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; border: 1px solid #e5e7eb; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#e5e7eb'" onmouseout="this.style.background='#f3f4f6'">
+                                <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center;">
+                                    <button onclick="if(window.analytics) window.analytics.trackDownload('billing_invoice'); alert('Downloading Current Invoice...')" style="display: flex; align-items: center; gap: 8px; background: transparent; color: #6b7280; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.color='#111'" onmouseout="this.style.color='#6b7280'">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                                        Download Invoice
+                                        Invoice
+                                    </button>
+                                    <button onclick="if(typeof godspeedAlert !== 'undefined') { godspeedAlert('Redirecting to Stripe Checkout...', 'Secure Payment Gateway'); } else { alert('Redirecting to secure payment portal...'); }" style="display: flex; align-items: center; gap: 8px; background: #0071e3; color: white; padding: 10px 24px; border-radius: 8px; font-size: 0.95rem; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,113,227,0.3);" onmouseover="this.style.background='#005bb5'" onmouseout="this.style.background='#0071e3'">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                                        Pay Tuition Securely
                                     </button>
                                 </div>
                             </div>
@@ -1240,7 +1203,7 @@
                                     <div style="display: grid; grid-template-columns: 1fr; gap: 16px;">
                                         <div>
                                             <label for="settings-parent-name" style="display: block; font-size: 0.85rem; font-weight: 600; color: #86868b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">Parent Name</label>
-                                            <input type="text" id="settings-parent-name" name="parent_name" autocomplete="name" placeholder="Enter your full name" style="width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid #e5e5ea; background: #f9f9f9; font-size: 1rem; outline: none; transition: all 0.2s;" onfocus="this.style.borderColor='#0071e3'; this.style.background='#fff'" onblur="this.style.borderColor='#e5e5ea'; this.style.background='#f9f9f9'" />
+                                            <input type="text" id="settings-parent-name" name="parent_name" autocomplete="name" placeholder="Enter your name" style="width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid #e5e5ea; background: #f9f9f9; font-size: 1rem; outline: none; transition: all 0.2s;" onfocus="this.style.borderColor='#0071e3'; this.style.background='#fff'" onblur="this.style.borderColor='#e5e5ea'; this.style.background='#f9f9f9'" />
                                         </div>
 
                                         <div>
@@ -1378,7 +1341,7 @@
     <script src="supabase-data-bridge.js" defer></script>
     <script src="export-functions.js" defer></script>
     <script src="receipt-view.js" defer></script>
-    <script src="parent-portal.js" defer></script>
+    <script src="parent-portal.js?v=3" defer></script>
     <!-- Non-critical scripts (async for independent loading) -->
     <script src="branded-modal.js"></script>
     <script src="documents-view.js" defer></script>
@@ -1413,8 +1376,8 @@
     </style>
 
     <!-- DuesTransparency React Component (Pre-compiled for all browsers/servers) -->
-    <link rel="stylesheet" href="/build/style.css?v=13">
-    <script src="/build/dues-widget.js?v=13"></script>
+    <link rel="stylesheet" href="/build/style.css?v=18">
+    <script src="/build/dues-widget.js?v=18"></script>
     <script src="mobile-menu.js"></script>
 </body>
 

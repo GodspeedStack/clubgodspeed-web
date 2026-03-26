@@ -224,6 +224,7 @@
             font-weight: 800;
             font-size: 1.1rem;
             color: var(--black);
+            white-space: nowrap;
         }
 
         /* Urgent Warning Bar */
@@ -278,82 +279,6 @@
             box-shadow: 0 15px 35px rgba(0,0,0,0.4);
         }
 
-        /* Timeline Table */
-        .timeline-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 40px;
-        }
-
-        .timeline-table th {
-            text-align: left;
-            font-size: 0.6rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--gray-600);
-            padding: 0 12px 14px 12px;
-            border-bottom: 1px solid var(--black);
-        }
-
-        .timeline-table th:last-child,
-        .timeline-table td:last-child {
-            text-align: right;
-        }
-
-        .timeline-table td {
-            padding: 14px 12px;
-            border-bottom: 1px solid var(--gray-200);
-            font-size: 0.88rem;
-            vertical-align: top;
-        }
-
-        .timeline-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .timeline-month {
-            font-weight: 800;
-            font-size: 0.9rem;
-            color: var(--black);
-            white-space: nowrap;
-        }
-
-        .timeline-season {
-            font-weight: 600;
-            color: var(--gray-600);
-            font-size: 0.8rem;
-        }
-
-        .timeline-freq {
-            font-family: 'Inter', sans-serif;
-            font-weight: 700;
-            color: var(--black);
-        }
-
-        .timeline-notes {
-            font-size: 0.82rem;
-            color: var(--gray-600);
-            line-height: 1.45;
-            max-width: 280px;
-        }
-
-        .timeline-cost {
-            font-weight: 800;
-            font-size: 1rem;
-            color: var(--black);
-        }
-
-        .timeline-off td {
-            color: var(--gray-300);
-            font-style: italic;
-        }
-
-        .timeline-off .timeline-month,
-        .timeline-off .timeline-cost {
-            color: var(--gray-300);
-        }
-
         @media print {
             body { background: white; padding: 0; display: block; }
             .document-wrapper { box-shadow: none; max-width: 100%; border: none; }
@@ -372,7 +297,7 @@
         <header class="doc-header">
             <div>
                 <h1 class="brand-logo">GODSPEED</h1>
-                <div class="brand-subtitle">Basketball Club // Foundation Report</div>
+                <div class="brand-subtitle">Basketball Club // Official AAU Program</div>
             </div>
             <div class="doc-meta">
                 <h2>Godspeed OS</h2>
@@ -382,12 +307,12 @@
 
         <div class="doc-body">
             <div id="loading-state">
-                Synthesizing Live Financials...
+                Synthesizing Database Config...
             </div>
 
             <div id="dynamic-content" style="display: none;">
                 <div class="intro-text">
-                    Welcome to the 2026 Season. This official document outlines the precise allocation of season dues and explicitly details our facility costs, tournament fees, and operating budget exactly as mandated by our administration.
+                    This document provides parents with a simple, official overview of the season's requirements, costs, and schedule.
                 </div>
 
                 <div class="metrics-grid">
@@ -395,40 +320,27 @@
                         <div class="label">Roster Size</div>
                         <div class="value" id="val-roster">--</div>
                     </div>
-                    <div class="metric-card">
-                        <div class="label">Per Player Dues</div>
-                        <div class="value" id="val-dues">$--</div>
+                    <!-- PROMINENT DUES BLOCK -->
+                    <div class="metric-card" style="background: var(--blue); border-left: none; box-shadow: 0 10px 20px rgba(26,58,143,0.2);">
+                        <div class="label" style="color: rgba(255,255,255,0.7);">Per Player Dues</div>
+                        <div class="value" id="val-dues" style="color: var(--white); font-size: 3.6rem;">$--</div>
                     </div>
-                    <div class="metric-card" style="background: var(--black);">
-                        <div class="label" style="color: var(--gray-300);">Fundraising Minimum</div>
-                        <div class="value" id="val-fundraising" style="color: var(--white);">$--</div>
+                    <div class="metric-card">
+                        <div class="label">Fundraising Minimum</div>
+                        <div class="value" id="val-fundraising">$--</div>
                     </div>
                 </div>
 
-                <!-- NEW: Explicit Gym/Facility Costs -->
-                <div class="section-title">Facility & Operations Baseline</div>
+                <!-- NEW SIMPLIFIED SINGLE TABLE -->
+                <div class="section-title">What Your Dues Cover</div>
                 <table class="premium-table">
                     <thead>
                         <tr>
-                            <th>Facility Description</th>
-                            <th style="text-align: right;">Allocated Cost</th>
+                            <th>Program Inclusions & Coverage</th>
+                            <th style="text-align: right;">Operations Value</th>
                         </tr>
                     </thead>
-                    <tbody id="table-gym">
-                        <!-- Populated by JS -->
-                    </tbody>
-                </table>
-
-                <!-- General Operational Allocations -->
-                <div class="section-title">Program Operating Expenses</div>
-                <table class="premium-table">
-                    <thead>
-                        <tr>
-                            <th>Expense Category & Details</th>
-                            <th style="text-align: right;">Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-costs">
+                    <tbody id="table-included">
                         <!-- Populated by JS -->
                     </tbody>
                 </table>
@@ -445,28 +357,10 @@
                     <thead>
                         <tr>
                             <th>Sanctioned Event</th>
-                            <th style="text-align: right;">Entry Fee</th>
+                            <th style="text-align: right;">Entry/Status</th>
                         </tr>
                     </thead>
                     <tbody id="table-tournaments">
-                        <!-- Populated by JS -->
-                    </tbody>
-                </table>
-
-                <!-- Monthly Program Timeline -->
-                <div class="section-title" style="margin-top: 50px;">Monthly Program Timeline</div>
-                <table class="timeline-table">
-                    <thead>
-                        <tr>
-                            <th>Month</th>
-                            <th>Phase</th>
-                            <th>Wks</th>
-                            <th>Freq</th>
-                            <th>Notes</th>
-                            <th>Gym Cost</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-timeline">
                         <!-- Populated by JS -->
                     </tbody>
                 </table>
@@ -482,7 +376,6 @@
 
         async function init() {
             try {
-                // Determine if they used singular or plural table name recently
                 let response = await supabase.from('season_configs').select('config_data').eq('is_active', true).single();
                 if (response.error && response.error.code === 'PGRST205') {
                     response = await supabase.from('season_config').select('config_data').eq('is_active', true).single();
@@ -498,39 +391,48 @@
                 document.getElementById('val-dues').innerText = "$" + (config.seasonInfo?.duesPerPlayer || 745).toLocaleString();
                 document.getElementById('val-fundraising').innerText = "$" + (config.fundraisingGoal?.target || 6040).toLocaleString();
 
-                // 1. Gym / Facility Costs (Explicit Requirement)
-                // If the user's live JSON contains Gym configurations, use them. Otherwise, inject hardcoded requirement to ensure it prints properly.
+                // 1. Compile Single "What's Included" Table
+                let combinedItems = [];
+                
+                // Gym Sessions explicitly
                 const gymSessions = config.gym_sessions || config.programCosts?.gym_sessions || [
-                    { label: 'Spring Gym Rental (3x/week)', desc: 'High-quality hardwood facility for Spring training.', cost: 3500 },
-                    { label: 'Summer Gym Rental (2x/week)', desc: 'Consistent, premium courts booked for the remainder of Summer.', cost: 2800 }
+                    { label: 'Spring Gym Rental', desc: 'Secure weekly practice facility access' },
+                    { label: 'Summer Gym Rental', desc: 'Consistent court time for remainder of season' }
                 ];
+                gymSessions.forEach(g => {
+                    combinedItems.push({ 
+                        name: g.label || g.name, 
+                        desc: g.desc || g.description || 'Facility access',
+                        cost: g.cost || g.amount || g.value || null
+                    });
+                });
 
-                document.getElementById('table-gym').innerHTML = gymSessions.map(g => `
-                    <tr>
-                        <td>
-                            <div class="row-title">${g.label || g.name}</div>
-                            <div class="row-desc">${g.desc || g.description || 'Facility allocation for practice and training sessions over the span of the season.'}</div>
-                        </td>
-                        <td class="row-amount">$${(g.cost || g.amount || g.value || 0).toLocaleString()}</td>
-                    </tr>
-                `).join('');
-
-                // 2. Build Scenarios Table
-                const costsTbody = document.getElementById('table-costs');
+                // Other permitted scenarios
                 const scenarios = config.fundraisingGoal?.scenarios || [];
-                // Filter out Gym Rental if it's already caught in our explicit gym breakdown to avoid visual double-counting, though usually they are separate in demo
-                const nonGymScenarios = scenarios.filter(s => !(s.description || s.name || '').toLowerCase().includes('gym'));
+                const excludedTerms = ['gym', 'coach', 'training staff', 'uniform', 'equipment', 'insurance', 'league', 'registration', 'compensation'];
+                
+                scenarios.forEach(s => {
+                    const sName = (s.description || s.name || '');
+                    if (!excludedTerms.some(term => sName.toLowerCase().includes(term))) {
+                        combinedItems.push({ 
+                            name: sName, 
+                            desc: s.details || s.notes || 'Associated program expense.',
+                            cost: s.amount || s.cost || s.total || s.value || null
+                        });
+                    }
+                });
 
-                if (nonGymScenarios.length === 0) {
-                    costsTbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:var(--gray-300); padding: 20px;">Cost breakdown pending synthesis.</td></tr>`;
+                const tIncluded = document.getElementById('table-included');
+                if (combinedItems.length === 0) {
+                    tIncluded.innerHTML = `<tr><td colspan="2" style="text-align:center; color:var(--gray-300); padding: 20px;">Pending list synthesis.</td></tr>`;
                 } else {
-                    costsTbody.innerHTML = nonGymScenarios.map(s => `
+                    tIncluded.innerHTML = combinedItems.map(item => `
                         <tr>
                             <td>
-                                <div class="row-title">${s.description || s.name || s.label}</div>
-                                <div class="row-desc">${s.details || s.notes || 'Associated program expense.'}</div>
+                                <div class="row-title">${item.name}</div>
+                                <div class="row-desc">${item.desc}</div>
                             </td>
-                            <td class="row-amount">$${(s.amount || s.cost || s.total || s.value || 0).toLocaleString()}</td>
+                            <td class="row-amount">${item.cost ? '$' + item.cost.toLocaleString() : 'Included'}</td>
                         </tr>
                     `).join('');
                 }
@@ -551,34 +453,9 @@
                             <td>
                                 <div class="row-title">${name}</div>
                             </td>
-                            <td class="row-amount">${formattedFee}</td>
+                            <td class="row-amount" style="color:var(--gray-600); font-weight:600;">${formattedFee}</td>
                         </tr>
                         `;
-                    }).join('');
-                }
-
-                // 4. Build Monthly Timeline
-                const timelineTbody = document.getElementById('table-timeline');
-                const timeline = config.timeline || [];
-
-                if (timeline.length === 0) {
-                    timelineTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--gray-300); padding: 20px;">Monthly schedule pending.</td></tr>`;
-                } else {
-                    timelineTbody.innerHTML = timeline.map(t => {
-                        const isOff = (t.season || '').toUpperCase().includes('OFF');
-                        const rowClass = isOff ? 'timeline-off' : '';
-                        const costDisplay = t.cost > 0 ? `$${t.cost.toLocaleString()}` : '—';
-                        const weeksDisplay = t.weeks > 0 ? t.weeks : '—';
-                        const freqDisplay = t.frequency === '-' ? '—' : `${t.frequency}/wk`;
-                        return `
-                        <tr class="${rowClass}">
-                            <td class="timeline-month">${t.month}</td>
-                            <td class="timeline-season">${t.season}</td>
-                            <td>${weeksDisplay}</td>
-                            <td class="timeline-freq">${freqDisplay}</td>
-                            <td class="timeline-notes">${t.notes || ''}</td>
-                            <td class="timeline-cost">${costDisplay}</td>
-                        </tr>`;
                     }).join('');
                 }
 
