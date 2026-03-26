@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Godspeed Basketball</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.tailwindcss.com" rel="stylesheet">
+    <link rel="stylesheet" href="nav-unified.css">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: white; color: black; }
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: white; border-bottom: 1px solid #e5e7eb; }
+        .logo { font-size: 1.5rem; font-weight: 700; }
+        .nav-desktop-unified { display: flex; gap: 2rem; align-items: center; }
+        .nav-links-unified { display: flex; gap: 2rem; }
+        .nav-links-unified a { text-decoration: none; color: #111; font-size: 0.9375rem; font-weight: 500; transition: color 0.2s; }
+        .nav-links-unified a:hover { color: #2563eb; }
+        .nav-right-unified { display: flex; gap: 2rem; align-items: center; }
+        .nav-cart-btn { position: relative; color: #111; display: flex; align-items: center; text-decoration: none; }
+        .cart-badge { position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: bold; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+        .btn-unified-train { background: #2563eb; color: white; padding: 0.75rem 1.5rem; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.05em; transition: background 0.2s; }
+        .btn-unified-train:hover { background: #1d4ed8; }
+        .mobile-menu-btn { display: none; }
+        @media (max-width: 768px) { .nav-desktop-unified { display: none; } .mobile-menu-btn { display: block; } }
+        .breadcrumb { font-size: 0.875rem; color: #9ca3af; padding: 1.5rem 2rem; max-width: 90rem; margin: 0 auto; }
+        .breadcrumb a { color: #2563eb; text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        main { max-width: 90rem; margin: 0 auto; padding: 2rem; }
+        #checkout-content { display: grid; grid-template-columns: 1fr; gap: 2rem; }
+        @media (min-width: 768px) { #checkout-content { grid-template-columns: 3fr 2fr; } }
+        .checkout-section-title { font-size: 1.125rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.5rem; }
+        #order-items { margin-bottom: 1.5rem; }
+        .continue-shopping { display: inline-block; color: #2563eb; text-decoration: none; font-size: 0.9375rem; font-weight: 500; margin-top: 1rem; }
+        .continue-shopping:hover { text-decoration: underline; }
+        #order-summary { position: sticky; top: 120px; }
+        #proceed-btn { transition: background 0.2s; }
+        #proceed-btn:hover:not(:disabled) { background: #1d1d1f; }
+        #proceed-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        footer { text-align: center; padding: 2rem; color: #9ca3af; font-size: 0.875rem; border-top: 1px solid #e5e7eb; margin-top: 4rem; }
+    </style>
+</head>
+<body class="bg-white text-black font-sans antialiased">
+    <nav class="navbar">
+        <a href="index.html" class="logo" style="text-decoration:none;">GODSPEED<span style="color: #2563eb;">BASKETBALL</span></a>
+        <div class="nav-desktop-unified">
+            <div class="nav-links-unified">
+                <a href="index.html">Home</a>
+                <a href="training.html">Training</a>
+                <a href="aau.html">AAU</a>
+                <a href="calendar-grid.html" class="auth-restricted" style="display: none;">Calendar</a>
+                <a href="store.html">Shop</a>
+                <a href="about.html">About</a>
+            </div>
+            <div class="nav-right-unified">
+                <a href="#" id="cart-btn" class="nav-cart-btn" aria-label="Cart">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    <span class="cart-badge">0</span>
+                </a>
+                <a href="training.html#signup" class="btn-unified-train">TRAIN WITH US</a>
+            </div>
+        </div>
+        <button class="mobile-menu-btn" aria-label="Menu" onclick="openMobileMenu()" style="background:none; border:none; font-size:24px; cursor:pointer;">&#9776;</button>
+    </nav>
+
+    <div class="breadcrumb">
+        <a href="index.html">Home</a> > <a href="store.html">Store</a> > Checkout
+    </div>
+
+    <main>
+        <div id="checkout-content">
+            <div>
+                <h2 class="checkout-section-title">Order Review</h2>
+                <div id="order-items"></div>
+                <a href="store.html" class="continue-shopping">&#8592; Continue Shopping</a>
+            </div>
+            <div id="order-summary" style="position:sticky;top:120px;">
+                <h2 style="font-size:1.125rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:1.5rem;">Order Summary</h2>
+                <div style="display:flex;justify-content:space-between;margin-bottom:0.75rem;font-size:0.9375rem;">
+                    <span style="color:#6b7280;">Subtotal</span>
+                    <span id="summary-subtotal" style="font-weight:500;">$0.00</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:0.75rem;font-size:0.9375rem;">
+                    <span style="color:#6b7280;">Shipping</span>
+                    <span id="summary-shipping" style="font-weight:500;">FREE</span>
+                </div>
+                <div id="shipping-threshold" style="display:none;font-size:0.8125rem;color:#2563eb;margin-bottom:0.75rem;"></div>
+                <div style="border-top:2px solid #111;margin:1rem 0;"></div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:2rem;font-size:1.125rem;">
+                    <span style="font-weight:700;">Total</span>
+                    <span id="summary-total" style="font-weight:700;">$0.00</span>
+                </div>
+                <form id="checkout-form">
+                    <div style="margin-bottom:1rem;">
+                        <label for="checkout-email" style="display:block;font-size:0.8125rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;color:#374151;">Email</label>
+                        <input type="email" id="checkout-email" required placeholder="your@email.com" style="width:100%;padding:12px 16px;border:1px solid #d1d5db;border-radius:6px;font-size:0.9375rem;font-family:Inter,sans-serif;box-sizing:border-box;">
+                    </div>
+                    <div style="margin-bottom:1.5rem;">
+                        <label for="checkout-phone" style="display:block;font-size:0.8125rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;color:#374151;">Phone <span style="font-weight:400;color:#9ca3af;">(optional)</span></label>
+                        <input type="tel" id="checkout-phone" placeholder="(555) 123-4567" style="width:100%;padding:12px 16px;border:1px solid #d1d5db;border-radius:6px;font-size:0.9375rem;font-family:Inter,sans-serif;box-sizing:border-box;">
+                    </div>
+                    <button type="submit" id="proceed-btn" style="width:100%;padding:16px;background:#000;color:#fff;font-weight:700;font-size:0.9375rem;text-transform:uppercase;letter-spacing:0.05em;border:none;border-radius:6px;cursor:pointer;min-height:52px;transition:background 0.2s;">PROCEED TO PAYMENT</button>
+                </form>
+                <div id="checkout-error" style="display:none;margin-top:1rem;padding:12px 16px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;font-size:0.875rem;color:#991b1b;"></div>
+                <div style="text-align:center;margin-top:1rem;font-size:0.8125rem;color:#9ca3af;display:flex;align-items:center;justify-content:center;gap:6px;">
+                    <svg style="width:14px;height:14px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    Secure checkout powered by Stripe
+                </div>
+                <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid #e5e7eb;">
+                    <div style="font-size:0.8125rem;color:#6b7280;margin-bottom:0.5rem;display:flex;align-items:center;gap:6px;">
+                        <span>&#8617;</span> 30-day return policy
+                    </div>
+                    <div style="font-size:0.8125rem;color:#6b7280;display:flex;align-items:center;gap:6px;">
+                        <span>&#128230;</span> Free shipping on orders over $50
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        &copy; 2026 Godspeed Basketball. All rights reserved.
+    </footer>
+
+    <script src="branded-modal.js"></script>
+    <script src="security.js"></script>
+    <script src="mobile-menu.js"></script>
+    <script src="cart-handler.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(initCheckout, 100);
+        });
+
+        function initCheckout() {
+            if (!window.cartManager) {
+                setTimeout(initCheckout, 100);
+                return;
+            }
+
+            var items = window.cartManager.getItems();
+            if (items.length === 0) {
+                renderEmptyCart();
+                return;
+            }
+
+            renderOrderItems(items);
+            renderOrderSummary(items);
+            updateCartBadges();
+
+            window.cartManager.subscribe(function() {
+                var updatedItems = window.cartManager.getItems();
+                if (updatedItems.length === 0) {
+                    renderEmptyCart();
+                    return;
+                }
+                renderOrderItems(updatedItems);
+                renderOrderSummary(updatedItems);
+            });
+        }
+
+        function renderEmptyCart() {
+            document.getElementById('checkout-content').innerHTML = '<div style="text-align: center; padding: 4rem 1rem; grid-column: 1/-1;"><svg style="width:64px;height:64px;margin:0 auto 1.5rem;color:#d1d5db;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg><h2 style="font-size:1.5rem;font-weight:700;margin-bottom:0.5rem;">Your cart is empty</h2><p style="color:#6b7280;margin-bottom:2rem;">Add some items before checking out.</p><a href="store.html" style="display:inline-block;background:#000;color:#fff;padding:14px 32px;border-radius:4px;font-weight:700;text-transform:uppercase;text-decoration:none;font-size:0.875rem;letter-spacing:0.05em;">Shop Now</a></div>';
+        }
+
+        function renderOrderItems(items) {
+            var container = document.getElementById('order-items');
+            container.innerHTML = items.map(function(item) {
+                var imgSrc = item.image || 'assets/godspeed-tshirt.png';
+                return '<div class="checkout-item" style="display:flex;gap:1rem;padding:1.25rem 0;border-bottom:1px solid #e5e7eb;align-items:center;">' +
+                    '<img src="' + imgSrc + '" alt="' + item.productName + '" style="width:80px;height:80px;object-fit:cover;border-radius:8px;background:#f5f5f5;">' +
+                    '<div style="flex:1;min-width:0;">' +
+                        '<div style="font-weight:600;font-size:0.9375rem;margin-bottom:2px;">' + item.productName + '</div>' +
+                        (item.variantName ? '<div style="font-size:0.8125rem;color:#6b7280;">Size: ' + item.variantName + '</div>' : '') +
+                        '<div style="font-size:0.875rem;color:#111;font-weight:500;margin-top:4px;">$' + item.price.toFixed(2) + '</div>' +
+                    '</div>' +
+                    '<div style="display:flex;align-items:center;gap:8px;">' +
+                        '<button onclick="updateQty(\'' + item.productId + '\',\'' + item.variantId + '\',' + (item.quantity - 1) + ')" style="width:32px;height:32px;border:1px solid #d1d5db;background:white;border-radius:6px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;">&#8722;</button>' +
+                        '<span style="font-weight:600;min-width:20px;text-align:center;">' + item.quantity + '</span>' +
+                        '<button onclick="updateQty(\'' + item.productId + '\',\'' + item.variantId + '\',' + (item.quantity + 1) + ')" style="width:32px;height:32px;border:1px solid #d1d5db;background:white;border-radius:6px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;">+</button>' +
+                    '</div>' +
+                    '<div style="font-weight:700;min-width:70px;text-align:right;">$' + (item.price * item.quantity).toFixed(2) + '</div>' +
+                    '<button onclick="removeItem(\'' + item.productId + '\',\'' + item.variantId + '\')" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:1.25rem;padding:4px 8px;" title="Remove">&times;</button>' +
+                '</div>';
+            }).join('');
+        }
+
+        function renderOrderSummary(items) {
+            var subtotal = items.reduce(function(sum, item) { return sum + (item.price * item.quantity); }, 0);
+            var shipping = subtotal >= 50 ? 0 : 7.95;
+            var total = subtotal + shipping;
+
+            document.getElementById('summary-subtotal').textContent = '$' + subtotal.toFixed(2);
+            document.getElementById('summary-shipping').textContent = shipping === 0 ? 'FREE' : '$' + shipping.toFixed(2);
+            document.getElementById('summary-total').textContent = '$' + total.toFixed(2);
+
+            var thresholdMsg = document.getElementById('shipping-threshold');
+            if (thresholdMsg) {
+                if (subtotal < 50 && subtotal > 0) {
+                    var remaining = (50 - subtotal).toFixed(2);
+                    thresholdMsg.textContent = 'Add $' + remaining + ' more for free shipping';
+                    thresholdMsg.style.display = 'block';
+                } else {
+                    thresholdMsg.style.display = 'none';
+                }
+            }
+        }
+
+        function updateQty(productId, variantId, qty) {
+            if (qty <= 0) {
+                window.cartManager.removeItem(productId, variantId);
+            } else {
+                window.cartManager.updateQuantity(productId, variantId, qty);
+            }
+            if (typeof updateCartBadges === 'function') updateCartBadges();
+        }
+
+        function removeItem(productId, variantId) {
+            window.cartManager.removeItem(productId, variantId);
+            if (typeof updateCartBadges === 'function') updateCartBadges();
+        }
+
+        document.getElementById('checkout-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            var email = document.getElementById('checkout-email').value.trim();
+            if (!email) return;
+
+            var btn = document.getElementById('proceed-btn');
+            var originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'PROCESSING...';
+
+            try {
+                var items = window.cartManager.getItems();
+                var SUPABASE_FUNCTION_URL = 'https://nnqokhqennuxalamnvps.supabase.co/functions/v1/create-checkout-session';
+
+                var response = await fetch(SUPABASE_FUNCTION_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        items: items,
+                        customer_email: email,
+                        success_url: window.location.origin + '/success.html',
+                        cancel_url: window.location.href
+                    })
+                });
+
+                var data = await response.json();
+                if (data.error) throw new Error(data.error);
+                if (data.url) {
+                    window.location.href = data.url;
+                } else {
+                    throw new Error('No checkout URL returned');
+                }
+            } catch (error) {
+                console.error('Checkout error:', error);
+                var errMsg = error.message || 'Something went wrong. Please try again.';
+                var errDiv = document.getElementById('checkout-error');
+                if (errDiv) {
+                    errDiv.textContent = errMsg;
+                    errDiv.style.display = 'block';
+                }
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        });
+    </script>
+</body>
+</html>
