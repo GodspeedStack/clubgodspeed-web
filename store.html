@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop - Club Godspeed Basketball</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="nav-unified.css">
+    <link rel="stylesheet" href="store-hero.css">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Navbar scroll behavior */
+        .navbar {
+            transition: background-color 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            background-color: #000 !important;
+        }
+
+        /* Store filters */
+        .store-filters {
+            padding: 20px 5%;
+            border-bottom: 1px solid #222;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            background: #111;
+            position: sticky;
+            top: 90px;
+            z-index: 100;
+        }
+
+        .filters-left {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+            flex: 1 1 auto;
+        }
+
+        #filter-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: transparent;
+            color: #666;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            border: none;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            letter-spacing: 0.05em;
+        }
+
+        .filter-btn:hover {
+            color: #fff;
+        }
+
+        .filter-btn.active {
+            background: #fff;
+            color: #000;
+        }
+
+        .filters-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sort-label {
+            color: #666;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        #sort-select {
+            background: transparent;
+            color: #999;
+            border: 1px solid #333;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #sort-select:hover,
+        #sort-select:focus {
+            border-color: #555;
+            color: #fff;
+            outline: none;
+        }
+
+        #sort-select option {
+            background: #111;
+            color: #fff;
+        }
+
+        /* Products grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            padding: 40px 5%;
+            background: #000;
+        }
+
+        @media (min-width: 768px) {
+            .products-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 30px;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .products-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 30px;
+            }
+        }
+
+        /* Product card */
+        .product-card {
+            background: #111;
+            border-radius: 4px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid #222;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            border-color: #333;
+        }
+
+        /* Product image container */
+        .product-image-container {
+            position: relative;
+            padding-top: 100%;
+            background: #000;
+            overflow: hidden;
+        }
+
+        .product-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .product-card:hover .product-image {
+            transform: scale(1.05);
+        }
+
+        /* Product tag */
+        .product-tag {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 2px;
+            letter-spacing: 0.05em;
+            z-index: 2;
+        }
+
+        /* Product overlay */
+        .product-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            min-height: 100px;
+        }
+
+        .product-card:hover .product-overlay {
+            opacity: 1;
+        }
+
+        .view-details-btn {
+            background: white;
+            color: black;
+            border: none;
+            padding: 12px 24px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.05em;
+            border-radius: 2px;
+            transform: translateY(10px);
+            transition: transform 0.3s ease;
+            pointer-events: none;
+            cursor: pointer;
+        }
+
+        .product-card:hover .view-details-btn {
+            transform: translateY(0);
+        }
+
+        /* Product info */
+        .product-info {
+            padding: 16px 20px;
+        }
+
+        .product-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .product-price {
+            font-size: 14px;
+            color: #999;
+        }
+
+        /* Footer */
+        .footer {
+            background: #f3f4f6;
+            color: #000;
+            padding: 60px 5% 40px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-column h3 {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 20px;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column li {
+            margin-bottom: 12px;
+        }
+
+        .footer-column a {
+            font-size: 14px;
+            color: #666;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-column a:hover {
+            color: #000;
+        }
+
+        .footer-logo {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #e5e7eb;
+            padding-top: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+        }
+
+        /* Empty state */
+        .empty-products {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-products p {
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body class="bg-black text-white font-sans antialiased store-page">
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-left">
+                <div class="logo">
+                    <a href="index.html">GODSPEED BASKETBALL</a>
+                </div>
+            </div>
+
+            <div class="nav-center nav-desktop">
+                <a href="index.html">Home</a>
+                <a href="training.html">Training</a>
+                <a href="aau.html">AAU</a>
+                <a id="calendar-link" href="calendar.html">Calendar</a>
+                <a href="store.html" class="nav-active">Shop</a>
+                <a href="about.html">About</a>
+            </div>
+
+            <div class="nav-right">
+                <button class="cart-icon" id="cart-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span class="cart-badge" id="cart-badge">0</span>
+                </button>
+
+                <div class="member-dropdown nav-desktop">
+                    <button class="member-btn" id="member-toggle">
+                        <span>Member Login</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="member-menu" id="member-menu">
+                        <a href="member-login.html">Login</a>
+                        <a href="member-signup.html">Sign Up</a>
+                    </div>
+                </div>
+
+                <a href="training.html" class="train-btn nav-desktop">TRAIN WITH US</a>
+
+                <button class="mobile-menu-btn nav-mobile" id="mobile-menu-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="store-hero">
+        <div class="hero-content">
+            <div class="hero-eyebrow">OFFICIAL TEAM GEAR</div>
+            <h1 class="hero-title">GEAR UP.</h1>
+            <p class="hero-subtitle">Performance wear for dedicated athletes.</p>
+            <button class="hero-cta" id="scroll-to-products">SHOP COLLECTION</button>
+        </div>
+    </section>
+
+    <!-- Filter Bar -->
+    <div class="store-filters">
+        <div class="filters-left">
+            <div id="filter-group"></div>
+        </div>
+        <div class="filters-right">
+            <label for="sort-select" class="sort-label">Sort:</label>
+            <select id="sort-select">
+                <option value="featured">Featured</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+                <option value="newest">Newest</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="products-grid" id="products-grid">
+        <div class="empty-products">
+            <p>Loading products...</p>
+        </div>
+    </div>
+
+    <!-- Cart Overlay -->
+    <div class="cart-overlay" id="cart-overlay">
+        <div class="cart-sidebar">
+            <div class="cart-header">
+                <h2>Your Cart</h2>
+                <button class="cart-close" id="cart-close">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="cart-items" id="cart-items"></div>
+            <div class="cart-footer">
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <span id="cart-total">$0.00</span>
+                </div>
+                <button class="checkout-btn" id="checkout-btn">PROCEED TO CHECKOUT</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-column">
+                <div class="footer-logo">GODSPEED BASKETBALL</div>
+                <p style="font-size: 13px; color: #666; line-height: 1.6;">Elite AAU basketball program dedicated to developing champions on and off the court.</p>
+            </div>
+            <div class="footer-column">
+                <h3>Programs</h3>
+                <ul>
+                    <li><a href="training.html">Training</a></li>
+                    <li><a href="aau.html">AAU Teams</a></li>
+                    <li><a href="calendar.html">Events</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Athletes</h3>
+                <ul>
+                    <li><a href="member-login.html">Member Login</a></li>
+                    <li><a href="member-signup.html">Join Us</a></li>
+                    <li><a href="about.html">About</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Shop</h3>
+                <ul>
+                    <li><a href="store.html">All Products</a></li>
+                    <li><a href="store.html">Apparel</a></li>
+                    <li><a href="store.html">Equipment</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Parents</h3>
+                <ul>
+                    <li><a href="about.html">Program Info</a></li>
+                    <li><a href="index.html#contact">Contact</a></li>
+                    <li><a href="training.html">Get Involved</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Company</h3>
+                <ul>
+                    <li><a href="about.html">About Us</a></li>
+                    <li><a href="index.html#contact">Contact</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Club Godspeed Basketball. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="products.js"></script>
+    <script src="branded-modal.js"></script>
+    <script src="security.js"></script>
+    <script src="mobile-menu.js"></script>
+    <script src="cart-handler.js"></script>
+
+    <script>
+        // Navbar scroll behavior
+        const navbar = document.querySelector('.navbar');
+        const heroSection = document.querySelector('.store-hero');
+
+        function updateNavbarScroll() {
+            const heroHeight = heroSection.offsetHeight;
+            const scrollPosition = window.scrollY;
+
+            if (scrollPosition > heroHeight) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        }
+
+        window.addEventListener('scroll', updateNavbarScroll);
+        updateNavbarScroll();
+
+        // Scroll to products button
+        document.getElementById('scroll-to-products').addEventListener('click', function() {
+            const filterBar = document.querySelector('.store-filters');
+            filterBar.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // Product catalog rendering
+        document.addEventListener('DOMContentLoaded', function() {
+            const grid = document.getElementById('products-grid');
+            let selectedCategory = 'all';
+            let selectedSort = 'featured';
+
+            // Render filter buttons from catalog
+            const filterGroup = document.getElementById('filter-group');
+            GodspeedCatalog.getCategories().forEach(cat => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn' + (cat.id === 'all' ? ' active' : '');
+                btn.dataset.category = cat.id;
+                btn.textContent = cat.label;
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedCategory = cat.id;
+                    renderProducts();
+                });
+                filterGroup.appendChild(btn);
+            });
+
+            function renderProducts() {
+                let products = GodspeedCatalog.getProducts(selectedCategory);
+
+                // Sort
+                if (selectedSort === 'price-low') {
+                    products.sort((a, b) => a.price - b.price);
+                } else if (selectedSort === 'price-high') {
+                    products.sort((a, b) => b.price - a.price);
+                } else if (selectedSort === 'newest') {
+                    // Assuming products are already ordered by newest, or reverse
+                    products.reverse();
+                }
+
+                if (products.length === 0) {
+                    grid.innerHTML = '<div class="empty-products" style="grid-column: 1 / -1;"><p>No products found in this category.</p></div>';
+                    return;
+                }
+
+                grid.innerHTML = products.map(product => `
+                    <a href="product.html?id=${product.id}" class="product-card">
+                        <div class="product-image-container">
+                            <img src="${product.image}" alt="${product.title}" class="product-image" loading="lazy">
+                            ${product.tag ? `<span class="product-tag" style="background:${product.tagColor || '#2563eb'}">${product.tag}</span>` : ''}
+                            <div class="product-overlay">
+                                <span class="view-details-btn">VIEW DETAILS</span>
+                            </div>
+                        </div>
+                        <div class="product-info">
+                            <h3 class="product-title">${product.title}</h3>
+                            <div class="product-price">$${product.price.toFixed(2)}</div>
+                        </div>
+                    </a>
+                `).join('');
+            }
+
+            // Sort handler
+            document.getElementById('sort-select').addEventListener('change', function() {
+                selectedSort = this.value;
+                renderProducts();
+            });
+
+            renderProducts();
+        });
+
+        // Cart toggle
+        document.getElementById('cart-toggle').addEventListener('click', function() {
+            document.getElementById('cart-overlay').classList.add('active');
+        });
+
+        document.getElementById('cart-close').addEventListener('click', function() {
+            document.getElementById('cart-overlay').classList.remove('active');
+        });
+
+        // Close cart when clicking overlay background
+        document.getElementById('cart-overlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('active');
+            }
+        });
+
+        // Member dropdown
+        document.getElementById('member-toggle').addEventListener('click', function(e) {
+            e.preventDefault();
+            const menu = document.getElementById('member-menu');
+            menu.classList.toggle('active');
+        });
+
+        // Close member menu when clicking elsewhere
+        document.addEventListener('click', function(e) {
+            const dropdown = document.querySelector('.member-dropdown');
+            if (!dropdown.contains(e.target)) {
+                document.getElementById('member-menu').classList.remove('active');
+            }
+        });
+
+        // Calendar link auth check
+        const calendarLink = document.getElementById('calendar-link');
+        if (calendarLink && !localStorage.getItem('memberToken')) {
+            calendarLink.style.display = 'none';
+        }
+    </script>
+</body>
+</html>

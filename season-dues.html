@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Season Dues — Godspeed Basketball</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="nav-unified.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #fff; color: #111; -webkit-font-smoothing: antialiased; }
+
+        /* ── Nav ───────────────────────────────────────── */
+        .navbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem 2rem; background: #fff; border-bottom: 1px solid #e5e7eb;
+        }
+        .logo { font-size: 1.5rem; font-weight: 700; text-decoration: none; color: #111; }
+        .logo span { color: #2563eb; }
+
+        /* ── Hero ──────────────────────────────────────── */
+        .dues-hero {
+            text-align: center; padding: 3rem 1.5rem 2rem;
+            max-width: 640px; margin: 0 auto;
+        }
+        .dues-hero h1 {
+            font-size: 2rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: -0.02em; margin-bottom: 0.75rem;
+        }
+        .dues-hero p { font-size: 1rem; color: #6b7280; line-height: 1.6; }
+
+        /* ── Program Cards ─────────────────────────────── */
+        .programs { max-width: 960px; margin: 0 auto; padding: 0 1.5rem 2rem; }
+        .program-grid { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
+        @media (min-width: 640px) { .program-grid { grid-template-columns: repeat(3, 1fr); } }
+
+        .program-card {
+            border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem;
+            cursor: pointer; transition: all 0.2s; position: relative;
+        }
+        .program-card:hover { border-color: #2563eb; }
+        .program-card.selected { border-color: #2563eb; background: #f0f5ff; }
+        .program-card.selected::after {
+            content: '✓'; position: absolute; top: 12px; right: 12px;
+            background: #2563eb; color: #fff; width: 24px; height: 24px;
+            border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-size: 14px; font-weight: 700;
+        }
+        .program-card .program-name {
+            font-size: 0.8125rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.05em; color: #6b7280; margin-bottom: 0.5rem;
+        }
+        .program-card .program-price {
+            font-size: 1.75rem; font-weight: 800; margin-bottom: 0.25rem;
+        }
+        .program-card .program-desc {
+            font-size: 0.8125rem; color: #6b7280; line-height: 1.5;
+        }
+        .program-badge {
+            display: inline-block; background: #111; color: #fff;
+            font-size: 0.6875rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.05em; padding: 3px 8px; border-radius: 4px;
+            margin-bottom: 0.75rem;
+        }
+
+        /* ── Plan Selection ────────────────────────────── */
+        .plan-section {
+            max-width: 640px; margin: 0 auto; padding: 1rem 1.5rem 2rem;
+            display: none;
+        }
+        .plan-section.visible { display: block; }
+        .plan-section h2 {
+            font-size: 1rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.05em; margin-bottom: 1rem;
+        }
+        .plan-options { display: flex; flex-direction: column; gap: 0.75rem; }
+
+        .plan-option {
+            display: flex; align-items: center; gap: 1rem;
+            border: 2px solid #e5e7eb; border-radius: 10px;
+            padding: 1rem 1.25rem; cursor: pointer; transition: all 0.2s;
+        }
+        .plan-option:hover { border-color: #2563eb; }
+        .plan-option.selected { border-color: #2563eb; background: #f0f5ff; }
+
+        .plan-radio {
+            width: 20px; height: 20px; border: 2px solid #d1d5db;
+            border-radius: 50%; flex-shrink: 0; display: flex;
+            align-items: center; justify-content: center; transition: all 0.2s;
+        }
+        .plan-option.selected .plan-radio {
+            border-color: #2563eb;
+        }
+        .plan-option.selected .plan-radio::after {
+            content: ''; width: 10px; height: 10px;
+            background: #2563eb; border-radius: 50%;
+        }
+        .plan-details { flex: 1; }
+        .plan-name { font-weight: 600; font-size: 0.9375rem; }
+        .plan-breakdown { font-size: 0.8125rem; color: #6b7280; margin-top: 2px; }
+        .plan-total { font-weight: 700; font-size: 1rem; text-align: right; white-space: nowrap; }
+        .plan-badge-best {
+            background: #dcfce7; color: #166534; font-size: 0.6875rem;
+            font-weight: 700; padding: 2px 6px; border-radius: 4px;
+            text-transform: uppercase; letter-spacing: 0.03em; margin-left: 6px;
+        }
+
+        /* ── Checkout Form ─────────────────────────────── */
+        .checkout-section {
+            max-width: 640px; margin: 0 auto; padding: 0 1.5rem 3rem;
+            display: none;
+        }
+        .checkout-section.visible { display: block; }
+        .checkout-section h2 {
+            font-size: 1rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.05em; margin-bottom: 1rem;
+        }
+
+        .form-group { margin-bottom: 1rem; }
+        .form-group label {
+            display: block; font-size: 0.8125rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.05em;
+            margin-bottom: 0.375rem; color: #374151;
+        }
+        .form-group input {
+            width: 100%; padding: 12px 16px; border: 1px solid #d1d5db;
+            border-radius: 6px; font-size: 0.9375rem; font-family: 'Inter', sans-serif;
+        }
+        .form-group input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+        .pay-btn {
+            width: 100%; padding: 16px; background: #000; color: #fff;
+            font-weight: 700; font-size: 0.9375rem; text-transform: uppercase;
+            letter-spacing: 0.05em; border: none; border-radius: 6px;
+            cursor: pointer; min-height: 52px; transition: background 0.2s;
+            margin-top: 0.5rem;
+        }
+        .pay-btn:hover:not(:disabled) { background: #1d1d1f; }
+        .pay-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .secure-note {
+            text-align: center; margin-top: 0.75rem; font-size: 0.8125rem;
+            color: #9ca3af; display: flex; align-items: center;
+            justify-content: center; gap: 6px;
+        }
+
+        /* ── Summary Sidebar ───────────────────────────── */
+        .order-summary {
+            background: #f9fafb; border-radius: 10px; padding: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+        .summary-row {
+            display: flex; justify-content: space-between;
+            font-size: 0.875rem; padding: 6px 0;
+        }
+        .summary-row .label { color: #6b7280; }
+        .summary-row .value { font-weight: 600; }
+        .summary-row.total { border-top: 2px solid #111; margin-top: 8px; padding-top: 10px; }
+        .summary-row.total .label { font-weight: 700; font-size: 1rem; }
+        .summary-row.total .value { font-weight: 800; font-size: 1.125rem; }
+
+        /* ── Status Banner ─────────────────────────────── */
+        .status-banner {
+            max-width: 640px; margin: 0 auto; padding: 0 1.5rem;
+            display: none;
+        }
+        .status-banner.visible { display: block; }
+        .status-banner .banner-inner {
+            background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px;
+            padding: 1.25rem; text-align: center;
+        }
+        .status-banner .banner-inner.has-balance {
+            background: #fefce8; border-color: #fde68a;
+        }
+
+        /* ── Footer ────────────────────────────────────── */
+        footer {
+            text-align: center; padding: 2rem; color: #9ca3af;
+            font-size: 0.875rem; border-top: 1px solid #e5e7eb; margin-top: 2rem;
+        }
+
+        /* ── Loading ───────────────────────────────────── */
+        .loading-spinner {
+            display: inline-block; width: 20px; height: 20px;
+            border: 2px solid #fff; border-top-color: transparent;
+            border-radius: 50%; animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">GODSPEED<span>BASKETBALL</span></a>
+    </nav>
+
+    <!-- ── Hero ────────────────────────────────────────── -->
+    <div class="dues-hero">
+        <h1>Season Dues</h1>
+        <p>Summer 2026 registration. Choose your program and payment plan below.</p>
+    </div>
+
+    <!-- ── Existing Enrollment Status ──────────────────── -->
+    <div class="status-banner" id="status-banner">
+        <div class="banner-inner" id="status-inner"></div>
+    </div>
+
+    <!-- ── Step 1: Choose Program ──────────────────────── -->
+    <div class="programs" id="step-programs">
+        <div class="program-grid" id="program-grid">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+
+    <!-- ── Step 2: Choose Plan ─────────────────────────── -->
+    <div class="plan-section" id="step-plans">
+        <h2>Choose Your Payment Plan</h2>
+        <div class="plan-options" id="plan-options">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+
+    <!-- ── Step 3: Checkout ────────────────────────────── -->
+    <div class="checkout-section" id="step-checkout">
+        <h2>Checkout</h2>
+        <div class="order-summary" id="order-summary">
+            <!-- Populated by JS -->
+        </div>
+        <form id="dues-form">
+            <div class="form-group">
+                <label for="parent-name">Parent / Guardian Name</label>
+                <input type="text" id="parent-name" required placeholder="Your full name">
+            </div>
+            <div class="form-group">
+                <label for="parent-email">Email</label>
+                <input type="email" id="parent-email" required placeholder="your@email.com">
+            </div>
+            <div class="form-group">
+                <label for="athlete-name">Athlete Name</label>
+                <input type="text" id="athlete-name" required placeholder="Athlete's full name">
+            </div>
+            <button type="submit" class="pay-btn" id="pay-btn">
+                Proceed to Payment
+            </button>
+        </form>
+        <div class="secure-note">
+            <svg style="width:14px;height:14px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            Secure checkout powered by Stripe
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 Godspeed Basketball. All rights reserved.
+    </footer>
+
+    <script>
+    (function() {
+        'use strict';
+
+        // ── Config ────────────────────────────────────────
+        var SUPABASE_URL = 'https://nnqokhqennuxalamnvps.supabase.co';
+        var SUPABASE_ANON_KEY = ''; // Set this to your anon key
+        var CHECKOUT_FUNCTION_URL = SUPABASE_URL + '/functions/v1/create-dues-checkout';
+
+        // ── State ─────────────────────────────────────────
+        var duesConfigs = [];
+        var planTemplates = [];
+        var selectedProgram = null;
+        var selectedPlan = null;
+
+        // ── Init ──────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDuesConfig();
+            prefillFromAuth();
+        });
+
+        // ── Load dues config from Supabase ────────────────
+        async function loadDuesConfig() {
+            try {
+                // Fetch active dues configs
+                var configRes = await fetch(SUPABASE_URL + '/rest/v1/season_dues_config?is_active=eq.true&order=total_amount.desc', {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+                    }
+                });
+                duesConfigs = await configRes.json();
+
+                // Fetch active plan templates
+                var planRes = await fetch(SUPABASE_URL + '/rest/v1/payment_plan_templates?is_active=eq.true&order=sort_order.asc', {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+                    }
+                });
+                planTemplates = await planRes.json();
+
+                renderPrograms();
+                checkExistingEnrollment();
+            } catch (err) {
+                console.error('[dues] Failed to load config:', err);
+                // Fallback: render hardcoded values
+                renderFallbackPrograms();
+            }
+        }
+
+        // ── Render program cards ──────────────────────────
+        function renderPrograms() {
+            var grid = document.getElementById('program-grid');
+            grid.innerHTML = duesConfigs.map(function(config) {
+                var badge = config.program === 'Full Program' ? '<div class="program-badge">Best Value</div>' : '';
+                return '<div class="program-card" data-config-id="' + config.id + '" onclick="selectProgram(\'' + config.id + '\')">' +
+                    badge +
+                    '<div class="program-name">' + config.program + '</div>' +
+                    '<div class="program-price">$' + Number(config.total_amount).toFixed(0) + '</div>' +
+                    '<div class="program-desc">' + (config.description || '') + '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        // ── Fallback if Supabase fetch fails ──────────────
+        function renderFallbackPrograms() {
+            duesConfigs = [
+                { id: 'full', season: 'Summer 2026', program: 'Full Program', total_amount: 745, description: 'AAU + Training combined season dues', currency: 'usd' },
+                { id: 'aau', season: 'Summer 2026', program: 'AAU', total_amount: 495, description: 'AAU league registration and tournament fees', currency: 'usd' },
+                { id: 'training', season: 'Summer 2026', program: 'Training', total_amount: 250, description: 'Skill development sessions and court time', currency: 'usd' },
+            ];
+            planTemplates = [
+                { id: 'full-1', dues_config_id: 'full', plan_name: 'Pay in Full', num_installments: 1, installment_amount: 745, frequency_days: 0, sort_order: 1 },
+                { id: 'full-2', dues_config_id: 'full', plan_name: '2-Payment Plan', num_installments: 2, installment_amount: 372.50, frequency_days: 30, sort_order: 2 },
+                { id: 'full-3', dues_config_id: 'full', plan_name: '3-Payment Plan', num_installments: 3, installment_amount: 248.33, frequency_days: 30, sort_order: 3 },
+                { id: 'aau-1', dues_config_id: 'aau', plan_name: 'Pay in Full', num_installments: 1, installment_amount: 495, frequency_days: 0, sort_order: 1 },
+                { id: 'aau-2', dues_config_id: 'aau', plan_name: '2-Payment Plan', num_installments: 2, installment_amount: 247.50, frequency_days: 30, sort_order: 2 },
+                { id: 'aau-3', dues_config_id: 'aau', plan_name: '3-Payment Plan', num_installments: 3, installment_amount: 165, frequency_days: 30, sort_order: 3 },
+                { id: 'trn-1', dues_config_id: 'training', plan_name: 'Pay in Full', num_installments: 1, installment_amount: 250, frequency_days: 0, sort_order: 1 },
+                { id: 'trn-2', dues_config_id: 'training', plan_name: '2-Payment Plan', num_installments: 2, installment_amount: 125, frequency_days: 30, sort_order: 2 },
+            ];
+            renderPrograms();
+        }
+
+        // ── Select a program ──────────────────────────────
+        window.selectProgram = function(configId) {
+            selectedProgram = duesConfigs.find(function(c) { return c.id === configId; });
+            selectedPlan = null;
+
+            // Update card selection state
+            document.querySelectorAll('.program-card').forEach(function(card) {
+                card.classList.toggle('selected', card.dataset.configId === configId);
+            });
+
+            // Render plan options for this program
+            var plans = planTemplates.filter(function(p) { return p.dues_config_id === configId; });
+            renderPlans(plans);
+
+            document.getElementById('step-plans').classList.add('visible');
+            document.getElementById('step-checkout').classList.remove('visible');
+
+            // Smooth scroll to plans
+            setTimeout(function() {
+                document.getElementById('step-plans').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        };
+
+        // ── Render plan options ───────────────────────────
+        function renderPlans(plans) {
+            var container = document.getElementById('plan-options');
+            container.innerHTML = plans.map(function(plan, idx) {
+                var isPayFull = plan.num_installments === 1;
+                var breakdown = isPayFull
+                    ? 'One-time payment'
+                    : '$' + Number(plan.installment_amount).toFixed(2) + '/mo &times; ' + plan.num_installments + ' months';
+                var total = isPayFull
+                    ? plan.installment_amount
+                    : plan.installment_amount * plan.num_installments;
+                var badge = isPayFull ? '<span class="plan-badge-best">Save</span>' : '';
+
+                return '<div class="plan-option" data-plan-id="' + plan.id + '" onclick="selectPlan(\'' + plan.id + '\')">' +
+                    '<div class="plan-radio"></div>' +
+                    '<div class="plan-details">' +
+                        '<div class="plan-name">' + plan.plan_name + badge + '</div>' +
+                        '<div class="plan-breakdown">' + breakdown + '</div>' +
+                    '</div>' +
+                    '<div class="plan-total">$' + Number(total).toFixed(2) + '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        // ── Select a plan ─────────────────────────────────
+        window.selectPlan = function(planId) {
+            selectedPlan = planTemplates.find(function(p) { return p.id === planId; });
+
+            document.querySelectorAll('.plan-option').forEach(function(opt) {
+                opt.classList.toggle('selected', opt.dataset.planId === planId);
+            });
+
+            renderOrderSummary();
+            document.getElementById('step-checkout').classList.add('visible');
+
+            setTimeout(function() {
+                document.getElementById('step-checkout').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        };
+
+        // ── Render order summary ──────────────────────────
+        function renderOrderSummary() {
+            if (!selectedProgram || !selectedPlan) return;
+
+            var isPayFull = selectedPlan.num_installments === 1;
+            var chargeNow = selectedPlan.installment_amount;
+            var totalCost = isPayFull ? chargeNow : selectedPlan.installment_amount * selectedPlan.num_installments;
+
+            var summaryHtml = '<div class="summary-row"><span class="label">Program</span><span class="value">' + selectedProgram.program + '</span></div>' +
+                '<div class="summary-row"><span class="label">Season</span><span class="value">' + selectedProgram.season + '</span></div>' +
+                '<div class="summary-row"><span class="label">Plan</span><span class="value">' + selectedPlan.plan_name + '</span></div>';
+
+            if (!isPayFull) {
+                summaryHtml += '<div class="summary-row"><span class="label">Installment</span><span class="value">1 of ' + selectedPlan.num_installments + '</span></div>';
+            }
+
+            summaryHtml += '<div class="summary-row total"><span class="label">Due Now</span><span class="value">$' + Number(chargeNow).toFixed(2) + '</span></div>';
+
+            document.getElementById('order-summary').innerHTML = summaryHtml;
+
+            // Update button text
+            document.getElementById('pay-btn').textContent = 'Pay $' + Number(chargeNow).toFixed(2) + ' Now';
+        }
+
+        // ── Prefill from localStorage (parent portal auth) ─
+        function prefillFromAuth() {
+            var email = localStorage.getItem('gba_user_email');
+            var parentName = localStorage.getItem('gba_parent_name');
+            var athleteName = localStorage.getItem('gba_athlete_name');
+
+            if (email) document.getElementById('parent-email').value = email;
+            if (parentName) document.getElementById('parent-name').value = parentName;
+            if (athleteName) document.getElementById('athlete-name').value = athleteName;
+        }
+
+        // ── Check for existing enrollment ─────────────────
+        async function checkExistingEnrollment() {
+            var email = localStorage.getItem('gba_user_email');
+            if (!email || !SUPABASE_ANON_KEY) return;
+
+            try {
+                var res = await fetch(
+                    SUPABASE_URL + '/rest/v1/parent_dues_enrollment?parent_email=eq.' + encodeURIComponent(email) + '&status=neq.cancelled&select=*,season_dues_config(*),payment_plan_templates(*)',
+                    {
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': 'Bearer ' + (localStorage.getItem('gba_access_token') || SUPABASE_ANON_KEY),
+                        }
+                    }
+                );
+                var enrollments = await res.json();
+
+                if (enrollments && enrollments.length > 0) {
+                    var e = enrollments[0];
+                    var banner = document.getElementById('status-banner');
+                    var inner = document.getElementById('status-inner');
+
+                    if (e.status === 'paid_in_full') {
+                        inner.innerHTML = '<div style="font-size:1.5rem;margin-bottom:0.5rem;">&#10003;</div>' +
+                            '<div style="font-weight:700;margin-bottom:4px;">You\'re all set!</div>' +
+                            '<div style="font-size:0.875rem;color:#6b7280;">' + (e.athlete_name || 'Your athlete') + '\'s ' + e.season_dues_config.season + ' dues are paid in full.</div>';
+                    } else {
+                        var remaining = Math.max(0, e.total_owed - e.total_paid);
+                        inner.className = 'banner-inner has-balance';
+                        inner.innerHTML = '<div style="font-weight:700;margin-bottom:4px;">Enrollment Active</div>' +
+                            '<div style="font-size:0.875rem;color:#6b7280;">' +
+                            (e.athlete_name || 'Your athlete') + ' — ' + e.season_dues_config.program +
+                            ' (' + e.payment_plan_templates.plan_name + ')' +
+                            '</div>' +
+                            '<div style="font-size:1.25rem;font-weight:800;margin-top:8px;">$' + remaining.toFixed(2) + ' remaining</div>';
+                    }
+
+                    banner.classList.add('visible');
+                }
+            } catch (err) {
+                console.error('[dues] Failed to check enrollment:', err);
+            }
+        }
+
+        // ── Form submission — create Stripe checkout ──────
+        document.getElementById('dues-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (!selectedProgram || !selectedPlan) {
+                alert('Please select a program and payment plan.');
+                return;
+            }
+
+            var parentName = document.getElementById('parent-name').value.trim();
+            var parentEmail = document.getElementById('parent-email').value.trim();
+            var athleteName = document.getElementById('athlete-name').value.trim();
+
+            if (!parentName || !parentEmail || !athleteName) return;
+
+            var btn = document.getElementById('pay-btn');
+            var originalText = btn.textContent;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span>';
+
+            try {
+                var response = await fetch(CHECKOUT_FUNCTION_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        parent_email: parentEmail,
+                        parent_name: parentName,
+                        athlete_name: athleteName,
+                        dues_config_id: selectedProgram.id,
+                        plan_template_id: selectedPlan.id,
+                        success_url: window.location.origin + '/dues-success.html?session_id={CHECKOUT_SESSION_ID}',
+                        cancel_url: window.location.href,
+                    })
+                });
+
+                var data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                if (data.url) {
+                    // Store enrollment context for success page
+                    localStorage.setItem('gba_last_dues_enrollment', JSON.stringify({
+                        enrollment_id: data.enrollment_id,
+                        program: selectedProgram.program,
+                        plan: selectedPlan.plan_name,
+                        amount: data.amount_charged,
+                    }));
+                    window.location.href = data.url;
+                } else {
+                    throw new Error('No checkout URL returned');
+                }
+            } catch (err) {
+                console.error('[dues] Checkout error:', err);
+                alert('Something went wrong: ' + err.message + '. Please try again.');
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        });
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Compliance — Godspeed Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --gs-black: #0a0a0a;
+            --gs-blue: #2563eb;
+            --gs-red: #dc2626;
+            --gs-green: #16a34a;
+            --gs-orange: #ea580c;
+            --gs-gray-50: #f9fafb;
+            --gs-gray-100: #f3f4f6;
+            --gs-gray-200: #e5e7eb;
+            --gs-gray-400: #9ca3af;
+            --gs-gray-500: #6b7280;
+            --gs-gray-600: #4b5563;
+            --gs-gray-700: #374151;
+            --gs-gray-900: #111827;
+        }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--gs-gray-50);
+            color: var(--gs-gray-900);
+            line-height: 1.5;
+        }
+
+        /* ── Layout ─────────────────────────────── */
+        .admin-header {
+            background: var(--gs-black);
+            color: #fff;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .admin-header .logo {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        .admin-header .logo span { color: var(--gs-blue); }
+        .admin-header nav a {
+            color: var(--gs-gray-400);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            margin-left: 24px;
+            transition: color 0.15s;
+        }
+        .admin-header nav a:hover, .admin-header nav a.active { color: #fff; }
+
+        .admin-body { max-width: 1280px; margin: 0 auto; padding: 24px 32px; }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .page-subtitle {
+            font-size: 14px;
+            color: var(--gs-gray-500);
+            margin-bottom: 24px;
+        }
+
+        /* ── Stats Cards ───────────────────────── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: #fff;
+            border: 1px solid var(--gs-gray-200);
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .stat-card .stat-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--gs-gray-500);
+            margin-bottom: 4px;
+        }
+        .stat-card .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+        }
+        .stat-card .stat-detail {
+            font-size: 12px;
+            color: var(--gs-gray-400);
+            margin-top: 4px;
+        }
+        .stat-value.danger { color: var(--gs-red); }
+        .stat-value.success { color: var(--gs-green); }
+        .stat-value.warning { color: var(--gs-orange); }
+
+        /* ── Tabs ──────────────────────────────── */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            border-bottom: 2px solid var(--gs-gray-200);
+            margin-bottom: 24px;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gs-gray-500);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.15s;
+        }
+        .tab-btn:hover { color: var(--gs-gray-700); }
+        .tab-btn.active {
+            color: var(--gs-black);
+            border-bottom-color: var(--gs-blue);
+        }
+        .tab-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--gs-red);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            padding: 0 5px;
+            margin-left: 6px;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ── Tables ────────────────────────────── */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border: 1px solid var(--gs-gray-200);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .data-table thead {
+            background: var(--gs-gray-50);
+        }
+        .data-table th {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--gs-gray-500);
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--gs-gray-200);
+        }
+        .data-table td {
+            font-size: 13px;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--gs-gray-100);
+            vertical-align: middle;
+        }
+        .data-table tr:last-child td { border-bottom: none; }
+        .data-table tr:hover { background: #f8fafc; }
+
+        /* ── Status Badges ─────────────────────── */
+        .badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .badge-pending { background: #fef3c7; color: #92400e; }
+        .badge-notified { background: #dbeafe; color: #1e40af; }
+        .badge-viewed { background: #e0e7ff; color: #3730a3; }
+        .badge-downloaded { background: #ede9fe; color: #5b21b6; }
+        .badge-signed { background: #dcfce7; color: #166534; }
+        .badge-at-risk { background: #fee2e2; color: #991b1b; }
+
+        /* ── Buttons ───────────────────────────── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-decoration: none;
+        }
+        .btn-primary { background: var(--gs-black); color: #fff; }
+        .btn-primary:hover { background: #1f2937; }
+        .btn-danger { background: var(--gs-red); color: #fff; }
+        .btn-danger:hover { background: #b91c1c; }
+        .btn-outline {
+            background: #fff;
+            color: var(--gs-gray-700);
+            border: 1px solid var(--gs-gray-200);
+        }
+        .btn-outline:hover { background: var(--gs-gray-50); border-color: var(--gs-gray-400); }
+        .btn-sm { padding: 5px 10px; font-size: 11px; }
+        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+
+        /* ── Progress Bar ──────────────────────── */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--gs-gray-200);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        .progress-fill.green { background: var(--gs-green); }
+        .progress-fill.orange { background: var(--gs-orange); }
+        .progress-fill.red { background: var(--gs-red); }
+
+        /* ── Impersonation Banner ──────────────── */
+        .impersonation-banner {
+            display: none;
+            background: #fbbf24;
+            color: var(--gs-black);
+            padding: 10px 24px;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .impersonation-banner.active { display: flex; align-items: center; justify-content: center; gap: 12px; }
+        .impersonation-banner .exit-btn {
+            background: var(--gs-black);
+            color: #fff;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* ── Modal ─────────────────────────────── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: #fff;
+            border-radius: 12px;
+            max-width: 640px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 32px;
+        }
+        .modal h2 { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+        .modal-close {
+            float: right;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--gs-gray-400);
+        }
+
+        /* ── Timeline ──────────────────────────── */
+        .timeline { list-style: none; padding-left: 24px; border-left: 2px solid var(--gs-gray-200); }
+        .timeline li {
+            position: relative;
+            padding: 8px 0 16px 20px;
+            font-size: 13px;
+        }
+        .timeline li::before {
+            content: '';
+            position: absolute;
+            left: -29px;
+            top: 12px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--gs-gray-400);
+            border: 2px solid #fff;
+        }
+        .timeline li.event-signed::before { background: var(--gs-green); }
+        .timeline li.event-viewed::before { background: var(--gs-blue); }
+        .timeline li.event-notification::before { background: var(--gs-orange); }
+        .timeline .event-time {
+            display: block;
+            font-size: 11px;
+            color: var(--gs-gray-400);
+            margin-top: 2px;
+        }
+
+        /* ── Filter Bar ────────────────────────── */
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .filter-bar select, .filter-bar input {
+            font-family: inherit;
+            font-size: 13px;
+            padding: 7px 12px;
+            border: 1px solid var(--gs-gray-200);
+            border-radius: 6px;
+            background: #fff;
+        }
+
+        @media (max-width: 768px) {
+            .admin-body { padding: 16px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .data-table { font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Impersonation Mode Banner -->
+<div id="impersonationBanner" class="impersonation-banner">
+    <span>VIEWING PORTAL AS: <strong id="impersonationName">—</strong></span>
+    <button class="exit-btn" onclick="exitImpersonation()">EXIT VIEW</button>
+</div>
+
+<!-- Header -->
+<header class="admin-header">
+    <div class="logo">GODSPEED<span>ADMIN</span></div>
+    <nav>
+        <a href="#">Dashboard</a>
+        <a href="#">Roster</a>
+        <a href="#" class="active">Documents</a>
+        <a href="#">Dues</a>
+        <a href="#">Training</a>
+    </nav>
+</header>
+
+<!-- Main Content -->
+<main class="admin-body">
+
+    <h1 class="page-title">Document Compliance</h1>
+    <p class="page-subtitle">Track, manage, and enforce document signing across all active roster families.</p>
+
+    <!-- Stats Overview -->
+    <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+            <div class="stat-label">Total Documents</div>
+            <div class="stat-value" id="statTotalDocs">—</div>
+            <div class="stat-detail">Active this season</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Overall Compliance</div>
+            <div class="stat-value success" id="statCompliance">—%</div>
+            <div class="stat-detail"><div class="progress-bar"><div class="progress-fill green" id="complianceBar" style="width:0%"></div></div></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Unsigned (Active Roster)</div>
+            <div class="stat-value danger" id="statUnsigned">—</div>
+            <div class="stat-detail">Across all mandatory docs</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">At-Risk Players</div>
+            <div class="stat-value warning" id="statAtRisk">—</div>
+            <div class="stat-detail">Missing mandatory documents</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Reminders Sent (7d)</div>
+            <div class="stat-value" id="statReminders">—</div>
+            <div class="stat-detail">Automated + manual</div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="compliance">Compliance Matrix</button>
+        <button class="tab-btn" data-tab="documents">Documents<span class="tab-badge" id="docsBadge" style="display:none">0</span></button>
+        <button class="tab-btn" data-tab="parents">Parent View<span class="tab-badge" id="parentsBadge" style="display:none">0</span></button>
+        <button class="tab-btn" data-tab="activity">Activity Log</button>
+    </div>
+
+    <!-- TAB: Compliance Matrix ────────────────── -->
+    <div class="tab-content active" id="tab-compliance">
+        <div class="btn-group">
+            <button class="btn btn-primary" onclick="sendBulkReminders()">Send All Pending Reminders</button>
+            <button class="btn btn-danger" onclick="sendEscalations()">Send Escalation Warnings</button>
+            <button class="btn btn-outline" onclick="exportComplianceCSV()">Export CSV</button>
+        </div>
+
+        <div class="filter-bar">
+            <select id="filterDoc" onchange="applyFilters()">
+                <option value="">All Documents</option>
+            </select>
+            <select id="filterStatus" onchange="applyFilters()">
+                <option value="">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="notified">Notified</option>
+                <option value="viewed">Viewed</option>
+                <option value="downloaded">Downloaded</option>
+                <option value="signed">Signed</option>
+            </select>
+            <select id="filterRisk" onchange="applyFilters()">
+                <option value="">All Players</option>
+                <option value="at-risk">At-Risk Only</option>
+            </select>
+            <input type="search" id="filterSearch" placeholder="Search parent or athlete..." oninput="applyFilters()">
+        </div>
+
+        <table class="data-table" id="complianceTable">
+            <thead>
+                <tr>
+                    <th>Athlete</th>
+                    <th>Parent</th>
+                    <th>Document</th>
+                    <th>Status</th>
+                    <th>Days Out</th>
+                    <th>Last Activity</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="complianceBody">
+                <!-- Populated by JS -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- TAB: Documents ────────────────────────── -->
+    <div class="tab-content" id="tab-documents">
+        <div class="btn-group">
+            <button class="btn btn-primary" onclick="openNewDocModal()">+ New Document</button>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Document</th>
+                    <th>Category</th>
+                    <th>Season</th>
+                    <th>Assigned</th>
+                    <th>Signed</th>
+                    <th>Rate</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="documentsBody">
+                <!-- Populated by JS -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- TAB: Parent View ──────────────────────── -->
+    <div class="tab-content" id="tab-parents">
+        <p style="font-size:14px;color:var(--gs-gray-500);margin-bottom:16px;">
+            Select a parent to see exactly what they see in the portal (read-only impersonation).
+        </p>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Parent</th>
+                    <th>Athletes</th>
+                    <th>Docs Pending</th>
+                    <th>Docs Signed</th>
+                    <th>Compliance</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="parentsBody">
+                <!-- Populated by JS -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- TAB: Activity Log ────────────────────── -->
+    <div class="tab-content" id="tab-activity">
+        <div class="filter-bar">
+            <select id="activityFilter" onchange="loadActivityLog()">
+                <option value="">All Events</option>
+                <option value="signed">Signatures</option>
+                <option value="viewed">Views</option>
+                <option value="notification_sent">Notifications Sent</option>
+                <option value="escalation_sent">Escalations</option>
+            </select>
+        </div>
+        <ul class="timeline" id="activityTimeline">
+            <!-- Populated by JS -->
+        </ul>
+    </div>
+
+</main>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detailModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+        <h2 id="modalTitle">Agreement Detail</h2>
+        <div id="modalContent"></div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// ADMIN DOCUMENTS DASHBOARD — Client-Side Logic
+// Connects to Supabase for live data.
+// ============================================================
+
+// ── Supabase Client (uses same auth as parent portal) ────
+// In production, import from your shared auth module.
+// For now, expects window.supabase to be initialized.
+const SUPABASE_URL = ''; // Set in deployment
+const SUPABASE_ANON_KEY = ''; // Set in deployment
+
+let supabaseClient = null;
+let complianceData = [];
+let documentsData = [];
+let parentsData = [];
+
+// ── Initialize ──────────────────────────────────────────
+async function init() {
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+        });
+    });
+
+    // If Supabase is available, load live data
+    if (window.supabase || (SUPABASE_URL && SUPABASE_ANON_KEY)) {
+        await loadLiveData();
+    } else {
+        loadDemoData();
+    }
+}
+
+// ── Load Live Data from Supabase ────────────────────────
+async function loadLiveData() {
+    try {
+        // Compliance matrix (the main view)
+        const { data: compliance } = await supabaseClient
+            .from('parent_compliance_status')
+            .select('*')
+            .order('roster_at_risk', { ascending: false });
+
+        complianceData = compliance || [];
+
+        // Document summary
+        const { data: docSummary } = await supabaseClient
+            .from('document_compliance_summary')
+            .select('*');
+
+        documentsData = docSummary || [];
+
+        renderAll();
+    } catch (err) {
+        console.error('Failed to load live data:', err);
+        loadDemoData();
+    }
+}
+
+// ── Demo Data (works without Supabase connection) ───────
+function loadDemoData() {
+    const athletes = [
+        { name: 'Aiden', parent: 'Marcus Johnson', email: 'marcus@example.com' },
+        { name: 'Quest', parent: 'Tanya Williams', email: 'tanya@example.com' },
+        { name: 'Cassius', parent: 'Dre Thompson', email: 'dre@example.com' },
+        { name: 'A.D.', parent: 'Crystal Davis', email: 'crystal@example.com' },
+        { name: 'Howard', parent: 'Kevin Brown', email: 'kevin@example.com' },
+        { name: 'Anton', parent: 'Denis Petrov', email: 'anton@example.com' },
+        { name: 'Emory', parent: 'LaShonda Mitchell', email: 'lashonda@example.com' },
+        { name: 'Ashton', parent: 'James Wilson', email: 'james@example.com' },
+        { name: 'Junior', parent: 'Maria Gonzalez', email: 'maria@example.com' },
+        { name: 'Kyrie', parent: 'DeAndre Harris', email: 'deandre@example.com' },
+        { name: 'Oliver', parent: 'Sarah Chen', email: 'sarah@example.com' },
+        { name: 'Khalik', parent: 'Tyrone Jackson', email: 'tyrone@example.com' },
+    ];
+
+    const docs = [
+        { title: 'Liability Waiver 2026', slug: 'liability-waiver-2026', category: 'waiver' },
+        { title: 'Medical Release Form', slug: 'medical-release', category: 'medical_release' },
+        { title: 'Code of Conduct', slug: 'code-of-conduct', category: 'code_of_conduct' },
+        { title: 'Concussion Protocol', slug: 'concussion-protocol', category: 'consent_form' },
+        { title: 'Photo/Video Release', slug: 'photo-video-release', category: 'consent_form' },
+    ];
+
+    const statuses = ['signed', 'signed', 'signed', 'signed', 'viewed', 'downloaded', 'notified', 'pending'];
+
+    complianceData = [];
+    athletes.forEach(a => {
+        docs.forEach(d => {
+            const status = statuses[Math.floor(Math.random() * statuses.length)];
+            const daysOut = status === 'signed' ? null : Math.floor(Math.random() * 18) + 1;
+            complianceData.push({
+                athlete_name: a.name,
+                parent_email: a.email,
+                document_title: d.title,
+                document_slug: d.slug,
+                document_category: d.category,
+                agreement_status: status,
+                is_mandatory: true,
+                enrollment_status: 'active',
+                days_outstanding: daysOut,
+                roster_at_risk: status !== 'signed' && daysOut > 7,
+                notification_count: status === 'pending' ? 0 : Math.floor(Math.random() * 4),
+                view_count: ['viewed','downloaded','signed'].includes(status) ? Math.floor(Math.random() * 3) + 1 : 0,
+                signed_at: status === 'signed' ? '2026-03-' + (10 + Math.floor(Math.random() * 15)) + 'T14:00:00Z' : null,
+                first_viewed_at: ['viewed','downloaded','signed'].includes(status) ? '2026-03-15T10:00:00Z' : null,
+                assigned_at: '2026-03-01T00:00:00Z',
+            });
+        });
+    });
+
+    // Build document summary from compliance data
+    documentsData = docs.map(d => {
+        const docAgreements = complianceData.filter(c => c.document_slug === d.slug);
+        const signed = docAgreements.filter(c => c.agreement_status === 'signed').length;
+        return {
+            title: d.title,
+            slug: d.slug,
+            category: d.category,
+            season: 'Summer 2026',
+            is_mandatory: true,
+            total_assigned: docAgreements.length,
+            total_signed: signed,
+            total_pending: docAgreements.filter(c => c.agreement_status === 'pending').length,
+            total_notified: docAgreements.filter(c => c.agreement_status === 'notified').length,
+            total_viewed: docAgreements.filter(c => c.agreement_status === 'viewed').length,
+            total_downloaded: docAgreements.filter(c => c.agreement_status === 'downloaded').length,
+            sign_rate_pct: docAgreements.length > 0 ? Math.round(signed / docAgreements.length * 100) : 0,
+        };
+    });
+
+    renderAll();
+}
+
+// ── Render Everything ───────────────────────────────────
+function renderAll() {
+    renderStats();
+    renderComplianceTable();
+    renderDocumentsTable();
+    renderParentsTable();
+    populateDocFilter();
+}
+
+// ── Stats ───────────────────────────────────────────────
+function renderStats() {
+    const totalDocs = documentsData.length;
+    const totalAssigned = complianceData.length;
+    const totalSigned = complianceData.filter(c => c.agreement_status === 'signed').length;
+    const totalUnsigned = totalAssigned - totalSigned;
+    const atRisk = complianceData.filter(c => c.roster_at_risk).length;
+    const rate = totalAssigned > 0 ? Math.round(totalSigned / totalAssigned * 100) : 0;
+    const uniqueAtRisk = new Set(complianceData.filter(c => c.roster_at_risk).map(c => c.athlete_name)).size;
+
+    document.getElementById('statTotalDocs').textContent = totalDocs;
+    document.getElementById('statCompliance').textContent = rate + '%';
+    document.getElementById('complianceBar').style.width = rate + '%';
+    document.getElementById('complianceBar').className = 'progress-fill ' + (rate >= 80 ? 'green' : rate >= 50 ? 'orange' : 'red');
+    document.getElementById('statUnsigned').textContent = totalUnsigned;
+    document.getElementById('statAtRisk').textContent = uniqueAtRisk;
+    document.getElementById('statReminders').textContent = complianceData.reduce((s, c) => s + (c.notification_count || 0), 0);
+}
+
+// ── Compliance Matrix ───────────────────────────────────
+function renderComplianceTable(data) {
+    const rows = data || complianceData;
+    const tbody = document.getElementById('complianceBody');
+    tbody.innerHTML = rows.map(row => `
+        <tr>
+            <td>
+                <strong>${row.athlete_name}</strong>
+                ${row.roster_at_risk ? '<br><span class="badge badge-at-risk">AT RISK</span>' : ''}
+            </td>
+            <td>${row.parent_email}</td>
+            <td>${row.document_title}</td>
+            <td><span class="badge badge-${row.agreement_status}">${row.agreement_status}</span></td>
+            <td>${row.days_outstanding !== null ? row.days_outstanding + 'd' : '—'}</td>
+            <td>
+                ${row.signed_at ? 'Signed ' + formatDate(row.signed_at) :
+                  row.first_viewed_at ? 'Viewed ' + formatDate(row.first_viewed_at) :
+                  row.notification_count > 0 ? row.notification_count + ' emails sent' : 'No activity'}
+            </td>
+            <td>
+                <button class="btn btn-outline btn-sm" onclick="openDetail('${row.document_slug}', '${row.athlete_name}')">Detail</button>
+                ${row.agreement_status !== 'signed' ? `<button class="btn btn-primary btn-sm" onclick="sendReminder('${row.parent_email}', '${row.document_slug}')">Remind</button>` : ''}
+            </td>
+        </tr>
+    `).join('');
+}
+
+// ── Documents Table ─────────────────────────────────────
+function renderDocumentsTable() {
+    const tbody = document.getElementById('documentsBody');
+    tbody.innerHTML = documentsData.map(doc => {
+        const rate = doc.sign_rate_pct;
+        const rateClass = rate >= 80 ? 'green' : rate >= 50 ? 'orange' : 'red';
+        return `
+            <tr>
+                <td><strong>${doc.title}</strong></td>
+                <td>${doc.category.replace(/_/g, ' ')}</td>
+                <td>${doc.season}</td>
+                <td>${doc.total_assigned}</td>
+                <td>${doc.total_signed}</td>
+                <td>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <div class="progress-bar" style="width:80px;">
+                            <div class="progress-fill ${rateClass}" style="width:${rate}%"></div>
+                        </div>
+                        <span style="font-weight:600;font-size:12px;">${rate}%</span>
+                    </div>
+                </td>
+                <td>
+                    <button class="btn btn-outline btn-sm" onclick="notifyAllForDoc('${doc.slug}')">Notify Unsigned</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// ── Parents Table (Impersonation) ───────────────────────
+function renderParentsTable() {
+    // Group by parent
+    const parentMap = {};
+    complianceData.forEach(row => {
+        if (!parentMap[row.parent_email]) {
+            parentMap[row.parent_email] = { email: row.parent_email, athletes: new Set(), pending: 0, signed: 0, total: 0 };
+        }
+        parentMap[row.parent_email].athletes.add(row.athlete_name);
+        parentMap[row.parent_email].total++;
+        if (row.agreement_status === 'signed') parentMap[row.parent_email].signed++;
+        else parentMap[row.parent_email].pending++;
+    });
+
+    const parents = Object.values(parentMap).sort((a, b) => b.pending - a.pending);
+
+    const tbody = document.getElementById('parentsBody');
+    tbody.innerHTML = parents.map(p => {
+        const rate = p.total > 0 ? Math.round(p.signed / p.total * 100) : 0;
+        const athletes = Array.from(p.athletes).join(', ');
+        return `
+            <tr>
+                <td><strong>${p.email}</strong></td>
+                <td>${athletes}</td>
+                <td>${p.pending > 0 ? '<span class="badge badge-at-risk">' + p.pending + '</span>' : '0'}</td>
+                <td>${p.signed}</td>
+                <td>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <div class="progress-bar" style="width:80px;">
+                            <div class="progress-fill ${rate >= 80 ? 'green' : rate >= 50 ? 'orange' : 'red'}" style="width:${rate}%"></div>
+                        </div>
+                        <span style="font-weight:600;font-size:12px;">${rate}%</span>
+                    </div>
+                </td>
+                <td>
+                    <button class="btn btn-outline btn-sm" onclick="impersonateParent('${p.email}', '${athletes}')">View as Parent</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    // Update badge
+    const atRiskParents = parents.filter(p => p.pending > 0).length;
+    const badge = document.getElementById('parentsBadge');
+    if (atRiskParents > 0) {
+        badge.style.display = 'inline-flex';
+        badge.textContent = atRiskParents;
+    }
+}
+
+// ── Filters ─────────────────────────────────────────────
+function populateDocFilter() {
+    const select = document.getElementById('filterDoc');
+    documentsData.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.slug;
+        opt.textContent = d.title;
+        select.appendChild(opt);
+    });
+}
+
+function applyFilters() {
+    let filtered = [...complianceData];
+    const docFilter = document.getElementById('filterDoc').value;
+    const statusFilter = document.getElementById('filterStatus').value;
+    const riskFilter = document.getElementById('filterRisk').value;
+    const searchFilter = document.getElementById('filterSearch').value.toLowerCase();
+
+    if (docFilter) filtered = filtered.filter(r => r.document_slug === docFilter);
+    if (statusFilter) filtered = filtered.filter(r => r.agreement_status === statusFilter);
+    if (riskFilter === 'at-risk') filtered = filtered.filter(r => r.roster_at_risk);
+    if (searchFilter) {
+        filtered = filtered.filter(r =>
+            r.athlete_name.toLowerCase().includes(searchFilter) ||
+            r.parent_email.toLowerCase().includes(searchFilter)
+        );
+    }
+
+    renderComplianceTable(filtered);
+}
+
+// ── Impersonation Mode ──────────────────────────────────
+function impersonateParent(email, athleteNames) {
+    const banner = document.getElementById('impersonationBanner');
+    document.getElementById('impersonationName').textContent = email + ' (' + athleteNames + ')';
+    banner.classList.add('active');
+
+    // Open parent portal in new tab with read-only impersonation param
+    // In production, this sets a server-side impersonation token
+    window.open(
+        '/parent-portal.html?impersonate=' + encodeURIComponent(email) + '&admin=true',
+        '_blank'
+    );
+}
+
+function exitImpersonation() {
+    document.getElementById('impersonationBanner').classList.remove('active');
+}
+
+// ── Actions ─────────────────────────────────────────────
+async function sendReminder(email, docSlug) {
+    if (!confirm('Send reminder to ' + email + ' for ' + docSlug + '?')) return;
+
+    // In production, call the edge function
+    console.log('[admin] Sending reminder to', email, 'for', docSlug);
+    alert('Reminder sent to ' + email);
+}
+
+async function sendBulkReminders() {
+    const unsigned = complianceData.filter(c => c.agreement_status !== 'signed');
+    if (!confirm('Send reminders to ' + unsigned.length + ' unsigned agreements?')) return;
+
+    console.log('[admin] Sending bulk reminders for', unsigned.length, 'agreements');
+    alert('Bulk reminders queued: ' + unsigned.length + ' emails');
+}
+
+async function sendEscalations() {
+    const atRisk = complianceData.filter(c => c.roster_at_risk);
+    if (!confirm('Send escalation warnings to ' + atRisk.length + ' at-risk agreements?')) return;
+
+    console.log('[admin] Sending escalations for', atRisk.length, 'at-risk agreements');
+    alert('Escalation warnings queued: ' + atRisk.length + ' emails');
+}
+
+function notifyAllForDoc(docSlug) {
+    const unsigned = complianceData.filter(c => c.document_slug === docSlug && c.agreement_status !== 'signed');
+    if (!confirm('Notify ' + unsigned.length + ' parents who haven\'t signed this document?')) return;
+
+    console.log('[admin] Notifying for doc:', docSlug, '—', unsigned.length, 'parents');
+    alert('Notifications sent: ' + unsigned.length);
+}
+
+function exportComplianceCSV() {
+    const headers = ['Athlete', 'Parent Email', 'Document', 'Status', 'Days Outstanding', 'At Risk', 'Signed At'];
+    const rows = complianceData.map(r => [
+        r.athlete_name, r.parent_email, r.document_title, r.agreement_status,
+        r.days_outstanding || '', r.roster_at_risk ? 'YES' : 'NO', r.signed_at || ''
+    ]);
+
+    const csv = [headers, ...rows].map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'godspeed_compliance_' + new Date().toISOString().split('T')[0] + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// ── Detail Modal ────────────────────────────────────────
+function openDetail(docSlug, athleteName) {
+    const records = complianceData.filter(c => c.document_slug === docSlug && c.athlete_name === athleteName);
+    if (records.length === 0) return;
+
+    const r = records[0];
+    document.getElementById('modalTitle').textContent = r.document_title + ' — ' + r.athlete_name;
+    document.getElementById('modalContent').innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+            <div><strong style="font-size:12px;color:var(--gs-gray-500);">Status</strong><br>
+                <span class="badge badge-${r.agreement_status}">${r.agreement_status}</span></div>
+            <div><strong style="font-size:12px;color:var(--gs-gray-500);">Parent</strong><br>${r.parent_email}</div>
+            <div><strong style="font-size:12px;color:var(--gs-gray-500);">Assigned</strong><br>${formatDate(r.assigned_at)}</div>
+            <div><strong style="font-size:12px;color:var(--gs-gray-500);">Days Outstanding</strong><br>${r.days_outstanding !== null ? r.days_outstanding + ' days' : 'Completed'}</div>
+            <div><strong style="font-size:12px;color:var(--gs-gray-500);">Emails Sent</strong><br>${r.notification_count}</div>
+            <div><strong style="font-size:12px;color:var(--gs-gray-500);">Views</strong><br>${r.view_count}</div>
+            ${r.signed_at ? `<div><strong style="font-size:12px;color:var(--gs-gray-500);">Signed At</strong><br>${formatDate(r.signed_at)}</div>` : ''}
+        </div>
+
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;">Event Timeline</h3>
+        <ul class="timeline">
+            ${r.signed_at ? `<li class="event-signed"><strong>Signed</strong> — Document signed electronically<span class="event-time">${formatDate(r.signed_at)}</span></li>` : ''}
+            ${r.first_viewed_at ? `<li class="event-viewed"><strong>Viewed</strong> — Parent opened document in portal<span class="event-time">${formatDate(r.first_viewed_at)}</span></li>` : ''}
+            ${r.notification_count > 0 ? `<li class="event-notification"><strong>Notified</strong> — ${r.notification_count} email(s) sent<span class="event-time">Most recent notification</span></li>` : ''}
+            <li><strong>Assigned</strong> — Document assigned to parent<span class="event-time">${formatDate(r.assigned_at)}</span></li>
+        </ul>
+
+        ${r.agreement_status !== 'signed' ? `
+        <div style="margin-top:20px;display:flex;gap:8px;">
+            <button class="btn btn-primary" onclick="sendReminder('${r.parent_email}', '${r.document_slug}'); closeDetailModal();">Send Reminder</button>
+            <button class="btn btn-danger" onclick="alert('Escalation sent'); closeDetailModal();">Send Escalation</button>
+        </div>
+        ` : ''}
+    `;
+
+    document.getElementById('detailModal').classList.add('active');
+}
+
+function closeDetailModal() {
+    document.getElementById('detailModal').classList.remove('active');
+}
+
+// ── Utilities ───────────────────────────────────────────
+function formatDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// ── Boot ────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', init);
+
+// Close modal on overlay click
+document.getElementById('detailModal').addEventListener('click', function(e) {
+    if (e.target === this) closeDetailModal();
+});
+</script>
+
+</body>
+</html>

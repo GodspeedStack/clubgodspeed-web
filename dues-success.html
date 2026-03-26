@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Confirmed — Godspeed Basketball</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif; background: #fff; color: #111;
+            -webkit-font-smoothing: antialiased; min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; padding: 2rem;
+        }
+        .success-container { max-width: 480px; text-align: center; }
+
+        .checkmark-ring {
+            width: 80px; height: 80px; border-radius: 50%;
+            background: #f0fdf4; border: 3px solid #22c55e;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.5rem; animation: scaleIn 0.4s ease-out;
+        }
+        .checkmark-ring svg { width: 40px; height: 40px; color: #22c55e; }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        h1 {
+            font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;
+            text-transform: uppercase; letter-spacing: -0.01em;
+        }
+        .subtitle { font-size: 1rem; color: #6b7280; line-height: 1.6; margin-bottom: 1.5rem; }
+
+        .receipt-card {
+            background: #f9fafb; border-radius: 10px; padding: 1.25rem;
+            text-align: left; margin-bottom: 1.5rem;
+        }
+        .receipt-row {
+            display: flex; justify-content: space-between;
+            font-size: 0.875rem; padding: 5px 0;
+        }
+        .receipt-row .label { color: #6b7280; }
+        .receipt-row .value { font-weight: 600; }
+        .receipt-row.total {
+            border-top: 2px solid #111; margin-top: 6px; padding-top: 8px;
+            font-weight: 700;
+        }
+
+        .next-steps {
+            background: #f0f5ff; border-radius: 10px; padding: 1rem 1.25rem;
+            text-align: left; font-size: 0.875rem; color: #374151;
+            line-height: 1.6; margin-bottom: 1.5rem;
+        }
+        .next-steps strong { color: #111; }
+
+        .cta-link {
+            display: inline-block; background: #000; color: #fff;
+            padding: 14px 28px; border-radius: 6px; font-weight: 700;
+            font-size: 0.875rem; text-transform: uppercase; text-decoration: none;
+            letter-spacing: 0.05em; transition: background 0.2s;
+        }
+        .cta-link:hover { background: #1d1d1f; }
+
+        .logo {
+            font-size: 1.25rem; font-weight: 700; margin-bottom: 2rem;
+        }
+        .logo span { color: #2563eb; }
+
+        footer {
+            position: fixed; bottom: 0; width: 100%; text-align: center;
+            padding: 1rem; color: #9ca3af; font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="success-container">
+        <div class="logo">GODSPEED<span>BASKETBALL</span></div>
+
+        <div class="checkmark-ring">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+            </svg>
+        </div>
+
+        <h1>Payment Confirmed</h1>
+        <p class="subtitle" id="subtitle">Your payment has been received. A confirmation email is on its way.</p>
+
+        <div class="receipt-card" id="receipt-card" style="display:none;"></div>
+
+        <div class="next-steps" id="next-steps">
+            <strong>What happens next?</strong><br>
+            You'll receive a confirmation email with your receipt. If you chose a payment plan,
+            we'll send a friendly reminder before each upcoming installment so nothing catches you off guard.
+        </div>
+
+        <a href="parent-portal.html" class="cta-link">Go to Parent Portal</a>
+    </div>
+
+    <footer>&copy; 2026 Godspeed Basketball. All rights reserved.</footer>
+
+    <script>
+    (function() {
+        var enrollment = null;
+        try {
+            enrollment = JSON.parse(localStorage.getItem('gba_last_dues_enrollment'));
+        } catch(e) {}
+
+        if (enrollment) {
+            var subtitle = document.getElementById('subtitle');
+            subtitle.textContent = 'Your $' + Number(enrollment.amount).toFixed(2) + ' payment for ' + enrollment.program + ' has been received.';
+
+            var card = document.getElementById('receipt-card');
+            card.style.display = 'block';
+            card.innerHTML =
+                '<div class="receipt-row"><span class="label">Program</span><span class="value">' + enrollment.program + '</span></div>' +
+                '<div class="receipt-row"><span class="label">Plan</span><span class="value">' + enrollment.plan + '</span></div>' +
+                '<div class="receipt-row total"><span class="label">Paid</span><span class="value">$' + Number(enrollment.amount).toFixed(2) + '</span></div>';
+
+            // Clean up
+            localStorage.removeItem('gba_last_dues_enrollment');
+        }
+    })();
+    </script>
+</body>
+</html>

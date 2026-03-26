@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Training Report — Godspeed Basketball</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --gs-black: #0a0a0a;
+            --gs-blue: #2563eb;
+            --gs-red: #dc2626;
+            --gs-green: #16a34a;
+            --gs-orange: #ea580c;
+            --gs-gray-50: #f9fafb;
+            --gs-gray-100: #f3f4f6;
+            --gs-gray-200: #e5e7eb;
+            --gs-gray-400: #9ca3af;
+            --gs-gray-500: #6b7280;
+            --gs-gray-600: #4b5563;
+            --gs-gray-700: #374151;
+            --gs-gray-900: #111827;
+        }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--gs-gray-50);
+            color: var(--gs-gray-900);
+            line-height: 1.5;
+        }
+
+        /* ── Header ──────────────────────────── */
+        .header {
+            background: var(--gs-black);
+            color: #fff;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header .logo {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        .header .logo span { color: var(--gs-blue); }
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .header-actions select {
+            font-family: inherit;
+            font-size: 13px;
+            padding: 7px 12px;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            background: #1f2937;
+            color: #fff;
+        }
+
+        /* ── Layout ──────────────────────────── */
+        .container { max-width: 900px; margin: 0 auto; padding: 24px 32px; }
+
+        /* ── Auth Gate ───────────────────────── */
+        .auth-gate {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            text-align: center;
+        }
+        .auth-gate h2 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .auth-gate p {
+            font-size: 14px;
+            color: var(--gs-gray-500);
+            margin-bottom: 24px;
+            max-width: 400px;
+        }
+
+        /* ── Buttons ─────────────────────────── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-decoration: none;
+        }
+        .btn-primary { background: var(--gs-black); color: #fff; }
+        .btn-primary:hover { background: #1f2937; }
+        .btn-blue { background: var(--gs-blue); color: #fff; }
+        .btn-blue:hover { background: #1d4ed8; }
+        .btn-outline {
+            background: #fff;
+            color: var(--gs-gray-700);
+            border: 1px solid var(--gs-gray-200);
+        }
+        .btn-outline:hover { background: var(--gs-gray-50); border-color: var(--gs-gray-400); }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ── Report Preview ──────────────────── */
+        .report-card {
+            background: #fff;
+            border: 1px solid var(--gs-gray-200);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+        .report-card-header {
+            background: var(--gs-black);
+            color: #fff;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .report-card-header h1 {
+            font-size: 20px;
+            font-weight: 800;
+        }
+        .report-card-header .report-date {
+            font-size: 12px;
+            color: var(--gs-gray-400);
+        }
+        .report-card-body { padding: 24px; }
+
+        .athlete-meta {
+            display: flex;
+            gap: 32px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+        .athlete-meta .meta-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .meta-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--gs-gray-500);
+            margin-bottom: 2px;
+        }
+        .meta-value {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        /* ── Stats Grid ──────────────────────── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--gs-gray-50);
+            border: 1px solid var(--gs-gray-200);
+            border-radius: 8px;
+            padding: 14px;
+            text-align: center;
+        }
+        .stat-card .stat-value {
+            font-size: 24px;
+            font-weight: 800;
+        }
+        .stat-card .stat-label {
+            font-size: 11px;
+            color: var(--gs-gray-500);
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        /* ── Tables ──────────────────────────── */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--gs-gray-200);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+        .data-table thead { background: var(--gs-gray-50); }
+        .data-table th {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--gs-gray-500);
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--gs-gray-200);
+        }
+        .data-table td {
+            font-size: 13px;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--gs-gray-100);
+        }
+        .data-table tr:last-child td { border-bottom: none; }
+        .data-table td.center { text-align: center; }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin: 24px 0 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title::before {
+            content: '';
+            display: inline-block;
+            width: 3px;
+            height: 16px;
+            background: var(--gs-blue);
+            border-radius: 2px;
+        }
+
+        /* ── Skill Bars ──────────────────────── */
+        .skill-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 32px;
+            margin-bottom: 20px;
+        }
+        .skill-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .skill-label {
+            font-size: 12px;
+            color: var(--gs-gray-600);
+            min-width: 100px;
+        }
+        .skill-bar {
+            flex: 1;
+            height: 10px;
+            background: var(--gs-gray-200);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .skill-bar-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+        .skill-bar-fill.green { background: var(--gs-green); }
+        .skill-bar-fill.blue { background: var(--gs-blue); }
+        .skill-bar-fill.orange { background: var(--gs-orange); }
+        .skill-score {
+            font-size: 12px;
+            font-weight: 700;
+            min-width: 24px;
+            text-align: right;
+        }
+
+        /* ── Coach Notes ─────────────────────── */
+        .coach-note {
+            background: var(--gs-gray-50);
+            border-left: 3px solid var(--gs-blue);
+            padding: 14px 16px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 12px;
+        }
+        .coach-note-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--gs-blue);
+            margin-bottom: 4px;
+        }
+        .coach-note-label.green { color: var(--gs-green); }
+        .coach-note-label.orange { color: var(--gs-orange); }
+        .coach-note p {
+            font-size: 13px;
+            color: var(--gs-gray-700);
+            line-height: 1.6;
+        }
+
+        /* ── Action Bar ──────────────────────── */
+        .action-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 16px 0;
+            border-top: 1px solid var(--gs-gray-200);
+            margin-top: 8px;
+        }
+
+        /* ── Admin Send Section ──────────────── */
+        .admin-send-section {
+            display: none;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .admin-send-section.visible { display: block; }
+        .admin-send-section h3 {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .send-form {
+            display: flex;
+            gap: 12px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+        .send-form .field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .send-form label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--gs-gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .send-form input {
+            font-family: inherit;
+            font-size: 13px;
+            padding: 8px 12px;
+            border: 1px solid var(--gs-gray-200);
+            border-radius: 6px;
+            min-width: 260px;
+        }
+
+        /* ── Loading State ───────────────────── */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            color: var(--gs-gray-500);
+            font-size: 14px;
+        }
+        .loading::before {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--gs-gray-200);
+            border-top-color: var(--gs-blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Status Message ──────────────────── */
+        .status-msg {
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .status-msg.success { display: block; background: #dcfce7; color: #166534; }
+        .status-msg.error { display: block; background: #fee2e2; color: #991b1b; }
+        .status-msg.info { display: block; background: #dbeafe; color: #1e40af; }
+
+        .tagline {
+            text-align: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--gs-gray-400);
+            letter-spacing: 0.1em;
+            padding: 24px 0 40px;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 16px; }
+            .skill-grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .athlete-meta { gap: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+    <div class="logo">GODSPEED<span>BASKETBALL</span></div>
+    <div class="header-actions">
+        <select id="athleteSelect" onchange="loadReport(this.value)" style="display:none;">
+            <option value="">Select Athlete...</option>
+        </select>
+        <button class="btn btn-blue" id="downloadBtn" onclick="downloadPDF()" style="display:none;">
+            Download Report (PDF)
+        </button>
+    </div>
+</header>
+
+<!-- Main Content -->
+<main class="container">
+    <div id="statusMsg" class="status-msg"></div>
+
+    <!-- Auth Gate (shown when not logged in) -->
+    <div id="authGate" class="auth-gate" style="display:none;">
+        <h2>Training Report</h2>
+        <p>Sign in to your Parent Portal account to view and download your athlete's training report.</p>
+        <button class="btn btn-primary" onclick="signIn()">Sign In with Google</button>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="loading" style="display:none;">Loading training data...</div>
+
+    <!-- Admin: Send to Parent -->
+    <div id="adminSendSection" class="admin-send-section">
+        <h3>Send Report to Parent</h3>
+        <p style="font-size:13px;color:var(--gs-gray-600);margin-bottom:12px;">
+            Email a link to this report. The parent will see live data when they open it.
+        </p>
+        <div class="send-form">
+            <div class="field">
+                <label>Parent Email</label>
+                <input type="email" id="parentEmailInput" placeholder="parent@email.com">
+            </div>
+            <button class="btn btn-blue" onclick="sendReportToParent()">Send Report Link</button>
+            <button class="btn btn-outline" onclick="copyReportLink()">Copy Link</button>
+        </div>
+    </div>
+
+    <!-- Report Content -->
+    <div id="reportContent" style="display:none;">
+        <div class="report-card">
+            <div class="report-card-header">
+                <div>
+                    <h1 id="athleteName">--</h1>
+                    <div class="report-date" id="reportDate">Training Report</div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:10px;color:var(--gs-gray-400);text-transform:uppercase;letter-spacing:0.05em;">Training Report</div>
+                    <div style="font-size:12px;color:#fff;margin-top:2px;" id="reportDateHeader"></div>
+                </div>
+            </div>
+            <div class="report-card-body">
+                <!-- Athlete Meta -->
+                <div class="athlete-meta" id="athleteMeta"></div>
+
+                <!-- Training Hours -->
+                <div class="section-title">Training Hours</div>
+                <div class="stats-grid" id="hoursStats"></div>
+
+                <!-- Attendance Stats -->
+                <div class="section-title">Attendance Summary</div>
+                <div class="stats-grid" id="attendanceStats"></div>
+
+                <!-- Training Session Log -->
+                <div class="section-title">Training Sessions</div>
+                <div id="sessionTableContainer"></div>
+
+                <!-- Coach Notes (Training) -->
+                <div id="trainingNotesContainer"></div>
+
+                <!-- Skill Evaluation -->
+                <div id="evalSection" style="display:none;">
+                    <div class="section-title" id="evalTitle">Skill Evaluation</div>
+                    <div class="skill-grid" id="skillGrid"></div>
+                    <div id="overallRating" style="text-align:center;margin-bottom:20px;"></div>
+                    <div id="evalNotes"></div>
+                </div>
+
+                <!-- Action Bar -->
+                <div class="action-bar">
+                    <button class="btn btn-primary" onclick="downloadPDF()">Download Report (PDF)</button>
+                    <button class="btn btn-outline" onclick="window.print()">Print</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="tagline">BROTHERHOOD. HABITS. SUCCESS.</div>
+    </div>
+</main>
+
+<!-- Dependencies -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="training-report-pdf.js"></script>
+
+<!-- Auth + Supabase (loaded from your existing setup) -->
+<script src="env-injector.js"></script>
+<script src="auth-supabase.js" defer></script>
+
+<script>
+// ============================================================
+// ATHLETE TRAINING REPORT — Page Controller
+// Works for both admin (sees all athletes) and parent (sees own).
+// ============================================================
+
+let _currentAthleteId = null;
+let _currentData = null;
+let _isAdmin = false;
+let _supabase = null;
+
+// ── Initialization ─────────────────────────────────────
+async function init() {
+    // Parse URL params
+    const params = new URLSearchParams(window.location.search);
+    const athleteIdParam = params.get('athlete_id') || params.get('aid');
+    const adminParam = params.get('admin') === 'true';
+
+    // Wait for Supabase
+    await waitForAuth();
+
+    _supabase = getSupabaseClient();
+    if (!_supabase) {
+        showAuthGate();
+        return;
+    }
+
+    // Check auth
+    const { data: { session } } = await _supabase.auth.getSession();
+    if (!session) {
+        showAuthGate();
+        return;
+    }
+
+    // Check if admin/coach
+    const { data: profile } = await _supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+    _isAdmin = profile && (profile.role === 'coach' || profile.role === 'director');
+
+    // Populate athlete dropdown
+    const athletes = await GS_TrainingReport.getAthletes();
+    if (athletes.length === 0) {
+        showStatus('No athletes found. Contact your coach if this is unexpected.', 'error');
+        return;
+    }
+
+    const select = document.getElementById('athleteSelect');
+    athletes.forEach(a => {
+        const opt = document.createElement('option');
+        opt.value = a.id;
+        opt.textContent = a.first_name + ' ' + a.last_name + (a.jersey_number != null ? ' #' + a.jersey_number : '');
+        select.appendChild(opt);
+    });
+
+    // Show dropdown if multiple athletes or admin
+    if (athletes.length > 1 || _isAdmin) {
+        select.style.display = 'block';
+    }
+
+    // Show admin send section
+    if (_isAdmin) {
+        document.getElementById('adminSendSection').classList.add('visible');
+    }
+
+    // Auto-select athlete
+    if (athleteIdParam) {
+        select.value = athleteIdParam;
+        loadReport(athleteIdParam);
+    } else if (athletes.length === 1) {
+        select.value = athletes[0].id;
+        loadReport(athletes[0].id);
+    }
+
+    document.getElementById('downloadBtn').style.display = 'inline-flex';
+}
+
+function getSupabaseClient() {
+    try {
+        if (window.auth && typeof window.auth.getSupabaseClient === 'function') {
+            return window.auth.getSupabaseClient();
+        }
+        if (window.supabaseClient) return window.supabaseClient;
+        return null;
+    } catch (_) { return null; }
+}
+
+function waitForAuth() {
+    return new Promise(resolve => {
+        let attempts = 0;
+        const check = () => {
+            attempts++;
+            if (getSupabaseClient() || attempts > 20) {
+                resolve();
+            } else {
+                setTimeout(check, 250);
+            }
+        };
+        check();
+    });
+}
+
+function showAuthGate() {
+    document.getElementById('authGate').style.display = 'flex';
+}
+
+function signIn() {
+    if (window.auth && typeof window.auth.loginWithGoogle === 'function') {
+        window.auth.loginWithGoogle();
+    } else {
+        showStatus('Auth module not loaded. Please refresh the page.', 'error');
+    }
+}
+
+function showStatus(msg, type) {
+    const el = document.getElementById('statusMsg');
+    el.className = 'status-msg ' + type;
+    el.textContent = msg;
+    if (type === 'success') {
+        setTimeout(() => { el.style.display = 'none'; }, 5000);
+    }
+}
+
+// ── Load Report Data ────────────────────────────────────
+async function loadReport(athleteId) {
+    if (!athleteId) return;
+    _currentAthleteId = athleteId;
+
+    document.getElementById('reportContent').style.display = 'none';
+    document.getElementById('loadingState').style.display = 'flex';
+
+    try {
+        _currentData = await GS_TrainingReport.fetchAthleteData(athleteId);
+        renderReport(_currentData);
+        document.getElementById('reportContent').style.display = 'block';
+    } catch (err) {
+        console.error('Failed to load report:', err);
+        showStatus('Failed to load training data: ' + err.message, 'error');
+    } finally {
+        document.getElementById('loadingState').style.display = 'none';
+    }
+}
+
+// ── Render Report Preview ───────────────────────────────
+function renderReport(data) {
+    const { athlete, roster, attendance, totalTeamSessions, sessionsAttended, enrichedStats, evaluation, hoursData, hoursUsedCalc } = data;
+    const teamInfo = roster[0]?.teams || {};
+    const role = roster[0]?.role || 'rotation';
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    // Header
+    document.getElementById('athleteName').textContent = athlete.first_name + ' ' + athlete.last_name;
+    document.getElementById('reportDateHeader').textContent = dateStr;
+
+    // Athlete meta
+    const meta = document.getElementById('athleteMeta');
+    meta.innerHTML = [
+        athlete.jersey_number != null ? metaItem('Jersey', '#' + athlete.jersey_number) : '',
+        metaItem('Position', athlete.position || '--'),
+        metaItem('Role', role.charAt(0).toUpperCase() + role.slice(1)),
+        metaItem('Team', teamInfo.name || athlete.team_name || '--'),
+        metaItem('Season', athlete.season || teamInfo.season || '--'),
+    ].join('');
+
+    // Training hours
+    const hoursPurchased = hoursData && hoursData.hours_purchased != null
+        ? parseFloat(hoursData.hours_purchased).toFixed(1) : 'N/A';
+    const hoursUsed = hoursData && hoursData.hours_used != null
+        ? parseFloat(hoursData.hours_used).toFixed(1)
+        : hoursUsedCalc > 0 ? hoursUsedCalc.toFixed(1) : 'N/A';
+    const hoursRemaining = hoursData && hoursData.hours_remaining != null
+        ? parseFloat(hoursData.hours_remaining).toFixed(1) : 'N/A';
+
+    document.getElementById('hoursStats').innerHTML = [
+        statCard(hoursPurchased, 'Hours Purchased'),
+        statCard(hoursUsed, 'Hours Used'),
+        statCard(hoursRemaining, 'Hours Remaining'),
+    ].join('');
+
+    // Attendance stats
+    const attendPct = totalTeamSessions > 0 ? Math.round((sessionsAttended / totalTeamSessions) * 100) : 0;
+    const avgEffort = attendance.length > 0
+        ? (attendance.reduce((s, a) => s + (a.effort_rating || 0), 0) / attendance.length).toFixed(1)
+        : '--';
+    const avgFocus = computeAvgSkill(attendance, 'focus');
+    const avgHustle = computeAvgSkill(attendance, 'hustle');
+
+    document.getElementById('attendanceStats').innerHTML = [
+        statCard(sessionsAttended, 'Sessions Attended'),
+        statCard(totalTeamSessions, 'Total Sessions'),
+        statCard(attendPct + '%', 'Attendance Rate'),
+        statCard(avgEffort + '/5', 'Avg Effort'),
+    ].join('');
+
+    // Session log table
+    const sessionRows = attendance
+        .filter(a => a.training_sessions)
+        .sort((a, b) => new Date(b.training_sessions.session_date) - new Date(a.training_sessions.session_date))
+        .map(a => {
+            const s = a.training_sessions;
+            const sr = a.skill_ratings || {};
+            return `<tr>
+                <td>${fmtDate(s.session_date)}</td>
+                <td>${fmtTime(s.start_time)}</td>
+                <td>${s.title || s.session_type.replace(/_/g, ' ')}</td>
+                <td class="center">${fmtDuration(s.duration_minutes)}</td>
+                <td class="center">${a.effort_rating || '--'}</td>
+                <td class="center">${sr.focus || '--'}</td>
+                <td class="center">${sr.hustle || '--'}</td>
+                <td class="center">${sr.iq || '--'}</td>
+            </tr>`;
+        });
+
+    document.getElementById('sessionTableContainer').innerHTML = sessionRows.length > 0
+        ? `<table class="data-table"><thead><tr>
+            <th>Date</th><th>Time</th><th>Session</th><th>Duration</th><th>Effort</th>
+            <th>Focus</th><th>Hustle</th><th>IQ</th>
+           </tr></thead><tbody>${sessionRows.join('')}</tbody></table>`
+        : '<p style="color:var(--gs-gray-500);font-size:13px;">No training sessions recorded yet.</p>';
+
+    // Training coach notes
+    const trainingNotes = attendance
+        .filter(a => a.coach_notes && a.training_sessions)
+        .sort((a, b) => new Date(b.training_sessions.session_date) - new Date(a.training_sessions.session_date));
+
+    document.getElementById('trainingNotesContainer').innerHTML = trainingNotes.length > 0
+        ? '<div class="section-title">Coach Notes (Training)</div>' +
+          trainingNotes.map(a => {
+              const s = a.training_sessions;
+              return `<div class="coach-note">
+                  <div class="coach-note-label">${fmtDate(s.session_date)} - ${s.title || s.session_type.replace(/_/g, ' ')}</div>
+                  <p>${escHtml(a.coach_notes)}</p>
+              </div>`;
+          }).join('')
+        : '';
+
+    // Skill evaluation
+    const evalSection = document.getElementById('evalSection');
+    if (evaluation) {
+        evalSection.style.display = 'block';
+        document.getElementById('evalTitle').innerHTML =
+            '<span></span>Skill Evaluation <span style="font-weight:400;font-size:12px;color:var(--gs-gray-500);">(' +
+            fmtDate(evaluation.evaluation_date) + ')</span>';
+
+        const skills = [
+            ['Ball Handling', evaluation.ball_handling],
+            ['Shooting Form', evaluation.shooting_form],
+            ['Mid-Range', evaluation.mid_range],
+            ['Three-Point', evaluation.three_point],
+            ['Free Throw', evaluation.free_throw],
+            ['Finishing', evaluation.finishing],
+            ['Passing', evaluation.passing],
+            ['Court Vision', evaluation.court_vision],
+            ['Defensive Stance', evaluation.defensive_stance],
+            ['Lateral Quickness', evaluation.lateral_quickness],
+            ['Rebounding', evaluation.rebounding],
+            ['Basketball IQ', evaluation.basketball_iq],
+            ['Leadership', evaluation.leadership],
+            ['Effort', evaluation.effort],
+            ['Coachability', evaluation.coachability],
+        ].filter(([, v]) => v != null);
+
+        document.getElementById('skillGrid').innerHTML = skills.map(([label, val]) => {
+            const pct = (val / 10) * 100;
+            const color = val >= 7 ? 'green' : val >= 5 ? 'blue' : 'orange';
+            return `<div class="skill-row">
+                <span class="skill-label">${label}</span>
+                <div class="skill-bar"><div class="skill-bar-fill ${color}" style="width:${pct}%"></div></div>
+                <span class="skill-score">${val}</span>
+            </div>`;
+        }).join('');
+
+        // Overall rating
+        if (evaluation.overall_rating) {
+            document.getElementById('overallRating').innerHTML =
+                `<div style="display:inline-block;background:var(--gs-black);color:#fff;padding:10px 24px;border-radius:8px;">
+                    <span style="font-size:12px;font-weight:600;">OVERALL RATING</span>
+                    <span style="font-size:22px;font-weight:800;margin-left:12px;">${parseFloat(evaluation.overall_rating).toFixed(1)}</span>
+                    <span style="font-size:13px;color:var(--gs-gray-400);">/ 10</span>
+                </div>`;
+        }
+
+        // Eval notes
+        let notesHtml = '';
+        if (evaluation.strengths) {
+            notesHtml += `<div class="coach-note" style="border-left-color:var(--gs-green);">
+                <div class="coach-note-label green">Strengths</div>
+                <p>${escHtml(evaluation.strengths)}</p>
+            </div>`;
+        }
+        if (evaluation.areas_to_improve) {
+            notesHtml += `<div class="coach-note" style="border-left-color:var(--gs-orange);">
+                <div class="coach-note-label orange">Areas for Development</div>
+                <p>${escHtml(evaluation.areas_to_improve)}</p>
+            </div>`;
+        }
+        if (evaluation.coach_comments) {
+            notesHtml += `<div class="coach-note">
+                <div class="coach-note-label">Coach Assessment</div>
+                <p style="font-style:italic;">"${escHtml(evaluation.coach_comments)}"</p>
+            </div>`;
+        }
+        document.getElementById('evalNotes').innerHTML = notesHtml;
+    } else {
+        evalSection.style.display = 'none';
+    }
+
+    // Pre-fill parent email if admin
+    if (_isAdmin && athlete.parent_account_id) {
+        // Try to get parent email
+        _supabase.from('parent_accounts').select('email').eq('id', athlete.parent_account_id).maybeSingle()
+            .then(({ data }) => {
+                if (data?.email) {
+                    document.getElementById('parentEmailInput').value = data.email;
+                }
+            });
+    }
+}
+
+// ── Download PDF ────────────────────────────────────────
+async function downloadPDF() {
+    if (!_currentAthleteId) {
+        showStatus('Please select an athlete first.', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('downloadBtn');
+    btn.disabled = true;
+    btn.textContent = 'Generating...';
+
+    try {
+        await GS_TrainingReport.generate(_currentAthleteId, {
+            download: true,
+            onProgress: function (stage) {
+                if (stage === 'fetching') btn.textContent = 'Fetching data...';
+                if (stage === 'building') btn.textContent = 'Building PDF...';
+            },
+        });
+        showStatus('PDF downloaded.', 'success');
+    } catch (err) {
+        console.error('PDF generation failed:', err);
+        showStatus('PDF generation failed: ' + err.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Download Report (PDF)';
+    }
+}
+
+// ── Send Report to Parent (Admin) ───────────────────────
+async function sendReportToParent() {
+    const email = document.getElementById('parentEmailInput').value.trim();
+    if (!email) {
+        showStatus('Enter a parent email address.', 'error');
+        return;
+    }
+    if (!_currentAthleteId || !_currentData) {
+        showStatus('Select an athlete and load their report first.', 'error');
+        return;
+    }
+
+    const athleteName = _currentData.athlete.first_name + ' ' + _currentData.athlete.last_name;
+    const reportLink = window.location.origin + '/athlete-training-report.html?athlete_id=' + _currentAthleteId;
+
+    try {
+        // Use the Supabase edge function for sending emails
+        const { data, error } = await _supabase.functions.invoke('send-document-notification', {
+            body: {
+                custom_email: true,
+                to: email,
+                subject: 'Training Report Ready: ' + athleteName,
+                html: buildReportEmailHtml(athleteName, reportLink),
+            },
+        });
+
+        // If the custom_email path doesn't exist in the edge function yet,
+        // fall back to the direct Resend call via a simple fetch
+        if (error) {
+            console.warn('Edge function failed, trying fallback approach.');
+            // Fallback: just copy the link
+            await navigator.clipboard.writeText(reportLink);
+            showStatus('Edge function unavailable. Report link copied to clipboard. Send manually to: ' + email, 'info');
+            return;
+        }
+
+        showStatus('Training report link sent to ' + email, 'success');
+    } catch (err) {
+        console.error('Failed to send report:', err);
+        // Fallback: copy link
+        try {
+            await navigator.clipboard.writeText(reportLink);
+            showStatus('Could not send email. Report link copied to clipboard instead.', 'info');
+        } catch (_) {
+            showStatus('Failed to send. Share this link manually: ' + reportLink, 'info');
+        }
+    }
+}
+
+function copyReportLink() {
+    if (!_currentAthleteId) {
+        showStatus('Select an athlete first.', 'error');
+        return;
+    }
+    const link = window.location.origin + '/athlete-training-report.html?athlete_id=' + _currentAthleteId;
+    navigator.clipboard.writeText(link).then(() => {
+        showStatus('Report link copied to clipboard.', 'success');
+    }).catch(() => {
+        showStatus('Link: ' + link, 'info');
+    });
+}
+
+function buildReportEmailHtml(athleteName, link) {
+    return `
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;">
+        <div style="font-size:20px;font-weight:700;margin-bottom:24px;">
+            GODSPEED<span style="color:#2563eb;">BASKETBALL</span>
+        </div>
+        <p style="font-size:16px;line-height:1.6;color:#111;">
+            A new training report is available for <strong>${athleteName}</strong>.
+        </p>
+        <p style="font-size:16px;line-height:1.6;color:#111;">
+            This report includes attendance, training grades, game performance, skill evaluations,
+            and coach notes. You can view it online or download it as a PDF.
+        </p>
+        <a href="${link}" style="display:inline-block;background:#000;color:#fff;padding:16px 32px;border-radius:6px;font-weight:700;font-size:14px;text-transform:uppercase;text-decoration:none;letter-spacing:0.05em;margin:24px 0;">
+            VIEW TRAINING REPORT
+        </a>
+        <p style="font-size:13px;color:#9ca3af;margin-top:8px;">
+            This link takes you to ${athleteName}'s training report on clubgodspeed.com.
+        </p>
+        <p style="font-size:14px;line-height:1.6;color:#6b7280;margin-top:24px;">
+            Questions? Just reply to this email or text Coach Scott.
+        </p>
+        <div style="border-top:1px solid #e5e7eb;margin-top:32px;padding-top:16px;font-size:12px;color:#9ca3af;">
+            Godspeed Basketball Academy -- Brotherhood. Habits. Success.
+        </div>
+    </div>`;
+}
+
+// ── Utility Functions ───────────────────────────────────
+function metaItem(label, value) {
+    return `<div class="meta-item"><span class="meta-label">${label}</span><span class="meta-value">${escHtml(value)}</span></div>`;
+}
+
+function statCard(value, label) {
+    return `<div class="stat-card"><div class="stat-value">${value}</div><div class="stat-label">${label}</div></div>`;
+}
+
+function fmtDate(iso) {
+    if (!iso) return 'N/A';
+    return new Date(iso + (iso.includes('T') ? '' : 'T00:00:00')).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function fmtTime(timeStr) {
+    if (!timeStr) return 'N/A';
+    try {
+        const [h, m] = timeStr.split(':').map(Number);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const h12 = h % 12 || 12;
+        return h12 + ':' + String(m).padStart(2, '0') + ' ' + ampm;
+    } catch (_) { return 'N/A'; }
+}
+
+function fmtDuration(minutes) {
+    if (!minutes) return 'N/A';
+    const hrs = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hrs > 0 && mins > 0) return hrs + 'h ' + mins + 'm';
+    if (hrs > 0) return hrs + 'h';
+    return mins + 'm';
+}
+
+function escHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function computeAvgSkill(attendance, skill) {
+    const vals = attendance.map(a => (a.skill_ratings || {})[skill]).filter(v => v != null);
+    if (vals.length === 0) return '--';
+    return (vals.reduce((s, v) => s + v, 0) / vals.length).toFixed(1);
+}
+
+// ── Boot ────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product | Godspeed Store</title>
+    <meta name="description" content="Official Godspeed Basketball merchandise. Look Good. Play Good.">
+
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="responsive-nav.css">
+    <style>
+        /* Nike-style Product Page */
+        .product-page-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            min-height: calc(100vh - 200px);
+        }
+
+        @media (max-width: 968px) {
+            .product-page-container {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+        }
+
+        /* Product Gallery */
+        .product-gallery {
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+        }
+
+        @media (max-width: 968px) {
+            .product-gallery {
+                position: relative;
+                top: 0;
+            }
+        }
+
+        .product-main-image {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            background: #f5f5f5;
+        }
+
+        .product-thumbnails {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .product-thumbnail {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .product-thumbnail:hover,
+        .product-thumbnail.active {
+            border-color: #2563eb;
+        }
+
+        /* Product Details */
+        .product-details {
+            padding-top: 1rem;
+        }
+
+        .product-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1d1d1f;
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+
+        .product-price {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 2rem;
+        }
+
+        .product-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-label {
+            font-size: 0.875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #1d1d1f;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .size-guide-link {
+            font-size: 0.75rem;
+            font-weight: 400;
+            text-transform: none;
+            color: #86868b;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .size-guide-link:hover {
+            color: #2563eb;
+        }
+
+        /* Size Grid - Nike Style */
+        .size-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .size-btn {
+            padding: 0.75rem 1rem;
+            border: 1px solid #d2d2d7;
+            background: white;
+            color: #1d1d1f;
+            font-weight: 600;
+            font-size: 0.875rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            min-height: 44px;
+        }
+
+        .size-btn:hover:not(:disabled) {
+            border-color: #1d1d1f;
+            background: #f5f5f7;
+        }
+
+        .size-btn.selected {
+            border-color: #1d1d1f;
+            background: #1d1d1f;
+            color: white;
+        }
+
+        .size-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            text-decoration: line-through;
+        }
+
+        .size-error {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .size-error.show {
+            display: block;
+        }
+
+        /* Add to Cart Button - Nike Style */
+        .add-to-cart-section {
+            margin-bottom: 2rem;
+        }
+
+        .add-to-cart-btn {
+            width: 100%;
+            padding: 1rem 2rem;
+            background: #1d1d1f;
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 52px;
+        }
+
+        .add-to-cart-btn:hover:not(:disabled) {
+            background: #000;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .add-to-cart-btn:disabled {
+            background: #d2d2d7;
+            color: #86868b;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .add-to-cart-btn.adding {
+            background: #22c55e;
+        }
+
+        /* Product Description */
+        .product-description {
+            margin-bottom: 2rem;
+        }
+
+        .product-description p {
+            color: #1d1d1f;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .product-features {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .product-features li {
+            color: #86868b;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .product-features li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #86868b;
+        }
+
+        /* Shipping Info */
+        .shipping-info {
+            padding: 1rem;
+            background: #f5f5f7;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            color: #1d1d1f;
+            margin-bottom: 2rem;
+        }
+
+        /* Sticky Mobile Add to Cart */
+        .mobile-sticky-cart {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #d2d2d7;
+            padding: 1rem;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (max-width: 968px) {
+            .mobile-sticky-cart {
+                display: block;
+            }
+
+            .add-to-cart-section {
+                margin-bottom: 80px;
+            }
+        }
+
+        .mobile-sticky-cart .add-to-cart-btn {
+            margin: 0;
+        }
+
+        /* Navbar for product page */
+        .navbar {
+            background: white;
+            border-bottom: 1px solid #d2d2d7;
+        }
+    </style>
+    <link rel="stylesheet" href="nav-unified.css">
+</head>
+
+<body class="bg-white">
+        <nav class="navbar">
+        <div class="logo">GODSPEED<span style="color: #2563eb;">BASKETBALL</span></div>
+        <div class="nav-desktop-unified">
+            <div class="nav-links-unified">
+                <a href="index.html">Home</a>
+                <a href="training.html">Training</a>
+                <a href="aau.html">AAU</a>
+                <a href="calendar-grid.html" class="auth-restricted" style="display: none;">Calendar</a>
+                <div style="position: relative; opacity: 0.5; cursor: not-allowed; display: none; align-items: center;">
+                    <span>Academy</span>
+                    <span style="position: absolute; top: -12px; right: -24px; font-size: 9px; background: #f3f4f6; color: #6b7280; padding: 2px 4px; border-radius: 4px; border: 1px solid #e5e7eb;">SOON</span>
+                </div>
+                <a href="store.html">Shop</a>
+                <a href="about.html">About</a>
+            </div>
+            <!-- Right Side Icons -->
+            <div class="nav-right-unified">
+                <!-- Cart Icon -->
+                <a href="#" id="cart-btn" class="nav-cart-btn" aria-label="Cart">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    <span class="cart-badge badge-bounce" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: bold; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">0</span>
+                </a>
+                <!-- Member Login Dropdown -->
+                <div class="nav-login-wrapper" style="position: relative; z-index: 50;">
+                    <a href="#" class="nav-cart-btn" aria-label="Sign In">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 4 0 00-7 7h14a7 4 0 00-7-7z" />
+                        </svg>
+                    </a>
+                    <div class="login-dropdown">
+                        <div style="padding: 8px 16px 4px; font-size: 11px; text-transform: uppercase; color: #86868b; font-weight: 600; letter-spacing: 0.05em;">Member Access</div>
+                        <a href="parent-portal.html" class="login-option">
+                            <span style="display: flex; align-items: center; gap: 10px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                                Parents
+                            </span>
+                            <span class="login-arrow">›</span>
+                        </a>
+                        <a href="coach-portal.html" class="login-option">
+                            <span style="display: flex; align-items: center; gap: 10px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                                Coaches
+                            </span>
+                            <span class="login-arrow">›</span>
+                        </a>
+                    </div>
+                </div>
+                <a href="training.html#signup" class="btn-unified-train">TRAIN WITH US</a>
+            </div>
+        </div>
+        <button class="mobile-menu-btn" aria-label="Menu" onclick="openMobileMenu()" style="background:none; border:none; font-size:24px; cursor:pointer;">☰</button>
+    </nav>
+
+    <div class="product-page-container">
+        <!-- Product Gallery -->
+        <div class="product-gallery">
+            <img id="main-product-image" src="" alt="Product" class="product-main-image">
+            <div class="product-thumbnails" id="product-thumbnails">
+                <!-- Thumbnails injected by JS -->
+            </div>
+        </div>
+
+        <!-- Product Details -->
+        <div class="product-details">
+            <h1 id="product-title" class="product-title"></h1>
+            <div id="product-price" class="product-price"></div>
+
+            <!-- Size Selection -->
+            <div class="product-section">
+                <div class="section-label">
+                    <span>Select Size</span>
+                    <a href="#" class="size-guide-link" onclick="godspeedAlert('Size guide coming soon', 'Size Guide'); return false;">Size Guide</a>
+                </div>
+                <div class="size-grid" id="size-grid">
+                    <!-- Sizes injected by JS -->
+                </div>
+                <div class="size-error" id="size-error">Please select a size</div>
+            </div>
+
+            <!-- Add to Cart -->
+            <div class="add-to-cart-section">
+                <button id="add-to-cart-btn" class="add-to-cart-btn" disabled>
+                    Add to Cart
+                </button>
+            </div>
+
+            <!-- Product Description -->
+            <div class="product-description">
+                <p id="product-description"></p>
+                <ul class="product-features" id="product-features">
+                    <!-- Features injected by JS -->
+                </ul>
+            </div>
+
+            <!-- Shipping Info -->
+            <div class="shipping-info">
+                <strong>📦 Free Shipping</strong> on orders over $50. Ships in 3-5 business days.
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Sticky Add to Cart -->
+    <div class="mobile-sticky-cart">
+        <button id="mobile-add-to-cart-btn" class="add-to-cart-btn" disabled>
+            Add to Cart
+        </button>
+                </div>
+
+    <!-- Cart Overlay -->
+    <div id="cart-overlay" class="cart-overlay">
+        <div class="cart-sidebar">
+            <div class="cart-header">
+                <h2>Your Cart</h2>
+                <button id="close-cart" class="close-cart-btn">×</button>
+            </div>
+            <div id="cart-items" class="cart-items">
+                <p class="empty-cart-msg">Your cart is empty.</p>
+                </div>
+            <div class="cart-footer">
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <span id="cart-total-price">$0.00</span>
+                </div>
+                <button class="btn-primary checkout-btn">Checkout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load unified catalog FIRST -->
+    <script src="products.js"></script>
+    <script>
+        // Get product ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+        let selectedSize = null;
+        let currentProduct = null;
+
+        function loadProduct() {
+            if (!productId || !GodspeedCatalog) {
+                document.querySelector('.product-page-container').innerHTML = '<div style="padding: 4rem; text-align: center; grid-column: 1/-1;"><h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 1rem;">Product Not Found</h1><p style="color: #86868b; margin-bottom: 2rem;">The product you\'re looking for doesn\'t exist or has been removed.</p><a href="store.html" style="color: #2563eb; font-weight: 600; text-decoration: underline;">Back to Store</a></div>';
+                return;
+            }
+
+            currentProduct = GodspeedCatalog.getProduct(productId);
+            if (!currentProduct) {
+                document.querySelector('.product-page-container').innerHTML = '<div style="padding: 4rem; text-align: center; grid-column: 1/-1;"><h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 1rem;">Product Not Found</h1><p style="color: #86868b; margin-bottom: 2rem;">The product you\'re looking for doesn\'t exist or has been removed.</p><a href="store.html" style="color: #2563eb; font-weight: 600; text-decoration: underline;">Back to Store</a></div>';
+                return;
+            }
+
+            // Set page title
+            document.title = currentProduct.title + ' | Godspeed Store';
+
+            // Update product info
+            document.getElementById('product-title').textContent = currentProduct.title;
+            document.getElementById('product-price').textContent = '$' + currentProduct.price.toFixed(2);
+            document.getElementById('product-description').textContent = currentProduct.description;
+            document.getElementById('main-product-image').src = currentProduct.image;
+            document.getElementById('main-product-image').alt = currentProduct.title;
+
+            // Render features
+            var featuresList = document.getElementById('product-features');
+            featuresList.innerHTML = currentProduct.features.map(function(f) { return '<li>' + f + '</li>'; }).join('');
+
+            // Render thumbnails
+            var thumbnailsContainer = document.getElementById('product-thumbnails');
+            var images = currentProduct.images || [currentProduct.image];
+            thumbnailsContainer.innerHTML = images.map(function(img, index) {
+                return '<img src="' + img + '" alt="View ' + (index + 1) + '" class="product-thumbnail ' + (index === 0 ? 'active' : '') + '" data-img="' + img + '">';
+            }).join('');
+
+            // Thumbnail click handlers
+            thumbnailsContainer.querySelectorAll('.product-thumbnail').forEach(function(thumb) {
+                thumb.addEventListener('click', function() {
+                    document.getElementById('main-product-image').src = this.dataset.img;
+                    thumbnailsContainer.querySelectorAll('.product-thumbnail').forEach(function(t) { t.classList.remove('active'); });
+                    this.classList.add('active');
+                });
+            });
+
+            // Render sizes
+            renderSizes();
+        }
+
+        function renderSizes() {
+            var sizeGrid = document.getElementById('size-grid');
+            sizeGrid.innerHTML = currentProduct.sizes.map(function(size) {
+                var isAvailable = currentProduct.availableSizes.indexOf(size) !== -1;
+                return '<button class="size-btn" ' + (!isAvailable ? 'disabled' : '') + ' data-size="' + size + '">' + size + '</button>';
+            }).join('');
+
+            // Size click handlers
+            sizeGrid.querySelectorAll('.size-btn:not([disabled])').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    selectedSize = this.dataset.size;
+                    sizeGrid.querySelectorAll('.size-btn').forEach(function(b) { b.classList.remove('selected'); });
+                    this.classList.add('selected');
+                    document.getElementById('add-to-cart-btn').disabled = false;
+                    document.getElementById('mobile-add-to-cart-btn').disabled = false;
+                    document.getElementById('size-error').classList.remove('show');
+                });
+            });
+        }
+
+        function addToCart(e) {
+            if (!selectedSize) {
+                document.getElementById('size-error').classList.add('show');
+                return;
+            }
+
+            var button = e.currentTarget;
+            var originalText = button.textContent;
+            button.disabled = true;
+            button.textContent = 'Adding...';
+            button.classList.add('adding');
+
+            if (window.cartManager) {
+                var variant = {
+                    id: currentProduct.id + '-' + selectedSize,
+                    price_override: currentProduct.price,
+                    size: selectedSize,
+                    color: null
+                };
+                var productItem = {
+                    id: currentProduct.id,
+                    title: currentProduct.title + ' - ' + selectedSize,
+                    base_price: currentProduct.price,
+                    featured_image_url: currentProduct.image
+                };
+                window.cartManager.addItem(productItem, variant, 1);
+
+                if (typeof showCartNotification === 'function') {
+                    showCartNotification(currentProduct.title + ' (' + selectedSize + ') added to cart');
+                }
+                if (typeof updateCartBadges === 'function') {
+                    updateCartBadges();
+                }
+
+                setTimeout(function() {
+                    button.textContent = 'Added!';
+                    setTimeout(function() {
+                        button.textContent = originalText;
+                        button.classList.remove('adding');
+                        button.disabled = false;
+                    }, 1500);
+                }, 500);
+            } else {
+                if (typeof godspeedAlert === 'function') {
+                    godspeedAlert('Cart system not loaded. Please refresh the page.', 'Error');
+                }
+                button.disabled = false;
+                button.textContent = originalText;
+                button.classList.remove('adding');
+            }
+        }
+
+        // Event listeners for add-to-cart
+        document.getElementById('add-to-cart-btn').addEventListener('click', addToCart);
+        document.getElementById('mobile-add-to-cart-btn').addEventListener('click', addToCart);
+
+        // Initialize
+        loadProduct();
+    </script>
+
+    <script src="branded-modal.js"></script>
+    <script src="security.js"></script>
+    <script src="mobile-menu.js"></script>
+    <script src="cart-handler.js"></script>
+</body>
+
+</html>

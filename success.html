@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmed | GODSPEED BASKETBALL</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="nav-unified.css">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        @keyframes checkmark { 0% { transform: scale(0) rotate(-45deg); opacity: 0; } 50% { transform: scale(1.2) rotate(0deg); opacity: 1; } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes confettiDrop { 0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+        .check-animate { animation: checkmark 0.6s ease-out 0.3s both; }
+        .fade-up { opacity: 0; animation: fadeInUp 0.5s ease-out forwards; }
+        .fade-up-1 { animation-delay: 0.5s; }
+        .fade-up-2 { animation-delay: 0.7s; }
+        .fade-up-3 { animation-delay: 0.9s; }
+        .fade-up-4 { animation-delay: 1.1s; }
+        .confetti-piece { position: fixed; top: -10px; z-index: 0; pointer-events: none; }
+    </style>
+</head>
+<body class="bg-white text-black font-sans antialiased min-h-screen flex flex-col">
+    <!-- Navigation -->
+    <nav class="navbar">
+        <a href="index.html" class="logo" style="text-decoration:none;">GODSPEED<span style="color: #2563eb;">BASKETBALL</span></a>
+        <div class="nav-desktop-unified">
+            <div class="nav-links-unified">
+                <a href="index.html">Home</a>
+                <a href="training.html">Training</a>
+                <a href="aau.html">AAU</a>
+                <a href="calendar-grid.html" class="auth-restricted" style="display: none;">Calendar</a>
+                <a href="store.html">Shop</a>
+                <a href="about.html">About</a>
+            </div>
+            <div class="nav-right-unified">
+                <a href="training.html#signup" class="btn-unified-train">TRAIN WITH US</a>
+            </div>
+        </div>
+        <button class="mobile-menu-btn" aria-label="Menu" onclick="openMobileMenu()" style="background:none; border:none; font-size:24px; cursor:pointer;">☰</button>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex items-center justify-center px-4 py-16" style="position:relative;overflow:hidden;">
+        <div style="max-width:540px;width:100%;text-align:center;position:relative;z-index:1;">
+            <!-- Checkmark -->
+            <div class="check-animate" style="width:80px;height:80px;background:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 2rem;">
+                <svg style="width:40px;height:40px;color:#fff;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+
+            <h1 class="fade-up fade-up-1" style="font-size:2.5rem;font-weight:800;text-transform:uppercase;letter-spacing:-0.02em;margin-bottom:0.75rem;">Order Confirmed</h1>
+            <p class="fade-up fade-up-2" style="color:#6b7280;font-size:1.0625rem;line-height:1.6;margin-bottom:2.5rem;">Your order has been placed successfully. A confirmation email will be sent shortly with tracking details.</p>
+
+            <!-- Order Details Card -->
+            <div id="order-details" class="fade-up fade-up-3" style="background:#f9fafb;border-radius:12px;padding:2rem;margin-bottom:2.5rem;text-align:left;display:none;">
+                <div style="font-size:0.8125rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:#9ca3af;margin-bottom:1rem;">Order Details</div>
+                <div id="order-items-list"></div>
+                <div style="border-top:1px solid #e5e7eb;margin-top:1rem;padding-top:1rem;display:flex;justify-content:space-between;font-weight:700;">
+                    <span>Total</span>
+                    <span id="order-total"></span>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="fade-up fade-up-4" style="display:flex;flex-direction:column;gap:0.75rem;align-items:center;">
+                <a href="store.html" style="display:inline-block;background:#000;color:#fff;padding:16px 40px;border-radius:6px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;text-decoration:none;font-size:0.875rem;transition:background 0.2s;min-width:200px;">Continue Shopping</a>
+                <a href="index.html" style="color:#6b7280;font-size:0.875rem;text-decoration:none;font-weight:500;">Return to Home</a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer style="text-align:center;padding:2rem;font-size:0.8125rem;color:#9ca3af;border-top:1px solid #f3f4f6;">
+        &copy; 2026 Godspeed Basketball. All rights reserved.
+    </footer>
+
+    <script>
+        // Show last order details if available
+        (function() {
+            try {
+                var lastOrder = JSON.parse(localStorage.getItem('godspeed_last_order') || 'null');
+                if (lastOrder && lastOrder.items && lastOrder.items.length > 0) {
+                    var detailsDiv = document.getElementById('order-details');
+                    var itemsList = document.getElementById('order-items-list');
+                    var totalEl = document.getElementById('order-total');
+
+                    itemsList.innerHTML = lastOrder.items.map(function(item) {
+                        return '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;font-size:0.9375rem;">' +
+                            '<div><span style="font-weight:500;">' + item.productName + '</span>' +
+                            (item.variantName ? ' <span style="color:#9ca3af;">(' + item.variantName + ')</span>' : '') +
+                            ' <span style="color:#9ca3af;">&times; ' + item.quantity + '</span></div>' +
+                            '<div style="font-weight:600;">$' + (item.price * item.quantity).toFixed(2) + '</div>' +
+                        '</div>';
+                    }).join('');
+
+                    var subtotal = lastOrder.items.reduce(function(s, i) { return s + i.price * i.quantity; }, 0);
+                    var shipping = subtotal >= 50 ? 0 : 7.95;
+                    totalEl.textContent = '$' + (subtotal + shipping).toFixed(2);
+
+                    detailsDiv.style.display = 'block';
+                }
+                // Clear after showing
+                localStorage.removeItem('godspeed_last_order');
+            } catch(e) {}
+
+            // Clear cart
+            if (window.cartManager) {
+                window.cartManager.clear();
+            }
+            localStorage.removeItem('godspeed_cart');
+        })();
+
+        // Confetti animation
+        (function() {
+            var colors = ['#2563eb', '#000', '#ef4444', '#f59e0b', '#10b981'];
+            for (var i = 0; i < 30; i++) {
+                var piece = document.createElement('div');
+                piece.className = 'confetti-piece';
+                piece.style.left = Math.random() * 100 + '%';
+                piece.style.width = (Math.random() * 8 + 4) + 'px';
+                piece.style.height = (Math.random() * 8 + 4) + 'px';
+                piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+                piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                piece.style.animation = 'confettiDrop ' + (Math.random() * 2 + 2) + 's linear ' + (Math.random() * 1) + 's forwards';
+                document.querySelector('main').appendChild(piece);
+            }
+        })();
+    </script>
+    <script src="cart-handler.js"></script>
+    <script src="mobile-menu.js"></script>
+</body>
+</html>
