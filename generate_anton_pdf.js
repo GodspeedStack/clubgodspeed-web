@@ -8,20 +8,15 @@ async function generatePDF() {
 
     const record = {
         hours: {
-            totalPurchased: 24,
-            used: 18.5,
-            remaining: 5.5
+            totalPurchased: 10.0,
+            used: 2.0,
+            remaining: 8.0
         },
         purchases: [
-            { date: '2026-01-15', item: 'Winter Training Package (12 hrs)', status: 'paid', amount: '$450.00' },
-            { date: '2026-03-01', item: 'Spring Pre-Season Package (12 hrs)', status: 'paid', amount: '$450.00' }
+            { date: '2026-03-21', item: '10 Hour Training Package', status: 'Active', amount: '$400.00' }
         ],
         usage: [
-            { date: '2026-03-25', session: 'Defensive Rotations Focus (Team Practice)', duration: '1.5 hrs', coach: 'Coach Blyakhman' },
-            { date: '2026-03-20', session: 'Transition Offense & Guard Reads', duration: '1.5 hrs', coach: 'Coach Blyakhman' },
-            { date: '2026-03-18', session: 'Shooting Mechanics & Reps', duration: '1.0 hrs', coach: 'Coach Blyakhman' },
-            { date: '2026-03-13', session: 'Pick & Roll Read Progression', duration: '1.5 hrs', coach: 'Coach Blyakhman' },
-            { date: '2026-03-10', session: 'Full Court Scrimmage Evaluation', duration: '2.0 hrs', coach: 'Coach Blyakhman' }
+            { date: '2026-03-21', session: '1v1 Training (Coach Scott & Coach True)', duration: '2 Hours', coach: 'Targeted Core Focus' }
         ]
     };
 
