@@ -12,26 +12,11 @@ let BLOG_POSTS = [];
 let MEMOS = [];
 let CAMPAIGNS = [];
 
-// ─── MOCK DATA (offline fallback) ──────────────────────────
-const MOCK_PROFILES = [
-  {id:'p1',email:'dana.johnson@email.com',full_name:'Dana Johnson',player_name:'Marcus Johnson',grade:'5th',role:'parent',approved:true,phone:'555-0101'},
-  {id:'p2',email:'lisa.chen@email.com',full_name:'Lisa Chen',player_name:'Kevin Chen',grade:'4th',role:'parent',approved:true,phone:'555-0102'},
-  {id:'p3',email:'james.williams@email.com',full_name:'James Williams',player_name:'Tyler Williams',grade:'5th',role:'parent',approved:true,phone:'555-0103'},
-  {id:'p4',email:'sarah.miller@email.com',full_name:'Sarah Miller',player_name:'Jordan Miller',grade:'4th',role:'parent',approved:false,phone:'555-0104'},
-];
-const MOCK_REQUESTS = [
-  {id:'r1',user_id:'p4',email:'sarah.miller@email.com',full_name:'Sarah Miller',requested_role:'parent',grade:'4th',player_name:'Jordan Miller',status:'pending',ip_address:'192.168.1.5',created_at:new Date(Date.now()-3600000).toISOString()},
-  {id:'r2',user_id:'u99',email:'coach.gene@godspeed.com',full_name:'Gene Coach',requested_role:'coach',grade:'5th',player_name:null,status:'pending',ip_address:'10.0.0.2',created_at:new Date(Date.now()-7200000).toISOString()},
-];
-const MOCK_DUES = [
-  {profile_id:'p1',full_name:'Dana Johnson',player_name:'Marcus Johnson',grade:'5th',season:'spring_2026',amount_due:350,amount_paid:350,balance:0,payment_status:'paid',method:'venmo'},
-  {profile_id:'p2',full_name:'Lisa Chen',player_name:'Kevin Chen',grade:'4th',season:'spring_2026',amount_due:350,amount_paid:175,balance:175,payment_status:'partial',method:'cash'},
-  {profile_id:'p3',full_name:'James Williams',player_name:'Tyler Williams',grade:'5th',season:'spring_2026',amount_due:350,amount_paid:0,balance:350,payment_status:'unpaid',method:null},
-];
-const MOCK_CAMPAIGNS = [
-  {id:'c1',name:'Spring 2026 Dues Reminder',type:'email',subject:'Your spring dues are due April 1',status:'sent',sent_at:new Date(Date.now()-86400000*3).toISOString(),open_rate_pct:68,click_rate_pct:22,total_recipients:24,delivered:23,opened:16,clicked:5,bounced:1},
-  {id:'c2',name:'Practice Schedule Update',type:'sms',subject:null,status:'sent',sent_at:new Date(Date.now()-86400000*7).toISOString(),open_rate_pct:91,click_rate_pct:0,total_recipients:24,delivered:24,opened:22,clicked:0,bounced:0},
-];
+// ─── EMPTY DEFAULTS (no mock data -- live Supabase only) ───
+const MOCK_PROFILES = [];
+const MOCK_REQUESTS = [];
+const MOCK_DUES = [];
+const MOCK_CAMPAIGNS = [];
 
 // ─── INIT ───────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -99,10 +84,10 @@ async function init() {
       }
     }
 
-    // Offline / Demo fallback
+    // Offline fallback -- no Supabase client available
     loading.style.display = 'none';
-    document.getElementById('director-name').textContent = 'Scott G. (Demo)';
-    document.getElementById('director-email').textContent = 'offline@demo.com';
+    document.getElementById('director-name').textContent = 'Offline Mode';
+    document.getElementById('director-email').textContent = 'No connection';
     await loadDashboard();
 
   } catch(e) {
@@ -205,11 +190,7 @@ async function loadDashboard() {
     </div>`).join('') : '<p style="color:var(--muted);font-size:13px">All dues current! 🎉</p>';
 
   document.getElementById('dash-activity').innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:12px">
-      <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:8px;height:8px;background:var(--green);border-radius:50%;margin-top:5px"></div><div><div style="font-size:13px;font-weight:500">Dana Johnson — dues paid in full <span style="color:var(--muted);font-size:11px">3 days ago</span></div></div></div>
-      <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:8px;height:8px;background:var(--yellow);border-radius:50%;margin-top:5px"></div><div><div style="font-size:13px;font-weight:500">Sarah Miller — new login request <span style="color:var(--muted);font-size:11px">1 hour ago</span></div></div></div>
-      <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:8px;height:8px;background:var(--blue);border-radius:50%;margin-top:5px"></div><div><div style="font-size:13px;font-weight:500">Spring 2026 Dues Reminder — campaign sent <span style="color:var(--muted);font-size:11px">3 days ago</span></div></div></div>
-    </div>`;
+    <p style="color:var(--muted);font-size:13px">No recent activity.</p>`;
 }
 
 // ─── PLAYERS ────────────────────────────────────────────────
