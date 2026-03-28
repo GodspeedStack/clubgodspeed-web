@@ -282,47 +282,58 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 
 /* PLAYER REPORT CARDS */
 .player-report-card {
-  border: 1px solid var(--border); border-radius: 12px; background: rgba(255,255,255,0.02);
-  overflow: hidden; transition: all 0.15s ease;
+  border: 1px solid var(--border); border-radius: 12px; margin-bottom: 8px;
+  background: rgba(255,255,255,0.02); transition: all 0.2s ease; overflow: hidden;
 }
 .player-report-card.checked { border-color: rgba(52,199,89,0.3); background: rgba(52,199,89,0.04); }
 .player-report-header {
   display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.15s ease;
 }
-.player-report-header:hover { background: rgba(255,255,255,0.04); }
-.player-report-header input[type=checkbox] { accent-color: #34c759; width: 16px; height: 16px; flex-shrink: 0; }
-.player-report-header .player-name { font-weight: 700; font-size: 14px; flex: 1; }
-.player-report-header .expand-arrow { color: var(--muted); font-size: 12px; transition: transform 0.2s; }
-.player-report-card.expanded .expand-arrow { transform: rotate(180deg); }
-.player-report-body {
-  display: none; padding: 0 14px 14px; border-top: 1px solid var(--border);
+.player-report-header:hover { background: rgba(255,255,255,0.03); }
+.player-report-header input[type=checkbox] { accent-color: #34c759; width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
+.player-report-header .pr-name { flex: 1; font-size: 14px; font-weight: 600; }
+.player-report-header .pr-expand {
+  width: 28px; height: 28px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+  color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: 0.2s;
 }
-.player-report-card.expanded .player-report-body { display: block; padding-top: 12px; }
+.player-report-header .pr-expand:hover { background: rgba(255,255,255,0.1); }
+.player-report-body { display: none; padding: 0 14px 14px; border-top: 1px solid var(--border); }
+.player-report-card.expanded .player-report-body { display: block; padding-top: 14px; }
+.player-report-card.expanded .pr-expand { transform: rotate(180deg); }
+
+/* Effort Stars */
+.effort-stars { display: flex; gap: 4px; margin-top: 6px; }
+.effort-stars button {
+  width: 28px; height: 28px; border-radius: 6px; font-size: 12px; font-weight: 700;
+  background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--muted);
+  cursor: pointer; transition: all 0.15s ease; font-family: var(--font-sans);
+}
+.effort-stars button:hover { background: rgba(37,99,235,0.15); color: #60a5fa; }
+.effort-stars button.active { background: rgba(37,99,235,0.25); border-color: rgba(37,99,235,0.4); color: #60a5fa; }
+
+/* Per-player report fields */
 .pr-field { margin-bottom: 10px; }
-.pr-field label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+.pr-field label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 6px; }
 .pr-field input, .pr-field textarea, .pr-field select {
-  width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
-  background: rgba(0,0,0,0.3); color: var(--text); font-family: var(--font-sans); font-size: 13px;
+  background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 8px;
+  color: #fff; padding: 8px 10px; font-size: 13px; width: 100%; transition: border-color 0.2s;
+  font-family: var(--font-sans);
 }
 .pr-field textarea { min-height: 60px; resize: vertical; }
-.effort-stars { display: flex; gap: 4px; }
-.effort-stars button {
-  width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border);
-  background: rgba(0,0,0,0.3); color: var(--muted); font-weight: 700; font-size: 13px;
-  cursor: pointer; transition: all 0.15s;
+.pr-field select { cursor: pointer; }
+.pr-field select[multiple] { min-height: 80px; }
+.pr-field input:focus, .pr-field textarea:focus, .pr-field select:focus { border-color: var(--primary); }
+
+/* Guest card remove button */
+.pr-remove {
+  width: 24px; height: 24px; border-radius: 50%; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);
+  color: #ef4444; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; transition: 0.15s;
 }
-.effort-stars button.active { background: rgba(37,99,235,0.2); border-color: var(--primary); color: var(--primary); }
-/* Legacy attendance grid (game stats) */
-.attendance-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; margin-top: 12px; }
-.attendance-item {
-  display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px;
-  background: rgba(255,255,255,0.03); border: 1px solid var(--border); font-size: 13px; cursor: pointer;
-  transition: all 0.15s ease;
-}
-.attendance-item:hover { background: rgba(255,255,255,0.06); }
-.attendance-item.checked { background: rgba(52,199,89,0.08); border-color: rgba(52,199,89,0.2); }
-.attendance-item input[type=checkbox] { accent-color: #34c759; width: 16px; height: 16px; cursor: pointer; }
+.pr-remove:hover { background: rgba(239,68,68,0.2); }
+
+/* Report card controls bar */
+.report-controls { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; margin-top: 8px; }
 
 /* SPINNER OVERLAY */
 .panel-loading {
@@ -683,21 +694,20 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
             <div class="field"><label>End Time</label><input type="time" id="de-end-time"></div>
             <div class="field"><label>Location</label><input type="text" id="de-location" placeholder="Gym, Court, etc."></div>
           </div>
-          <div class="field"><label>Notes</label><textarea id="de-notes" style="min-height:80px;border:1px solid var(--border);border-radius:12px;background:rgba(0,0,0,0.3);color:#fff;padding:16px;width:100%;font-family:var(--font-sans);font-size:14px;resize:vertical" placeholder="Optional notes..."></textarea></div>
-          <!-- Player Training Reports -->
+          <div class="field"><label>Session Notes</label><textarea id="de-notes" placeholder="Overall session observations..."></textarea></div>
+
           <div class="field">
-            <label style="font-size:15px;font-weight:700;margin-bottom:4px">Player Reports</label>
-            <p style="color:var(--muted);font-size:12px;margin-bottom:12px">Select present athletes and add per-player training notes. This data populates the Training section in the Parent Portal and the Player section in the Coach Portal.</p>
-            <div style="display:flex;gap:8px;margin-bottom:12px">
-              <button class="btn btn-ghost btn-xs" onclick="toggleAllAttendance(true)">Select All</button>
-              <button class="btn btn-ghost btn-xs" onclick="toggleAllAttendance(false)">Clear All</button>
-              <button class="btn btn-ghost btn-xs" onclick="expandAllPlayerCards()">Expand All</button>
-              <button class="btn btn-ghost btn-xs" onclick="collapseAllPlayerCards()">Collapse All</button>
+            <label>Player Reports</label>
+            <div class="report-controls">
+              <button class="btn btn-ghost btn-xs" onclick="toggleAllPlayers(true)">Select All</button>
+              <button class="btn btn-ghost btn-xs" onclick="toggleAllPlayers(false)">Clear All</button>
+              <button class="btn btn-ghost btn-xs" onclick="toggleExpandAll(true)">Expand All</button>
+              <button class="btn btn-ghost btn-xs" onclick="toggleExpandAll(false)">Collapse All</button>
+              <button class="btn btn-ghost btn-xs" onclick="addGuestPlayer()">+ Add Player</button>
             </div>
-            <div id="de-attendance" style="display:flex;flex-direction:column;gap:8px">
+            <div id="de-player-cards">
               <p style="color:var(--muted);font-size:13px">Select a team to load roster</p>
             </div>
-            <button class="btn btn-ghost btn-xs" style="margin-top:10px" onclick="addGuestPlayer()">+ Add Player</button>
           </div>
           <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="submitTrainingSession()">Log Training Session</button>
         </div>
@@ -723,7 +733,6 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
             </div>
             <div class="field"><label>Team Score</label><input type="number" id="gm-team-score" min="0" placeholder="--"></div>
             <div class="field"><label>Opponent Score</label><input type="number" id="gm-opp-score" min="0" placeholder="--"></div>
-            <div class="field"><label>Season</label><input type="text" id="gm-season" placeholder="e.g. Spring 2026"></div>
           </div>
 
           <div class="field" style="margin-top:16px">

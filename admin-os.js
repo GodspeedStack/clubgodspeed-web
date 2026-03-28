@@ -406,6 +406,9 @@ function viewBroadcast(id) {
 }
 
 // ─── DATA ENTRY ─────────────────────────────────────────────
+const FOCUS_AREAS = ['shooting','ball_handling','defense','passing','rebounding','conditioning','court_vision','finishing'];
+let guestCounter = 0;
+
 function loadDataEntry() { /* teams already loaded in init */ }
 function switchDataTab(tab, btn) {
   document.querySelectorAll('.sub-tab').forEach(t=>t.classList.remove('active'));
@@ -413,6 +416,7 @@ function switchDataTab(tab, btn) {
   document.getElementById('data-training').style.display=tab==='training'?'block':'none';
   document.getElementById('data-game').style.display=tab==='game'?'block':'none';
 }
+
 async function loadTeamRoster(prefix) {
   const teamId=document.getElementById(prefix+'-team').value;
   if(!teamId||!osSupabase) return;
@@ -424,165 +428,188 @@ async function loadTeamRoster(prefix) {
     renderRoster(prefix,roster);
   } catch(e){ console.error('Roster load:',e); }
 }
+
+function renderRoster(prefix, roster) {
+  if (prefix === 'de') {
+    document.getElementById('de-player-cards').innerHTML = roster.map(a => buildPlayerCard(a.id, a.name, false)).join('');
+  } else if (prefix === 'gm') {
+    const statCols = ['MIN','PTS','FGM','FGA','3PM','3PA','FTM','FTA','OREB','DREB','AST','STL','BLK','TO','PF'];
+    document.getElementById('gm-stats-grid').innerHTML = `<table><thead><tr><th style="text-align:left">Player</th>${statCols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${roster.map(a=>`<tr><td style="text-align:left;font-weight:600;white-space:nowrap">${a.name}</td>${statCols.map(c=>`<td><input type="number" min="0" value="0" data-athlete="${a.id}" data-stat="${c.toLowerCase()}"></td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  }
+}
+
 function buildPlayerCard(athleteId, name, isGuest) {
-  const nameField = isGuest
-    ? `<input type="text" class="guest-name" placeholder="Player name..." value="" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:14px;font-weight:700;padding:4px 8px;width:140px" onclick="event.stopPropagation()">`
-    : `<span class="player-name">${name}</span>`;
-  const removeBtn = isGuest
-    ? `<button class="btn btn-ghost btn-xs" style="flex-shrink:0;color:var(--accent);margin-left:auto;padding:2px 6px" onclick="event.stopPropagation();this.closest('.player-report-card').remove()">X</button>`
-    : '';
+  const focusOpts = FOCUS_AREAS.map(f => `<option value="${f}">${f.replace(/_/g,' ')}</option>`).join('');
   return `<div class="player-report-card checked" data-athlete-id="${athleteId}">
-    <div class="player-report-header" onclick="togglePlayerCard(this)">
-      <input type="checkbox" checked onclick="event.stopPropagation();this.closest('.player-report-card').classList.toggle('checked',this.checked)">
-      ${nameField}
-      ${removeBtn}
-      <span class="expand-arrow">&#9660;</span>
+    <div class="player-report-header" onclick="toggleCardExpand(this.parentElement)">
+      <input type="checkbox" checked onclick="event.stopPropagation(); toggleCardChecked(this)">
+      ${isGuest ? `<input type="text" class="pr-guest-name" placeholder="Guest player name..." style="flex:1;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:6px;color:#fff;padding:4px 8px;font-size:13px;font-weight:600" onclick="event.stopPropagation()">` : `<span class="pr-name">${name}</span>`}
+      ${isGuest ? `<button class="pr-remove" onclick="event.stopPropagation();this.closest('.player-report-card').remove()">x</button>` : ''}
+      <button class="pr-expand" onclick="event.stopPropagation();toggleCardExpand(this.closest('.player-report-card'))">▼</button>
     </div>
     <div class="player-report-body">
       <div class="pr-field">
-        <label>Effort (1-5)</label>
-        <div class="effort-stars">${[1,2,3,4,5].map(n=>`<button type="button" onclick="event.preventDefault();setEffort(this,${n})">${n}</button>`).join('')}</div>
+        <label>Effort Rating</label>
+        <div class="effort-stars" data-value="0">
+          ${[1,2,3,4,5].map(n => `<button onclick="setEffort(this,${n})">${n}</button>`).join('')}
+        </div>
       </div>
       <div class="pr-field">
         <label>Focus Areas</label>
-        <select class="pr-focus" multiple style="min-height:70px">
-          <option value="shooting">Shooting</option>
-          <option value="ball_handling">Ball Handling</option>
-          <option value="defense">Defense</option>
-          <option value="passing">Passing</option>
-          <option value="rebounding">Rebounding</option>
-          <option value="conditioning">Conditioning</option>
-          <option value="court_vision">Court Vision</option>
-          <option value="finishing">Finishing</option>
-        </select>
+        <select class="pr-focus" multiple>${focusOpts}</select>
       </div>
       <div class="pr-field">
         <label>Coach Notes</label>
-        <textarea class="pr-notes" placeholder="Performance observations, highlights, areas to improve..."></textarea>
+        <textarea class="pr-notes" placeholder="Performance observations..."></textarea>
       </div>
       <div class="pr-field">
-        <label>Drills (optional)</label>
-        <input type="text" class="pr-drills" placeholder="e.g. 3pt shooting 7/10, Mikan drill, defensive slides">
+        <label>Drills (comma-separated)</label>
+        <input type="text" class="pr-drills" placeholder="e.g. Mikan drill, 3pt shooting 7/10">
       </div>
     </div>
   </div>`;
 }
-function renderRoster(prefix,roster) {
-  if(prefix==='de') {
-    document.getElementById('de-attendance').innerHTML=roster.map(a=>buildPlayerCard(a.id, a.name, false)).join('');
-  } else if(prefix==='gm') {
-    const statCols=['MIN','PTS','FGM','FGA','3PM','3PA','FTM','FTA','OREB','DREB','AST','STL','BLK','TO','PF'];
-    document.getElementById('gm-stats-grid').innerHTML=`<table><thead><tr><th style="text-align:left">Player</th>${statCols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${roster.map(a=>`<tr><td style="text-align:left;font-weight:600;white-space:nowrap">${a.name}</td>${statCols.map(c=>`<td><input type="number" min="0" value="0" data-athlete="${a.id}" data-stat="${c.toLowerCase()}"></td>`).join('')}</tr>`).join('')}</tbody></table>`;
-  }
-}
-function togglePlayerCard(header) {
-  header.closest('.player-report-card').classList.toggle('expanded');
-}
-function toggleAllAttendance(check) {
-  document.querySelectorAll('#de-attendance .player-report-card').forEach(card=>{
-    card.querySelector('input[type=checkbox]').checked=check;
-    card.classList.toggle('checked',check);
-  });
-}
-function expandAllPlayerCards() {
-  document.querySelectorAll('#de-attendance .player-report-card').forEach(c=>c.classList.add('expanded'));
-}
-function collapseAllPlayerCards() {
-  document.querySelectorAll('#de-attendance .player-report-card').forEach(c=>c.classList.remove('expanded'));
+
+function toggleCardExpand(card) { card.classList.toggle('expanded'); }
+function toggleCardChecked(cb) {
+  cb.closest('.player-report-card').classList.toggle('checked', cb.checked);
 }
 function setEffort(btn, val) {
-  btn.closest('.effort-stars').querySelectorAll('button').forEach((b,i)=>b.classList.toggle('active',i<val));
-  btn.closest('.effort-stars').dataset.value=val;
+  const stars = btn.parentElement;
+  stars.dataset.value = val;
+  stars.querySelectorAll('button').forEach((b, i) => b.classList.toggle('active', i < val));
+}
+
+function toggleAllPlayers(check) {
+  document.querySelectorAll('#de-player-cards .player-report-card').forEach(card => {
+    const cb = card.querySelector('input[type=checkbox]');
+    if (cb) { cb.checked = check; card.classList.toggle('checked', check); }
+  });
+}
+function toggleExpandAll(expand) {
+  document.querySelectorAll('#de-player-cards .player-report-card').forEach(card => {
+    card.classList.toggle('expanded', expand);
+  });
 }
 function addGuestPlayer() {
-  const grid=document.getElementById('de-attendance');
-  if(grid.querySelector('p')) grid.innerHTML='';
-  grid.insertAdjacentHTML('beforeend', buildPlayerCard('guest','',true));
-  const cards=grid.querySelectorAll('.player-report-card');
-  const last=cards[cards.length-1];
-  last.classList.add('expanded');
-  last.querySelector('.guest-name').focus();
+  guestCounter++;
+  const container = document.getElementById('de-player-cards');
+  const placeholder = container.querySelector('p');
+  if (placeholder) placeholder.remove();
+  container.insertAdjacentHTML('beforeend', buildPlayerCard('guest', '', true));
 }
+
 function clearAllStats() {
-  document.querySelectorAll('#gm-stats-grid input[type=number]').forEach(i=>i.value='0');
+  document.querySelectorAll('#gm-stats-grid input[type=number]').forEach(i => i.value = '0');
 }
+
 async function submitTrainingSession() {
-  const teamId=document.getElementById('de-team').value;
-  const sessionType=document.getElementById('de-session-type').value;
-  const date=document.getElementById('de-date').value;
-  const startTime=document.getElementById('de-start-time').value;
-  const endTime=document.getElementById('de-end-time').value;
-  const location=document.getElementById('de-location').value;
-  const notes=document.getElementById('de-notes').value;
-  if(!teamId||!date||!startTime||!endTime) return showToast('Team, date, and times are required','error');
-  const cards=document.querySelectorAll('#de-attendance .player-report-card');
-  if(!cards.length) return showToast('Load a roster first','error');
-  const attendance=[];
-  try {
-    if(!osSupabase) return showToast('No database connection','error');
-    for(const card of cards) {
-      const cb=card.querySelector('input[type=checkbox]');
-      let athleteId=card.dataset.athleteId;
-      const status=cb.checked?'present':'absent';
-      // Guest player -- insert into athletes table first
-      if(athleteId==='guest') {
-        const nameInput=card.querySelector('.guest-name');
-        const fullName=(nameInput?.value||'').trim();
-        if(!fullName) continue;
-        const parts=fullName.split(/\s+/);
-        const {data:newAthlete,error:aErr}=await osSupabase.from('athletes').insert({first_name:parts[0],last_name:parts.slice(1).join(' ')||''}).select('id').single();
-        if(aErr) throw aErr;
-        athleteId=newAthlete.id;
-      }
-      // Collect per-player training data
-      const effortStars=card.querySelector('.effort-stars');
-      const effortRating=effortStars?parseInt(effortStars.dataset.value)||null:null;
-      const focusSelect=card.querySelector('.pr-focus');
-      const focusAreas=focusSelect?Array.from(focusSelect.selectedOptions).map(o=>o.value):[];
-      const coachNotes=(card.querySelector('.pr-notes')?.value||'').trim()||null;
-      const drillsRaw=(card.querySelector('.pr-drills')?.value||'').trim();
-      const drillsCompleted=drillsRaw?drillsRaw.split(',').map(d=>({drill_name:d.trim()})):[];
-      const record={athlete_id:athleteId,status,effort_rating:effortRating,coach_notes:coachNotes};
-      if(focusAreas.length) record.skill_ratings=Object.fromEntries(focusAreas.map(f=>[f,1]));
-      if(drillsCompleted.length) record.drills_completed=drillsCompleted;
-      attendance.push(record);
+  const teamId = document.getElementById('de-team').value;
+  const sessionType = document.getElementById('de-session-type').value;
+  const date = document.getElementById('de-date').value;
+  const startTime = document.getElementById('de-start-time').value;
+  const endTime = document.getElementById('de-end-time').value;
+  const location = document.getElementById('de-location').value;
+  const sessionNotes = document.getElementById('de-notes').value;
+  if (!teamId || !date || !startTime || !endTime) return showToast('Team, date, and times are required', 'error');
+
+  const cards = document.querySelectorAll('#de-player-cards .player-report-card');
+  if (!cards.length) return showToast('Load a roster first', 'error');
+
+  const attendance = [];
+  for (const card of cards) {
+    let athleteId = card.dataset.athleteId;
+    const checked = card.querySelector('input[type=checkbox]').checked;
+
+    // Guest player: resolve
+    if (athleteId === 'guest') {
+      const nameInput = card.querySelector('.pr-guest-name');
+      const guestName = nameInput ? nameInput.value.trim() : '';
+      if (!guestName) continue; // skip empty guest cards silently
+      if (osSupabase) {
+        const parts = guestName.split(/\s+/);
+        const { data: newAthlete, error: insertErr } = await osSupabase.from('athletes')
+          .insert({ first_name: parts[0], last_name: parts.slice(1).join(' ') || '' })
+          .select('id').single();
+        if (insertErr) { showToast('Failed to add guest: ' + insertErr.message, 'error'); return; }
+        athleteId = newAthlete.id;
+      } else { continue; }
     }
-    if(!attendance.some(a=>a.status==='present')) return showToast('At least one athlete must be present','error');
-    const session=await osSupabase.auth.getSession();
-    const {error}=await osSupabase.rpc('log_training_session',{p_team_id:teamId,p_session_type:sessionType,p_session_date:date,p_start_time:startTime,p_end_time:endTime,p_location:location,p_session_notes:notes,p_attendance:JSON.stringify(attendance)});
-    if(error) throw error;
+
+    const effort = parseInt(card.querySelector('.effort-stars')?.dataset.value) || null;
+    const focus = Array.from(card.querySelector('.pr-focus')?.selectedOptions || []).map(o => o.value);
+    const notes = card.querySelector('.pr-notes')?.value?.trim() || null;
+    const drillsRaw = card.querySelector('.pr-drills')?.value?.trim();
+    const drills = drillsRaw ? drillsRaw.split(',').map(d => ({ drill_name: d.trim() })) : [];
+
+    attendance.push({
+      athlete_id: athleteId,
+      status: checked ? 'present' : 'absent',
+      effort_rating: effort,
+      coach_notes: notes,
+      skill_ratings: focus.length ? Object.fromEntries(focus.map(f => [f, 1])) : {},
+      drills_completed: drills
+    });
+  }
+
+  if (!attendance.some(a => a.status === 'present')) return showToast('At least one athlete must be present', 'error');
+
+  try {
+    if (osSupabase) {
+      const { error } = await osSupabase.rpc('log_training_session', {
+        p_team_id: teamId,
+        p_session_type: sessionType,
+        p_session_date: date,
+        p_start_time: startTime,
+        p_end_time: endTime,
+        p_location: location,
+        p_session_notes: sessionNotes,
+        p_attendance: JSON.stringify(attendance)
+      });
+      if (error) throw error;
+    }
     showToast('Training session logged with player reports. Calendar event created.');
-  } catch(e){ showToast('Error: '+e.message,'error'); }
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
 }
+
 async function submitGame() {
-  const teamId=document.getElementById('gm-team').value;
-  const opponent=document.getElementById('gm-opponent').value;
-  const gameDate=document.getElementById('gm-date').value;
-  const gameTime=document.getElementById('gm-time').value;
-  const location=document.getElementById('gm-location').value;
-  const gameType=document.getElementById('gm-type').value;
-  const teamScore=document.getElementById('gm-team-score').value;
-  const oppScore=document.getElementById('gm-opp-score').value;
-  const season=document.getElementById('gm-season').value;
-  if(!teamId||!opponent||!gameDate||!gameType) return showToast('Team, opponent, date, and type required','error');
-  const stats=[];
-  const rows=document.querySelectorAll('#gm-stats-grid tbody tr');
-  rows.forEach(row=>{
-    const inputs=row.querySelectorAll('input[type=number]');
-    if(!inputs.length) return;
-    const athleteId=inputs[0].dataset.athlete;
-    const s={athlete_id:athleteId};
-    inputs.forEach(inp=>{ s[inp.dataset.stat]=parseInt(inp.value)||0; });
+  const teamId = document.getElementById('gm-team').value;
+  const opponent = document.getElementById('gm-opponent').value;
+  const gameDate = document.getElementById('gm-date').value;
+  const gameTime = document.getElementById('gm-time').value;
+  const location = document.getElementById('gm-location').value;
+  const gameType = document.getElementById('gm-type').value;
+  const teamScore = document.getElementById('gm-team-score').value;
+  const oppScore = document.getElementById('gm-opp-score').value;
+  if (!teamId || !opponent || !gameDate || !gameType) return showToast('Team, opponent, date, and type required', 'error');
+
+  const stats = [];
+  document.querySelectorAll('#gm-stats-grid tbody tr').forEach(row => {
+    const inputs = row.querySelectorAll('input[type=number]');
+    if (!inputs.length) return;
+    const athleteId = inputs[0].dataset.athlete;
+    const s = { athlete_id: athleteId };
+    inputs.forEach(inp => { s[inp.dataset.stat] = parseInt(inp.value) || 0; });
     stats.push(s);
   });
+
   try {
-    if(osSupabase) {
-      const session=await osSupabase.auth.getSession();
-      const {error}=await osSupabase.rpc('log_game',{p_team_id:teamId,p_opponent_name:opponent,p_game_date:gameDate,p_game_time:gameTime||null,p_location:location,p_team_score:teamScore?parseInt(teamScore):null,p_opponent_score:oppScore?parseInt(oppScore):null,p_game_type:gameType,p_season:season,p_coach_id:session.data.session.user.id,p_player_stats:JSON.stringify(stats)});
-      if(error) throw error;
+    if (osSupabase) {
+      const { error } = await osSupabase.rpc('log_game', {
+        p_game_date: gameDate,
+        p_game_type: gameType,
+        p_opponent_name: opponent,
+        p_team_id: teamId,
+        p_location: location,
+        p_team_score: teamScore ? parseInt(teamScore) : null,
+        p_opponent_score: oppScore ? parseInt(oppScore) : null,
+        p_game_time: gameTime || null,
+        p_player_stats: JSON.stringify(stats)
+      });
+      if (error) throw error;
     }
     showToast('Game logged. Calendar event created.');
-  } catch(e){ showToast('Error: '+e.message,'error'); }
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
 }
 
 // ─── CALENDAR ───────────────────────────────────────────────
