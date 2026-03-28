@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://unpkg.com/lucide@latest"></script>
+
 <style>
 :root {
   --bg: #000000;
@@ -116,13 +116,11 @@ body {
   color: var(--muted); cursor: pointer; transition: all 0.2s ease; border: none; background: transparent; width: 100%; text-align: left;
 }
 .sb-link:hover { background: var(--surface-hover); color: var(--text); }
-.sb-link.active { background: rgba(37,99,235,0.1); color: #fff; font-weight: 700; box-shadow: inset 4px 0 0 var(--primary); }
-.sb-link .icon { width: 20px; font-size: 16px; opacity: 0.6; transition: opacity 0.2s; }
-.sb-link.active .icon, .sb-link:hover .icon { opacity: 1; }
-.badge { background: var(--accent); color: #fff; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 9999px; margin-left: auto; box-shadow: 0 2px 10px rgba(239,68,68,0.4); }
+.sb-link.active { background: rgba(255,255,255,0.06); color: #fff; font-weight: 700; box-shadow: inset 3px 0 0 rgba(255,255,255,0.5); }
+.badge { background: rgba(255,255,255,0.15); color: #fff; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 9999px; margin-left: auto; }
 
 .sb-footer { margin-top: auto; padding: 24px 24px 16px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
-.avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), #8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; box-shadow: 0 4px 10px rgba(37,99,235,0.3); }
+.avatar { width: 40px; height: 40px; aspect-ratio: 1; flex-shrink: 0; border-radius: 50%; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: var(--text); }
 .sb-footer-info { flex: 1; overflow: hidden; }
 .sb-footer-info strong { display: block; color: var(--text); font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sb-footer-info span { display: block; font-size: 11px; color: var(--muted); margin-top: 4px; font-weight: 500; }
@@ -150,11 +148,8 @@ body {
   box-shadow: 0 20px 40px rgba(0,0,0,0.4);
 }
 .metric-card:hover { transform: translateY(-4px); box-shadow: 0 30px 60px rgba(0,0,0,0.6); border-color: var(--border-light); }
-.metric-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--muted); opacity: 0.3; }
-.metric-card.blue::before { background: var(--primary); opacity: 1; box-shadow: 0 4px 20px var(--primary-glow); }
-.metric-card.green::before { background: #34c759; opacity: 1; box-shadow: 0 4px 20px rgba(52,199,89,0.4); }
-.metric-card.yellow::before { background: #ffcc00; opacity: 1; box-shadow: 0 4px 20px rgba(255,204,0,0.4); }
-.metric-card.red::before { background: var(--accent); opacity: 1; box-shadow: 0 4px 20px rgba(239,68,68,0.4); }
+.metric-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: rgba(255,255,255,0.08); }
+.metric-card.blue::before, .metric-card.green::before, .metric-card.yellow::before, .metric-card.red::before { background: rgba(255,255,255,0.15); }
 
 .metric-card .label { font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 .metric-card .val { font-size: 40px; font-weight: 900; margin: 16px 0 12px; letter-spacing: -0.04em; color: #fff; line-height: 1; }
@@ -242,22 +237,22 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
   <div class="sb-logo">GODSPEED<span>Admin Dashboard</span></div>
   <div class="sb-section">
     <div class="sb-label">Overview</div>
-    <button class="sb-link active" onclick="switchPanel('dashboard')"><i data-lucide="layout-dashboard" class="icon"></i>Dashboard</button>
+    <button class="sb-link active" onclick="switchPanel('dashboard')">Dashboard</button>
   </div>
   <div class="sb-section">
     <div class="sb-label">People</div>
-    <button class="sb-link" onclick="switchPanel('players')"><i data-lucide="users" class="icon"></i>Players & Parents</button>
-    <button class="sb-link" id="req-tab" onclick="switchPanel('requests')"><i data-lucide="shield" class="icon"></i>Login Requests<span class="badge" id="pending-badge">0</span></button>
+    <button class="sb-link" onclick="switchPanel('players')">Players & Parents</button>
+    <button class="sb-link" id="req-tab" onclick="switchPanel('requests')">Login Requests<span class="badge" id="pending-badge">0</span></button>
   </div>
   <div class="sb-section">
     <div class="sb-label">Finance</div>
-    <button class="sb-link" onclick="switchPanel('dues')"><i data-lucide="credit-card" class="icon"></i>Orders & Dues</button>
+    <button class="sb-link" onclick="switchPanel('dues')">Orders & Dues</button>
   </div>
   <div class="sb-section">
     <div class="sb-label">Comms & Content</div>
-    <button class="sb-link" onclick="switchPanel('comms')"><i data-lucide="mail" class="icon"></i>Email / SMS</button>
-    <button class="sb-link" onclick="switchPanel('blog')"><i data-lucide="pen-tool" class="icon"></i>Blog Posts</button>
-    <button class="sb-link" onclick="switchPanel('memos')"><i data-lucide="file-text" class="icon"></i>Coach Memos</button>
+    <button class="sb-link" onclick="switchPanel('comms')">Email / SMS</button>
+    <button class="sb-link" onclick="switchPanel('blog')">Blog Posts</button>
+    <button class="sb-link" onclick="switchPanel('memos')">Coach Memos</button>
   </div>
   <div class="sb-footer">
     <div class="avatar" id="director-initials">D</div>
@@ -439,6 +434,6 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 <script type="module" src="src/lib/env-injector.js"></script>
 <script src="auth-supabase.js" defer></script>
 <script src="admin-os.js" defer></script>
-<script>document.addEventListener("DOMContentLoaded", () => lucide.createIcons());</script>
+
 </body>
 </html>
