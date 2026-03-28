@@ -224,13 +224,30 @@ PANEL_TITLES.dataEntry = 'Data Entry';
 | Field | Type | Source | Required |
 |-------|------|--------|----------|
 | Team | Select | `teams` table | Yes |
-| Session Type | Select | practice, shooting, conditioning, scrimmage, film | Yes |
+| Session Type | Select | training, practice, shooting, conditioning, scrimmage, film | Yes |
 | Date | Date picker | default: today | Yes |
 | Start Time | Time picker | | Yes |
 | End Time | Time picker | | Yes |
 | Location | Text | | No |
 | Notes | Textarea | | No |
-| Attendance | Checkbox list | Athletes from selected team via `team_rosters` | Yes (at least 1) |
+| Attendance | Checkbox list + name input | Athletes from selected team via `team_rosters` | Yes (at least 1) |
+| Add Player | Text input + button | Manual entry for guests/walk-ins | No |
+
+**DB Constraint Update Required:**
+The `training_sessions.session_type` CHECK constraint must be widened to include the new values.
+Run in Supabase SQL Editor:
+```sql
+ALTER TABLE public.training_sessions
+  DROP CONSTRAINT IF EXISTS training_sessions_session_type_check;
+
+ALTER TABLE public.training_sessions
+  ADD CONSTRAINT training_sessions_session_type_check
+  CHECK (session_type IN (
+    'team_practice', 'individual_workout', 'skills_clinic',
+    'open_gym', 'film_session', 'conditioning', 'scrimmage',
+    'training', 'practice', 'shooting', 'film'
+  ));
+```
 
 **On Team Select:** Fetch roster:
 ```javascript
@@ -241,6 +258,27 @@ const { data: roster } = await supabase
   .eq('status', 'active');
 ```
 Render checkboxes with "Select All" toggle.
+
+**Attendance Row Layout:**
+Each athlete row should display:
+```
+[checkbox] [Player Name (editable text field)] [status: present/absent/excused]
+```
+- Roster players pre-populate with `first_name + ' ' + last_name` in a read-only text field
+- "Add Player" button below the roster list adds a blank row with an editable name field
+- Guest/walk-in rows include an editable text input for the player's name
+- Guest athletes get inserted into the `athletes` table (first_name, last_name) before logging attendance, then their new `athlete_id` is used in the attendance JSONB
+
+**Add Player (guest) flow:**
+```javascript
+// On submit, for any guest rows:
+const { data: newAthlete } = await supabase
+  .from('athletes')
+  .insert({ first_name: guestFirstName, last_name: guestLastName })
+  .select('id')
+  .single();
+// Then include newAthlete.id in the p_attendance array
+```
 
 **On Submit:** Call RPC:
 ```javascript
