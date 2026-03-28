@@ -637,6 +637,7 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
             <div class="field"><label>Team</label><select id="de-team" onchange="loadTeamRoster('de')"><option value="">Select team...</option></select></div>
             <div class="field"><label>Session Type</label>
               <select id="de-session-type">
+                <option value="training">Training</option>
                 <option value="practice">Practice</option>
                 <option value="shooting">Shooting</option>
                 <option value="conditioning">Conditioning</option>
@@ -659,6 +660,7 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
             <div class="attendance-grid" id="de-attendance">
               <p style="color:var(--muted);font-size:13px">Select a team to load roster</p>
             </div>
+            <button class="btn btn-ghost btn-xs" style="margin-top:8px" onclick="addGuestPlayer()">+ Add Player</button>
           </div>
           <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="submitTrainingSession()">Log Training Session</button>
         </div>

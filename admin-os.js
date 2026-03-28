@@ -428,7 +428,8 @@ function renderRoster(prefix,roster) {
   if(prefix==='de') {
     document.getElementById('de-attendance').innerHTML=roster.map(a=>`
       <label class="attendance-item" onclick="this.classList.toggle('checked')">
-        <input type="checkbox" value="${a.id}" checked> ${a.name}
+        <input type="checkbox" value="${a.id}" checked>
+        <input type="text" class="att-name" value="${a.name}" readonly style="background:transparent;border:none;color:var(--text);font-size:14px;font-weight:600;pointer-events:none;width:100%">
       </label>`).join('');
   } else if(prefix==='gm') {
     const statCols=['MIN','PTS','FGM','FGA','3PM','3PA','FTM','FTA','OREB','DREB','AST','STL','BLK','TO','PF'];
@@ -437,6 +438,18 @@ function renderRoster(prefix,roster) {
 }
 function toggleAllAttendance(check) {
   document.querySelectorAll('#de-attendance input[type=checkbox]').forEach(cb=>{cb.checked=check; cb.closest('.attendance-item').classList.toggle('checked',check);});
+}
+function addGuestPlayer() {
+  const grid=document.getElementById('de-attendance');
+  if(grid.querySelector('p')) grid.innerHTML='';
+  const row=document.createElement('label');
+  row.className='attendance-item checked';
+  row.onclick=function(){this.classList.toggle('checked')};
+  row.innerHTML=`<input type="checkbox" value="guest" checked>
+    <input type="text" class="att-name guest-name" placeholder="Player name..." style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;font-weight:600;padding:6px 10px;width:100%" onclick="event.stopPropagation()">
+    <button class="btn btn-ghost btn-xs" style="flex-shrink:0;color:var(--accent)" onclick="event.stopPropagation();this.closest('.attendance-item').remove()">X</button>`;
+  grid.appendChild(row);
+  row.querySelector('.guest-name').focus();
 }
 function clearAllStats() {
   document.querySelectorAll('#gm-stats-grid input[type=number]').forEach(i=>i.value='0');
@@ -450,17 +463,34 @@ async function submitTrainingSession() {
   const location=document.getElementById('de-location').value;
   const notes=document.getElementById('de-notes').value;
   if(!teamId||!date||!startTime||!endTime) return showToast('Team, date, and times are required','error');
-  const cbs=document.querySelectorAll('#de-attendance input[type=checkbox]');
-  if(!cbs.length) return showToast('Load a roster first','error');
+  const items=document.querySelectorAll('#de-attendance .attendance-item');
+  if(!items.length) return showToast('Load a roster first','error');
   const attendance=[];
-  cbs.forEach(cb=>attendance.push({athlete_id:cb.value,status:cb.checked?'present':'absent'}));
-  if(!attendance.some(a=>a.status==='present')) return showToast('At least one athlete must be present','error');
   try {
-    if(osSupabase) {
-      const session=await osSupabase.auth.getSession();
-      const {error}=await osSupabase.rpc('log_training_session',{p_team_id:teamId,p_session_type:sessionType,p_session_date:date,p_start_time:startTime,p_end_time:endTime,p_location:location,p_notes:notes,p_coach_id:session.data.session.user.id,p_attendance:JSON.stringify(attendance)});
-      if(error) throw error;
+    if(!osSupabase) return showToast('No database connection','error');
+    // Process each attendance row -- create guest athletes first
+    for(const item of items) {
+      const cb=item.querySelector('input[type=checkbox]');
+      const nameInput=item.querySelector('.att-name');
+      let athleteId=cb.value;
+      const status=cb.checked?'present':'absent';
+      // Guest player -- insert into athletes table
+      if(athleteId==='guest') {
+        const fullName=(nameInput?.value||'').trim();
+        if(!fullName) continue; // skip empty guest rows
+        const parts=fullName.split(/\s+/);
+        const firstName=parts[0];
+        const lastName=parts.slice(1).join(' ')||'';
+        const {data:newAthlete,error:aErr}=await osSupabase.from('athletes').insert({first_name:firstName,last_name:lastName}).select('id').single();
+        if(aErr) throw aErr;
+        athleteId=newAthlete.id;
+      }
+      attendance.push({athlete_id:athleteId,status});
     }
+    if(!attendance.some(a=>a.status==='present')) return showToast('At least one athlete must be present','error');
+    const session=await osSupabase.auth.getSession();
+    const {error}=await osSupabase.rpc('log_training_session',{p_team_id:teamId,p_session_type:sessionType,p_session_date:date,p_start_time:startTime,p_end_time:endTime,p_location:location,p_notes:notes,p_coach_id:session.data.session.user.id,p_attendance:JSON.stringify(attendance)});
+    if(error) throw error;
     showToast('Training session logged. Calendar event created.');
   } catch(e){ showToast('Error: '+e.message,'error'); }
 }
