@@ -51,6 +51,17 @@ body {
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 var(--primary-glow); } 70% { box-shadow: 0 0 0 10px rgba(0,113,227,0); } 100% { box-shadow: 0 0 0 0 rgba(0,113,227,0); } }
 
+/* TOAST */
+.toast {
+  position: fixed; bottom: 32px; right: 32px; padding: 14px 24px; border-radius: 12px;
+  font-size: 14px; font-weight: 600; z-index: 9999; animation: slideUp 0.3s cubic-bezier(0.16,1,0.3,1) forwards;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  transition: opacity 0.3s ease;
+}
+.toast-success { background: rgba(52,199,89,0.15); border: 1px solid rgba(52,199,89,0.3); color: #34c759; }
+.toast-error { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; }
+.toast-info { background: rgba(37,99,235,0.15); border: 1px solid rgba(37,99,235,0.3); color: #60a5fa; }
+
 /* LOGIN SCREEN */
 #admin-login-screen {
   display: none; position: fixed; inset: 0; background: var(--bg); z-index: 900;
@@ -74,11 +85,12 @@ body {
   display: block; font-family: var(--font-sans); font-size: 11px; font-weight: 700; letter-spacing: 0.2em;
   text-transform: uppercase; -webkit-text-fill-color: var(--primary); margin-top: 8px;
 }
+.field { margin-bottom: 16px; }
 .field label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 8px; display: block; }
 .field input, .field select, .field textarea {
   background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border); border-radius: 12px;
   color: #fff; padding: 16px; font-size: 15px; width: 100%; transition: all 0.2s ease;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); font-family: var(--font-sans);
 }
 .field input:focus, .field select:focus, .field textarea:focus {
   border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.2), inset 0 2px 4px rgba(0,0,0,0.2);
@@ -86,7 +98,7 @@ body {
 .btn {
   padding: 16px 32px; border-radius: var(--radius-btn); font-size: 14px; font-weight: 700; letter-spacing: 0.05em;
   text-transform: uppercase; cursor: pointer; border: none; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--font-sans);
 }
 .btn-primary {
   background: var(--primary); color: #fff; box-shadow: 0 10px 25px rgba(37,99,235,0.3);
@@ -97,22 +109,25 @@ body {
 .btn-ghost { background: transparent; color: var(--text); border: 2px solid var(--border); }
 .btn-ghost:hover { background: var(--surface-hover); border-color: var(--border-light); }
 .btn-sm { padding: 8px 24px; font-size: 12px; }
+.btn-xs { padding: 4px 12px; font-size: 11px; }
+.btn-danger { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+.btn-danger:hover { background: rgba(239,68,68,0.25); }
 
 /* SIDEBAR */
 #sidebar {
   width: var(--sidebar); background: var(--surface); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
   border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; padding: 32px 0 24px;
-  z-index: 10;
+  z-index: 10; overflow-y: auto;
 }
 .sb-logo {
-  padding: 0 24px 40px; font-family: var(--font-sans); font-size: 24px; font-weight: 900; letter-spacing: -0.05em; text-transform: uppercase;
+  padding: 0 24px 32px; font-family: var(--font-sans); font-size: 24px; font-weight: 900; letter-spacing: -0.05em; text-transform: uppercase;
   background: linear-gradient(to right, #fff, #93c5fd); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1;
 }
 .sb-logo span { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.15em; -webkit-text-fill-color: var(--primary); margin-top: 6px; }
-.sb-section { padding: 0 16px; margin-bottom: 24px; }
-.sb-label { font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); padding: 0 12px; margin-bottom: 12px; }
+.sb-section { padding: 0 16px; margin-bottom: 20px; }
+.sb-label { font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); padding: 0 12px; margin-bottom: 8px; }
 .sb-link {
-  display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 600;
+  display: flex; align-items: center; gap: 12px; padding: 9px 16px; border-radius: 12px; font-size: 13px; font-weight: 600;
   color: var(--muted); cursor: pointer; transition: all 0.2s ease; border: none; background: transparent; width: 100%; text-align: left;
 }
 .sb-link:hover { background: var(--surface-hover); color: var(--text); }
@@ -181,6 +196,28 @@ tr:last-child td { border-bottom: none; }
 .tag-red { background: rgba(255,59,48,0.1); color: #ff3b30; border-color: rgba(255,59,48,0.2); }
 .tag-blue { background: rgba(0,113,227,0.1); color: #0071e3; border-color: rgba(0,113,227,0.2); }
 .tag-gray { background: rgba(255,255,255,0.05); color: var(--muted); border-color: rgba(255,255,255,0.1); }
+.tag-orange { background: rgba(255,149,0,0.1); color: #ff9500; border-color: rgba(255,149,0,0.2); }
+.tag-purple { background: rgba(175,82,222,0.1); color: #af52de; border-color: rgba(175,82,222,0.2); }
+
+/* FILTER CHIPS */
+.filter-chips { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+.filter-chip {
+  padding: 6px 16px; border-radius: 9999px; font-size: 12px; font-weight: 700; cursor: pointer;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--muted);
+  transition: all 0.2s ease; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.filter-chip:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+.filter-chip.active { background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(255,255,255,0.2); }
+
+/* SUB-TABS */
+.sub-tabs { display: flex; gap: 0; margin-bottom: 32px; border-bottom: 1px solid var(--border); }
+.sub-tab {
+  padding: 12px 24px; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--muted);
+  border: none; background: transparent; text-transform: uppercase; letter-spacing: 0.05em;
+  border-bottom: 2px solid transparent; transition: all 0.2s ease;
+}
+.sub-tab:hover { color: var(--text); }
+.sub-tab.active { color: #fff; border-bottom-color: rgba(255,255,255,0.5); }
 
 /* ALERTS */
 .alert { padding: 16px 20px; border-radius: 12px; font-size: 14px; margin-bottom: 24px; font-weight: 500; display: flex; gap: 12px; align-items: flex-start; }
@@ -206,10 +243,59 @@ tr:last-child td { border-bottom: none; }
 
 /* MISC GRID/FORMS */
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
 .editor-toolbar { background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border); padding: 12px 16px; border-radius: 16px 16px 0 0; display: flex; gap: 8px; flex-wrap: wrap; }
 .editor-toolbar button { background: rgba(255,255,255,0.05); border: 1px solid transparent; color: var(--text); padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.05em; }
 .editor-toolbar button:hover { background: rgba(255,255,255,0.1); border-color: var(--border); }
 textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); border: none; color: #fff; font-size: 16px; line-height: 1.8; padding: 24px; resize: vertical; border-radius: 0 0 16px 16px; font-family: var(--font-sans); }
+
+/* CALENDAR */
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 32px; }
+.cal-header { padding: 12px 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); text-align: center; background: rgba(0,0,0,0.3); }
+.cal-day {
+  min-height: 100px; padding: 8px; background: var(--card); cursor: pointer; transition: background 0.15s ease;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.cal-day:hover { background: rgba(255,255,255,0.04); }
+.cal-day.other-month { opacity: 0.3; }
+.cal-day.today { box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2); }
+.cal-day .day-num { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+.cal-event { font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.cal-event.practice { background: rgba(37,99,235,0.2); color: #60a5fa; }
+.cal-event.game { background: rgba(239,68,68,0.2); color: #f87171; }
+.cal-event.meeting { background: rgba(52,199,89,0.2); color: #34c759; }
+.cal-event.deadline { background: rgba(255,149,0,0.2); color: #ff9500; }
+.cal-event.other { background: rgba(255,255,255,0.08); color: var(--muted); }
+
+/* STATS GRID */
+.stats-grid { overflow-x: auto; margin-bottom: 24px; }
+.stats-grid table { min-width: 1200px; }
+.stats-grid th, .stats-grid td { padding: 8px 10px; font-size: 12px; text-align: center; }
+.stats-grid td input {
+  width: 48px; padding: 4px; text-align: center; background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border); border-radius: 6px; color: #fff; font-size: 12px;
+  font-family: var(--font-sans);
+}
+.stats-grid td input:focus {
+  border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.2);
+}
+
+/* ATTENDANCE */
+.attendance-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; margin-top: 12px; }
+.attendance-item {
+  display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px;
+  background: rgba(255,255,255,0.03); border: 1px solid var(--border); font-size: 13px; cursor: pointer;
+  transition: all 0.15s ease;
+}
+.attendance-item:hover { background: rgba(255,255,255,0.06); }
+.attendance-item.checked { background: rgba(52,199,89,0.08); border-color: rgba(52,199,89,0.2); }
+.attendance-item input[type=checkbox] { accent-color: #34c759; width: 16px; height: 16px; cursor: pointer; }
+
+/* SPINNER OVERLAY */
+.panel-loading {
+  display: flex; align-items: center; justify-content: center; padding: 60px;
+  color: var(--muted); font-size: 14px; font-weight: 600;
+}
 </style>
 </head>
 <body>
@@ -237,25 +323,37 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 <!-- SIDEBAR -->
 <nav id="sidebar">
   <div class="sb-logo">GODSPEED<span>Admin Dashboard</span></div>
+
   <div class="sb-section">
     <div class="sb-label">Overview</div>
-    <button class="sb-link active" onclick="switchPanel('dashboard')"><i data-lucide="layout-dashboard" class="icon"></i>Dashboard</button>
+    <button class="sb-link active" onclick="switchPanel('dashboard',this)"><i data-lucide="layout-dashboard" class="icon"></i>Dashboard</button>
   </div>
+
   <div class="sb-section">
     <div class="sb-label">People</div>
-    <button class="sb-link" onclick="switchPanel('players')"><i data-lucide="users" class="icon"></i>Players & Parents</button>
-    <button class="sb-link" id="req-tab" onclick="switchPanel('requests')"><i data-lucide="shield" class="icon"></i>Login Requests<span class="badge" id="pending-badge">0</span></button>
+    <button class="sb-link" onclick="switchPanel('players',this)"><i data-lucide="users" class="icon"></i>Players & Parents</button>
+    <button class="sb-link" id="req-tab" onclick="switchPanel('requests',this)"><i data-lucide="shield" class="icon"></i>Login Requests<span class="badge" id="pending-badge">0</span></button>
   </div>
+
   <div class="sb-section">
     <div class="sb-label">Finance</div>
-    <button class="sb-link" onclick="switchPanel('dues')"><i data-lucide="credit-card" class="icon"></i>Orders & Dues</button>
+    <button class="sb-link" onclick="switchPanel('dues',this)"><i data-lucide="wallet" class="icon"></i>Dues</button>
+    <button class="sb-link" onclick="switchPanel('orders',this)"><i data-lucide="shopping-bag" class="icon"></i>Orders</button>
   </div>
+
   <div class="sb-section">
-    <div class="sb-label">Comms & Content</div>
-    <button class="sb-link" onclick="switchPanel('comms')"><i data-lucide="mail" class="icon"></i>Email / SMS</button>
-    <button class="sb-link" onclick="switchPanel('blog')"><i data-lucide="pen-tool" class="icon"></i>Blog Posts</button>
-    <button class="sb-link" onclick="switchPanel('memos')"><i data-lucide="file-text" class="icon"></i>Coach Memos</button>
+    <div class="sb-label">Operations</div>
+    <button class="sb-link" onclick="switchPanel('comms',this)"><i data-lucide="send" class="icon"></i>Messaging</button>
+    <button class="sb-link" onclick="switchPanel('dataEntry',this)"><i data-lucide="clipboard-list" class="icon"></i>Data Entry</button>
+    <button class="sb-link" onclick="switchPanel('calendar',this)"><i data-lucide="calendar" class="icon"></i>Calendar</button>
   </div>
+
+  <div class="sb-section">
+    <div class="sb-label">Content</div>
+    <button class="sb-link" onclick="switchPanel('blog',this)"><i data-lucide="pen-tool" class="icon"></i>Blog Posts</button>
+    <button class="sb-link" onclick="switchPanel('memos',this)"><i data-lucide="file-text" class="icon"></i>Coach Memos</button>
+  </div>
+
   <div class="sb-footer">
     <div class="avatar" id="director-initials">D</div>
     <div class="sb-footer-info">
@@ -272,7 +370,7 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
     <h1 id="panel-title">Dashboard</h1>
     <div class="topbar-actions">
       <span id="topbar-date" style="font-size:12px;color:var(--muted)"></span>
-      <button class="btn btn-ghost btn-sm" onclick="refreshCurrent()">↻ Refresh</button>
+      <button class="btn btn-ghost btn-sm" onclick="refreshCurrent()">Refresh</button>
     </div>
   </div>
 
@@ -310,36 +408,179 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
       </div>
     </div>
 
-    <!-- DUES & ORDERS -->
+    <!-- SEASON DUES -->
     <div class="panel" id="panel-dues">
-      <div class="metrics" style="grid-template-columns:repeat(3,1fr)">
+      <div class="metrics" style="grid-template-columns:repeat(4,1fr)">
+        <div class="metric-card blue"><div class="label">Total Enrolled</div><div class="val" id="d-enrolled">--</div></div>
         <div class="metric-card green"><div class="label">Total Collected</div><div class="val" id="d-collected">$--</div></div>
-        <div class="metric-card red"><div class="label">Total Outstanding</div><div class="val" id="d-outstanding">$--</div></div>
-        <div class="metric-card blue"><div class="label">Total Billed</div><div class="val" id="d-billed">$--</div></div>
+        <div class="metric-card red"><div class="label">Outstanding</div><div class="val" id="d-outstanding">$--</div></div>
+        <div class="metric-card yellow"><div class="label">Overdue</div><div class="val" id="d-overdue">--</div></div>
+      </div>
+      <div class="filter-chips" id="dues-filters">
+        <button class="filter-chip active" onclick="filterDues('all')">All</button>
+        <button class="filter-chip" onclick="filterDues('pending')">Pending</button>
+        <button class="filter-chip" onclick="filterDues('overdue')">Overdue</button>
+        <button class="filter-chip" onclick="filterDues('paid')">Paid</button>
       </div>
       <div class="card">
-        <div class="card-header"><h2>Payment Ledger</h2><button class="btn btn-primary btn-sm" onclick="openModal('record-payment')">+ Record Payment</button></div>
-        <table><thead><tr><th>Parent / Player</th><th>Season</th><th>Grade</th><th>Fee Due</th><th>Paid</th><th>Balance</th><th>Method</th><th>Status</th></tr></thead><tbody id="dues-tbody"><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px">Loading...</td></tr></tbody></table>
+        <div class="card-header"><h2>Installment Ledger</h2><button class="btn btn-primary btn-sm" onclick="openModal('record-payment')">+ Record Payment</button></div>
+        <table><thead><tr><th>Parent</th><th>Player</th><th>Installment</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Paid Date</th><th>Actions</th></tr></thead><tbody id="dues-tbody"><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px">Loading...</td></tr></tbody></table>
       </div>
     </div>
 
-    <!-- COMMS -->
+    <!-- PRO SHOP ORDERS -->
+    <div class="panel" id="panel-orders">
+      <div class="metrics" style="grid-template-columns:repeat(4,1fr)">
+        <div class="metric-card blue"><div class="label">Total Orders</div><div class="val" id="o-total">--</div></div>
+        <div class="metric-card green"><div class="label">Revenue</div><div class="val" id="o-revenue">$--</div></div>
+        <div class="metric-card yellow"><div class="label">Pending Fulfillment</div><div class="val" id="o-pending">--</div></div>
+        <div class="metric-card red"><div class="label">Refunded</div><div class="val" id="o-refunded">$--</div></div>
+      </div>
+      <div class="filter-chips" id="order-filters">
+        <button class="filter-chip active" onclick="filterOrders('all')">All</button>
+        <button class="filter-chip" onclick="filterOrders('unfulfilled')">Unfulfilled</button>
+        <button class="filter-chip" onclick="filterOrders('shipped')">Shipped</button>
+        <button class="filter-chip" onclick="filterOrders('delivered')">Delivered</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>Order History</h2></div>
+        <table><thead><tr><th>Order #</th><th>Customer</th><th>Total</th><th>Payment</th><th>Fulfillment</th><th>Date</th><th>Actions</th></tr></thead><tbody id="orders-tbody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px">Loading...</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- MESSAGING -->
     <div class="panel" id="panel-comms">
-      <div class="metrics" style="grid-template-columns:repeat(3,1fr)">
-        <div class="metric-card blue"><div class="label">Campaigns Sent</div><div class="val" id="c-sent">--</div></div>
-        <div class="metric-card green"><div class="label">Avg Open Rate</div><div class="val" id="c-open">--%</div></div>
-        <div class="metric-card purple"><div class="label">Avg Click Rate</div><div class="val" id="c-click">--%</div></div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:20px">
+      <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:20px">
+        <!-- Compose -->
         <div class="card">
-          <div class="card-header"><h2>Campaigns</h2><button class="btn btn-primary btn-sm" onclick="openModal('new-campaign')">+ New</button></div>
-          <div id="campaigns-list" style="padding:12px"></div>
+          <div class="card-header"><h2>Compose Broadcast</h2></div>
+          <div class="card-body">
+            <div class="field"><label>Subject</label><input type="text" id="bc-subject" maxlength="200" placeholder="Message subject..."></div>
+            <div class="field"><label>Body</label><textarea class="editor" id="bc-body" style="min-height:180px;border:1px solid var(--border);border-radius:12px" placeholder="Write your message..."></textarea></div>
+            <div class="field">
+              <label>Audience</label>
+              <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+                <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="radio" name="bc-audience" value="all_parents" checked style="accent-color:var(--primary)"> All Parents</label>
+                <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="radio" name="bc-audience" value="team" style="accent-color:var(--primary)"> Specific Team</label>
+                <select id="bc-team" style="display:none;margin-left:24px;width:200px"><option value="">Select team...</option></select>
+              </div>
+            </div>
+            <div class="field">
+              <label>Channel</label>
+              <div style="display:flex;gap:16px;margin-top:8px">
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="radio" name="bc-channel" value="both" checked style="accent-color:var(--primary)"> Both</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="radio" name="bc-channel" value="email" style="accent-color:var(--primary)"> Email</label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="radio" name="bc-channel" value="internal" style="accent-color:var(--primary)"> Internal</label>
+              </div>
+            </div>
+            <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="sendBroadcast()">Send Broadcast</button>
+          </div>
         </div>
-        <div class="card" id="campaign-detail-card">
-          <div class="card-header"><h2>Campaign Detail</h2></div>
-          <div class="card-body" id="campaign-detail"><p style="color:var(--muted);font-size:13px">Select a campaign to view stats.</p></div>
+
+        <!-- Sent Messages -->
+        <div class="card">
+          <div class="card-header"><h2>Sent Messages</h2></div>
+          <div id="broadcast-list" style="padding:0">
+            <table><thead><tr><th>Subject</th><th>Audience</th><th>Sent</th><th>Recipients</th><th>Delivered</th><th>Read</th></tr></thead><tbody id="broadcast-tbody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px">No messages yet</td></tr></tbody></table>
+          </div>
         </div>
       </div>
+    </div>
+
+    <!-- DATA ENTRY -->
+    <div class="panel" id="panel-dataEntry">
+      <div class="sub-tabs">
+        <button class="sub-tab active" onclick="switchDataTab('training',this)">Training</button>
+        <button class="sub-tab" onclick="switchDataTab('game',this)">Games</button>
+      </div>
+
+      <!-- Training Session Form -->
+      <div id="data-training" class="card">
+        <div class="card-header"><h2>Log Training Session</h2></div>
+        <div class="card-body">
+          <div class="grid2">
+            <div class="field"><label>Team</label><select id="de-team" onchange="loadTeamRoster('de')"><option value="">Select team...</option></select></div>
+            <div class="field"><label>Session Type</label>
+              <select id="de-session-type">
+                <option value="practice">Practice</option>
+                <option value="shooting">Shooting</option>
+                <option value="conditioning">Conditioning</option>
+                <option value="scrimmage">Scrimmage</option>
+                <option value="film">Film</option>
+              </select>
+            </div>
+            <div class="field"><label>Date</label><input type="date" id="de-date"></div>
+            <div class="field"><label>Start Time</label><input type="time" id="de-start-time"></div>
+            <div class="field"><label>End Time</label><input type="time" id="de-end-time"></div>
+            <div class="field"><label>Location</label><input type="text" id="de-location" placeholder="Gym, Court, etc."></div>
+          </div>
+          <div class="field"><label>Notes</label><textarea id="de-notes" style="min-height:80px;border:1px solid var(--border);border-radius:12px;background:rgba(0,0,0,0.3);color:#fff;padding:16px;width:100%;font-family:var(--font-sans);font-size:14px;resize:vertical" placeholder="Optional notes..."></textarea></div>
+          <div class="field">
+            <label>Attendance</label>
+            <div style="display:flex;gap:8px;margin-bottom:8px;margin-top:8px">
+              <button class="btn btn-ghost btn-xs" onclick="toggleAllAttendance(true)">Select All</button>
+              <button class="btn btn-ghost btn-xs" onclick="toggleAllAttendance(false)">Clear All</button>
+            </div>
+            <div class="attendance-grid" id="de-attendance">
+              <p style="color:var(--muted);font-size:13px">Select a team to load roster</p>
+            </div>
+          </div>
+          <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="submitTrainingSession()">Log Training Session</button>
+        </div>
+      </div>
+
+      <!-- Game Form -->
+      <div id="data-game" class="card" style="display:none">
+        <div class="card-header"><h2>Log Game</h2></div>
+        <div class="card-body">
+          <div class="grid2">
+            <div class="field"><label>Team</label><select id="gm-team" onchange="loadTeamRoster('gm')"><option value="">Select team...</option></select></div>
+            <div class="field"><label>Opponent</label><input type="text" id="gm-opponent" placeholder="Opponent team name"></div>
+            <div class="field"><label>Game Date</label><input type="date" id="gm-date"></div>
+            <div class="field"><label>Game Time</label><input type="time" id="gm-time"></div>
+            <div class="field"><label>Location</label><input type="text" id="gm-location" placeholder="Venue name"></div>
+            <div class="field"><label>Game Type</label>
+              <select id="gm-type">
+                <option value="league">League</option>
+                <option value="tournament">Tournament</option>
+                <option value="scrimmage">Scrimmage</option>
+                <option value="showcase">Showcase</option>
+              </select>
+            </div>
+            <div class="field"><label>Team Score</label><input type="number" id="gm-team-score" min="0" placeholder="--"></div>
+            <div class="field"><label>Opponent Score</label><input type="number" id="gm-opp-score" min="0" placeholder="--"></div>
+            <div class="field"><label>Season</label><input type="text" id="gm-season" placeholder="e.g. Spring 2026"></div>
+          </div>
+
+          <div class="field" style="margin-top:16px">
+            <label>Player Stats</label>
+            <div style="display:flex;gap:8px;margin:8px 0">
+              <button class="btn btn-ghost btn-xs" onclick="clearAllStats()">Clear All</button>
+            </div>
+            <div class="stats-grid" id="gm-stats-grid">
+              <p style="color:var(--muted);font-size:13px">Select a team to load roster</p>
+            </div>
+          </div>
+          <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="submitGame()">Log Game</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div class="panel" id="panel-calendar">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+        <div style="display:flex;align-items:center;gap:16px">
+          <button class="btn btn-ghost btn-sm" onclick="calNav(-1)">Prev</button>
+          <h2 id="cal-month-label" style="font-size:20px;font-weight:800;letter-spacing:-0.02em"></h2>
+          <button class="btn btn-ghost btn-sm" onclick="calNav(1)">Next</button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" id="cal-view-month" onclick="setCalView('month')" style="opacity:1">Month</button>
+          <button class="btn btn-ghost btn-sm" id="cal-view-list" onclick="setCalView('list')" style="opacity:0.5">List</button>
+          <button class="btn btn-primary btn-sm" onclick="openModal('create-event')">+ Event</button>
+        </div>
+      </div>
+      <div id="cal-container"></div>
     </div>
 
     <!-- BLOG -->
@@ -354,7 +595,7 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
             <h2 id="blog-editor-title">New Post</h2>
             <div style="display:flex;gap:8px">
               <button class="btn btn-ghost btn-sm" onclick="saveBlogDraft()">Save Draft</button>
-              <button class="btn btn-primary btn-sm" onclick="publishBlogPost()">Publish →</button>
+              <button class="btn btn-primary btn-sm" onclick="publishBlogPost()">Publish</button>
             </div>
           </div>
           <div class="card-body">
@@ -391,7 +632,7 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
         <div class="card" id="memo-editor-card">
           <div class="card-header">
             <h2 id="memo-editor-title">New Memo</h2>
-            <button class="btn btn-primary btn-sm" onclick="sendMemo()">Send Memo →</button>
+            <button class="btn btn-primary btn-sm" onclick="sendMemo()">Send Memo</button>
           </div>
           <div class="card-body">
             <input type="hidden" id="memo-editing-id">
@@ -427,8 +668,8 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 
 <!-- MODAL -->
 <div id="modal-overlay" onclick="if(event.target===this)closeModal()">
-  <div id="modal-box" id="modal-box">
-    <div class="modal-header"><h2 id="modal-title">Modal</h2><button class="modal-close" onclick="closeModal()">✕</button></div>
+  <div id="modal-box">
+    <div class="modal-header"><h2 id="modal-title">Modal</h2><button class="modal-close" onclick="closeModal()">x</button></div>
     <div id="modal-body"></div>
   </div>
 </div>
