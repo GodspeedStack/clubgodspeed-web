@@ -28,10 +28,11 @@
 (function () {
   'use strict';
 
-  // -- Feature flag ----
-  // Set window.GS_USE_MOCK = true in console to force mock data.
+  // -- Feature flag (debug only) ----
+  // Set window.GS_USE_MOCK = true in browser console to force mock data.
+  // Production default: live Supabase data.
   if (window.GS_USE_MOCK === true) {
-    console.log('[DataBridge] Mock mode -- skipping live fetch.');
+    console.warn('[DataBridge] Mock mode enabled via GS_USE_MOCK flag -- skipping live fetch.');
     return;
   }
 

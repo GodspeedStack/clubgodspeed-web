@@ -255,16 +255,7 @@ async function handleLogin() {
         let loginSuccess = false;
         let errorMessage = 'Invalid email or password. Please check your credentials and try again.';
 
-        // BYPASS: Direct access for Local Dev/Support & Mock Cohorts
-        const mockEmails = ['denisblyakhman@gmail.com', 'test@example.com', 'demo@clubgodspeed.com', 'training@clubgodspeed.com'];
-        if (mockEmails.includes(email.toLowerCase())) {
-            console.log('Bypassing auth for known local or demo user');
-            localStorage.setItem('gba_parent_auth_token', 'bypass_token_' + Date.now());
-            localStorage.setItem('gba_user_email', email);
-            loginSuccess = true;
-        }
-
-        // Try Supabase auth first (real backend)
+        // Authenticate via Supabase (real backend)
         if (!loginSuccess && window.auth && typeof window.auth.login === 'function') {
             try {
                 const result = await window.auth.login(email, password);

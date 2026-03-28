@@ -583,78 +583,11 @@ async function loadLiveData() {
     }
 }
 
-// ── Demo Data (works without Supabase connection) ───────
+// ── Fallback: Empty state when Supabase is unavailable ───────
 function loadDemoData() {
-    const athletes = [
-        { name: 'Aiden', parent: 'Marcus Johnson', email: 'marcus@example.com' },
-        { name: 'Quest', parent: 'Tanya Williams', email: 'tanya@example.com' },
-        { name: 'Cassius', parent: 'Dre Thompson', email: 'dre@example.com' },
-        { name: 'A.D.', parent: 'Crystal Davis', email: 'crystal@example.com' },
-        { name: 'Howard', parent: 'Kevin Brown', email: 'kevin@example.com' },
-        { name: 'Anton', parent: 'Denis Petrov', email: 'anton@example.com' },
-        { name: 'Emory', parent: 'LaShonda Mitchell', email: 'lashonda@example.com' },
-        { name: 'Ashton', parent: 'James Wilson', email: 'james@example.com' },
-        { name: 'Junior', parent: 'Maria Gonzalez', email: 'maria@example.com' },
-        { name: 'Kyrie', parent: 'DeAndre Harris', email: 'deandre@example.com' },
-        { name: 'Oliver', parent: 'Sarah Chen', email: 'sarah@example.com' },
-        { name: 'Khalik', parent: 'Tyrone Jackson', email: 'tyrone@example.com' },
-    ];
-
-    const docs = [
-        { title: 'Liability Waiver 2026', slug: 'liability-waiver-2026', category: 'waiver' },
-        { title: 'Medical Release Form', slug: 'medical-release', category: 'medical_release' },
-        { title: 'Code of Conduct', slug: 'code-of-conduct', category: 'code_of_conduct' },
-        { title: 'Concussion Protocol', slug: 'concussion-protocol', category: 'consent_form' },
-        { title: 'Photo/Video Release', slug: 'photo-video-release', category: 'consent_form' },
-    ];
-
-    const statuses = ['signed', 'signed', 'signed', 'signed', 'viewed', 'downloaded', 'notified', 'pending'];
-
+    console.warn('[AdminDocs] Supabase unavailable. Showing empty state -- no mock data.');
     complianceData = [];
-    athletes.forEach(a => {
-        docs.forEach(d => {
-            const status = statuses[Math.floor(Math.random() * statuses.length)];
-            const daysOut = status === 'signed' ? null : Math.floor(Math.random() * 18) + 1;
-            complianceData.push({
-                athlete_name: a.name,
-                parent_email: a.email,
-                document_title: d.title,
-                document_slug: d.slug,
-                document_category: d.category,
-                agreement_status: status,
-                is_mandatory: true,
-                enrollment_status: 'active',
-                days_outstanding: daysOut,
-                roster_at_risk: status !== 'signed' && daysOut > 7,
-                notification_count: status === 'pending' ? 0 : Math.floor(Math.random() * 4),
-                view_count: ['viewed','downloaded','signed'].includes(status) ? Math.floor(Math.random() * 3) + 1 : 0,
-                signed_at: status === 'signed' ? '2026-03-' + (10 + Math.floor(Math.random() * 15)) + 'T14:00:00Z' : null,
-                first_viewed_at: ['viewed','downloaded','signed'].includes(status) ? '2026-03-15T10:00:00Z' : null,
-                assigned_at: '2026-03-01T00:00:00Z',
-            });
-        });
-    });
-
-    // Build document summary from compliance data
-    documentsData = docs.map(d => {
-        const docAgreements = complianceData.filter(c => c.document_slug === d.slug);
-        const signed = docAgreements.filter(c => c.agreement_status === 'signed').length;
-        return {
-            title: d.title,
-            slug: d.slug,
-            category: d.category,
-            season: 'Summer 2026',
-            is_mandatory: true,
-            total_assigned: docAgreements.length,
-            total_signed: signed,
-            total_pending: docAgreements.filter(c => c.agreement_status === 'pending').length,
-            total_notified: docAgreements.filter(c => c.agreement_status === 'notified').length,
-            total_viewed: docAgreements.filter(c => c.agreement_status === 'viewed').length,
-            total_downloaded: docAgreements.filter(c => c.agreement_status === 'downloaded').length,
-            sign_rate_pct: docAgreements.length > 0 ? Math.round(signed / docAgreements.length * 100) : 0,
-        };
-    });
-
+    documentsData = [];
     renderAll();
 }
 

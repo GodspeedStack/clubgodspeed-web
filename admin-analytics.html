@@ -278,24 +278,9 @@
             } catch (err) {
                 console.warn('Database query failed. Falling back to LocalStorage demo data:', err);
                 
-                // Fallback to LocalStorage for Demo purposes
-                let localPending = JSON.parse(localStorage.getItem('pending_access_requests') || '[]');
-                
-                // Generate a mock entry for "today" if the array is empty, to fulfill the user's specific request
-                if (localPending.length === 0) {
-                    localPending.push({
-                        id: 'mock-1',
-                        email: 'newparent2026@example.com',
-                        parentName: 'Jane Parent',
-                        playerName: 'Timmy Parent',
-                        created_at: new Date().toISOString(),
-                        status: 'pending'
-                    });
-                    localStorage.setItem('pending_access_requests', JSON.stringify(localPending));
-                }
-                
-                const pendingOnly = localPending.filter(p => p.status === 'pending');
-                renderPendingTable(pendingOnly, true);
+                // Fallback: show empty state when Supabase is unavailable
+                console.warn('[AdminAnalytics] Supabase unavailable. Showing empty pending approvals.');
+                renderPendingTable([], true);
             }
         }
 
