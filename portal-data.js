@@ -18,7 +18,10 @@ const GODSPEED_DATA = {
         documents: []
     },
     accounts: [],
-    trainingRecords: {}
+    trainingRecords: {},
+    gameLog: [],
+    seasonStats: { gp: 0, wins: 0, losses: 0, pf: 0, pa: 0, avgPf: 0, avgPa: 0, margin: 0 },
+    playerPerformance: []
 };
 
 // Database Initialization & Sync

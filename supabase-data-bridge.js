@@ -286,6 +286,72 @@
       prescription: null,
     };
 
+    // -- Transform: games -> gameLog[] ----
+    const gameLog = games.map((g) => ({
+      id: g.id,
+      date: g.game_date,
+      opponent: g.opponent_name || 'Unknown',
+      scoreUs: g.team_score || 0,
+      scoreThem: g.opponent_score || 0,
+      result: g.result === 'W' ? 'W' : g.result === 'L' ? 'L' : 'N/A',
+    }));
+
+    // -- Transform: games -> seasonStats ----
+    const gamesWithResult = games.filter((g) => g.result === 'W' || g.result === 'L');
+    const wins = gamesWithResult.filter((g) => g.result === 'W').length;
+    const losses = gamesWithResult.filter((g) => g.result === 'L').length;
+    const gp = gamesWithResult.length;
+    const pf = gamesWithResult.reduce((sum, g) => sum + (g.team_score || 0), 0);
+    const pa = gamesWithResult.reduce((sum, g) => sum + (g.opponent_score || 0), 0);
+    const seasonStats = {
+      gp: gp,
+      wins: wins,
+      losses: losses,
+      pf: pf,
+      pa: pa,
+      avgPf: gp > 0 ? Math.round((pf / gp) * 10) / 10 : 0,
+      avgPa: gp > 0 ? Math.round((pa / gp) * 10) / 10 : 0,
+      margin: gp > 0 ? Math.round(((pf - pa) / gp) * 10) / 10 : 0,
+    };
+
+    // -- Transform: player_game_stats -> playerPerformance[] ----
+    const statsByAthlete = {};
+    for (const s of gameStats) {
+      if (!statsByAthlete[s.athlete_id]) statsByAthlete[s.athlete_id] = [];
+      statsByAthlete[s.athlete_id].push(s);
+    }
+
+    const playerPerformance = athletes.map((a) => {
+      const pStats = statsByAthlete[a.id] || [];
+      const totalGames = pStats.length;
+      if (totalGames === 0) {
+        return {
+          name: a.first_name + ' ' + (a.last_name || '').charAt(0) + '.',
+          highlight: 'No game data yet',
+          notes: '',
+        };
+      }
+      const totals = pStats.reduce(
+        (acc, s) => ({
+          pts: acc.pts + (s.points || 0),
+          reb: acc.reb + (s.total_rebounds || 0),
+          ast: acc.ast + (s.assists || 0),
+          stl: acc.stl + (s.steals || 0),
+          blk: acc.blk + (s.blocks || 0),
+        }),
+        { pts: 0, reb: 0, ast: 0, stl: 0, blk: 0 }
+      );
+      const avg = (v) => (totalGames > 0 ? (v / totalGames).toFixed(1) : '0');
+      return {
+        name: a.first_name + ' ' + (a.last_name || '').charAt(0) + '.',
+        highlight:
+          avg(totals.pts) + ' PPG | ' +
+          avg(totals.reb) + ' RPG | ' +
+          avg(totals.ast) + ' APG',
+        notes: pStats[0].coach_notes || '',
+      };
+    });
+
     // -- Transform: reports (derived from roster) ----
     const reports = {};
     for (const r of rosterData) {
@@ -305,6 +371,9 @@
       reports: reports,
       grades: gradesData,
       gameAnalysis: gameAnalysis,
+      gameLog: gameLog,
+      seasonStats: seasonStats,
+      playerPerformance: playerPerformance,
       // Fields below don't have Supabase sources yet --
       // they'll be merged with existing mock/cached values.
       _liveLoaded: true,
@@ -332,6 +401,11 @@
         gameAnalysis: liveData.gameAnalysis.recentGames.length > 0
           ? liveData.gameAnalysis
           : cached.gameAnalysis,
+        gameLog: liveData.gameLog.length > 0 ? liveData.gameLog : cached.gameLog,
+        seasonStats: liveData.seasonStats.gp > 0 ? liveData.seasonStats : cached.seasonStats,
+        playerPerformance: liveData.playerPerformance.length > 0
+          ? liveData.playerPerformance
+          : cached.playerPerformance,
         // Preserve these from cache until they have Supabase sources:
         coaches: cached.coaches,
         warRoomInsights: cached.warRoomInsights,
