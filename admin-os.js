@@ -645,7 +645,7 @@ function renderCalendar() {
     const dateStr=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const isToday=dateStr===todayStr;
     const dayEvents=allCalEvents.filter(e=>e.event_date===dateStr);
-    html+=`<div class="cal-day${isToday?' today':''}" onclick="showDayEvents('${dateStr}')"><div class="day-num">${d}</div>`;
+    html+=`<div class="cal-day${isToday?' today':''}" onclick="showDayEvents('${dateStr}')"><div class="day-num">${d}<span class="cal-add-btn" onclick="event.stopPropagation();addCalEventForDate('${dateStr}')" title="Add event">+</span></div>`;
     dayEvents.slice(0,3).forEach(e=>html+=`<div class="cal-event ${e.event_type||'other'}" onclick="event.stopPropagation();editCalEvent('${e.id}')">${e.title||'Event'}</div>`);
     if(dayEvents.length>3) html+=`<div style="font-size:10px;color:var(--muted)">+${dayEvents.length-3} more</div>`;
     html+='</div>';
@@ -665,12 +665,22 @@ function showDayEvents(dateStr) {
   const dayEvents=allCalEvents.filter(e=>e.event_date===dateStr);
   openModal('day-events');
   document.getElementById('modal-title').textContent='Events on '+fmtShort(dateStr);
-  document.getElementById('modal-body').innerHTML=dayEvents.length?dayEvents.map(e=>`
-    <div style="padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px">
-      <div style="font-weight:700">${e.title}</div>
-      <div style="color:var(--muted);font-size:12px;margin-top:4px">${e.start_time||''} ${e.end_time?'- '+e.end_time:''} ${e.location?'| '+e.location:''}</div>
-      ${e.source_type?`<div style="font-size:11px;color:var(--muted);margin-top:4px">Auto-created from ${e.source_type}</div>`:''}
+  const eventsHtml=dayEvents.length?dayEvents.map(e=>`
+    <div style="padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;display:flex;align-items:flex-start;justify-content:space-between">
+      <div>
+        <div style="font-weight:700">${e.title}</div>
+        <div style="color:var(--muted);font-size:12px;margin-top:4px">${e.start_time||''} ${e.end_time?'- '+e.end_time:''} ${e.location?'| '+e.location:''}</div>
+        ${e.source_type?`<div style="font-size:11px;color:var(--muted);margin-top:4px">Auto-created from ${e.source_type}</div>`:''}
+      </div>
+      <button class="btn btn-ghost btn-xs" onclick="editCalEvent('${e.id}')" style="flex-shrink:0;margin-left:8px">Edit</button>
     </div>`).join(''):'<p style="color:var(--muted)">No events on this day.</p>';
+  document.getElementById('modal-body').innerHTML=eventsHtml+`<button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="addCalEventForDate('${dateStr}')"><i data-lucide="plus" style="width:16px;height:16px;margin-right:6px"></i>Add Event on ${fmtShort(dateStr)}</button>`;
+  if(window.lucide) lucide.createIcons();
+}
+function addCalEventForDate(dateStr) {
+  openModal('add-event');
+  document.getElementById('modal-title').textContent='New Event';
+  document.getElementById('modal-body').innerHTML=calEventForm({event_date:dateStr});
 }
 function editCalEvent(id) {
   const e=allCalEvents.find(x=>x.id===id); if(!e) return;
