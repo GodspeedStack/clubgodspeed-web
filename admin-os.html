@@ -296,6 +296,133 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
   display: flex; align-items: center; justify-content: center; padding: 60px;
   color: var(--muted); font-size: 14px; font-weight: 600;
 }
+
+/* MOBILE MENU TOGGLE */
+#mobile-menu-btn { display: none; background: none; border: none; color: var(--text); cursor: pointer; padding: 8px; }
+#mobile-menu-btn svg { width: 24px; height: 24px; }
+#sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9; }
+#sidebar-overlay.open { display: block; }
+
+/* TABLE SCROLL WRAPPER */
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* ─────────── MOBILE RESPONSIVE ─────────── */
+@media (max-width: 768px) {
+  body { flex-direction: column; }
+
+  /* Sidebar: off-screen drawer */
+  #sidebar {
+    position: fixed; left: -280px; top: 0; bottom: 0; width: 280px;
+    z-index: 100; transition: left 0.3s cubic-bezier(0.16,1,0.3,1);
+    padding-top: 20px;
+  }
+  #sidebar.open { left: 0; }
+  .sb-logo { padding: 0 20px 24px; font-size: 20px; }
+  .sb-section { margin-bottom: 12px; }
+  .sb-footer { padding: 16px 20px 12px; }
+
+  /* Show hamburger */
+  #mobile-menu-btn { display: block; }
+
+  /* Main area: full width */
+  #main { width: 100%; height: 100vh; }
+  .topbar { padding: 16px 20px; }
+  .topbar h1 { font-size: 20px; }
+  .topbar-actions { gap: 8px; }
+  #topbar-date { display: none; }
+
+  /* Content padding */
+  #content { padding: 0 16px 40px; }
+
+  /* Metric cards: 2 columns */
+  .metrics { grid-template-columns: repeat(2, 1fr) !important; gap: 12px; margin-bottom: 24px; }
+  .metric-card { padding: 20px; border-radius: 16px; }
+  .metric-card .val { font-size: 28px; margin: 8px 0 6px; }
+  .metric-card .label { font-size: 10px; }
+  .metric-card .sub { font-size: 12px; }
+
+  /* Cards */
+  .card { border-radius: 16px; margin-bottom: 16px; }
+  .card-header { padding: 16px 20px; }
+  .card-header h2 { font-size: 14px; }
+  .card-body { padding: 20px; }
+
+  /* Tables: horizontal scroll */
+  table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  thead { display: table; width: 100%; table-layout: fixed; }
+  tbody { display: table; width: 100%; table-layout: fixed; }
+  th, td { padding: 10px 12px; font-size: 12px; white-space: nowrap; }
+
+  /* Grid layouts: stack */
+  .grid2, .grid3 { grid-template-columns: 1fr !important; gap: 16px; }
+
+  /* Messaging: stack compose/sent */
+  #panel-comms > div { grid-template-columns: 1fr !important; }
+
+  /* Blog & Memos: stack sidebar/editor */
+  #panel-blog > div, #panel-memos > div { grid-template-columns: 1fr !important; }
+
+  /* Dashboard: stack cards */
+  #panel-dashboard > div[style*='grid-template-columns'] { grid-template-columns: 1fr !important; }
+
+  /* Calendar: compact */
+  .cal-day { min-height: 60px; padding: 4px; }
+  .cal-day .day-num { font-size: 11px; }
+  .cal-event { font-size: 9px; padding: 1px 4px; }
+  #panel-calendar > div:first-child { flex-direction: column; gap: 12px; align-items: stretch !important; }
+  #panel-calendar > div:first-child > div { justify-content: center; }
+  #cal-month-label { font-size: 16px !important; }
+
+  /* Data Entry forms */
+  #data-training .grid2, #data-game .grid2 { grid-template-columns: 1fr !important; gap: 0; }
+  .attendance-grid { grid-template-columns: 1fr !important; }
+  .stats-grid table { min-width: 900px; }
+
+  /* Sub-tabs */
+  .sub-tabs { margin-bottom: 20px; }
+  .sub-tab { padding: 10px 16px; font-size: 12px; }
+
+  /* Filter chips */
+  .filter-chips { gap: 6px; margin-bottom: 16px; }
+  .filter-chip { padding: 5px 12px; font-size: 11px; }
+
+  /* Fields */
+  .field input, .field select, .field textarea { padding: 12px; font-size: 14px; border-radius: 10px; }
+  .field label { font-size: 10px; margin-bottom: 6px; }
+
+  /* Buttons */
+  .btn { padding: 12px 24px; font-size: 13px; }
+  .btn-sm { padding: 6px 16px; font-size: 11px; }
+  .btn-xs { padding: 4px 10px; font-size: 10px; }
+
+  /* Modal: full screen */
+  #modal-box { width: 100%; max-width: 100%; max-height: 100vh; height: 100vh; border-radius: 0; padding: 20px; }
+  .modal-header { margin-bottom: 20px; padding-bottom: 16px; }
+  .modal-header h2 { font-size: 16px; }
+
+  /* Login box */
+  .login-box { width: 90%; max-width: 400px; padding: 24px; }
+  .login-logo { font-size: 28px; margin-bottom: 24px; }
+
+  /* Editor */
+  textarea.editor { min-height: 200px; padding: 16px; font-size: 14px; }
+
+  /* Toast positioning */
+  .toast { bottom: 16px; right: 16px; left: 16px; text-align: center; }
+
+  /* Sign out button */
+  #sidebar .btn-ghost { margin: 12px 16px 20px !important; padding: 10px; font-size: 12px; }
+}
+
+/* Small phones */
+@media (max-width: 400px) {
+  .metrics { grid-template-columns: 1fr !important; }
+  .metric-card { padding: 16px; }
+  .metric-card .val { font-size: 24px; }
+  #content { padding: 0 12px 32px; }
+  .topbar { padding: 12px 16px; }
+  .topbar h1 { font-size: 18px; }
+}
 </style>
 </head>
 <body>
@@ -364,10 +491,18 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
   <button class="btn btn-ghost" style="margin: 16px 16px 24px; border-color: rgba(255,59,48,0.3); color: var(--accent)" onclick="doLogout()">Sign Out</button>
 </nav>
 
+<!-- SIDEBAR OVERLAY (mobile backdrop) -->
+<div id="sidebar-overlay" onclick="toggleMobileMenu()"></div>
+
 <!-- MAIN -->
 <div id="main">
   <div class="topbar">
-    <h1 id="panel-title">Dashboard</h1>
+    <div style="display:flex;align-items:center;gap:12px">
+      <button id="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <h1 id="panel-title">Dashboard</h1>
+    </div>
     <div class="topbar-actions">
       <span id="topbar-date" style="font-size:12px;color:var(--muted)"></span>
       <button class="btn btn-ghost btn-sm" onclick="refreshCurrent()">Refresh</button>
@@ -677,6 +812,19 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 <script type="module" src="src/lib/env-injector.js"></script>
 <script src="auth-supabase.js" defer></script>
 <script src="admin-os.js" defer></script>
-<script>document.addEventListener("DOMContentLoaded", () => lucide.createIcons());</script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
+  function toggleMobileMenu() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebar-overlay').classList.toggle('open');
+  }
+  // Close sidebar on nav click (mobile)
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.sb-link') && window.innerWidth <= 768) {
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('sidebar-overlay').classList.remove('open');
+    }
+  });
+</script>
 </body>
 </html>
