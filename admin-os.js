@@ -187,7 +187,7 @@ async function loadDashboard() {
     <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
       <div><div style="font-weight:600;font-size:13px">${d.full_name}</div><div style="color:var(--muted);font-size:11px">Balance: $${(+d.balance).toFixed(0)}</div></div>
       <span class="tag ${d.payment_status==='partial'?'tag-yellow':'tag-red'}">${d.payment_status}</span>
-    </div>`).join('') : '<p style="color:var(--muted);font-size:13px">All dues current! 🎉</p>';
+    </div>`).join('') : '<p style="color:var(--muted);font-size:13px">All dues current!</p>';
 
   document.getElementById('dash-activity').innerHTML = `
     <p style="color:var(--muted);font-size:13px">No recent activity.</p>`;
@@ -313,7 +313,7 @@ async function approveReq(id, email) {
   } catch(e){ console.error(e); }
   renderRequests(allRequests);
   await loadDashboard();
-  alert(`✅ ${email} approved! They can now log in.`);
+  alert(`${email} approved! They can now log in.`);
 }
 
 async function denyReq(id, email) {
@@ -362,7 +362,7 @@ async function recordPayment(profileId) {
       const {data:fee}=await osSupabase.from('season_fees').select('id').eq('profile_id',profileId).single();
       if(fee){ await osSupabase.from('payments').insert({season_fee_id:fee.id,profile_id:profileId,amount,method,status:'confirmed',recorded_by:null}); }
     }
-    alert(`✅ $${amount} recorded via ${method}`);
+    alert(`$${amount} recorded via ${method}`);
     closeModal(); loadDues();
   } catch(e){ alert('Failed: '+e.message); }
 }
@@ -459,7 +459,7 @@ async function saveBlog(status) {
       if(id){ const p=BLOG_POSTS.find(x=>x.id===id); if(p) Object.assign(p,payload); }
       else { BLOG_POSTS.unshift({id:'b'+Date.now(),...payload}); }
     }
-    alert(status==='published'?'🚀 Published to site!':'Draft saved!');
+    alert(status==='published'?'Published to site!':'Draft saved!');
     await loadBlog();
   } catch(e){ alert('Error: '+e.message); }
 }
@@ -553,7 +553,7 @@ async function recordPaymentByEmail() {
       await osSupabase.from('payments').insert({season_fee_id:fee.id,profile_id:prof.id,amount,method,status:'confirmed'});
     } catch(e){ alert('Error: '+e.message); return; }
   }
-  alert(`✅ $${amount} via ${method} recorded!`); closeModal(); loadDues();
+  alert(`$${amount} via ${method} recorded!`); closeModal(); loadDues();
 }
 
 async function saveCampaign() {

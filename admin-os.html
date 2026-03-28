@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+<script src="https://unpkg.com/lucide@latest"></script>
 <style>
 :root {
   --bg: #000000;
@@ -117,6 +117,8 @@ body {
 }
 .sb-link:hover { background: var(--surface-hover); color: var(--text); }
 .sb-link.active { background: rgba(255,255,255,0.06); color: #fff; font-weight: 700; box-shadow: inset 3px 0 0 rgba(255,255,255,0.5); }
+.sb-link .icon { width: 20px; font-size: 16px; opacity: 0.6; transition: opacity 0.2s; }
+.sb-link.active .icon, .sb-link:hover .icon { opacity: 1; }
 .badge { background: rgba(255,255,255,0.15); color: #fff; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 9999px; margin-left: auto; }
 
 .sb-footer { margin-top: auto; padding: 24px 24px 16px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
@@ -237,22 +239,22 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
   <div class="sb-logo">GODSPEED<span>Admin Dashboard</span></div>
   <div class="sb-section">
     <div class="sb-label">Overview</div>
-    <button class="sb-link active" onclick="switchPanel('dashboard')">Dashboard</button>
+    <button class="sb-link active" onclick="switchPanel('dashboard')"><i data-lucide="layout-dashboard" class="icon"></i>Dashboard</button>
   </div>
   <div class="sb-section">
     <div class="sb-label">People</div>
-    <button class="sb-link" onclick="switchPanel('players')">Players & Parents</button>
-    <button class="sb-link" id="req-tab" onclick="switchPanel('requests')">Login Requests<span class="badge" id="pending-badge">0</span></button>
+    <button class="sb-link" onclick="switchPanel('players')"><i data-lucide="users" class="icon"></i>Players & Parents</button>
+    <button class="sb-link" id="req-tab" onclick="switchPanel('requests')"><i data-lucide="shield" class="icon"></i>Login Requests<span class="badge" id="pending-badge">0</span></button>
   </div>
   <div class="sb-section">
     <div class="sb-label">Finance</div>
-    <button class="sb-link" onclick="switchPanel('dues')">Orders & Dues</button>
+    <button class="sb-link" onclick="switchPanel('dues')"><i data-lucide="credit-card" class="icon"></i>Orders & Dues</button>
   </div>
   <div class="sb-section">
     <div class="sb-label">Comms & Content</div>
-    <button class="sb-link" onclick="switchPanel('comms')">Email / SMS</button>
-    <button class="sb-link" onclick="switchPanel('blog')">Blog Posts</button>
-    <button class="sb-link" onclick="switchPanel('memos')">Coach Memos</button>
+    <button class="sb-link" onclick="switchPanel('comms')"><i data-lucide="mail" class="icon"></i>Email / SMS</button>
+    <button class="sb-link" onclick="switchPanel('blog')"><i data-lucide="pen-tool" class="icon"></i>Blog Posts</button>
+    <button class="sb-link" onclick="switchPanel('memos')"><i data-lucide="file-text" class="icon"></i>Coach Memos</button>
   </div>
   <div class="sb-footer">
     <div class="avatar" id="director-initials">D</div>
@@ -434,6 +436,6 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 <script type="module" src="src/lib/env-injector.js"></script>
 <script src="auth-supabase.js" defer></script>
 <script src="admin-os.js" defer></script>
-
+<script>document.addEventListener("DOMContentLoaded", () => lucide.createIcons());</script>
 </body>
 </html>
