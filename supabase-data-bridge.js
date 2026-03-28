@@ -352,16 +352,76 @@
       };
     });
 
-    // -- Transform: reports (derived from roster) ----
+    // -- Transform: reports (derived from roster + training_attendance) ----
+    // Group attendance records by athlete
+    const attendanceByAthlete = {};
+    for (const a of attendance) {
+      if (!attendanceByAthlete[a.athlete_id]) attendanceByAthlete[a.athlete_id] = [];
+      attendanceByAthlete[a.athlete_id].push(a);
+    }
+
     const reports = {};
     for (const r of rosterData) {
+      const athleteAtt = attendanceByAthlete[r.athleteId] || [];
+      const sessions = athleteAtt.filter(a => a.status === 'present');
+      const latestSession = sessions.sort((a, b) =>
+        new Date(b.created_at) - new Date(a.created_at)
+      )[0];
+
+      // Build focus areas from most recent skill_ratings
+      const focusAreas = latestSession && latestSession.skill_ratings
+        ? Object.keys(latestSession.skill_ratings).map(k => k.replace(/_/g, ' ')).join(', ')
+        : 'General Development';
+
+      // Build content from recent coach notes
+      const recentNotes = sessions
+        .filter(s => s.coach_notes)
+        .slice(0, 5)
+        .map(s => {
+          const sess = trainSessions.find(ts => ts.id === s.session_id);
+          const dateStr = sess ? sess.session_date : '';
+          return '<li><strong>' + dateStr + '</strong> - ' + s.coach_notes + '</li>';
+        })
+        .join('');
+
+      const avgEffort = sessions.filter(s => s.effort_rating).length > 0
+        ? (sessions.reduce((sum, s) => sum + (s.effort_rating || 0), 0) /
+           sessions.filter(s => s.effort_rating).length).toFixed(1)
+        : r.avg_grade;
+
       reports[r.athleteId] = {
         tier: r.tier,
-        avg: r.avg_grade,
+        avg: avgEffort,
         trend: r.trend,
-        focus: 'General Development',
-        content: '<h4>Performance Snapshot</h4><p>' + (r.notes || 'No notes') + '</p>',
+        focus: focusAreas,
+        sessionsAttended: sessions.length,
+        content: recentNotes
+          ? '<h4>Recent Training Notes</h4><ul>' + recentNotes + '</ul>'
+          : '<h4>Performance Snapshot</h4><p>' + (r.notes || 'No notes') + '</p>',
       };
+    }
+
+    // -- Transform: training_attendance -> trainingRecords (per-athlete, for parent portal) ----
+    const trainingRecords = {};
+    for (const a of attendance) {
+      if (!trainingRecords[a.athlete_id]) trainingRecords[a.athlete_id] = [];
+      const sess = trainSessions.find(s => s.id === a.session_id);
+      trainingRecords[a.athlete_id].push({
+        id: a.id,
+        sessionId: a.session_id,
+        date: sess ? sess.session_date : null,
+        sessionType: sess ? sess.session_type.replace(/_/g, ' ') : 'Training',
+        location: sess ? sess.location : '',
+        status: a.status,
+        effortRating: a.effort_rating,
+        coachNotes: a.coach_notes || '',
+        focusAreas: a.skill_ratings ? Object.keys(a.skill_ratings).map(k => k.replace(/_/g, ' ')) : [],
+        drills: a.drills_completed || [],
+      });
+    }
+    // Sort each athlete's records newest first
+    for (const key of Object.keys(trainingRecords)) {
+      trainingRecords[key].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
     }
 
     // -- Assemble GODSPEED_DATA shape ----
@@ -374,6 +434,7 @@
       gameLog: gameLog,
       seasonStats: seasonStats,
       playerPerformance: playerPerformance,
+      trainingRecords: trainingRecords,
       // Fields below don't have Supabase sources yet --
       // they'll be merged with existing mock/cached values.
       _liveLoaded: true,
@@ -406,12 +467,14 @@
         playerPerformance: liveData.playerPerformance.length > 0
           ? liveData.playerPerformance
           : cached.playerPerformance,
+        trainingRecords: Object.keys(liveData.trainingRecords || {}).length > 0
+          ? liveData.trainingRecords
+          : cached.trainingRecords,
         // Preserve these from cache until they have Supabase sources:
         coaches: cached.coaches,
         warRoomInsights: cached.warRoomInsights,
         training: cached.training,
         accounts: cached.accounts,
-        trainingRecords: cached.trainingRecords,
         // Metadata
         _liveLoaded: true,
         _loadedAt: liveData._loadedAt,

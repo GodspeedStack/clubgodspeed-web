@@ -353,22 +353,27 @@ BEGIN
         auth.uid(), auth.uid()
     ) RETURNING id INTO v_session_id;
 
-    -- Insert attendance records
+    -- Insert attendance records with full per-player training data
     FOR v_record IN SELECT * FROM jsonb_array_elements(p_attendance)
     LOOP
         INSERT INTO public.training_attendance (
-            session_id, athlete_id, status, effort_rating, coach_notes
+            session_id, athlete_id, status, effort_rating, coach_notes,
+            skill_ratings, drills_completed
         ) VALUES (
             v_session_id,
             (v_record ->> 'athlete_id')::uuid,
             COALESCE(v_record ->> 'status', 'present'),
             (v_record ->> 'effort_rating')::smallint,
-            v_record ->> 'coach_notes'
+            v_record ->> 'coach_notes',
+            COALESCE(v_record -> 'skill_ratings', '{}'::jsonb),
+            COALESCE(v_record -> 'drills_completed', '[]'::jsonb)
         )
         ON CONFLICT (session_id, athlete_id) DO UPDATE SET
             status = EXCLUDED.status,
             effort_rating = EXCLUDED.effort_rating,
-            coach_notes = EXCLUDED.coach_notes;
+            coach_notes = EXCLUDED.coach_notes,
+            skill_ratings = EXCLUDED.skill_ratings,
+            drills_completed = EXCLUDED.drills_completed;
     END LOOP;
 
     -- Auto-create calendar event
