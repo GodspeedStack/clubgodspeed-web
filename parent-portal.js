@@ -294,12 +294,12 @@ async function handleLogin() {
                 // Check if login was successful
                 if (result === true || (result && result.success !== false)) {
                     loginSuccess = true;
- &              } else {
+              } else {
                     errorMessage = result?.error || result?.message || errorMessage;
-                }
+               }
             } catch (authError) {
                 console.error('Auth login error:', authError);
- &              errorMessage = authError.message || errorMessage;
+              errorMessage = authError.message || errorMessage;
 
                 // Provide specific error messages
                 if (authError.message && authError.message.includes('Invalid login credentials')) {
@@ -1824,7 +1824,7 @@ async function renderTrainingDashboard() {
                 ${safeDescription ? `<div style="font-size:13px; color:#444; margin-bottom:12px; line-height:1.4;">${safeDescription}</div>` : ''}
 
                 ${safeFocus.length > 0 ? `
-     &          <div style="margin-bottom:12px; display:flex; flex-wrap:wrap; gap:6px;">
+    &          <div style="margin-bottom:12px; display:flex; flex-wrap:wrap; gap:6px;">
                     ${safeFocus.map(f => `<span style="font-size:11px; background:#f0f9ff; color:#0369a1; padding:2px 8px; border-radius:4px; font-weight:500;">${f}</span>`).join('')}
                 </div>
                 ` : ''}
@@ -2015,7 +2015,7 @@ async function loadTrainingHours(parentEmail) {
                 logItem.style.justifyContent = 'space-between';
                 logItem.style.padding = '12px';
                 logItem.style.background = '#fff';
-      &         logItem.style.border = '1px solid #eee';
+     &         logItem.style.border = '1px solid #eee';
                 logItem.style.borderRadius = '8px';
                 logItem.style.marginBottom = '8px';
 
@@ -2036,16 +2036,16 @@ async function loadTrainingHours(parentEmail) {
          `     iconDiv.style.alignItems = 'center';
 
                 const textDiv = document.createElement('div');
-     &          const activityDiv = document.createElement('div');
-             &  activityDiv.style.fontWeight = '600';
+    &          const activityDiv = document.createElement('div');
+            &  activityDiv.style.fontWeight = '600';
                 activityDiv.style.fontSize = '13px';
                 activityDiv.style.color = '#1f2937';
-   &            activityDiv.textContent = safeActivity;
+  &            activityDiv.textContent = safeActivity;
 
                 const dateDiv = document.createElement('div');
                 dateDiv.style.fontSize = '11px';
                 dateDiv.style.color = '#6b7280';
-          &     dateDiv.textContent = safeDate;
+         &     dateDiv.textContent = safeDate;
 
                 textDiv.appendChild(activityDiv);
                 textDiv.appendChild(dateDiv);
