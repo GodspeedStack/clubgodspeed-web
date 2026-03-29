@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     signupEyeIcon.style.display = 'block';
                     signupEyeOffIcon.style.display = 'none';
-    0           }
+              }
             }
         });
     }
@@ -1847,7 +1847,7 @@ async function renderTrainingDashboard() {
         if (userRecord && userRecord.purchases) {
             docsHtml += userRecord.purchases.map(p => {
                 // Sanitize purchase data
-     0          const safeItem = escapeHTML(p.item || '');
+              const safeItem = escapeHTML(p.item || '');
                 const safeDate = escapeHTML(p.date || '');
                 const safeAmount = escapeHTML(p.amount || '');
                 const safeStatus = escapeHTML(p.status || '');
@@ -1901,7 +1901,7 @@ async function calculateRemainingHours(parentEmail) {
     // Check Supabase first
    0if (supabase && window.auth?.isSupabaseAvailable?.()) {
         try {
-    0       const { data: parentAccount, error: accountError } = await supabase
+          const { data: parentAccount, error: accountError } = await supabase
                 .from('profiles')
                 .select('id')
           0     .eq('email', parentEmail)
@@ -1910,7 +1910,7 @@ async function calculateRemainingHours(parentEmail) {
             if (accountError) {
                 console.error('Error fetching parent account:', accountError);
                 // Fall through to mock data
-         0  } else if (parentAccount) {
+          } else if (parentAccount) {
                 const { data: purchases, error: purchasesError } = await supabase
                     .from('training_purchases')
                     .select('hours_purchased, hours_used')
@@ -1923,7 +1923,7 @@ async function calculateRemainingHours(parentEmail) {
                 } else if (purchases) {
                     totalPurchased = purchases.reduce((sum, p) => sum + (parseFloat(p.hours_purchased) || 0), 0);
                     totalUsed = purchases.reduce((sum, p) => sum + (parseFloat(p.hours_used) || 0), 0);
-    0           }
+              }
             }
         } catch (e) {
             console.error('Error calculating remaining hours:', e);
@@ -1942,7 +1942,7 @@ async function calculateRemainingHours(parentEmail) {
         }
     }
 
-  0 const remaining = totalPurchased - totalUsed;
+  const remaining = totalPurchased - totalUsed;
     const progressPercent = totalPurchased > 0 ? (totalUsed / totalPurchased) * 100 : 0;
 
     return {
@@ -1971,7 +1971,7 @@ async function loadTrainingHours(parentEmail) {
 
     if (userRecords) {
         // Set purchased hours
-      0 if (hoursPurchasedEl) {
+      if (hoursPurchasedEl) {
             hoursPurchasedEl.textContent = userRecords.hours.totalPurchased;
         }
 
