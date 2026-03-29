@@ -1061,26 +1061,26 @@ const DOCUMENT_TEMPLATE = {
         <p>I, <strong>{parent_name}</strong>, legal guardian of <strong>{child_name}</strong>, acknowledge that basketball is a contact sport involving inherent risks. I voluntarily assume all risks, including but not limited to sprains, fractures, citations, and serious injury.</p>
         <p>I release Godspeed Basketball, its coaches, and facilities from any liability regarding injuries sustained by {child_name} during practice, games, or travel.</p>
         <p><strong>Acknowledgment:</strong> By signing below, I waive my right to sue for negligence.</p>
-    ,
+    `,
     'medical': `
         <h3>Medical Consent Form</h3>
         <p>In the event of an emergency where I, <strong>{parent_name}</strong>, cannot be reached, I authorize Godspeed Basketball staff to obtain medical treatment for <strong>{child_name}</strong>.</p>
         <p>I agree to cover all costs associated with emergency transport and treatment.</p>
         <p><strong>Medical Conditions:</strong> I certify {child_name} is physically fit to participate.</p>
-    ,
+    `,
     'practice': `
         <h3>Practice & Training Consent</h3>
         <p>Godspeed Training is high-intensity. Sessions may involve heavy exertion, plyometrics, and physical contact.</p>
         <p>I, <strong>{parent_name}</strong>, give full consent for <strong>{child_name}</strong> to participate in all training drills as designed by the coaching staff.</p>
         <p>I understand it is my child's responsibility to hydrate and rest properly.</p>
-    ,
+    `,
     'conduct': `
         <h3>Parental Code of Conduct</h3>
         <p><strong>Strict Policy: No Coaching from the Sidelines.</strong></p>
         <p>To ensure athlete focus and development, parents must refrain from shouting instructions during games, practices, and training sessions.</p>
         <p><strong>Consequences:</strong> I, <strong>{parent_name}</strong>, understand that violating this policy undermines the coaching staff and <strong>will affect {child_name}'s playing time</strong>. Repeated offenses may result in removal from the program.</p>
         <p>We are a family. We support, we cheer, but we let the players play and the coaches coach.</p>
-    ,
+    `,
     'media': `
         <h3>Social Media Release</h3>
         <p>I, <strong>{parent_name}</strong>, grant permission for Club Godspeed to use photos/videos of <strong>{child_name}</strong> for social media and marketing.</p>
