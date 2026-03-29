@@ -818,7 +818,100 @@ function updateDashboardProfile(email) {
 
         welcomeMsg.textContent = `Here is what's happening with ${athleteName} today.`;
     }
+
+    // Hydrate from Supabase profiles for real names, then start realtime
+    const supabase = window.auth?.getSupabaseClient?.();
+    if (supabase && window.auth?.isSupabaseAvailable?.()) {
+        supabase.from('profiles').select('id,full_name,player_name,grade,phone').eq('email', email).single()
+            .then(({ data }) => {
+                if (data) {
+                    applyProfileToUI(data);
+                    initProfileRealtime(supabase, data.id);
+                }
+            });
+    }
 }
+
+/**
+ * Apply a profiles row to every UI slot that displays parent/player data.
+ * Called on load and on every Realtime UPDATE push from Supabase.
+ */
+function applyProfileToUI(profile) {
+    const full   = profile.full_name || '';
+    const player = profile.player_name || '';
+    const grade  = profile.grade || '';
+
+    // Sidebar / header name
+    const bannerName = document.getElementById('dashboard-user-name');
+    if (bannerName && full) bannerName.textContent = full;
+
+    const sidebarName = document.querySelector('.user-name');
+    if (sidebarName && full) sidebarName.textContent = full;
+
+    // Avatar initials
+    const avatarEl = document.querySelector('.user-avatar-small');
+    if (avatarEl && full) avatarEl.textContent = full.substring(0, 2).toUpperCase();
+
+    // Welcome message uses player name
+    const welcomeMsg = document.getElementById('dashboard-welcome-msg');
+    if (welcomeMsg && player) welcomeMsg.textContent = `Here is what's happening with ${player} today.`;
+
+    // Settings form pre-fill (if visible)
+    const settingsName   = document.getElementById('settings-parent-name');
+    const settingsPlayer = document.getElementById('settings-player-name');
+    const settingsGrade  = document.getElementById('settings-grade');
+    if (settingsName   && full)   settingsName.value   = full;
+    if (settingsPlayer && player) settingsPlayer.value = player;
+    if (settingsGrade  && grade)  settingsGrade.value  = grade;
+
+    // Any element decorated with data-profile-field="full_name" / "player_name" / "grade"
+    document.querySelectorAll('[data-profile-field]').forEach(el => {
+        const key = el.dataset.profileField;
+        if (profile[key] !== undefined && profile[key] !== null) {
+            el.tagName === 'INPUT' || el.tagName === 'SELECT'
+                ? (el.value = profile[key])
+                : (el.textContent = profile[key]);
+        }
+    });
+}
+
+/**
+ * Subscribe to Supabase Realtime for this parent's profile row.
+ * Any UPDATE written by the admin portal arrives here in ~200ms and
+ * patches the UI without a page reload.
+ * @param {object} supabase  - authenticated Supabase client
+ * @param {string} profileId - UUID of the logged-in user's profile row
+ */
+let _profileChannel = null;
+function initProfileRealtime(supabase, profileId) {
+    // Tear down any previous subscription (e.g. re-login)
+    if (_profileChannel) {
+        supabase.removeChannel(_profileChannel);
+        _profileChannel = null;
+    }
+
+    _profileChannel = supabase
+        .channel('parent-portal-profile-' + profileId)
+        .on(
+            'postgres_changes',
+            {
+                event:  'UPDATE',
+                schema: 'public',
+                table:  'profiles',
+                filter: `id=eq.${profileId}`,
+            },
+            (payload) => {
+                console.log('[Realtime] Profile updated by admin:', payload.new);
+                applyProfileToUI(payload.new);
+                // Subtle toast so the parent knows their info was refreshed
+                if (typeof showPortalToast === 'function') {
+                    showPortalToast('Your profile was updated by your coach.', 'info');
+                }
+            }
+        )
+        .subscribe();
+}
+
 
 function handleLogout() {
     if (window.auth && window.auth.logout) {
@@ -2933,9 +3026,140 @@ window.toggleCalendarView = function (viewType) {
     }
 }
 
+
 /**
  * (initiateTrainingPayment has been moved to training-cart.js)
  */
+
+// ─── TUITION PAYMENT FLOW ────────────────────────────────────────────────────
+
+window.openTuitionPaymentModal = function () {
+    const overlay = document.getElementById('tuition-payment-overlay');
+    if (!overlay) return;
+
+    // Reset state
+    const amountInput = document.getElementById('tuition-pay-amount');
+    const noteInput   = document.getElementById('tuition-pay-note');
+    const errorEl     = document.getElementById('tuition-pay-error');
+    const btn         = document.getElementById('tuition-pay-submit-btn');
+    if (amountInput) amountInput.value = '';
+    if (noteInput)   noteInput.value   = '';
+    if (errorEl)     errorEl.style.display = 'none';
+    if (btn)         { btn.textContent = 'Submit Payment'; btn.disabled = false; }
+
+    // Sync balance from DOM
+    const totalDueEl = document.getElementById('billing-total-due');
+    const balanceEl  = document.getElementById('tuition-modal-balance');
+    if (totalDueEl && balanceEl) balanceEl.textContent = totalDueEl.textContent || '$745.00';
+
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    if (amountInput) setTimeout(() => amountInput.focus(), 150);
+};
+
+window.closeTuitionPaymentModal = function () {
+    const overlay = document.getElementById('tuition-payment-overlay');
+    if (overlay) overlay.style.display = 'none';
+    document.body.style.overflow = '';
+};
+
+window.submitTuitionPayment = async function () {
+    const amountInput = document.getElementById('tuition-pay-amount');
+    const noteInput   = document.getElementById('tuition-pay-note');
+    const errorEl     = document.getElementById('tuition-pay-error');
+    const btn         = document.getElementById('tuition-pay-submit-btn');
+
+    const rawAmount = parseFloat(amountInput?.value || '0');
+    const note      = noteInput?.value?.trim() || '';
+
+    // Validate
+    if (!rawAmount || rawAmount <= 0) {
+        if (errorEl) { errorEl.textContent = 'Please enter a valid payment amount.'; errorEl.style.display = 'block'; }
+        amountInput?.focus();
+        return;
+    }
+    if (rawAmount > 10000) {
+        if (errorEl) { errorEl.textContent = 'Amount exceeds the maximum allowed. Please contact your coach.'; errorEl.style.display = 'block'; }
+        return;
+    }
+
+    const email       = localStorage.getItem('gba_user_email') || '';
+    const parentName  = document.querySelector('.user-name')?.textContent || email;
+    const playerName  = document.getElementById('dashboard-welcome-msg')?.textContent?.replace("Here is what's happening with ", '').replace(' today.', '') || '';
+    const amountStr   = rawAmount.toFixed(2);
+    const paymentDate = new Date().toISOString();
+    const receiptId   = 'GBS-' + Date.now();
+
+    // Disable button / show loading
+    if (btn) { btn.textContent = 'Processing…'; btn.disabled = true; }
+    if (errorEl) errorEl.style.display = 'none';
+
+    try {
+        const supabase = window.auth?.getSupabaseClient?.();
+
+        // 1. Write payment record to Supabase
+        if (supabase && window.auth?.isSupabaseAvailable?.()) {
+            const { error: dbError } = await supabase.from('dues_payments').insert([{
+                parent_email:  email,
+                parent_name:   parentName,
+                player_name:   playerName,
+                amount:        rawAmount,
+                note:          note || null,
+                receipt_id:    receiptId,
+                payment_date:  paymentDate,
+                status:        'pending_stripe',   // Will be updated to 'completed' by Stripe webhook
+                season:        'Spring/Summer 2026',
+            }]);
+            if (dbError) console.warn('[Payment] Supabase insert warning:', dbError.message);
+        }
+
+        // 2. Send receipt email to parent + admin notification
+        if (supabase && window.auth?.isSupabaseAvailable?.()) {
+            try {
+                await supabase.functions.invoke('send-email', {
+                    body: {
+                        type:         'tuition_payment',
+                        emailTo:      email,
+                        parentName:   parentName,
+                        playerName:   playerName,
+                        amount:       amountStr,
+                        receiptId:    receiptId,
+                        note:         note,
+                        paymentDate:  paymentDate,
+                        season:       'Spring/Summer 2026',
+                    }
+                });
+            } catch (emailErr) {
+                console.warn('[Payment] Email dispatch failed (non-fatal):', emailErr);
+            }
+        }
+
+        // 3. Close modal and show success
+        closeTuitionPaymentModal();
+        const successMsg = typeof godspeedAlert === 'function'
+            ? godspeedAlert(`Payment of $${amountStr} submitted. Receipt #${receiptId} has been sent to ${email}.`, 'Payment Submitted ✓')
+            : alert(`Payment of $${amountStr} submitted.\nReceipt: ${receiptId}\nConfirmation sent to ${email}`);
+
+        // 4. Refresh billing view
+        if (typeof window.renderBilling === 'function') {
+            window.renderBilling(email);
+        }
+
+    } catch (err) {
+        console.error('[Payment] Error:', err);
+        if (errorEl) {
+            errorEl.textContent = 'Something went wrong. Please try again or contact your coach.';
+            errorEl.style.display = 'block';
+        }
+        if (btn) { btn.textContent = 'Submit Payment'; btn.disabled = false; }
+    }
+};
+
+// Close modal on backdrop click
+document.addEventListener('click', function(e) {
+    const overlay = document.getElementById('tuition-payment-overlay');
+    if (overlay && e.target === overlay) window.closeTuitionPaymentModal();
+});
 
 
 /**

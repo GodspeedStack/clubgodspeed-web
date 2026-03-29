@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pay Tuition — Club Godspeed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #f2f2f7; color: #1d1d1f; min-height: 100vh; }
+
+  /* ─── SIDEBAR ─── */
+  .layout { display: flex; min-height: 100vh; }
+  .sidebar { width: 240px; background: #fff; border-right: 1px solid #e5e5ea; display: flex; flex-direction: column; padding: 24px 0; flex-shrink: 0; }
+  .sidebar-logo { padding: 0 20px 24px; font-weight: 900; font-size: 1.1rem; letter-spacing: -0.03em; border-bottom: 1px solid #f0f0f0; margin-bottom: 16px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; font-size: 0.9rem; font-weight: 500; color: #555; cursor: pointer; border-radius: 0; transition: all 0.15s; }
+  .nav-item.active { background: #f2f2f7; color: #111; font-weight: 700; border-left: 3px solid #111; }
+  .nav-item svg { opacity: 0.5; }
+  .nav-item.active svg { opacity: 1; }
+  .user-area { margin-top: auto; padding: 16px 20px; border-top: 1px solid #f0f0f0; display: flex; align-items: center; gap: 10px; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; background: #111; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; flex-shrink: 0; }
+
+  /* ─── MAIN ─── */
+  .main { flex: 1; padding: 32px; overflow-y: auto; }
+  .page-title { font-size: 1.4rem; font-weight: 900; letter-spacing: -0.03em; text-transform: uppercase; margin-bottom: 24px; }
+
+  /* ─── ACCOUNT STATUS CARD ─── */
+  .status-card { background: white; border-radius: 14px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border-left: 5px solid #ef4444; margin-bottom: 24px; }
+  .status-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .status-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #86868b; margin-bottom: 4px; }
+  .status-title { font-size: 1.15rem; font-weight: 800; color: #111; }
+  .status-badge { color: #ef4444; font-size: 0.85rem; font-weight: 700; margin-top: 4px; }
+  .due-amount { font-size: 1.75rem; font-weight: 900; color: #111; letter-spacing: -0.03em; }
+  .card-footer { margin-top: 20px; padding-top: 16px; border-top: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; }
+  .btn-invoice { display: flex; align-items: center; gap: 8px; background: transparent; color: #6b7280; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; border: none; cursor: pointer; font-family: inherit; }
+  .btn-pay { display: flex; align-items: center; gap: 8px; background: #111; color: white; padding: 12px 28px; border-radius: 10px; font-size: 0.95rem; font-weight: 800; border: none; cursor: pointer; font-family: inherit; box-shadow: 0 4px 14px rgba(0,0,0,0.2); transition: background 0.2s, transform 0.1s; letter-spacing: 0.01em; }
+  .btn-pay:hover { background: #333; transform: translateY(-1px); }
+  .btn-pay:active { transform: translateY(0); }
+
+  /* ─── DEMO INFO BANNER ─── */
+  .demo-banner { background: linear-gradient(135deg, #1a1a2e, #16213e); color: white; border-radius: 14px; padding: 20px 24px; margin-bottom: 24px; display: flex; align-items: center; gap: 16px; }
+  .demo-dot { width: 10px; height: 10px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 8px #4ade80; flex-shrink: 0; animation: pulse-dot 2s infinite; }
+  @keyframes pulse-dot { 0%,100%{ opacity:1; } 50%{ opacity:0.4; } }
+
+  /* ─── PAYMENT MODAL ─── */
+  #tuition-payment-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); backdrop-filter:blur(10px); z-index:9999; align-items:center; justify-content:center; padding:20px; }
+  .modal-box { background:#fff; border-radius:22px; max-width:460px; width:100%; box-shadow:0 50px 100px rgba(0,0,0,0.4); overflow:hidden; animation: modal-in 0.25s cubic-bezier(0.34,1.56,0.64,1); }
+  @keyframes modal-in { from{ opacity:0; transform:scale(0.92) translateY(12px); } to{ opacity:1; transform:scale(1) translateY(0); } }
+  .modal-header { background:#111; padding:24px 28px; display:flex; align-items:center; justify-content:space-between; }
+  .modal-header-sub { font-size:0.65rem; font-weight:800; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.45); margin-bottom:4px; }
+  .modal-header-title { font-size:1.3rem; font-weight:900; color:#fff; letter-spacing:-0.02em; }
+  .modal-close { background:rgba(255,255,255,0.1); border:none; color:#fff; width:36px; height:36px; border-radius:50%; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s; }
+  .modal-close:hover { background:rgba(255,255,255,0.2); }
+  .modal-body { padding:28px; }
+  .balance-box { background:#f9f9f9; border-radius:12px; padding:16px 20px; margin-bottom:24px; border:1px solid #f0f0f0; }
+  .balance-label { font-size:0.72rem; font-weight:700; color:#86868b; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:4px; }
+  .balance-amount { font-size:2.2rem; font-weight:900; color:#111; letter-spacing:-0.04em; }
+  .balance-sub { font-size:0.78rem; color:#86868b; margin-top:2px; }
+  .field-label { display:block; font-size:0.78rem; font-weight:700; color:#1d1d1f; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px; }
+  .amount-wrap { position:relative; margin-bottom:10px; }
+  .amount-prefix { position:absolute; left:16px; top:50%; transform:translateY(-50%); font-size:1.25rem; font-weight:700; color:#86868b; pointer-events:none; }
+  #tuition-pay-amount { width:100%; padding:14px 16px 14px 38px; border-radius:12px; border:2px solid #e5e5ea; font-size:1.4rem; font-weight:800; color:#111; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box; transition:border-color 0.2s; }
+  #tuition-pay-amount:focus { border-color:#111; }
+  .quick-btns { display:flex; gap:8px; margin-bottom:20px; }
+  .quick-btn { flex:1; padding:9px 6px; border-radius:9px; border:1.5px solid #e5e5ea; background:#f9f9f9; font-size:0.8rem; font-weight:700; cursor:pointer; color:#111; font-family:'Inter',sans-serif; transition:all 0.15s; }
+  .quick-btn:hover { border-color:#111; background:#fff; }
+  #tuition-pay-note { width:100%; padding:12px 16px; border-radius:12px; border:2px solid #e5e5ea; font-size:0.95rem; color:#111; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box; transition:border-color 0.2s; margin-bottom:24px; }
+  #tuition-pay-note:focus { border-color:#111; }
+  #tuition-pay-error { display:none; background:#fff0f0; color:#cc0000; border-radius:8px; padding:10px 14px; font-size:0.85rem; font-weight:600; margin-bottom:16px; }
+  #tuition-pay-submit-btn { width:100%; padding:16px; background:#111; color:#fff; border:none; border-radius:12px; font-size:1rem; font-weight:800; letter-spacing:0.02em; cursor:pointer; transition:background 0.2s; font-family:'Inter',sans-serif; }
+  #tuition-pay-submit-btn:hover { background:#333; }
+  #tuition-pay-submit-btn:disabled { background:#999; cursor:not-allowed; }
+  .modal-footer-note { text-align:center; font-size:0.72rem; color:#86868b; margin-top:12px; }
+
+  /* ─── SUCCESS OVERLAY ─── */
+  #success-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(10px); z-index:10000; align-items:center; justify-content:center; }
+  .success-box { background:#fff; border-radius:22px; max-width:400px; width:90%; padding:40px 32px; text-align:center; animation: modal-in 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+  .success-icon { width:64px; height:64px; border-radius:50%; background:#dcfce7; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; }
+  .success-title { font-size:1.4rem; font-weight:900; color:#111; margin-bottom:8px; letter-spacing:-0.02em; }
+  .success-sub { font-size:0.9rem; color:#6b7280; margin-bottom:24px; line-height:1.6; }
+  .receipt-box { background:#f9f9f9; border-radius:10px; padding:14px 18px; margin-bottom:24px; text-align:left; border:1px solid #f0f0f0; }
+  .receipt-row { display:flex; justify-content:space-between; font-size:0.85rem; padding:4px 0; }
+  .receipt-row .rk { color:#86868b; font-weight:600; }
+  .receipt-row .rv { font-weight:700; color:#111; }
+  .btn-done { background:#111; color:#fff; border:none; border-radius:10px; padding:14px 32px; font-size:0.95rem; font-weight:800; cursor:pointer; font-family:'Inter',sans-serif; width:100%; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">⚡ GODSPEED</div>
+    <div class="nav-item">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Documents
+    </div>
+    <div class="nav-item active">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      AAU Season Dues
+    </div>
+    <div class="nav-item">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Schedule
+    </div>
+    <div class="nav-item">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Performance
+    </div>
+    <div class="user-area">
+      <div class="avatar">JS</div>
+      <div>
+        <div style="font-size:0.85rem;font-weight:700;color:#111;">Jai Scott</div>
+        <div style="font-size:0.72rem;color:#86868b;">Parent</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main">
+    <div class="demo-banner">
+      <div class="demo-dot"></div>
+      <div>
+        <div style="font-weight:800;font-size:0.9rem;letter-spacing:-0.01em;">Payment Flow Demo</div>
+        <div style="font-size:0.78rem;opacity:0.7;margin-top:2px;">Click "Pay Tuition Securely" below to see the full payment modal experience</div>
+      </div>
+    </div>
+
+    <div class="page-title">AAU Season Dues</div>
+
+    <!-- Account Status Card -->
+    <div class="status-card">
+      <div class="status-top">
+        <div>
+          <div class="status-label">Account Status</div>
+          <div class="status-title">Spring / Summer 2026</div>
+          <div class="status-badge">● Action Required</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:0.78rem;color:#86868b;margin-bottom:4px;">Total Due</div>
+          <div class="due-amount" id="billing-total-due">$745</div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <button class="btn-invoice" onclick="alert('Downloading invoice...')">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Invoice
+        </button>
+        <button class="btn-pay" onclick="openTuitionPaymentModal()" id="pay-tuition-btn">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Pay Tuition Securely
+        </button>
+      </div>
+    </div>
+
+    <!-- Invoices placeholder -->
+    <div style="background:white;border-radius:14px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+      <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#86868b;margin-bottom:16px;">Outstanding Invoices</div>
+      <div style="text-align:center;padding:20px;background:#f9f9f9;border-radius:10px;color:#86868b;font-size:0.9rem;">
+        All caught up! No open invoices.
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ─── PAYMENT MODAL ─── -->
+<div id="tuition-payment-overlay" onclick="if(event.target===this)closeTuitionPaymentModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <div class="modal-header-sub">Club Godspeed</div>
+        <div class="modal-header-title">AAU Season Dues</div>
+      </div>
+      <button class="modal-close" onclick="closeTuitionPaymentModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="balance-box">
+        <div class="balance-label">Balance Due</div>
+        <div class="balance-amount" id="tuition-modal-balance">$745.00</div>
+        <div class="balance-sub">Spring / Summer 2026 Season</div>
+      </div>
+
+      <label class="field-label">Payment Amount</label>
+      <div class="amount-wrap">
+        <span class="amount-prefix">$</span>
+        <input id="tuition-pay-amount" type="number" min="1" placeholder="0.00" step="0.01">
+      </div>
+      <div class="quick-btns">
+        <button class="quick-btn" onclick="setAmount(745)">$745 Full</button>
+        <button class="quick-btn" onclick="setAmount(375)">$375 Half</button>
+        <button class="quick-btn" onclick="setAmount(250)">$250</button>
+      </div>
+
+      <label class="field-label">Note (optional)</label>
+      <input id="tuition-pay-note" type="text" placeholder="e.g. April installment">
+
+      <div id="tuition-pay-error"></div>
+      <button id="tuition-pay-submit-btn" onclick="submitTuitionPayment()">Submit Payment</button>
+      <p class="modal-footer-note">🔒 Secured by Stripe. Your card info is never stored on our servers.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ─── SUCCESS OVERLAY ─── -->
+<div id="success-overlay" onclick="if(event.target===this)closeSuccess()">
+  <div class="success-box">
+    <div class="success-icon">
+      <svg width="32" height="32" fill="none" stroke="#16a34a" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div class="success-title">Payment Submitted!</div>
+    <div class="success-sub" id="success-sub">Your payment has been received and a receipt has been sent to your email. The coach has been notified.</div>
+    <div class="receipt-box" id="receipt-box"></div>
+    <button class="btn-done" onclick="closeSuccess()">Done</button>
+  </div>
+</div>
+
+<script>
+  function setAmount(n) {
+    document.getElementById('tuition-pay-amount').value = n;
+    document.getElementById('tuition-pay-amount').focus();
+  }
+
+  function openTuitionPaymentModal() {
+    const overlay = document.getElementById('tuition-payment-overlay');
+    document.getElementById('tuition-pay-amount').value = '';
+    document.getElementById('tuition-pay-note').value = '';
+    const err = document.getElementById('tuition-pay-error');
+    err.style.display = 'none';
+    const btn = document.getElementById('tuition-pay-submit-btn');
+    btn.textContent = 'Submit Payment';
+    btn.disabled = false;
+    // Sync balance
+    const dueEl = document.getElementById('billing-total-due');
+    const balEl = document.getElementById('tuition-modal-balance');
+    if (dueEl && balEl) balEl.textContent = dueEl.textContent.replace(/^\$/, '') === '745' ? '$745.00' : dueEl.textContent;
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => document.getElementById('tuition-pay-amount').focus(), 150);
+  }
+
+  function closeTuitionPaymentModal() {
+    document.getElementById('tuition-payment-overlay').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  function closeSuccess() {
+    document.getElementById('success-overlay').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  async function submitTuitionPayment() {
+    const amountInput = document.getElementById('tuition-pay-amount');
+    const noteInput   = document.getElementById('tuition-pay-note');
+    const errorEl     = document.getElementById('tuition-pay-error');
+    const btn         = document.getElementById('tuition-pay-submit-btn');
+    const rawAmount   = parseFloat(amountInput.value || '0');
+    const note        = noteInput.value.trim();
+
+    if (!rawAmount || rawAmount <= 0) {
+      errorEl.textContent = 'Please enter a valid payment amount.';
+      errorEl.style.display = 'block';
+      amountInput.focus();
+      return;
+    }
+    if (rawAmount > 10000) {
+      errorEl.textContent = 'Amount exceeds maximum. Please contact your coach.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    errorEl.style.display = 'none';
+    btn.textContent = 'Processing…';
+    btn.disabled = true;
+
+    // Simulate network delay
+    await new Promise(r => setTimeout(r, 1400));
+
+    const receiptId   = 'GBS-' + Date.now();
+    const amountStr   = rawAmount.toFixed(2);
+    const dateStr     = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+
+    closeTuitionPaymentModal();
+
+    // Show success
+    document.getElementById('receipt-box').innerHTML = `
+      <div class="receipt-row"><span class="rk">Receipt ID</span><span class="rv">${receiptId}</span></div>
+      <div class="receipt-row"><span class="rk">Amount</span><span class="rv">$${amountStr}</span></div>
+      <div class="receipt-row"><span class="rk">Date</span><span class="rv">${dateStr}</span></div>
+      <div class="receipt-row"><span class="rk">Season</span><span class="rv">Spring/Summer 2026</span></div>
+      ${note ? `<div class="receipt-row"><span class="rk">Note</span><span class="rv">${note}</span></div>` : ''}
+      <div class="receipt-row"><span class="rk">Status</span><span class="rv" style="color:#16a34a;">✓ Confirmed</span></div>`;
+    document.getElementById('success-sub').textContent = `$${amountStr} received. Receipt #${receiptId} sent to jaiscott7@gmail.com. Your coach has been notified.`;
+    document.getElementById('success-overlay').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+</script>
+</body>
+</html>

@@ -1139,7 +1139,7 @@
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                                         Invoice
                                     </button>
-                                    <button onclick="if(typeof godspeedAlert !== 'undefined') { godspeedAlert('Redirecting to Stripe Checkout...', 'Secure Payment Gateway'); } else { alert('Redirecting to secure payment portal...'); }" style="display: flex; align-items: center; gap: 8px; background: #0071e3; color: white; padding: 10px 24px; border-radius: 8px; font-size: 0.95rem; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,113,227,0.3);" onmouseover="this.style.background='#005bb5'" onmouseout="this.style.background='#0071e3'">
+                                    <button onclick="openTuitionPaymentModal()" style="display: flex; align-items: center; gap: 8px; background: #111; color: white; padding: 10px 24px; border-radius: 8px; font-size: 0.95rem; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.25);" onmouseover="this.style.background='#333'" onmouseout="this.style.background='#111'">
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
                                         Pay Tuition Securely
                                     </button>
@@ -1328,6 +1328,47 @@
         </div>
     </div>
 
+    <!-- TUITION PAYMENT MODAL -->
+    <div id="tuition-payment-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);z-index:99999;align-items:center;justify-content:center;padding:20px;">
+      <div style="background:#fff;border-radius:20px;max-width:480px;width:100%;box-shadow:0 40px 80px rgba(0,0,0,0.3);overflow:hidden;">
+        <!-- Header -->
+        <div style="background:#111;padding:24px 28px;display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:0.7rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:4px;">Club Godspeed</div>
+            <div style="font-size:1.2rem;font-weight:900;color:#fff;letter-spacing:-0.02em;">AAU Season Dues</div>
+          </div>
+          <button onclick="closeTuitionPaymentModal()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">✕</button>
+        </div>
+        <!-- Body -->
+        <div style="padding:28px;">
+          <div style="background:#f9f9f9;border-radius:12px;padding:16px 20px;margin-bottom:24px;border:1px solid #f0f0f0;">
+            <div style="font-size:0.75rem;font-weight:700;color:#86868b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Balance Due</div>
+            <div id="tuition-modal-balance" style="font-size:2rem;font-weight:900;color:#111;letter-spacing:-0.03em;">$745.00</div>
+            <div style="font-size:0.8rem;color:#86868b;margin-top:2px;">Spring / Summer 2026 Season</div>
+          </div>
+          <div style="margin-bottom:20px;">
+            <label style="display:block;font-size:0.8rem;font-weight:700;color:#1d1d1f;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Payment Amount</label>
+            <div style="position:relative;">
+              <span style="position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:1.2rem;font-weight:700;color:#86868b;">$</span>
+              <input id="tuition-pay-amount" type="number" min="1" placeholder="0.00" step="0.01" style="width:100%;padding:14px 16px 14px 36px;border-radius:12px;border:2px solid #e5e5ea;font-size:1.3rem;font-weight:700;color:#111;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color 0.2s;" onfocus="this.style.borderColor='#111'" onblur="this.style.borderColor='#e5e5ea'">
+            </div>
+            <div style="display:flex;gap:8px;margin-top:10px;">
+              <button onclick="document.getElementById('tuition-pay-amount').value='745'" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e5e5ea;background:#f9f9f9;font-size:0.8rem;font-weight:700;cursor:pointer;color:#111;">$745 Full</button>
+              <button onclick="document.getElementById('tuition-pay-amount').value='375'" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e5e5ea;background:#f9f9f9;font-size:0.8rem;font-weight:700;cursor:pointer;color:#111;">$375 Half</button>
+              <button onclick="document.getElementById('tuition-pay-amount').value='250'" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e5e5ea;background:#f9f9f9;font-size:0.8rem;font-weight:700;cursor:pointer;color:#111;">$250</button>
+            </div>
+          </div>
+          <div style="margin-bottom:24px;">
+            <label style="display:block;font-size:0.8rem;font-weight:700;color:#1d1d1f;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Note (optional)</label>
+            <input id="tuition-pay-note" type="text" placeholder="e.g. April installment" style="width:100%;padding:12px 16px;border-radius:12px;border:2px solid #e5e5ea;font-size:0.95rem;color:#111;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color 0.2s;" onfocus="this.style.borderColor='#111'" onblur="this.style.borderColor='#e5e5ea'">
+          </div>
+          <div id="tuition-pay-error" style="display:none;background:#fff0f0;color:#cc0000;border-radius:8px;padding:10px 14px;font-size:0.85rem;font-weight:600;margin-bottom:16px;"></div>
+          <button id="tuition-pay-submit-btn" onclick="submitTuitionPayment()" style="width:100%;padding:16px;background:#111;color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:800;letter-spacing:0.02em;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='#333'" onmouseout="this.style.background='#111'">Submit Payment</button>
+          <p style="text-align:center;font-size:0.75rem;color:#86868b;margin-top:12px;margin-bottom:0;">🔒 Secured by Stripe. Your payment info is never stored on our servers.</p>
+        </div>
+      </div>
+    </div>
+
     <!-- Scripts -->
     <!-- Footer Removed per User Request -->
     <!-- Supabase Client (load with defer for non-blocking) -->
@@ -1341,7 +1382,7 @@
     <script src="supabase-data-bridge.js" defer></script>
     <script src="export-functions.js" defer></script>
     <script src="receipt-view.js" defer></script>
-    <script src="parent-portal.js?v=5" defer></script>
+    <script src="parent-portal.js?v=6" defer></script>
     <!-- Non-critical scripts (async for independent loading) -->
     <script src="branded-modal.js"></script>
     <script src="documents-view.js" defer></script>

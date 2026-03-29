@@ -427,10 +427,65 @@ async function loadDues() {
     if(osSupabase) {
       const {data,error}=await osSupabase.from('dues_installments').select(`id,installment_number,amount,due_date,status,paid_at,enrollment:parent_dues_enrollment!enrollment_id(id,parent_name,parent_email,athlete_name,total_owed,total_paid,status)`).order('due_date',{ascending:true});
       if(!error) allInstallments=data||[];
-      else console.error('Dues load query error:',error);
+      else {
+        const {data:d}=await osSupabase.from('payment_summary').select('*');
+        allInstallments=(d||[]).map((r,i)=>({id:r.id||i,amount:r.amount_due,due_date:null,status:r.payment_status==='paid'?'paid':r.payment_status,paid_at:null,enrollment:{user:{full_name:r.full_name,email:r.email||''}}}));
+      }
+      // Load dues_payments submitted via parent portal Pay Tuition flow
+      try {
+        const {data:dp}=await osSupabase.from('dues_payments').select('*').order('payment_date',{ascending:false}).limit(50);
+        if(dp && dp.length) renderDuesPaymentsFeed(dp);
+      } catch(e){ /* table may not exist yet */ }
     }
   } catch(e){ console.error('Dues load:',e); }
   renderDues();
+
+  // Realtime: push toast when a parent submits a new payment
+  if(osSupabase && !window._duesPaymentsChannel) {
+    window._duesPaymentsChannel = osSupabase
+      .channel('admin-dues-payments')
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'dues_payments'},(payload)=>{
+        showToast(`💳 New payment: ${payload.new.parent_name||payload.new.parent_email} — $${(+payload.new.amount).toFixed(2)}`);
+        loadDues();
+      }).subscribe();
+  }
+}
+
+function renderDuesPaymentsFeed(payments) {
+  let feedEl = document.getElementById('dues-payments-feed');
+  if (!feedEl) {
+    const duesPanel = document.getElementById('panel-dues');
+    if (!duesPanel) return;
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.id = 'dues-payments-feed';
+    card.style.marginBottom = '20px';
+    card.innerHTML = `<div class="card-header"><h2>Portal Payments</h2><span style="font-size:12px;color:var(--muted)">Submitted via parent portal</span></div>
+      <table><thead><tr><th>Parent</th><th>Player</th><th>Amount</th><th>Note</th><th>Date</th><th>Status</th><th></th></tr></thead><tbody id="dpf-tbody"></tbody></table>`;
+    duesPanel.insertBefore(card, duesPanel.firstChild);
+    feedEl = card;
+  }
+  const tbody = document.getElementById('dpf-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = payments.map(p => {
+    const d = p.payment_date ? new Date(p.payment_date).toLocaleDateString() : '--';
+    const done = p.status === 'completed' || p.status === 'manual';
+    return `<tr>
+      <td style="font-weight:600">${p.parent_name||p.parent_email||'--'}</td>
+      <td style="color:var(--muted)">${p.player_name||'--'}</td>
+      <td>$${(+p.amount).toFixed(2)}</td>
+      <td style="color:var(--muted);font-size:12px">${p.note||'--'}</td>
+      <td style="color:var(--muted);font-size:12px">${d}</td>
+      <td>${statusTag(p.status)}</td>
+      <td>${!done?`<button class="btn btn-ghost btn-xs" onclick="markDuesPaymentPaid('${p.id}')">Mark Paid</button>`:''}</td>
+    </tr>`;
+  }).join('');
+}
+async function markDuesPaymentPaid(id) {
+  if(!confirm('Mark this payment as completed?')) return;
+  try { if(osSupabase) await osSupabase.from('dues_payments').update({status:'manual'}).eq('id',id); }
+  catch(e){ showToast('Error: '+e.message,'error'); return; }
+  showToast('Payment marked as completed'); loadDues();
 }
 function renderDues() {
   let items=allInstallments;
