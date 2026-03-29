@@ -1024,7 +1024,7 @@ function renderParentTrips() {
                     Pay Tuition Securely &rarr;
                 </button>
             </div>
-             : ''}
+            ` : ''}
         `;
         container.appendChild(card);
     });
@@ -1827,7 +1827,7 @@ async function renderTrainingDashboard() {
               <div style="margin-bottom:12px; display:flex; flex-wrap:wrap; gap:6px;">
                     ${safeFocus.map(f => `<span style="font-size:11px; background:#f0f9ff; color:#0369a1; padding:2px 8px; border-radius:4px; font-weight:500;">${f}</span>`).join('')}
                 </div>
-                 : ''}
+                ` : ''}
 
                 <div style="font-size:12px; color:#888; display:flex; gap:12px; padding-top:12px; border-top:1px solid #f9fafb;">
                     <span>📅 ${safeSchedule}</span>
