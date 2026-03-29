@@ -172,13 +172,15 @@ function routeAuthenticatedUser() {
         const dashboardView = document.getElementById('portal-dashboard');
         const waitingRoom = document.getElementById('portal-waiting-room');
 
-        if (approved === 'false') {
-            if (loginView) loginView.style.display = 'none';
-            if (waitingRoom) waitingRoom.style.display = 'flex';
-        } else {
+        // Default-deny: only explicit 'true' grants dashboard access.
+        // null (profile not yet loaded), 'false', or any other value → waiting room.
+        if (approved === 'true') {
             if (loginView) loginView.style.display = 'none';
             showDashboard();
             updateDashboardProfile(savedEmail);
+        } else {
+            if (loginView) loginView.style.display = 'none';
+            if (waitingRoom) waitingRoom.style.display = 'flex';
         }
     }
 }
@@ -395,7 +397,7 @@ async function handleLogin() {
                 if (window.auth && window.auth.isSupabaseAvailable()) {
                     // 2. Check approval status from the profiles table (v2 schema)
                     const approved = localStorage.getItem('gba_user_approved');
-                    if (approved === 'false') {
+                    if (approved !== 'true') {
                         // Check if there's a denied login_request
                         const supabaseClient = window.auth.getSupabaseClient();
                         if (supabaseClient) {

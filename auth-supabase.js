@@ -292,16 +292,28 @@
                 }
 
                 // Listen for auth state changes
-                supabaseClient.auth.onAuthStateChange((event, session) => {
+                supabaseClient.auth.onAuthStateChange(async (event, session) => {
                     if (event === 'SIGNED_IN' && session) {
                         localStorage.setItem(AUTH_KEY, 'supabase_session');
                         localStorage.setItem('gba_user_email', session.user.email);
                         localStorage.setItem('gba_user_id', session.user.id);
+                        // Fetch approval status before routing — prevents unapproved
+                        // accounts from reaching the dashboard on email confirmation redirect
+                        const profile = await window.auth.getProfile(session.user.id);
+                        if (profile) {
+                            localStorage.setItem('gba_user_role', profile.role || 'parent');
+                            localStorage.setItem('gba_user_approved', String(profile.approved ?? false));
+                        } else {
+                            // Default deny: treat missing profile as unapproved
+                            localStorage.setItem('gba_user_approved', 'false');
+                        }
                         updateUI(true);
                     } else if (event === 'SIGNED_OUT') {
                         localStorage.removeItem(AUTH_KEY);
                         localStorage.removeItem('gba_user_email');
                         localStorage.removeItem('gba_user_id');
+                        localStorage.removeItem('gba_user_role');
+                        localStorage.removeItem('gba_user_approved');
                         updateUI(false);
                     }
                 });
