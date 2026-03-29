@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     signupEyeIcon.style.display = 'block';
                     signupEyeOffIcon.style.display = 'none';
-                }
+    0           }
             }
         });
     }
@@ -294,12 +294,12 @@ async function handleLogin() {
                 // Check if login was successful
                 if (result === true || (result && result.success !== false)) {
                     loginSuccess = true;
-                } else {
+ &              } else {
                     errorMessage = result?.error || result?.message || errorMessage;
-                }
+                }
             } catch (authError) {
                 console.error('Auth login error:', authError);
-                errorMessage = authError.message || errorMessage;
+ &              errorMessage = authError.message || errorMessage;
 
                 // Provide specific error messages
                 if (authError.message && authError.message.includes('Invalid login credentials')) {
@@ -818,100 +818,7 @@ function updateDashboardProfile(email) {
 
         welcomeMsg.textContent = `Here is what's happening with ${athleteName} today.`;
     }
-
-    // Hydrate from Supabase profiles for real names, then start realtime
-    const supabase = window.auth?.getSupabaseClient?.();
-    if (supabase && window.auth?.isSupabaseAvailable?.()) {
-        supabase.from('profiles').select('id,full_name,player_name,grade,phone').eq('email', email).single()
-            .then(({ data }) => {
-                if (data) {
-                    applyProfileToUI(data);
-                    initProfileRealtime(supabase, data.id);
-                }
-            });
-    }
 }
-
-/**
- * Apply a profiles row to every UI slot that displays parent/player data.
- * Called on load and on every Realtime UPDATE push from Supabase.
- */
-function applyProfileToUI(profile) {
-    const full   = profile.full_name || '';
-    const player = profile.player_name || '';
-    const grade  = profile.grade || '';
-
-    // Sidebar / header name
-    const bannerName = document.getElementById('dashboard-user-name');
-    if (bannerName && full) bannerName.textContent = full;
-
-    const sidebarName = document.querySelector('.user-name');
-    if (sidebarName && full) sidebarName.textContent = full;
-
-    // Avatar initials
-    const avatarEl = document.querySelector('.user-avatar-small');
-    if (avatarEl && full) avatarEl.textContent = full.substring(0, 2).toUpperCase();
-
-    // Welcome message uses player name
-    const welcomeMsg = document.getElementById('dashboard-welcome-msg');
-    if (welcomeMsg && player) welcomeMsg.textContent = `Here is what's happening with ${player} today.`;
-
-    // Settings form pre-fill (if visible)
-    const settingsName   = document.getElementById('settings-parent-name');
-    const settingsPlayer = document.getElementById('settings-player-name');
-    const settingsGrade  = document.getElementById('settings-grade');
-    if (settingsName   && full)   settingsName.value   = full;
-    if (settingsPlayer && player) settingsPlayer.value = player;
-    if (settingsGrade  && grade)  settingsGrade.value  = grade;
-
-    // Any element decorated with data-profile-field="full_name" / "player_name" / "grade"
-    document.querySelectorAll('[data-profile-field]').forEach(el => {
-        const key = el.dataset.profileField;
-        if (profile[key] !== undefined && profile[key] !== null) {
-            el.tagName === 'INPUT' || el.tagName === 'SELECT'
-                ? (el.value = profile[key])
-                : (el.textContent = profile[key]);
-        }
-    });
-}
-
-/**
- * Subscribe to Supabase Realtime for this parent's profile row.
- * Any UPDATE written by the admin portal arrives here in ~200ms and
- * patches the UI without a page reload.
- * @param {object} supabase  - authenticated Supabase client
- * @param {string} profileId - UUID of the logged-in user's profile row
- */
-let _profileChannel = null;
-function initProfileRealtime(supabase, profileId) {
-    // Tear down any previous subscription (e.g. re-login)
-    if (_profileChannel) {
-        supabase.removeChannel(_profileChannel);
-        _profileChannel = null;
-    }
-
-    _profileChannel = supabase
-        .channel('parent-portal-profile-' + profileId)
-        .on(
-            'postgres_changes',
-            {
-                event:  'UPDATE',
-                schema: 'public',
-                table:  'profiles',
-                filter: `id=eq.${profileId}`,
-            },
-            (payload) => {
-                console.log('[Realtime] Profile updated by admin:', payload.new);
-                applyProfileToUI(payload.new);
-                // Subtle toast so the parent knows their info was refreshed
-                if (typeof showPortalToast === 'function') {
-                    showPortalToast('Your profile was updated by your coach.', 'info');
-                }
-            }
-        )
-        .subscribe();
-}
-
 
 function handleLogout() {
     if (window.auth && window.auth.logout) {
@@ -1111,10 +1018,11 @@ function renderParentTrips() {
             
             ${canPay ? `
             <div style="border-top: 1px solid #eee; padding-top: 16px;">
-                 <a href="${safePaymentLink}" target="_blank" class="btn-primary" 
-                    style="display:block; text-align:center; text-decoration:none; background:#0071e3; color:white; padding:12px; border-radius:8px; width:100%; font-weight:600;">
-                    Pay Tuition ($${safeFee})
-                 </a>
+                <button class="btn-primary"
+                    style="display:block; width:100%; background:#0a0a0a; color:white; padding:12px; border-radius:8px; font-weight:700; font-size:0.95rem; border:none; cursor:pointer; letter-spacing:0.02em;"
+                    onclick="openPaymentModal({ type: 'trip', label: ${JSON.stringify(safeName)}, amount: ${parseFloat(trip.fee) || 0}, tripId: ${JSON.stringify(trip.id || '')} })">
+                    Pay Tuition Securely &rarr;
+                </button>
             </div>
             ` : ''}
         `;
@@ -1916,7 +1824,7 @@ async function renderTrainingDashboard() {
                 ${safeDescription ? `<div style="font-size:13px; color:#444; margin-bottom:12px; line-height:1.4;">${safeDescription}</div>` : ''}
 
                 ${safeFocus.length > 0 ? `
-                <div style="margin-bottom:12px; display:flex; flex-wrap:wrap; gap:6px;">
+     &          <div style="margin-bottom:12px; display:flex; flex-wrap:wrap; gap:6px;">
                     ${safeFocus.map(f => `<span style="font-size:11px; background:#f0f9ff; color:#0369a1; padding:2px 8px; border-radius:4px; font-weight:500;">${f}</span>`).join('')}
                 </div>
                 ` : ''}
@@ -1939,7 +1847,7 @@ async function renderTrainingDashboard() {
         if (userRecord && userRecord.purchases) {
             docsHtml += userRecord.purchases.map(p => {
                 // Sanitize purchase data
-                const safeItem = escapeHTML(p.item || '');
+     0          const safeItem = escapeHTML(p.item || '');
                 const safeDate = escapeHTML(p.date || '');
                 const safeAmount = escapeHTML(p.amount || '');
                 const safeStatus = escapeHTML(p.status || '');
@@ -1953,27 +1861,27 @@ async function renderTrainingDashboard() {
                         <div style="font-size:11px; color:#166534;">${safeDate} • ${safeAmount} • ${safeStatus}</div>
                     </div>
                     <button data-email="${escapeHTML(safeEmail)}" class="btn-primary view-receipt-btn" style="padding: 6px 12px; font-size: 10px; min-width: 88px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; line-height:1.2; border:none; cursor:pointer; box-sizing: border-box;">View Receipt</button>
-                </div>
+ 0              </div>
             `;
             }).join('');
         }
 
-        // B. Standard Docs
+  0     // B. Standard Docs
         docsHtml += data.documents.map(doc => {
-            // Sanitize document data
+ 0          // Sanitize document data
             const safeTitle = escapeHTML(doc.title || '');
             const safeDate = escapeHTML(doc.date || '');
             const safeLink = validateURL(doc.link) || '#';
 
             return `
             <div class="doc-item" style="display:flex; align-items:center; gap:12px; padding:12px; border-bottom:1px solid #f0f0f0;">
-                <div style="background:#fee2e2; color:#991b1b; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:6px; font-size:10px; font-weight:700;">PDF</div>
+       0        <div style="background:#fee2e2; color:#991b1b; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:6px; font-size:10px; font-weight:700;">PDF</div>
                 <div style="flex:1;">
                     <div style="font-size:13px; font-weight:600;">${safeTitle}</div>
                     <div style="font-size:11px; color:#888;">Added ${safeDate}</div>
                 </div>
                 <a href="${safeLink}" class="btn-primary" style="padding: 6px 12px; font-size: 10px; min-width: 88px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; line-height:1.2; border:none; cursor:pointer; box-sizing: border-box;">Download</a>
-            </div>
+      0     </div>
         `;
         }).join('');
 
@@ -1991,31 +1899,31 @@ async function calculateRemainingHours(parentEmail) {
     let totalUsed = 0;
 
     // Check Supabase first
-    if (supabase && window.auth?.isSupabaseAvailable?.()) {
+   0if (supabase && window.auth?.isSupabaseAvailable?.()) {
         try {
-            const { data: parentAccount, error: accountError } = await supabase
+    0       const { data: parentAccount, error: accountError } = await supabase
                 .from('profiles')
                 .select('id')
-                .eq('email', parentEmail)
+          0     .eq('email', parentEmail)
                 .single();
 
             if (accountError) {
                 console.error('Error fetching parent account:', accountError);
                 // Fall through to mock data
-            } else if (parentAccount) {
+         0  } else if (parentAccount) {
                 const { data: purchases, error: purchasesError } = await supabase
                     .from('training_purchases')
                     .select('hours_purchased, hours_used')
-                    .eq('parent_id', parentAccount.id)
+     0              .eq('parent_id', parentAccount.id)
                     .eq('status', 'active');
 
                 if (purchasesError) {
-                    console.error('Error fetching purchases:', purchasesError);
-                    // Fall through to mock data
+                0   console.error('Error fetching purchases:', purchasesError);
+           0        // Fall through to mock data
                 } else if (purchases) {
                     totalPurchased = purchases.reduce((sum, p) => sum + (parseFloat(p.hours_purchased) || 0), 0);
                     totalUsed = purchases.reduce((sum, p) => sum + (parseFloat(p.hours_used) || 0), 0);
-                }
+    0           }
             }
         } catch (e) {
             console.error('Error calculating remaining hours:', e);
@@ -2029,12 +1937,12 @@ async function calculateRemainingHours(parentEmail) {
         const userRecords = getLedgerProfile(rawUserRecords);
         if (userRecords && userRecords.hours) {
             totalPurchased = userRecords.hours.totalPurchased;
-            // UI relies on active progress
+  0         // UI relies on active progress
             totalUsed = userRecords.hours.totalPurchased - userRecords.hours.remaining; 
         }
     }
 
-    const remaining = totalPurchased - totalUsed;
+  0 const remaining = totalPurchased - totalUsed;
     const progressPercent = totalPurchased > 0 ? (totalUsed / totalPurchased) * 100 : 0;
 
     return {
@@ -2063,14 +1971,14 @@ async function loadTrainingHours(parentEmail) {
 
     if (userRecords) {
         // Set purchased hours
-        if (hoursPurchasedEl) {
+      0 if (hoursPurchasedEl) {
             hoursPurchasedEl.textContent = userRecords.hours.totalPurchased;
         }
 
         // Update the main dashboard display elements
         const trainingHoursDisplay = document.getElementById('training-hours-display');
         if (trainingHoursDisplay) {
-            trainingHoursDisplay.textContent = userRecords.hours.remaining.toFixed(1);
+        0   trainingHoursDisplay.textContent = userRecords.hours.remaining.toFixed(1);
         }
 
         const utilizedDisplay = document.getElementById('training-utilized-display');
@@ -2078,7 +1986,7 @@ async function loadTrainingHours(parentEmail) {
             utilizedDisplay.textContent = userRecords.hours.used.toFixed(1);
         }
 
-        // Create Log Container if not exists (Training View)
+     0  // Create Log Container if not exists (Training View)
         // Use existing container or append a new one
         /* Assuming we are in 'training' view context or similar elements exist */
 
@@ -2107,37 +2015,37 @@ async function loadTrainingHours(parentEmail) {
                 logItem.style.justifyContent = 'space-between';
                 logItem.style.padding = '12px';
                 logItem.style.background = '#fff';
-                logItem.style.border = '1px solid #eee';
+      &         logItem.style.border = '1px solid #eee';
                 logItem.style.borderRadius = '8px';
                 logItem.style.marginBottom = '8px';
 
                 // Left Side Container (Icon + Text)
                 const leftContainer = document.createElement('div');
                 leftContainer.style.display = 'flex';
-                leftContainer.style.alignItems = 'center';
+     `         leftContainer.style.alignItems = 'center';
                 leftContainer.style.gap = '10px';
 
-                // Subtle Checkmark Icon
+        0       // Subtle Checkmark Icon
                 const iconDiv = document.createElement('div');
                 iconDiv.innerHTML = `
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                0       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="20 6 9 17 4 12"></polyline>
                         </svg>
-                    `;
+     `             `;
                 iconDiv.style.display = 'flex';
-                iconDiv.style.alignItems = 'center';
+         `     iconDiv.style.alignItems = 'center';
 
                 const textDiv = document.createElement('div');
-                const activityDiv = document.createElement('div');
-                activityDiv.style.fontWeight = '600';
+     &          const activityDiv = document.createElement('div');
+             &  activityDiv.style.fontWeight = '600';
                 activityDiv.style.fontSize = '13px';
                 activityDiv.style.color = '#1f2937';
-                activityDiv.textContent = safeActivity;
+   &            activityDiv.textContent = safeActivity;
 
                 const dateDiv = document.createElement('div');
                 dateDiv.style.fontSize = '11px';
                 dateDiv.style.color = '#6b7280';
-                dateDiv.textContent = safeDate;
+          &     dateDiv.textContent = safeDate;
 
                 textDiv.appendChild(activityDiv);
                 textDiv.appendChild(dateDiv);
@@ -3026,140 +2934,9 @@ window.toggleCalendarView = function (viewType) {
     }
 }
 
-
 /**
  * (initiateTrainingPayment has been moved to training-cart.js)
  */
-
-// ─── TUITION PAYMENT FLOW ────────────────────────────────────────────────────
-
-window.openTuitionPaymentModal = function () {
-    const overlay = document.getElementById('tuition-payment-overlay');
-    if (!overlay) return;
-
-    // Reset state
-    const amountInput = document.getElementById('tuition-pay-amount');
-    const noteInput   = document.getElementById('tuition-pay-note');
-    const errorEl     = document.getElementById('tuition-pay-error');
-    const btn         = document.getElementById('tuition-pay-submit-btn');
-    if (amountInput) amountInput.value = '';
-    if (noteInput)   noteInput.value   = '';
-    if (errorEl)     errorEl.style.display = 'none';
-    if (btn)         { btn.textContent = 'Submit Payment'; btn.disabled = false; }
-
-    // Sync balance from DOM
-    const totalDueEl = document.getElementById('billing-total-due');
-    const balanceEl  = document.getElementById('tuition-modal-balance');
-    if (totalDueEl && balanceEl) balanceEl.textContent = totalDueEl.textContent || '$745.00';
-
-    overlay.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    if (amountInput) setTimeout(() => amountInput.focus(), 150);
-};
-
-window.closeTuitionPaymentModal = function () {
-    const overlay = document.getElementById('tuition-payment-overlay');
-    if (overlay) overlay.style.display = 'none';
-    document.body.style.overflow = '';
-};
-
-window.submitTuitionPayment = async function () {
-    const amountInput = document.getElementById('tuition-pay-amount');
-    const noteInput   = document.getElementById('tuition-pay-note');
-    const errorEl     = document.getElementById('tuition-pay-error');
-    const btn         = document.getElementById('tuition-pay-submit-btn');
-
-    const rawAmount = parseFloat(amountInput?.value || '0');
-    const note      = noteInput?.value?.trim() || '';
-
-    // Validate
-    if (!rawAmount || rawAmount <= 0) {
-        if (errorEl) { errorEl.textContent = 'Please enter a valid payment amount.'; errorEl.style.display = 'block'; }
-        amountInput?.focus();
-        return;
-    }
-    if (rawAmount > 10000) {
-        if (errorEl) { errorEl.textContent = 'Amount exceeds the maximum allowed. Please contact your coach.'; errorEl.style.display = 'block'; }
-        return;
-    }
-
-    const email       = localStorage.getItem('gba_user_email') || '';
-    const parentName  = document.querySelector('.user-name')?.textContent || email;
-    const playerName  = document.getElementById('dashboard-welcome-msg')?.textContent?.replace("Here is what's happening with ", '').replace(' today.', '') || '';
-    const amountStr   = rawAmount.toFixed(2);
-    const paymentDate = new Date().toISOString();
-    const receiptId   = 'GBS-' + Date.now();
-
-    // Disable button / show loading
-    if (btn) { btn.textContent = 'Processing…'; btn.disabled = true; }
-    if (errorEl) errorEl.style.display = 'none';
-
-    try {
-        const supabase = window.auth?.getSupabaseClient?.();
-
-        // 1. Write payment record to Supabase
-        if (supabase && window.auth?.isSupabaseAvailable?.()) {
-            const { error: dbError } = await supabase.from('dues_payments').insert([{
-                parent_email:  email,
-                parent_name:   parentName,
-                player_name:   playerName,
-                amount:        rawAmount,
-                note:          note || null,
-                receipt_id:    receiptId,
-                payment_date:  paymentDate,
-                status:        'pending_stripe',   // Will be updated to 'completed' by Stripe webhook
-                season:        'Spring/Summer 2026',
-            }]);
-            if (dbError) console.warn('[Payment] Supabase insert warning:', dbError.message);
-        }
-
-        // 2. Send receipt email to parent + admin notification
-        if (supabase && window.auth?.isSupabaseAvailable?.()) {
-            try {
-                await supabase.functions.invoke('send-email', {
-                    body: {
-                        type:         'tuition_payment',
-                        emailTo:      email,
-                        parentName:   parentName,
-                        playerName:   playerName,
-                        amount:       amountStr,
-                        receiptId:    receiptId,
-                        note:         note,
-                        paymentDate:  paymentDate,
-                        season:       'Spring/Summer 2026',
-                    }
-                });
-            } catch (emailErr) {
-                console.warn('[Payment] Email dispatch failed (non-fatal):', emailErr);
-            }
-        }
-
-        // 3. Close modal and show success
-        closeTuitionPaymentModal();
-        const successMsg = typeof godspeedAlert === 'function'
-            ? godspeedAlert(`Payment of $${amountStr} submitted. Receipt #${receiptId} has been sent to ${email}.`, 'Payment Submitted ✓')
-            : alert(`Payment of $${amountStr} submitted.\nReceipt: ${receiptId}\nConfirmation sent to ${email}`);
-
-        // 4. Refresh billing view
-        if (typeof window.renderBilling === 'function') {
-            window.renderBilling(email);
-        }
-
-    } catch (err) {
-        console.error('[Payment] Error:', err);
-        if (errorEl) {
-            errorEl.textContent = 'Something went wrong. Please try again or contact your coach.';
-            errorEl.style.display = 'block';
-        }
-        if (btn) { btn.textContent = 'Submit Payment'; btn.disabled = false; }
-    }
-};
-
-// Close modal on backdrop click
-document.addEventListener('click', function(e) {
-    const overlay = document.getElementById('tuition-payment-overlay');
-    if (overlay && e.target === overlay) window.closeTuitionPaymentModal();
-});
 
 
 /**
@@ -3410,11 +3187,11 @@ function renderPaymentsTimeline(container, payments, plan, supabase) {
         } else if (isOverdue) {
             statusBadge = `<span style="background: #fee2e2; color: #ef4444; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Overdue</span>`;
             borderColor = '#ef4444';
-            actionBtn = `<button class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem; background: #ef4444;" onclick="triggerStripeCheckout('${payment.id}', ${payment.amount}, ${payment.installment_number})">Pay Now</button>`;
+            actionBtn = `<button class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem; background: #0a0a0a; font-weight:700;" onclick="openPaymentModal({ type:'installment', label:'Installment ${payment.installment_number}', amount:${payment.amount}, paymentId:'${payment.id}', installmentNumber:${payment.installment_number} })">Pay Now &rarr;</button>`;
         } else {
             statusBadge = `<span style="background: #fef3c7; color: #d97706; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Upcoming</span>`;
             borderColor = '#f59e0b';
-            actionBtn = `<button class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem;" onclick="triggerStripeCheckout('${payment.id}', ${payment.amount}, ${payment.installment_number})">Pay Early</button>`;
+            actionBtn = `<button class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem; background: #6b7280; font-weight:700;" onclick="openPaymentModal({ type:'installment', label:'Installment ${payment.installment_number}', amount:${payment.amount}, paymentId:'${payment.id}', installmentNumber:${payment.installment_number} })">Pay Early &rarr;</button>`;
         }
         
         // Hide button if it's pending but a previous installment is still unpaid
@@ -3444,40 +3221,200 @@ function renderPaymentsTimeline(container, payments, plan, supabase) {
     container.innerHTML = html;
 }
 
-window.triggerStripeCheckout = async function(paymentId, amount, installmentNumber) {
-    if (!window.auth || !window.auth.isSupabaseAvailable()) {
-        godspeedAlert('System error. Please try again later.', 'Error');
+// ---------------------------------------------------------------------------
+// Payment Modal — amount input overlay before Stripe redirect
+// opts: { type: 'installment'|'trip', label, amount, paymentId?, installmentNumber?, tripId? }
+// ---------------------------------------------------------------------------
+window.openPaymentModal = function(opts) {
+    const parentEmail = localStorage.getItem('gba_user_email') || '';
+    const playerName  = localStorage.getItem('gba_selected_athlete_name') || 'Athlete';
+
+    // Remove any existing modal
+    const existing = document.getElementById('gs-payment-modal-overlay');
+    if (existing) existing.remove();
+
+    const isInstallment = opts.type === 'installment';
+    const amountFmt = (v) => '$' + parseFloat(v).toFixed(2);
+
+    const overlay = document.createElement('div');
+    overlay.id = 'gs-payment-modal-overlay';
+    overlay.style.cssText = `
+        position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);
+        display:flex;align-items:center;justify-content:center;padding:16px;
+        backdrop-filter:blur(4px);animation:gsPmFadeIn 0.15s ease;
+    `;
+
+    overlay.innerHTML = `
+    <style>
+        @keyframes gsPmFadeIn { from { opacity:0; transform:scale(0.97); } to { opacity:1; transform:scale(1); } }
+        #gs-payment-modal { background:#fff; border-radius:16px; width:100%; max-width:440px; overflow:hidden;
+            box-shadow:0 24px 64px rgba(0,0,0,0.22); font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif; }
+        #gs-payment-modal .pm-header { background:#0a0a0a; color:#fff; padding:24px 28px 20px; }
+        #gs-payment-modal .pm-header h2 { font-size:1.05rem; font-weight:800; letter-spacing:0.04em;
+            text-transform:uppercase; margin:0 0 4px; }
+        #gs-payment-modal .pm-header p { font-size:0.8rem; color:#9ca3af; margin:0; }
+        #gs-payment-modal .pm-body { padding:24px 28px; }
+        #gs-payment-modal .pm-row { display:flex; justify-content:space-between; align-items:center;
+            padding:10px 0; border-bottom:1px solid #f3f4f6; font-size:0.9rem; }
+        #gs-payment-modal .pm-row:last-child { border-bottom:none; }
+        #gs-payment-modal .pm-label { color:#6b7280; font-weight:500; }
+        #gs-payment-modal .pm-val { color:#111; font-weight:700; }
+        #gs-payment-modal .pm-amount-wrap { margin:20px 0 8px; }
+        #gs-payment-modal .pm-amount-wrap label { display:block; font-size:0.75rem; font-weight:700;
+            text-transform:uppercase; letter-spacing:0.06em; color:#6b7280; margin-bottom:6px; }
+        #gs-payment-modal .pm-amount-input { display:flex; align-items:center; border:2px solid #e5e7eb;
+            border-radius:10px; overflow:hidden; transition:border-color 0.15s; }
+        #gs-payment-modal .pm-amount-input:focus-within { border-color:#0a0a0a; }
+        #gs-payment-modal .pm-amount-input span { padding:0 12px; font-size:1.15rem; font-weight:700; color:#6b7280; }
+        #gs-payment-modal .pm-amount-input input { flex:1; border:none; outline:none; font-size:1.35rem;
+            font-weight:800; color:#0a0a0a; padding:12px 8px 12px 0; background:transparent; width:100%; }
+        #gs-payment-modal .pm-note { font-size:0.78rem; color:#9ca3af; margin:6px 0 0; }
+        #gs-payment-modal .pm-actions { display:flex; gap:10px; margin-top:24px; }
+        #gs-payment-modal .pm-btn-pay { flex:1; background:#0a0a0a; color:#fff; border:none;
+            padding:14px 20px; border-radius:10px; font-size:0.9rem; font-weight:800;
+            text-transform:uppercase; letter-spacing:0.05em; cursor:pointer; transition:background 0.15s;
+            display:flex; align-items:center; justify-content:center; gap:8px; }
+        #gs-payment-modal .pm-btn-pay:hover { background:#1f2937; }
+        #gs-payment-modal .pm-btn-pay:disabled { background:#9ca3af; cursor:not-allowed; }
+        #gs-payment-modal .pm-btn-cancel { background:#f3f4f6; color:#374151; border:none;
+            padding:14px 16px; border-radius:10px; font-size:0.9rem; font-weight:600; cursor:pointer; }
+        #gs-payment-modal .pm-lock { font-size:0.75rem; color:#9ca3af; text-align:center; margin-top:14px;
+            display:flex; align-items:center; justify-content:center; gap:5px; }
+    </style>
+    <div id="gs-payment-modal">
+        <div class="pm-header">
+            <h2>Godspeed Basketball</h2>
+            <p>Secure Payment &mdash; ${escapeHTML(opts.label)}</p>
+        </div>
+        <div class="pm-body">
+            <div class="pm-row">
+                <span class="pm-label">Athlete</span>
+                <span class="pm-val">${escapeHTML(playerName)}</span>
+            </div>
+            <div class="pm-row">
+                <span class="pm-label">Paying As</span>
+                <span class="pm-val" style="font-size:0.85rem;">${escapeHTML(parentEmail) || '—'}</span>
+            </div>
+            ${isInstallment ? `<div class="pm-row">
+                <span class="pm-label">Balance Due</span>
+                <span class="pm-val">${amountFmt(opts.amount)}</span>
+            </div>` : ''}
+
+            <div class="pm-amount-wrap">
+                <label>Amount to Pay</label>
+                <div class="pm-amount-input">
+                    <span>$</span>
+                    <input type="number" id="pm-amount-field" min="1" step="0.01"
+                        value="${parseFloat(opts.amount).toFixed(2)}" autocomplete="off" inputmode="decimal">
+                </div>
+                <p class="pm-note">
+                    ${isInstallment
+                        ? 'You may pay a partial amount. Remaining balance will stay as pending.'
+                        : 'Pre-filled from program fee. Adjust if needed.'}
+                </p>
+            </div>
+
+            <div class="pm-actions">
+                <button class="pm-btn-cancel" onclick="document.getElementById('gs-payment-modal-overlay').remove()">Cancel</button>
+                <button class="pm-btn-pay" id="pm-submit-btn" onclick="window._submitPaymentModal(${JSON.stringify(opts).replace(/</g,'&lt;')})">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    Pay Securely
+                </button>
+            </div>
+            <p class="pm-lock">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Powered by Stripe &mdash; card details never touch our servers
+            </p>
+        </div>
+    </div>`;
+
+    // Close on backdrop click
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
+    setTimeout(() => document.getElementById('pm-amount-field')?.focus(), 80);
+};
+
+window._submitPaymentModal = async function(opts) {
+    const amountInput = document.getElementById('pm-amount-field');
+    const btn = document.getElementById('pm-submit-btn');
+    const enteredAmount = parseFloat(amountInput?.value);
+
+    if (!enteredAmount || enteredAmount < 1) {
+        amountInput?.closest('.pm-amount-input')?.style.setProperty('border-color', '#ef4444');
         return;
     }
-    const supabase = window.auth.getSupabaseClient();
-    const parentEmail = localStorage.getItem('gba_user_email') || '';
-    const playerName = localStorage.getItem('gba_selected_athlete_name') || 'Athlete';
 
-    godspeedAlert('Redirecting to secure checkout...', 'Processing');
+    if (!window.auth || !window.auth.isSupabaseAvailable()) {
+        alert('Auth not ready. Please refresh and try again.');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 0.8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Connecting…`;
+
+    const supabase   = window.auth.getSupabaseClient();
+    const parentEmail = localStorage.getItem('gba_user_email') || '';
+    const playerName  = localStorage.getItem('gba_selected_athlete_name') || 'Athlete';
+
     try {
-        const { data, error } = await supabase.functions.invoke('create-checkout', {
-            body: {
+        let body;
+        if (opts.type === 'installment') {
+            body = {
                 paymentType: 'aau_payment',
-                paymentId,
-                amount,
-                installmentNumber,
+                paymentId: opts.paymentId,
+                amount: enteredAmount,
+                installmentNumber: opts.installmentNumber,
                 parentEmail,
                 playerName
-            }
-        });
-        
-        if (error) throw error;
-        
-        if (data && data.url) {
-            window.location.href = data.url;
+            };
         } else {
-            throw new Error('No checkout URL returned.');
+            // Trip / program payment — pre-insert a payment record first so webhook can reference it
+            const { data: newPayment, error: insertErr } = await supabase
+                .from('payments')
+                .insert({
+                    parent_id: localStorage.getItem('gba_parent_id') || null,
+                    installment_number: 1,
+                    amount: enteredAmount,
+                    due_date: new Date().toISOString().split('T')[0],
+                    status: 'pending',
+                    notes: opts.label || 'Program payment'
+                })
+                .select('id')
+                .single();
+
+            if (insertErr) throw insertErr;
+
+            body = {
+                paymentType: 'aau_payment',
+                paymentId: newPayment.id,
+                amount: enteredAmount,
+                installmentNumber: 1,
+                parentEmail,
+                playerName,
+                description: opts.label
+            };
         }
+
+        const { data, error } = await supabase.functions.invoke('create-checkout', { body });
+        if (error) throw error;
+        if (!data?.url) throw new Error('No checkout URL returned.');
+
+        // Close modal, redirect to Stripe
+        document.getElementById('gs-payment-modal-overlay')?.remove();
+        window.location.href = data.url;
+
     } catch (err) {
-        console.error('Checkout error:', err);
-        godspeedAlert('Unable to initiate checkout. Please try again or contact support.', 'Payment Error');
+        console.error('Payment modal error:', err);
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Pay Securely`;
+        alert('Payment failed to start: ' + (err.message || 'Unknown error. Please try again.'));
     }
-}
+};
+
+// Legacy alias — keeps any old direct calls working
+window.triggerStripeCheckout = function(paymentId, amount, installmentNumber) {
+    openPaymentModal({ type: 'installment', label: 'Installment ' + installmentNumber, amount, paymentId, installmentNumber });
+};
 
 /**
  * Check and Send Notifications
