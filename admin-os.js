@@ -254,10 +254,19 @@ async function savePlayerInline(el) {
     const {error}=await osSupabase.from('athletes').update({first_name:firstName,last_name:lastName}).eq('id',athleteId);
     if(error){ showToast('Save failed: '+error.message,'error'); return; }
     el.classList.add('saved'); setTimeout(()=>el.classList.remove('saved'),1200);
-    // Update local cache
+    // Update roster cache
     const a=allRosterAthletes.find(x=>x.athlete_id===athleteId);
-    if(a){ a.first_name=firstName; a.last_name=lastName; a.display_name=firstName+(lastName?' '+lastName:''); }
+    const newDisplay=firstName+(lastName?' '+lastName:'');
+    if(a){ a.first_name=firstName; a.last_name=lastName; a.display_name=newDisplay; }
     el.dataset.origFirst=firstName; el.dataset.origLast=lastName;
+    // Sync player_name on linked parent profiles so Parents tab stays current
+    if(a&&a.parents) {
+      for(const pp of a.parents) {
+        const p=allPlayers.find(x=>x.id===pp.profile_id);
+        if(p) p.player_name=newDisplay;
+        await osSupabase.from('profiles').update({player_name:newDisplay}).eq('id',pp.profile_id).then(()=>{});
+      }
+    }
   } catch(e){ showToast('Error: '+e.message,'error'); }
 }
 
@@ -271,11 +280,15 @@ async function saveParentInline(el) {
     const {error}=await osSupabase.from('profiles').update({[field]:newVal}).eq('id',profileId);
     if(error){ showToast('Save failed: '+error.message,'error'); return; }
     el.classList.add('saved'); setTimeout(()=>el.classList.remove('saved'),1200);
-    // Update local cache
+    // Update profiles cache (Parents tab source)
     const p=allPlayers.find(x=>x.id===profileId);
     if(p) p[field]=newVal;
-    // Also update in roster cache for player view
+    // Sync into roster cache (Players tab source) so tab switch reflects changes
     allRosterAthletes.forEach(a=>{(a.parents||[]).forEach(pp=>{if(pp.profile_id===profileId) pp[field]=newVal;});});
+    // If parent full_name changed, also update parent_dues_enrollment.parent_name for dues consistency
+    if(field==='full_name') {
+      await osSupabase.from('parent_dues_enrollment').update({parent_name:newVal}).eq('parent_email',p?.email).then(()=>{});
+    }
   } catch(e){ showToast('Error: '+e.message,'error'); }
 }
 
@@ -983,16 +996,62 @@ async function addPlayer() {
   } catch(e){ showToast('Error: '+e.message,'error'); }
 }
 async function recordPaymentByEmail() {
-  const email=document.getElementById('rp-email').value, amount=parseFloat(document.getElementById('rp-amount').value), method=document.getElementById('rp-method').value;
-  if(!email||!amount) return showToast('All fields required','error');
-  if(osSupabase){ try {
-    const {data:prof}=await osSupabase.from('profiles').select('id').eq('email',email).single();
-    if(!prof) return showToast('Profile not found','error');
-    const {data:fee}=await osSupabase.from('season_fees').select('id').eq('profile_id',prof.id).single();
-    if(!fee) return showToast('No season fee found','error');
-    await osSupabase.from('payments').insert({season_fee_id:fee.id,profile_id:prof.id,amount,method,status:'confirmed'});
-  } catch(e){ showToast('Error: '+e.message,'error'); return; } }
-  showToast(`$${amount} via ${method} recorded!`); closeModal(); loadDues();
+  const email=(document.getElementById('rp-email').value||'').trim().toLowerCase();
+  const amount=parseFloat(document.getElementById('rp-amount').value);
+  const method=document.getElementById('rp-method').value;
+  if(!email||!amount||amount<=0) return showToast('Valid email and amount required','error');
+  if(!osSupabase) return;
+  try {
+    // 1. Find parent profile
+    const {data:prof,error:profErr}=await osSupabase.from('profiles').select('id,full_name').eq('email',email).maybeSingle();
+    if(profErr||!prof) return showToast('No parent profile found for '+email,'error');
+    // 2. Find or create enrollment (uses Full Program / Pay in Full defaults)
+    let enrollmentId;
+    const {data:enrollment}=await osSupabase.from('parent_dues_enrollment').select('id').eq('parent_email',email).maybeSingle();
+    if(enrollment) { enrollmentId=enrollment.id; }
+    else {
+      // Auto-enroll: Full Program config + Pay in Full template
+      const {data:cfg}=await osSupabase.from('season_dues_config').select('id,total_amount').eq('tier_name','Full Program').eq('is_active',true).maybeSingle();
+      if(!cfg) return showToast('No active season config found. Create one in Season Dues Config first.','error');
+      const {data:plan}=await osSupabase.from('payment_plan_templates').select('id').eq('dues_config_id',cfg.id).eq('plan_name','Pay in Full').maybeSingle();
+      if(!plan) return showToast('No Pay in Full plan template found for Full Program.','error');
+      const {data:newEnroll,error:enrErr}=await osSupabase.from('parent_dues_enrollment').insert({
+        parent_email:email, parent_name:prof.full_name||'', dues_config_id:cfg.id,
+        plan_template_id:plan.id, total_owed:cfg.total_amount, total_paid:0, status:'active'
+      }).select('id').single();
+      if(enrErr) return showToast('Enrollment failed: '+enrErr.message,'error');
+      enrollmentId=newEnroll.id;
+    }
+    // 3. Find next unpaid installment or create one
+    let installmentId=null;
+    const {data:unpaid}=await osSupabase.from('dues_installments').select('id,amount').eq('enrollment_id',enrollmentId).in('status',['pending','overdue']).order('due_date').limit(1).maybeSingle();
+    if(unpaid) { installmentId=unpaid.id; }
+    else {
+      // Create a one-off installment for this manual payment
+      const {data:inst,error:instErr}=await osSupabase.from('dues_installments').insert({
+        enrollment_id:enrollmentId, installment_number:1, amount:amount,
+        due_date:new Date().toISOString().split('T')[0], status:'pending'
+      }).select('id').single();
+      if(instErr) return showToast('Installment creation failed: '+instErr.message,'error');
+      installmentId=inst.id;
+    }
+    // 4. Record the payment
+    const {error:payErr}=await osSupabase.from('dues_payments').insert({
+      enrollment_id:enrollmentId, installment_id:installmentId,
+      stripe_payment_intent:'manual_'+method+'_'+Date.now(),
+      amount:amount, currency:'usd', status:'succeeded', paid_at:new Date().toISOString()
+    });
+    if(payErr) return showToast('Payment insert failed: '+payErr.message,'error');
+    // 5. Mark installment paid + update enrollment total_paid
+    await osSupabase.from('dues_installments').update({status:'paid',paid_at:new Date().toISOString()}).eq('id',installmentId);
+    const {data:enr}=await osSupabase.from('parent_dues_enrollment').select('total_paid,total_owed').eq('id',enrollmentId).single();
+    if(enr) {
+      const newPaid=(parseFloat(enr.total_paid)||0)+amount;
+      const newStatus=newPaid>=parseFloat(enr.total_owed)?'paid_in_full':'active';
+      await osSupabase.from('parent_dues_enrollment').update({total_paid:newPaid,status:newStatus}).eq('id',enrollmentId);
+    }
+    showToast(`$${amount} via ${method} recorded!`); closeModal(); loadDues();
+  } catch(e){ showToast('Error: '+e.message,'error'); }
 }
 
 // ─── EDITOR HELPERS ─────────────────────────────────────────
