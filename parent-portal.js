@@ -2022,7 +2022,7 @@ async function loadTrainingHours(parentEmail) {
                 // Left Side Container (Icon + Text)
                 const leftContainer = document.createElement('div');
                 leftContainer.style.display = 'flex';
-     `         leftContainer.style.alignItems = 'center';
+              leftContainer.style.alignItems = 'center';
                 leftContainer.style.gap = '10px';
 
                // Subtle Checkmark Icon
@@ -2031,9 +2031,9 @@ async function loadTrainingHours(parentEmail) {
                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="20 6 9 17 4 12"></polyline>
                         </svg>
-     `             `;
+                  `;
                 iconDiv.style.display = 'flex';
-         `     iconDiv.style.alignItems = 'center';
+              iconDiv.style.alignItems = 'center';
 
                 const textDiv = document.createElement('div');
               const activityDiv = document.createElement('div');
