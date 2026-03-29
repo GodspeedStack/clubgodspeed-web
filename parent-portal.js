@@ -274,7 +274,7 @@ async function handleLogin() {
                             class="mt-2 w-full py-3 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition">
                             Verify 2FA Code
                         </button>
-                    `;
+                    ;
                     const form = document.querySelector('.login-form');
                     if (form) {
                         form.appendChild(twoFactorDiv);
@@ -332,7 +332,7 @@ async function handleLogin() {
                             class="mt-2 w-full py-3 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition">
                             Verify 2FA Code
                         </button>
-                    `;
+                    ;
                     const form = document.querySelector('.login-form');
                     if (form) {
                         form.appendChild(twoFactorDiv);
@@ -1024,8 +1024,8 @@ function renderParentTrips() {
                     Pay Tuition Securely &rarr;
                 </button>
             </div>
-            ` : ''}
-        `;
+             : ''}
+        ;
         container.appendChild(card);
     });
 }
@@ -1061,32 +1061,32 @@ const DOCUMENT_TEMPLATE = {
         <p>I, <strong>{parent_name}</strong>, legal guardian of <strong>{child_name}</strong>, acknowledge that basketball is a contact sport involving inherent risks. I voluntarily assume all risks, including but not limited to sprains, fractures, citations, and serious injury.</p>
         <p>I release Godspeed Basketball, its coaches, and facilities from any liability regarding injuries sustained by {child_name} during practice, games, or travel.</p>
         <p><strong>Acknowledgment:</strong> By signing below, I waive my right to sue for negligence.</p>
-    `,
+    ,
     'medical': `
         <h3>Medical Consent Form</h3>
         <p>In the event of an emergency where I, <strong>{parent_name}</strong>, cannot be reached, I authorize Godspeed Basketball staff to obtain medical treatment for <strong>{child_name}</strong>.</p>
         <p>I agree to cover all costs associated with emergency transport and treatment.</p>
         <p><strong>Medical Conditions:</strong> I certify {child_name} is physically fit to participate.</p>
-    `,
+    ,
     'practice': `
         <h3>Practice & Training Consent</h3>
         <p>Godspeed Training is high-intensity. Sessions may involve heavy exertion, plyometrics, and physical contact.</p>
         <p>I, <strong>{parent_name}</strong>, give full consent for <strong>{child_name}</strong> to participate in all training drills as designed by the coaching staff.</p>
         <p>I understand it is my child's responsibility to hydrate and rest properly.</p>
-    `,
+    ,
     'conduct': `
         <h3>Parental Code of Conduct</h3>
         <p><strong>Strict Policy: No Coaching from the Sidelines.</strong></p>
         <p>To ensure athlete focus and development, parents must refrain from shouting instructions during games, practices, and training sessions.</p>
         <p><strong>Consequences:</strong> I, <strong>{parent_name}</strong>, understand that violating this policy undermines the coaching staff and <strong>will affect {child_name}'s playing time</strong>. Repeated offenses may result in removal from the program.</p>
         <p>We are a family. We support, we cheer, but we let the players play and the coaches coach.</p>
-    `,
+    ,
     'media': `
         <h3>Social Media Release</h3>
         <p>I, <strong>{parent_name}</strong>, grant permission for Club Godspeed to use photos/videos of <strong>{child_name}</strong> for social media and marketing.</p>
         <p>I understand these may be posted on Instagram, YouTube, and the website.</p>
         <p>My child's name will not be sold to third parties.</p>
-    `
+    
 };
 
 let currentDocType = null;
@@ -1402,7 +1402,7 @@ function loadPerformance(parentEmail) {
                 ${dayAvg}
             </div>
         </div>
-        `;
+        ;
     });
 
     listContainer.innerHTML = html;
@@ -1764,7 +1764,7 @@ async function renderTrainingDashboard() {
                         <span style="font-size:11px; padding:4px 8px; background:${badgeBg}; color:${badgeColor}; border-radius:12px; font-weight:600;">${escapeHTML(badgeText)}</span>
                     </div>
                 </div>
-            `}).join('');
+            }).join('');
         }
 
         // B. Past Usage Logs (User Specific)
@@ -1788,7 +1788,7 @@ async function renderTrainingDashboard() {
                     </div>
                     <div style="font-weight:700; color:#444; font-size:13px;">-${safeDuration}</div>
                 </div>
-            `;
+            ;
             }).join('');
         }
 
@@ -1824,17 +1824,17 @@ async function renderTrainingDashboard() {
                 ${safeDescription ? `<div style="font-size:13px; color:#444; margin-bottom:12px; line-height:1.4;">${safeDescription}</div>` : ''}
 
                 ${safeFocus.length > 0 ? `
-    &          <div style="margin-bottom:12px; display:flex; flex-wrap:wrap; gap:6px;">
+              <div style="margin-bottom:12px; display:flex; flex-wrap:wrap; gap:6px;">
                     ${safeFocus.map(f => `<span style="font-size:11px; background:#f0f9ff; color:#0369a1; padding:2px 8px; border-radius:4px; font-weight:500;">${f}</span>`).join('')}
                 </div>
-                ` : ''}
+                 : ''}
 
                 <div style="font-size:12px; color:#888; display:flex; gap:12px; padding-top:12px; border-top:1px solid #f9fafb;">
                     <span>📅 ${safeSchedule}</span>
                     <span>👤 ${safeCoach}</span>
                 </div>
             </div>
-        `;
+        ;
         }).join('');
     }
 
@@ -1862,7 +1862,7 @@ async function renderTrainingDashboard() {
                     </div>
                     <button data-email="${escapeHTML(safeEmail)}" class="btn-primary view-receipt-btn" style="padding: 6px 12px; font-size: 10px; min-width: 88px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; line-height:1.2; border:none; cursor:pointer; box-sizing: border-box;">View Receipt</button>
                </div>
-            `;
+            ;
             }).join('');
         }
 
@@ -1882,7 +1882,7 @@ async function renderTrainingDashboard() {
                 </div>
                 <a href="${safeLink}" class="btn-primary" style="padding: 6px 12px; font-size: 10px; min-width: 88px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; line-height:1.2; border:none; cursor:pointer; box-sizing: border-box;">Download</a>
            </div>
-        `;
+        ;
         }).join('');
 
         docsContainer.innerHTML = docsHtml;
@@ -2015,7 +2015,7 @@ async function loadTrainingHours(parentEmail) {
                 logItem.style.justifyContent = 'space-between';
                 logItem.style.padding = '12px';
                 logItem.style.background = '#fff';
-     &         logItem.style.border = '1px solid #eee';
+              logItem.style.border = '1px solid #eee';
                 logItem.style.borderRadius = '8px';
                 logItem.style.marginBottom = '8px';
 
@@ -2036,16 +2036,16 @@ async function loadTrainingHours(parentEmail) {
          `     iconDiv.style.alignItems = 'center';
 
                 const textDiv = document.createElement('div');
-    &          const activityDiv = document.createElement('div');
-            &  activityDiv.style.fontWeight = '600';
+              const activityDiv = document.createElement('div');
+              activityDiv.style.fontWeight = '600';
                 activityDiv.style.fontSize = '13px';
                 activityDiv.style.color = '#1f2937';
-  &            activityDiv.textContent = safeActivity;
+              activityDiv.textContent = safeActivity;
 
                 const dateDiv = document.createElement('div');
                 dateDiv.style.fontSize = '11px';
                 dateDiv.style.color = '#6b7280';
-         &     dateDiv.textContent = safeDate;
+              dateDiv.textContent = safeDate;
 
                 textDiv.appendChild(activityDiv);
                 textDiv.appendChild(dateDiv);
@@ -2484,7 +2484,7 @@ async function loadSkillsPrograms(parentEmail) {
                 </div>
                 ${safeStartDate ? `<div style="font-size: 14px; color: #666; margin-top: 8px;">Started: ${escapeHTML(safeStartDate)}</div>` : ''}
             </div>
-        `;
+        ;
         });
 
         container.innerHTML = html;
@@ -2860,7 +2860,7 @@ function viewTrainingStatement(email) {
                             <td><span style="background:#dcfce7; color:#166534; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:700;">${p.status.toUpperCase()}</span></td>
                             <td style="text-align:right;" class="amount">${p.amount}</td>
                         </tr>
-                    `).join('')}
+                    ).join('')}
                 </tbody>
             </table>
 
@@ -2887,7 +2887,7 @@ function viewTrainingStatement(email) {
                             <td style="${isRecent ? 'font-weight:500;' : ''}">${l.notes}</td>
                             <td style="text-align:right; font-weight:700; ${isRecent ? 'color:#1d4ed8;' : ''}">-${l.time}</td>
                         </tr>
-                        `;
+                        ;
                     }).join('')}
                 </tbody>
             </table>
@@ -2901,7 +2901,7 @@ function viewTrainingStatement(email) {
             </script>
         </body>
         </html>
-    `);
+    );
     w.document.close();
 }
 
@@ -3028,7 +3028,7 @@ function handleDemoBilling(container, totalDueEl, statusTextEl, statusCard) {
         <div style="text-align: center; padding: 20px; background: rgba(255,255,255,0.5); border-radius: 12px; color: #888; font-size: 0.9rem;">
             Demo Mode: Please sign in securely to view your open invoices and payment plans.
         </div>
-    `;
+    ;
     if (totalDueEl) totalDueEl.textContent = '$745';
     if (statusTextEl && statusCard) {
         statusTextEl.textContent = '● Action Required';
@@ -3082,7 +3082,7 @@ function renderPlanSelectionUI(container, parentId, supabase, email) {
                 <button id="confirm-plan-btn" class="btn-primary" disabled style="opacity: 0.5; padding: 12px 24px;">Enroll & Continue</button>
             </div>
         </div>
-    `;
+    ;
 
     // Add interactivity script
     window.selectPaymentPlan = function(element, planType, parentId, email) {
@@ -3214,7 +3214,7 @@ function renderPaymentsTimeline(container, payments, plan, supabase) {
                     <div>${actionBtn}</div>
                 </div>
             </div>
-        `;
+        ;
     });
     
     html += `</div>`;
@@ -3242,7 +3242,7 @@ window.openPaymentModal = function(opts) {
         position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);
         display:flex;align-items:center;justify-content:center;padding:16px;
         backdrop-filter:blur(4px);animation:gsPmFadeIn 0.15s ease;
-    `;
+    ;
 
     overlay.innerHTML = `
     <style>
@@ -3828,7 +3828,7 @@ async function fetchAthletePerformance() {
                         </div>
                         <p style="font-size: 0.95rem; color: #374151; line-height: 1.5; margin: 0;">${ev.coach_comments || 'No specific comments provided.'}</p>
                     </div>
-                `).join('');
+                ).join('');
             } else {
                 // Realistic mock fallback reflecting Coach Scott and Coach True
                 notesContainer.innerHTML = `
@@ -3846,7 +3846,7 @@ async function fetchAthletePerformance() {
                         </div>
                         <p style="font-size: 0.95rem; color: #374151; line-height: 1.5; margin: 0;">Solid performance in the weekend tournament. Shot selection is improving drastically. Let's focus on boxing out heavier forwards next week in training.</p>
                     </div>
-                `;
+                ;
             }
         }
     } catch (e) {
