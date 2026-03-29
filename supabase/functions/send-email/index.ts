@@ -191,6 +191,25 @@ function getEmailContent(type: string, data: any): { subject: string; text: stri
           adminLink, 'Review in Dashboard')
       }
 
+    case 'payment_admin_notify': {
+      const paidAt = data.paidAt ? new Date(data.paidAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : 'Just now'
+      const label = data.notes || (data.installmentNumber ? `Installment ${data.installmentNumber}` : 'Payment')
+      return {
+        subject: `Payment received — ${data.playerName || 'Athlete'} ($${data.amount})`,
+        text: `A payment has been received.\n\nPlayer: ${data.playerName || 'Unknown'}\nParent: ${data.parentEmail || 'Unknown'}\nAmount: $${data.amount}\nType: ${label}\nTime: ${paidAt}\n\nView in admin dashboard:\n${adminLink}\n\nGodspeed Portal`,
+        html: htmlWrap('Payment Received',
+          `<p style="font-size:16px;color:#4b5563;margin:0 0 20px;">A payment has been successfully processed via Stripe.</p>
+           ${detailTable([
+             ['Player',  data.playerName  || 'Unknown'],
+             ['Parent',  data.parentEmail || 'Unknown'],
+             ['Amount',  `$${data.amount}`],
+             ['Type',    label],
+             ['Time',    paidAt],
+           ])}`,
+          adminLink, 'View in Dashboard')
+      }
+    }
+
     default:
       return { subject: 'Godspeed Basketball', text: '', html: '' }
   }
@@ -209,10 +228,44 @@ Deno.serve(async (req) => {
 
   let content: { subject: string; text: string; html: string }
 
+  let resolvedEmailTo = emailTo
+
   if (type === 'gear_order') {
     content = getEmailContent(type, orderObj)
   } else if (type === 'new_registration') {
     content = getEmailContent(type, body)
+  } else if (type === 'payment_admin_notify') {
+    const { data: payment } = await supabase
+      .from('payments')
+      .select('*, payment_plans(player_name, parent_id)')
+      .eq('id', paymentId)
+      .single()
+
+    if (!payment) return new Response('Payment not found', { status: 404, headers: corsHeaders })
+
+    // Resolve parent email from profiles
+    const parentId = payment.parent_id || payment.payment_plans?.parent_id
+    let parentEmail = 'Unknown'
+    if (parentId) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('id', parentId)
+        .single()
+      if (profile?.email) parentEmail = profile.email
+    }
+
+    content = getEmailContent(type, {
+      playerName: payment.payment_plans?.player_name || 'Unknown',
+      amount: payment.amount,
+      installmentNumber: payment.installment_number,
+      notes: payment.notes,
+      parentEmail,
+      paidAt: payment.paid_at,
+    })
+
+    // Always route admin notifications to the configured admin email
+    resolvedEmailTo = Deno.env.get('ADMIN_EMAIL') || emailTo
   } else {
     const { data: payment } = await supabase
       .from('payments')
@@ -223,7 +276,7 @@ Deno.serve(async (req) => {
     if (!payment) return new Response('Payment not found', { status: 404, headers: corsHeaders })
 
     content = getEmailContent(type, {
-      playerName: payment.payment_plans.player_name,
+      playerName: payment.payment_plans?.player_name,
       amount: payment.amount,
       dueDate: payment.due_date,
       installmentNumber: payment.installment_number,
@@ -239,7 +292,7 @@ Deno.serve(async (req) => {
     },
     body: JSON.stringify({
       from: FROM_EMAIL,
-      to: emailTo,
+      to: resolvedEmailTo,
       subject: content.subject,
       text: content.text,
       html: content.html
@@ -256,12 +309,12 @@ Deno.serve(async (req) => {
     })
   }
 
-  if (type !== 'gear_order' && type !== 'new_registration') {
+  if (type !== 'gear_order' && type !== 'new_registration' && type !== 'payment_admin_notify') {
     await supabase.from('payment_reminders').insert({
       payment_id: paymentId,
       parent_id: body.payment ? body.payment.parent_id : null,
       reminder_type: type,
-      email_to: emailTo
+      email_to: resolvedEmailTo
     })
   }
 
