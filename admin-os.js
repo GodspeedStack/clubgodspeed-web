@@ -148,13 +148,13 @@ async function loadDashboard() {
       const [p,r,d] = await Promise.all([
         osSupabase.from('profiles').select('*'),
         osSupabase.from('login_requests').select('*').eq('status','pending'),
-        osSupabase.from('payment_summary').select('*'),
+        osSupabase.from('parent_dues_enrollment').select('id,total_owed,total_paid,status'),
       ]);
       profiles=p.data||[]; requests=r.data||[]; dues=d.data||[];
     }
   } catch(e){}
-  const collected=dues.reduce((a,d)=>a+(+d.amount_paid||0),0);
-  const outstanding=dues.reduce((a,d)=>a+(+d.balance||0),0);
+  const collected=dues.reduce((a,d)=>a+(+d.total_paid||0),0);
+  const outstanding=dues.reduce((a,d)=>a+((+d.total_owed||0)-(+d.total_paid||0)),0);
   document.getElementById('m-members').textContent=profiles.filter(p=>p.approved).length;
   document.getElementById('m-pending').textContent=requests.length;
   document.getElementById('m-collected').textContent='$'+collected.toFixed(0);
@@ -425,12 +425,9 @@ async function denyReq(id, email) {
 async function loadDues() {
   try {
     if(osSupabase) {
-      const {data,error}=await osSupabase.from('dues_installments').select(`id,amount,due_date,status,paid_at,enrollment:parent_dues_enrollment!enrollment_id(id,user:profiles!user_id(full_name,email))`).order('due_date',{ascending:true});
+      const {data,error}=await osSupabase.from('dues_installments').select(`id,installment_number,amount,due_date,status,paid_at,enrollment:parent_dues_enrollment!enrollment_id(id,parent_name,parent_email,athlete_name,total_owed,total_paid,status)`).order('due_date',{ascending:true});
       if(!error) allInstallments=data||[];
-      else { // fallback to payment_summary
-        const {data:d}=await osSupabase.from('payment_summary').select('*');
-        allInstallments=(d||[]).map((r,i)=>({id:r.id||i,amount:r.amount_due,due_date:null,status:r.payment_status==='paid'?'paid':r.payment_status,paid_at:null,enrollment:{user:{full_name:r.full_name,email:r.email||''}}}));
-      }
+      else console.error('Dues load query error:',error);
     }
   } catch(e){ console.error('Dues load:',e); }
   renderDues();
@@ -453,8 +450,8 @@ function renderDues() {
   document.querySelectorAll('#dues-filters .filter-chip').forEach(c=>c.classList.toggle('active',c.textContent.toLowerCase()===duesFilter));
 
   document.getElementById('dues-tbody').innerHTML=items.length ? items.map((inst,idx)=>`<tr>
-    <td style="font-weight:600">${inst.enrollment?.user?.full_name||'--'}</td><td style="color:var(--muted)">--</td>
-    <td>#${idx+1}</td><td>$${(+inst.amount||0).toFixed(0)}</td><td style="color:var(--muted)">${fmtShort(inst.due_date)}</td>
+    <td style="font-weight:600">${inst.enrollment?.parent_name||'--'}</td><td style="color:var(--muted)">${inst.enrollment?.athlete_name||'--'}</td>
+    <td>#${inst.installment_number||idx+1}</td><td>$${(+inst.amount||0).toFixed(0)}</td><td style="color:var(--muted)">${fmtShort(inst.due_date)}</td>
     <td>${statusTag(inst.status)}</td><td style="color:var(--muted)">${inst.paid_at?fmtShort(inst.paid_at):'--'}</td>
     <td><div style="display:flex;gap:4px">${inst.status!=='paid'?`<button class="btn btn-ghost btn-xs" onclick="markInstallmentPaid('${inst.id}')">Mark Paid</button>`:''}</div></td>
   </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px">No installments found</td></tr>';
