@@ -57,12 +57,47 @@ function welcomeHtml(name: string): string {
 </html>`
 }
 
+async function sendViaResend(email: string, fullName: string): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: FROM_EMAIL,
+      to: email,
+      subject: 'Your Godspeed Basketball Account is Ready',
+      html: welcomeHtml(fullName),
+    }),
+  })
+  if (res.ok) return { ok: true }
+  const errBody = await res.text()
+  return { ok: false, error: errBody }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  // Process pending welcome emails from queue
+  // Direct on-demand send: body contains { email, full_name }
+  // Used by the admin portal when approving a single account.
+  if (req.method === 'POST') {
+    let body: { email?: string; full_name?: string } = {}
+    try { body = await req.json() } catch (_) { /* no body — fall through to queue */ }
+
+    if (body.email) {
+      const result = await sendViaResend(body.email, body.full_name || '')
+      return new Response(
+        JSON.stringify({ sent: result.ok ? 1 : 0, failed: result.ok ? 0 : 1, error: result.error }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: result.ok ? 200 : 502 }
+      )
+    }
+  }
+
+  // Queue processing — processes pending rows from welcome_email_queue.
+  // Used by scheduled cron runs.
   const { data: pending, error: fetchErr } = await supabase
     .from('welcome_email_queue')
     .select('*')
@@ -80,41 +115,21 @@ Deno.serve(async (req) => {
 
   for (const item of pending) {
     try {
-      const res = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${RESEND_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          from: FROM_EMAIL,
-          to: item.email,
-          subject: 'Your Godspeed Basketball Account is Ready',
-          html: welcomeHtml(item.full_name)
-        })
-      })
-
-      if (res.ok) {
+      const result = await sendViaResend(item.email, item.full_name || '')
+      if (result.ok) {
         await supabase
           .from('welcome_email_queue')
           .update({ status: 'sent', sent_at: new Date().toISOString() })
           .eq('id', item.id)
         sent++
       } else {
-        const errBody = await res.text()
-        console.error(`Resend error for ${item.email}: ${errBody}`)
-        await supabase
-          .from('welcome_email_queue')
-          .update({ status: 'failed' })
-          .eq('id', item.id)
+        console.error(`Resend error for ${item.email}: ${result.error}`)
+        await supabase.from('welcome_email_queue').update({ status: 'failed' }).eq('id', item.id)
         failed++
       }
     } catch (err) {
       console.error(`Exception sending to ${item.email}:`, err)
-      await supabase
-        .from('welcome_email_queue')
-        .update({ status: 'failed' })
-        .eq('id', item.id)
+      await supabase.from('welcome_email_queue').update({ status: 'failed' }).eq('id', item.id)
       failed++
     }
   }

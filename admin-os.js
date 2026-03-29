@@ -381,8 +381,30 @@ async function linkParentToAthlete(athleteId) {
 
 async function approveProfile(id) {
   if(!confirm('Approve this profile?')) return;
-  try { if(osSupabase) await osSupabase.from('profiles').update({approved:true}).eq('id',id); } catch(e){ showToast('Failed: '+e.message,'error'); return; }
-  closeModal(); showToast('Profile approved'); loadPlayers();
+  try {
+    if(!osSupabase) return;
+    // Fetch profile before update so we have email/name for the welcome email
+    const { data: prof, error: fetchErr } = await osSupabase.from('profiles').select('email,full_name').eq('id',id).single();
+    if(fetchErr) throw fetchErr;
+    // Persist approval
+    const { error: updateErr } = await osSupabase.from('profiles').update({approved:true}).eq('id',id);
+    if(updateErr) throw updateErr;
+    // Update local cache immediately so re-render reflects new state
+    const cached = allPlayers.find(x => x.id === id);
+    if(cached) cached.approved = true;
+    // Re-render the modal in-place — shows Approved status, hides Approve button
+    viewParentProfile(id);
+    // Send welcome email
+    let emailNote = '';
+    try {
+      await osSupabase.functions.invoke('send-welcome-email', {
+        body: { email: prof.email, full_name: prof.full_name || '' }
+      });
+      emailNote = ' — welcome email sent';
+    } catch(e) { console.warn('Welcome email invoke failed:', e); }
+    showToast('Profile approved' + emailNote);
+    loadPlayers(); // refresh backing table in background
+  } catch(e) { showToast('Failed: '+e.message,'error'); }
 }
 
 // ─── LOGIN REQUESTS ─────────────────────────────────────────
@@ -405,14 +427,21 @@ function renderRequests(arr) {
 async function approveReq(id, email) {
   if(!confirm(`Approve ${email}?`)) return;
   try {
-    if(osSupabase) {
-      await osSupabase.rpc('approve_login_request',{request_id:id});
-      // Trigger welcome email
-      try { await osSupabase.functions.invoke('send-welcome-email'); } catch(e){ console.warn('Welcome email invoke failed:',e); }
-    }
+    if(!osSupabase) return;
+    await osSupabase.rpc('approve_login_request',{request_id:id});
+    // Fetch name so the welcome email can be personalised
+    const { data: prof } = await osSupabase.from('profiles').select('full_name').eq('email', email).maybeSingle();
+    // Send welcome email directly (no queue dependency)
+    try {
+      await osSupabase.functions.invoke('send-welcome-email', {
+        body: { email, full_name: prof?.full_name || '' }
+      });
+    } catch(e){ console.warn('Welcome email invoke failed:',e); }
   } catch(e){ console.error(e); }
-  renderRequests(allRequests); await loadDashboard();
-  showToast(`${email} approved! They can now log in.`);
+  // Reload from DB so the approved row no longer shows pending
+  await loadRequests();
+  await loadDashboard();
+  showToast(`${email} approved — welcome email sent!`);
 }
 async function denyReq(id, email) {
   const reason=prompt(`Reason for denying ${email}? (optional)`);
