@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
         stripe_payment_intent_id: session.payment_intent as string
       }).eq('id', paymentId)
 
-      // Fire receipt
+      // Fire receipt to parent
       await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-email`, {
         method: 'POST',
         headers: {
@@ -62,6 +62,16 @@ Deno.serve(async (req) => {
           'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
         },
         body: JSON.stringify({ paymentId, type: 'receipt' })
+      })
+
+      // Notify admin
+      await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+        },
+        body: JSON.stringify({ paymentId, type: 'payment_admin_notify' })
       })
     }
   }
