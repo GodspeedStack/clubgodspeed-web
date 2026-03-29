@@ -126,6 +126,13 @@
   .status-dot.active { background: var(--green); }
   .status-dot.inactive { background: var(--muted); }
 
+  /* Inline row inputs */
+  .row-input { background: transparent; border: 1px solid transparent; border-radius: 4px; padding: 4px 6px; color: var(--text); font-size: 13px; font-weight: 600; width: 100%; transition: border-color 0.15s, background 0.15s; }
+  .row-input:hover { border-color: var(--border); background: rgba(255,255,255,0.03); }
+  .row-input:focus { border-color: var(--primary); background: rgba(37,99,235,0.08); outline: none; }
+  .row-input.saved { border-color: var(--green); background: rgba(34,197,94,0.08); }
+  .row-input-sm { font-size: 12px; font-weight: 400; color: var(--muted); padding: 2px 6px; }
+
   /* Annotation labels */
   .annotation { position: absolute; background: #f59e0b; color: #000; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 4px; z-index: 50; white-space: nowrap; pointer-events: none; }
   .mockup-badge { position: fixed; top: 12px; right: 12px; background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; font-size: 11px; font-weight: 700; padding: 6px 14px; border-radius: 6px; z-index: 200; letter-spacing: 0.5px; }
@@ -191,47 +198,47 @@
               </tr>
             </thead>
             <tbody id="players-tbody">
-              <tr onclick="openModal('detail-modal')" style="cursor:pointer">
+              <tr>
                 <td>
                   <div class="player-cell">
                     <div class="avatar">A</div>
-                    <div><div class="player-name">Aiden Johnson</div><div class="player-sub">active</div></div>
+                    <div><input class="row-input" value="Aiden Johnson" onfocus="this.select()" onblur="flashSave(this)"><div class="player-sub" style="padding-left:6px">active</div></div>
                   </div>
                 </td>
-                <td>
-                  <div style="font-size:13px">Tamika Johnson</div>
-                  <div style="font-size:11px;color:var(--muted);margin-top:2px">Marcus Johnson</div>
+                <td style="min-width:140px">
+                  <input class="row-input row-input-sm" value="Tamika Johnson" onfocus="this.select()" onblur="flashSave(this)">
+                  <input class="row-input row-input-sm" value="Marcus Johnson" onfocus="this.select()" onblur="flashSave(this)" style="margin-top:2px">
                 </td>
                 <td><span class="tag tag-blue">4th</span></td>
                 <td style="color:var(--muted);font-size:12px">tamika.j@email.com<br>marcus.j@email.com</td>
                 <td style="color:var(--muted)">(404) 555-0142</td>
                 <td><span class="tag tag-green">Active</span></td>
-                <td><button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();openModal('detail-modal')">View</button></td>
+                <td><button class="btn btn-ghost btn-xs" onclick="openModal('detail-modal')">View</button></td>
               </tr>
-              <tr style="cursor:pointer">
+              <tr>
                 <td>
                   <div class="player-cell">
                     <div class="avatar" style="background:linear-gradient(135deg,#7c3aed,#ec4899)">Q</div>
-                    <div><div class="player-name">Quest Williams</div><div class="player-sub">active</div></div>
+                    <div><input class="row-input" value="Quest Williams" onfocus="this.select()" onblur="flashSave(this)"><div class="player-sub" style="padding-left:6px">active</div></div>
                   </div>
                 </td>
-                <td><div style="font-size:13px">Nicole Williams</div></td>
+                <td style="min-width:140px"><input class="row-input row-input-sm" value="Nicole Williams" onfocus="this.select()" onblur="flashSave(this)"></td>
                 <td><span class="tag tag-blue">4th</span></td>
                 <td style="color:var(--muted);font-size:12px">nicole.w@email.com</td>
                 <td style="color:var(--muted)">(404) 555-0198</td>
                 <td><span class="tag tag-green">Active</span></td>
                 <td><button class="btn btn-ghost btn-xs">View</button></td>
               </tr>
-              <tr style="cursor:pointer">
+              <tr>
                 <td>
                   <div class="player-cell">
                     <div class="avatar" style="background:linear-gradient(135deg,#059669,#2563eb)">C</div>
-                    <div><div class="player-name">Cassius Davis</div><div class="player-sub">active</div></div>
+                    <div><input class="row-input" value="Cassius Davis" onfocus="this.select()" onblur="flashSave(this)"><div class="player-sub" style="padding-left:6px">active</div></div>
                   </div>
                 </td>
-                <td>
-                  <div style="font-size:13px">Keisha Davis</div>
-                  <div style="font-size:11px;color:var(--muted);margin-top:2px">Robert Davis</div>
+                <td style="min-width:140px">
+                  <input class="row-input row-input-sm" value="Keisha Davis" onfocus="this.select()" onblur="flashSave(this)">
+                  <input class="row-input row-input-sm" value="Robert Davis" onfocus="this.select()" onblur="flashSave(this)" style="margin-top:2px">
                 </td>
                 <td><span class="tag tag-blue">5th</span></td>
                 <td style="color:var(--muted);font-size:12px">keisha.d@email.com<br>robert.d@email.com</td>
@@ -239,42 +246,42 @@
                 <td><span class="tag tag-green">Active</span></td>
                 <td><button class="btn btn-ghost btn-xs">View</button></td>
               </tr>
-              <tr style="cursor:pointer">
+              <tr>
                 <td>
                   <div class="player-cell">
                     <div class="avatar" style="background:linear-gradient(135deg,#dc2626,#f59e0b)">H</div>
-                    <div><div class="player-name">Howard Mitchell</div><div class="player-sub">active</div></div>
+                    <div><input class="row-input" value="Howard Mitchell" onfocus="this.select()" onblur="flashSave(this)"><div class="player-sub" style="padding-left:6px">active</div></div>
                   </div>
                 </td>
-                <td><div style="font-size:13px;color:var(--muted)">No parent linked</div></td>
+                <td style="min-width:140px"><span style="color:var(--muted);font-size:12px;padding:4px 6px;display:block">No parent linked</span></td>
                 <td><span class="tag tag-blue">4th</span></td>
                 <td style="color:var(--muted);font-size:12px">--</td>
                 <td style="color:var(--muted)">--</td>
                 <td><span class="tag tag-green">Active</span></td>
                 <td><button class="btn btn-ghost btn-xs">View</button></td>
               </tr>
-              <tr style="cursor:pointer">
+              <tr>
                 <td>
                   <div class="player-cell">
                     <div class="avatar" style="background:linear-gradient(135deg,#0891b2,#6366f1)">A</div>
-                    <div><div class="player-name">Anton Brooks</div><div class="player-sub">active</div></div>
+                    <div><input class="row-input" value="Anton Brooks" onfocus="this.select()" onblur="flashSave(this)"><div class="player-sub" style="padding-left:6px">active</div></div>
                   </div>
                 </td>
-                <td><div style="font-size:13px">Sandra Brooks</div></td>
+                <td style="min-width:140px"><input class="row-input row-input-sm" value="Sandra Brooks" onfocus="this.select()" onblur="flashSave(this)"></td>
                 <td><span class="tag tag-blue">5th</span></td>
                 <td style="color:var(--muted);font-size:12px">sandra.b@email.com</td>
                 <td style="color:var(--muted)">(404) 555-0301</td>
                 <td><span class="tag tag-green">Active</span></td>
                 <td><button class="btn btn-ghost btn-xs">View</button></td>
               </tr>
-              <tr style="cursor:pointer">
+              <tr>
                 <td>
                   <div class="player-cell">
                     <div class="avatar" style="background:linear-gradient(135deg,#7c3aed,#2563eb)">E</div>
-                    <div><div class="player-name">Emory Clarke</div><div class="player-sub">active</div></div>
+                    <div><input class="row-input" value="Emory Clarke" onfocus="this.select()" onblur="flashSave(this)"><div class="player-sub" style="padding-left:6px">active</div></div>
                   </div>
                 </td>
-                <td><div style="font-size:13px">Denise Clarke</div></td>
+                <td style="min-width:140px"><input class="row-input row-input-sm" value="Denise Clarke" onfocus="this.select()" onblur="flashSave(this)"></td>
                 <td><span class="tag tag-blue">4th</span></td>
                 <td style="color:var(--muted);font-size:12px">denise.c@email.com</td>
                 <td style="color:var(--muted)">(404) 555-0389</td>
@@ -304,10 +311,10 @@
                 <td>
                   <div class="player-cell">
                     <div class="avatar" style="background:linear-gradient(135deg,#ec4899,#8b5cf6)">T</div>
-                    <div><div class="player-name">Tamika Johnson</div><div class="player-sub">parent</div></div>
+                    <div><input class="row-input" value="Tamika Johnson" onfocus="this.select()" onblur="flashSave(this)"><div class="player-sub" style="padding-left:6px">parent</div></div>
                   </div>
                 </td>
-                <td>Aiden Johnson</td>
+                <td><input class="row-input row-input-sm" value="Aiden Johnson" onfocus="this.select()" onblur="flashSave(this)"></td>
                 <td><span class="tag tag-blue">4th</span></td>
                 <td style="color:var(--muted)">tamika.j@email.com</td>
                 <td style="color:var(--muted)">(404) 555-0142</td>
@@ -318,10 +325,10 @@
                 <td>
                   <div class="player-cell">
                     <div class="avatar" style="background:linear-gradient(135deg,#2563eb,#059669)">M</div>
-                    <div><div class="player-name">Marcus Johnson</div><div class="player-sub">parent</div></div>
+                    <div><input class="row-input" value="Marcus Johnson" onfocus="this.select()" onblur="flashSave(this)"><div class="player-sub" style="padding-left:6px">parent</div></div>
                   </div>
                 </td>
-                <td>Aiden Johnson</td>
+                <td><input class="row-input row-input-sm" value="Aiden Johnson" onfocus="this.select()" onblur="flashSave(this)"></td>
                 <td><span class="tag tag-blue">4th</span></td>
                 <td style="color:var(--muted)">marcus.j@email.com</td>
                 <td style="color:var(--muted)">(404) 555-0143</td>
@@ -332,10 +339,10 @@
                 <td>
                   <div class="player-cell">
                     <div class="avatar" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">N</div>
-                    <div><div class="player-name">Nicole Williams</div><div class="player-sub">parent</div></div>
+                    <div><input class="row-input" value="Nicole Williams" onfocus="this.select()" onblur="flashSave(this)"><div class="player-sub" style="padding-left:6px">parent</div></div>
                   </div>
                 </td>
-                <td>Quest Williams</td>
+                <td><input class="row-input row-input-sm" value="Quest Williams" onfocus="this.select()" onblur="flashSave(this)"></td>
                 <td><span class="tag tag-blue">4th</span></td>
                 <td style="color:var(--muted)">nicole.w@email.com</td>
                 <td style="color:var(--muted)">(404) 555-0198</td>
@@ -346,10 +353,10 @@
                 <td>
                   <div class="player-cell">
                     <div class="avatar" style="background:linear-gradient(135deg,#7c3aed,#ec4899)">K</div>
-                    <div><div class="player-name">Keisha Davis</div><div class="player-sub">parent</div></div>
+                    <div><input class="row-input" value="Keisha Davis" onfocus="this.select()" onblur="flashSave(this)"><div class="player-sub" style="padding-left:6px">parent</div></div>
                   </div>
                 </td>
-                <td>Cassius Davis</td>
+                <td><input class="row-input row-input-sm" value="Cassius Davis" onfocus="this.select()" onblur="flashSave(this)"></td>
                 <td><span class="tag tag-blue">5th</span></td>
                 <td style="color:var(--muted)">keisha.d@email.com</td>
                 <td style="color:var(--muted)">(404) 555-0234</td>
@@ -556,6 +563,11 @@ function filterTable() {
   document.querySelectorAll('#players-tbody tr').forEach(row => {
     row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
   });
+}
+
+function flashSave(el) {
+  el.classList.add('saved');
+  setTimeout(() => el.classList.remove('saved'), 1200);
 }
 
 // Close modal on overlay click

@@ -207,12 +207,13 @@ function renderRosterByPlayer(arr) {
   const tbody=document.getElementById('players-tbody');
   if(!filtered.length){ tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px">No players found. Click "+ Add" to add a player.</td></tr>'; return; }
   tbody.innerHTML=filtered.map(a=>{
-    const parentNames=(a.parents||[]).map(p=>p.full_name||p.email).join(', ')||'<span style="color:var(--muted)">No parent linked</span>';
+    const esc=s=>(s||'').replace(/"/g,'&quot;');
+    const parentInputs=(a.parents||[]).length?(a.parents||[]).map(p=>`<input class="row-input row-input-sm" value="${esc(p.full_name||p.email)}" data-profile-id="${p.profile_id}" data-field="full_name" onblur="saveParentInline(this)" onkeydown="if(event.key==='Enter'){this.blur()}" placeholder="Parent name">`).join(''):`<span style="color:var(--muted);font-size:12px">No parent linked</span>`;
     const parentEmails=(a.parents||[]).map(p=>p.email).join(', ')||'--';
     const parentPhones=(a.parents||[]).map(p=>p.phone).filter(Boolean).join(', ')||'--';
     return `<tr>
-      <td><div style="display:flex;align-items:center;gap:10px"><div class="avatar">${(a.first_name||'?')[0].toUpperCase()}</div><div><div style="font-weight:600">${a.display_name||'--'}</div><div style="color:var(--muted);font-size:11px">${a.enrollment_status||'active'}</div></div></div></td>
-      <td>${parentNames}</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar">${(a.first_name||'?')[0].toUpperCase()}</div><div><input class="row-input" value="${esc(a.display_name)}" data-athlete-id="${a.athlete_id}" data-orig-first="${esc(a.first_name)}" data-orig-last="${esc(a.last_name)}" onblur="savePlayerInline(this)" onkeydown="if(event.key==='Enter'){this.blur()}" placeholder="Player name"><div style="color:var(--muted);font-size:11px;padding-left:6px">${a.enrollment_status||'active'}</div></div></div></td>
+      <td style="min-width:140px">${parentInputs}</td>
       <td>${a.grade?statusTag(a.grade):'--'}</td>
       <td style="color:var(--muted);font-size:12px">${parentEmails}</td>
       <td style="color:var(--muted)">${parentPhones}</td>
@@ -228,14 +229,54 @@ function renderRosterByParent(arr) {
   const filtered=q?parentOnly.filter(p=>(p.full_name||'').toLowerCase().includes(q)||(p.email||'').toLowerCase().includes(q)||(p.player_name||'').toLowerCase().includes(q)):parentOnly;
   const tbody=document.getElementById('players-tbody');
   if(!filtered.length){ tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px">No parents found.</td></tr>'; return; }
+  const esc=s=>(s||'').replace(/"/g,'&quot;');
   tbody.innerHTML=filtered.map(p=>`<tr>
-    <td><div style="display:flex;align-items:center;gap:10px"><div class="avatar">${(p.full_name||p.email)[0].toUpperCase()}</div><div><div style="font-weight:600">${p.full_name||'--'}</div><div style="color:var(--muted);font-size:11px">${p.role}</div></div></div></td>
-    <td>${p.player_name||'--'}</td>
+    <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar">${(p.full_name||p.email)[0].toUpperCase()}</div><div><input class="row-input" value="${esc(p.full_name)}" data-profile-id="${p.id}" data-field="full_name" onblur="saveParentInline(this)" onkeydown="if(event.key==='Enter'){this.blur()}" placeholder="Parent name"><div style="color:var(--muted);font-size:11px;padding-left:6px">${p.role}</div></div></div></td>
+    <td><input class="row-input row-input-sm" value="${esc(p.player_name)}" data-profile-id="${p.id}" data-field="player_name" onblur="saveParentInline(this)" onkeydown="if(event.key==='Enter'){this.blur()}" placeholder="Player name"></td>
     <td>${p.grade?statusTag(p.grade):'--'}</td>
     <td style="color:var(--muted)">${p.email}</td>
     <td style="color:var(--muted)">${p.phone||'--'}</td>
     <td>${statusTag(p.approved?'Approved':'Pending')}</td>
     <td><button class="btn btn-ghost btn-xs" onclick="viewParentProfile('${p.id}')">View</button></td></tr>`).join('');
+}
+
+// ── Inline save: player name ──
+async function savePlayerInline(el) {
+  const athleteId=el.dataset.athleteId;
+  const newName=el.value.trim();
+  if(!newName||!athleteId||!osSupabase) return;
+  const parts=newName.split(/\s+/);
+  const firstName=parts[0];
+  const lastName=parts.slice(1).join(' ');
+  // Skip save if unchanged
+  if(firstName===el.dataset.origFirst && lastName===el.dataset.origLast) return;
+  try {
+    const {error}=await osSupabase.from('athletes').update({first_name:firstName,last_name:lastName}).eq('id',athleteId);
+    if(error){ showToast('Save failed: '+error.message,'error'); return; }
+    el.classList.add('saved'); setTimeout(()=>el.classList.remove('saved'),1200);
+    // Update local cache
+    const a=allRosterAthletes.find(x=>x.athlete_id===athleteId);
+    if(a){ a.first_name=firstName; a.last_name=lastName; a.display_name=firstName+(lastName?' '+lastName:''); }
+    el.dataset.origFirst=firstName; el.dataset.origLast=lastName;
+  } catch(e){ showToast('Error: '+e.message,'error'); }
+}
+
+// ── Inline save: parent name / player_name on profile ──
+async function saveParentInline(el) {
+  const profileId=el.dataset.profileId;
+  const field=el.dataset.field;
+  const newVal=el.value.trim();
+  if(!profileId||!field||!osSupabase) return;
+  try {
+    const {error}=await osSupabase.from('profiles').update({[field]:newVal}).eq('id',profileId);
+    if(error){ showToast('Save failed: '+error.message,'error'); return; }
+    el.classList.add('saved'); setTimeout(()=>el.classList.remove('saved'),1200);
+    // Update local cache
+    const p=allPlayers.find(x=>x.id===profileId);
+    if(p) p[field]=newVal;
+    // Also update in roster cache for player view
+    allRosterAthletes.forEach(a=>{(a.parents||[]).forEach(pp=>{if(pp.profile_id===profileId) pp[field]=newVal;});});
+  } catch(e){ showToast('Error: '+e.message,'error'); }
 }
 
 function filterPlayers() {

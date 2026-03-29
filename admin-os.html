@@ -263,6 +263,11 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 .roster-tab { transition: background 0.15s, color 0.15s; }
 .roster-tab.active { background: var(--primary) !important; color: #fff !important; }
 .roster-tab:not(.active):hover { background: rgba(255,255,255,0.05) !important; }
+.row-input { background: transparent; border: 1px solid transparent; border-radius: 4px; padding: 4px 6px; color: var(--text); font-size: 13px; font-weight: 600; width: 100%; transition: border-color 0.15s, background 0.15s; }
+.row-input:hover { border-color: var(--border); background: rgba(255,255,255,0.03); }
+.row-input:focus { border-color: var(--primary); background: rgba(37,99,235,0.08); outline: none; }
+.row-input.saved { border-color: #22c55e; background: rgba(34,197,94,0.08); }
+.row-input-sm { font-size: 12px; font-weight: 400; color: var(--muted); padding: 2px 6px; }
 .cal-add-btn { display: none; width: 18px; height: 18px; border-radius: 50%; background: rgba(37,99,235,0.25); color: #60a5fa; font-size: 14px; font-weight: 700; line-height: 18px; text-align: center; cursor: pointer; transition: background 0.15s; }
 .cal-add-btn:hover { background: rgba(37,99,235,0.5); color: #fff; }
 .cal-day:hover .cal-add-btn { display: inline-flex; align-items: center; justify-content: center; }
