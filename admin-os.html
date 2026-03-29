@@ -260,6 +260,9 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 .cal-day.other-month { opacity: 0.3; }
 .cal-day.today { box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2); }
 .cal-day .day-num { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+.roster-tab { transition: background 0.15s, color 0.15s; }
+.roster-tab.active { background: var(--primary) !important; color: #fff !important; }
+.roster-tab:not(.active):hover { background: rgba(255,255,255,0.05) !important; }
 .cal-add-btn { display: none; width: 18px; height: 18px; border-radius: 50%; background: rgba(37,99,235,0.25); color: #60a5fa; font-size: 14px; font-weight: 700; line-height: 18px; text-align: center; cursor: pointer; transition: background 0.15s; }
 .cal-add-btn:hover { background: rgba(37,99,235,0.5); color: #fff; }
 .cal-day:hover .cal-add-btn { display: inline-flex; align-items: center; justify-content: center; }
@@ -579,8 +582,17 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
     <!-- PLAYERS & PARENTS -->
     <div class="panel" id="panel-players">
       <div class="card">
-        <div class="card-header"><h2>Roster</h2><div style="display:flex;gap:8px"><input type="text" id="player-search" placeholder="Search..." style="width:200px" oninput="filterPlayers()"><button class="btn btn-primary btn-sm" onclick="openModal('add-player')">+ Add</button></div></div>
-        <table id="players-table"><thead><tr><th>Name</th><th>Player</th><th>Grade</th><th>Email</th><th>Phone</th><th>Email Opens</th><th>Dues</th><th>Status</th><th></th></tr></thead><tbody id="players-tbody"><tr><td colspan="9" style="text-align:center;color:var(--muted);padding:32px">Loading roster...</td></tr></tbody></table>
+        <div class="card-header">
+          <div style="display:flex;align-items:center;gap:12px">
+            <h2>Roster</h2>
+            <div style="display:flex;gap:4px;background:var(--surface);border-radius:6px;padding:2px">
+              <button class="roster-tab active" data-view="players" onclick="switchRosterView('players')" style="padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:var(--primary);color:#fff">Players</button>
+              <button class="roster-tab" data-view="parents" onclick="switchRosterView('parents')" style="padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:transparent;color:var(--muted)">Parents</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px"><input type="text" id="player-search" placeholder="Search..." style="width:200px" oninput="filterPlayers()"><button class="btn btn-primary btn-sm" onclick="openModal('add-player')">+ Add</button></div>
+        </div>
+        <table id="players-table"><thead><tr><th>Player</th><th>Parent(s)</th><th>Grade</th><th>Email</th><th>Phone</th><th>Status</th><th></th></tr></thead><tbody id="players-tbody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px">Loading roster...</td></tr></tbody></table>
       </div>
     </div>
 

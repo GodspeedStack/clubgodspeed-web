@@ -7,7 +7,9 @@ let osSupabase = null;
 let currentPanel = 'dashboard';
 let BLOG_POSTS = [], MEMOS = [], CAMPAIGNS = [], allPlayers = [], allRequests = [];
 let allInstallments = [], allOrders = [], allBroadcasts = [], allCalEvents = [];
+let allRosterAthletes = [];
 let duesFilter = 'all', ordersFilter = 'all';
+let rosterView = 'players'; // 'players' or 'parents'
 let calYear, calMonth, calView = 'month';
 let teamRosterCache = {};
 
@@ -178,39 +180,153 @@ async function loadDashboard() {
   document.getElementById('dash-activity').innerHTML='<p style="color:var(--muted);font-size:13px">No recent activity.</p>';
 }
 
-// ─── PLAYERS ────────────────────────────────────────────────
+// ─── PLAYERS & PARENTS ──────────────────────────────────────
 async function loadPlayers() {
-  try { if(osSupabase){ const {data}=await osSupabase.from('profiles').select('*').order('full_name'); allPlayers=data||[]; } } catch(e){}
-  renderPlayers(allPlayers);
+  try {
+    if(!osSupabase) return;
+    // Load profiles (parents) for the parent view and linking
+    const {data:profiles}=await osSupabase.from('profiles').select('*').order('full_name');
+    allPlayers=profiles||[];
+    // Load roster with linked parents via RPC
+    const {data:roster,error}=await osSupabase.rpc('get_roster_with_parents');
+    if(!error) allRosterAthletes=roster||[];
+  } catch(e){ console.error('loadPlayers:',e); }
+  if(rosterView==='players') renderRosterByPlayer(allRosterAthletes); else renderRosterByParent(allPlayers);
 }
-function renderPlayers(arr) {
-  document.getElementById('players-tbody').innerHTML=arr.map(p=>`<tr>
+
+function switchRosterView(view) {
+  rosterView=view;
+  document.querySelectorAll('.roster-tab').forEach(t=>t.classList.toggle('active',t.dataset.view===view));
+  if(view==='players') renderRosterByPlayer(allRosterAthletes); else renderRosterByParent(allPlayers);
+}
+
+// ── Player-centric view ──
+function renderRosterByPlayer(arr) {
+  const q=(document.getElementById('player-search')?.value||'').toLowerCase();
+  const filtered=q?arr.filter(a=>(a.display_name||'').toLowerCase().includes(q)||(a.parents||[]).some(p=>(p.full_name||'').toLowerCase().includes(q)||(p.email||'').toLowerCase().includes(q))):arr;
+  const tbody=document.getElementById('players-tbody');
+  if(!filtered.length){ tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px">No players found. Click "+ Add" to add a player.</td></tr>'; return; }
+  tbody.innerHTML=filtered.map(a=>{
+    const parentNames=(a.parents||[]).map(p=>p.full_name||p.email).join(', ')||'<span style="color:var(--muted)">No parent linked</span>';
+    const parentEmails=(a.parents||[]).map(p=>p.email).join(', ')||'--';
+    const parentPhones=(a.parents||[]).map(p=>p.phone).filter(Boolean).join(', ')||'--';
+    return `<tr>
+      <td><div style="display:flex;align-items:center;gap:10px"><div class="avatar">${(a.first_name||'?')[0].toUpperCase()}</div><div><div style="font-weight:600">${a.display_name||'--'}</div><div style="color:var(--muted);font-size:11px">${a.enrollment_status||'active'}</div></div></div></td>
+      <td>${parentNames}</td>
+      <td>${a.grade?statusTag(a.grade):'--'}</td>
+      <td style="color:var(--muted);font-size:12px">${parentEmails}</td>
+      <td style="color:var(--muted)">${parentPhones}</td>
+      <td>${statusTag(a.enrollment_status==='active'?'Active':'Inactive')}</td>
+      <td><button class="btn btn-ghost btn-xs" onclick="viewAthlete('${a.athlete_id}')">View</button></td></tr>`;
+  }).join('');
+}
+
+// ── Parent-centric view ──
+function renderRosterByParent(arr) {
+  const q=(document.getElementById('player-search')?.value||'').toLowerCase();
+  const parentOnly=arr.filter(p=>p.role==='parent');
+  const filtered=q?parentOnly.filter(p=>(p.full_name||'').toLowerCase().includes(q)||(p.email||'').toLowerCase().includes(q)||(p.player_name||'').toLowerCase().includes(q)):parentOnly;
+  const tbody=document.getElementById('players-tbody');
+  if(!filtered.length){ tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px">No parents found.</td></tr>'; return; }
+  tbody.innerHTML=filtered.map(p=>`<tr>
     <td><div style="display:flex;align-items:center;gap:10px"><div class="avatar">${(p.full_name||p.email)[0].toUpperCase()}</div><div><div style="font-weight:600">${p.full_name||'--'}</div><div style="color:var(--muted);font-size:11px">${p.role}</div></div></div></td>
-    <td>${p.player_name||'--'}</td><td>${p.grade?statusTag(p.grade):'--'}</td><td style="color:var(--muted)">${p.email}</td>
-    <td style="color:var(--muted)">${p.phone||'--'}</td><td style="color:var(--muted)">--</td><td>${statusTag('Active')}</td>
+    <td>${p.player_name||'--'}</td>
+    <td>${p.grade?statusTag(p.grade):'--'}</td>
+    <td style="color:var(--muted)">${p.email}</td>
+    <td style="color:var(--muted)">${p.phone||'--'}</td>
     <td>${statusTag(p.approved?'Approved':'Pending')}</td>
-    <td><button class="btn btn-ghost btn-xs" onclick="viewPlayer('${p.id}')">View</button></td></tr>`).join('');
+    <td><button class="btn btn-ghost btn-xs" onclick="viewParentProfile('${p.id}')">View</button></td></tr>`).join('');
 }
+
 function filterPlayers() {
-  const q=document.getElementById('player-search').value.toLowerCase();
-  renderPlayers(allPlayers.filter(p=>(p.full_name||'').toLowerCase().includes(q)||(p.email||'').toLowerCase().includes(q)||(p.player_name||'').toLowerCase().includes(q)));
+  if(rosterView==='players') renderRosterByPlayer(allRosterAthletes); else renderRosterByParent(allPlayers);
 }
-function viewPlayer(id) {
+
+// ── View Athlete Detail (player-centric) ──
+function viewAthlete(athleteId) {
+  const a=allRosterAthletes.find(x=>x.athlete_id===athleteId); if(!a) return;
+  openModal('view-player');
+  document.getElementById('modal-title').textContent=a.display_name;
+  const parentsHtml=(a.parents||[]).length?(a.parents||[]).map(p=>`
+    <div style="padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:600">${p.full_name||'--'}</div>
+          <div style="color:var(--muted);font-size:12px">${p.email} ${p.phone?' | '+p.phone:''}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${p.relationship||'guardian'} ${p.is_primary?'(primary)':''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">${statusTag(p.approved?'Approved':'Pending')}</div>
+      </div>
+    </div>`).join(''):'<p style="color:var(--muted)">No parents linked yet.</p>';
+  document.getElementById('modal-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div><label style="font-size:11px;color:var(--muted)">Player Name</label><div style="margin-top:4px;font-weight:600">${a.display_name}</div></div>
+      <div><label style="font-size:11px;color:var(--muted)">Grade</label><div style="margin-top:4px">${a.grade||'--'}</div></div>
+      <div><label style="font-size:11px;color:var(--muted)">Status</label><div style="margin-top:4px">${statusTag(a.enrollment_status==='active'?'Active':'Inactive')}</div></div>
+    </div>
+    <h3 style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--muted)">LINKED PARENTS</h3>
+    ${parentsHtml}
+    <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="openLinkParentModal('${athleteId}','${a.display_name}')"><i data-lucide="user-plus" style="width:16px;height:16px;margin-right:6px"></i>Link Parent Account</button>`;
+  if(window.lucide) lucide.createIcons();
+}
+
+// ── View Parent Profile ──
+function viewParentProfile(id) {
   const p=allPlayers.find(x=>x.id===id); if(!p) return;
   openModal('view-player');
   document.getElementById('modal-title').textContent=p.full_name||p.email;
   document.getElementById('modal-body').innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+      <div><label style="font-size:11px;color:var(--muted)">Parent Name</label><div style="margin-top:4px">${p.full_name||'--'}</div></div>
       <div><label style="font-size:11px;color:var(--muted)">Email</label><div style="margin-top:4px">${p.email}</div></div>
       <div><label style="font-size:11px;color:var(--muted)">Phone</label><div style="margin-top:4px">${p.phone||'--'}</div></div>
-      <div><label style="font-size:11px;color:var(--muted)">Player</label><div style="margin-top:4px">${p.player_name||'--'}</div></div>
+      <div><label style="font-size:11px;color:var(--muted)">Player(s)</label><div style="margin-top:4px">${p.player_name||'--'}</div></div>
       <div><label style="font-size:11px;color:var(--muted)">Grade</label><div style="margin-top:4px">${p.grade||'--'}</div></div>
-      <div><label style="font-size:11px;color:var(--muted)">Role</label><div style="margin-top:4px">${statusTag(p.role)}</div></div>
       <div><label style="font-size:11px;color:var(--muted)">Status</label><div style="margin-top:4px;display:flex;align-items:center;gap:8px">${statusTag(p.approved?'Approved':'Pending')}${!p.approved?`<button class="btn btn-ghost btn-xs" onclick="approveProfile('${p.id}')">Approve</button>`:''}</div></div>
     </div>`;
 }
+
+// ── Link existing parent to athlete ──
+function openLinkParentModal(athleteId,athleteName) {
+  closeModal();
+  openModal('link-parent');
+  document.getElementById('modal-title').textContent='Link Parent to '+athleteName;
+  const parentOpts=allPlayers.filter(p=>p.role==='parent').map(p=>`<option value="${p.id}">${p.full_name||p.email}</option>`).join('');
+  document.getElementById('modal-body').innerHTML=`
+    <div class="field"><label>Select Existing Parent</label><select id="lp-profile" style="width:100%"><option value="">-- Select Parent --</option>${parentOpts}</select></div>
+    <div style="text-align:center;color:var(--muted);margin:12px 0;font-size:12px">-- OR add new parent below --</div>
+    <div class="field"><label>New Parent Name</label><input type="text" id="lp-name" placeholder="e.g. Jane Smith"></div>
+    <div class="field"><label>New Parent Email</label><input type="email" id="lp-email" placeholder="e.g. jane@email.com"></div>
+    <div class="field"><label>Relationship</label><select id="lp-rel"><option value="mother">Mother</option><option value="father">Father</option><option value="guardian" selected>Guardian</option><option value="stepparent">Stepparent</option><option value="other">Other</option></select></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="linkParentToAthlete('${athleteId}')">Link Parent</button>`;
+}
+
+async function linkParentToAthlete(athleteId) {
+  if(!osSupabase) return;
+  let profileId=document.getElementById('lp-profile').value;
+  const newName=document.getElementById('lp-name').value.trim();
+  const newEmail=document.getElementById('lp-email').value.trim();
+  const rel=document.getElementById('lp-rel').value;
+  try {
+    // If no existing parent selected, create new profile
+    if(!profileId && newEmail) {
+      const {data:existing}=await osSupabase.from('profiles').select('id').eq('email',newEmail.toLowerCase()).maybeSingle();
+      if(existing) { profileId=existing.id; }
+      else {
+        const {data:ins,error:insErr}=await osSupabase.from('profiles').insert({email:newEmail.toLowerCase(),full_name:newName,role:'parent',approved:true}).select('id').single();
+        if(insErr) { showToast('Error creating parent: '+insErr.message,'error'); return; }
+        profileId=ins.id;
+      }
+    }
+    if(!profileId) { showToast('Select a parent or enter a new email','error'); return; }
+    const {error}=await osSupabase.rpc('link_parent_to_athlete',{p_profile_id:profileId,p_athlete_id:athleteId,p_relationship:rel,p_is_primary:false});
+    if(error) { showToast('Link failed: '+error.message,'error'); return; }
+    showToast('Parent linked!'); closeModal(); loadPlayers();
+  } catch(e){ showToast('Error: '+e.message,'error'); }
+}
+
 async function approveProfile(id) {
-  if(!confirm('Force approve this profile?')) return;
+  if(!confirm('Approve this profile?')) return;
   try { if(osSupabase) await osSupabase.from('profiles').update({approved:true}).eq('id',id); } catch(e){ showToast('Failed: '+e.message,'error'); return; }
   closeModal(); showToast('Profile approved'); loadPlayers();
 }
@@ -771,11 +887,23 @@ async function sendMemo() {
 // ─── MODAL ──────────────────────────────────────────────────
 function openModal(id) {
   const templates = {
-    'add-player': `<div class="field"><label>Full Name</label><input type="text" id="np-name"></div><div class="field"><label>Email</label><input type="email" id="np-email"></div><div class="field"><label>Player Name</label><input type="text" id="np-player"></div><div class="field"><label>Grade</label><select id="np-grade"><option>4th</option><option>5th</option></select></div><button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="addPlayer()">Add Player</button>`,
+    'add-player': `
+      <h3 style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">PLAYER INFO</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="field"><label>Player First Name</label><input type="text" id="np-pfirst" placeholder="e.g. Aiden"></div>
+        <div class="field"><label>Player Last Name</label><input type="text" id="np-plast" placeholder="e.g. Johnson"></div>
+      </div>
+      <div class="field"><label>Grade</label><select id="np-grade"><option value="4th">4th</option><option value="5th">5th</option><option value="3rd">3rd</option><option value="6th">6th</option></select></div>
+      <hr style="border-color:var(--border);margin:12px 0">
+      <h3 style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">PARENT / GUARDIAN INFO</h3>
+      <div class="field"><label>Parent Full Name</label><input type="text" id="np-name" placeholder="e.g. Jane Johnson"></div>
+      <div class="field"><label>Parent Email</label><input type="email" id="np-email" placeholder="e.g. jane@email.com"></div>
+      <div class="field"><label>Relationship</label><select id="np-rel"><option value="mother">Mother</option><option value="father">Father</option><option value="guardian" selected>Guardian</option><option value="stepparent">Stepparent</option><option value="other">Other</option></select></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="addPlayer()">Add Player & Parent</button>`,
     'record-payment': `<div class="field"><label>Parent Email</label><input type="email" id="rp-email"></div><div class="field"><label>Amount</label><input type="number" id="rp-amount"></div><div class="field"><label>Method</label><select id="rp-method"><option value="venmo">Venmo</option><option value="cash">Cash</option><option value="zelle">Zelle</option><option value="check">Check</option></select></div><button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="recordPaymentByEmail()">Record Payment</button>`,
     'create-event': calEventForm(),
   };
-  const titles={'add-player':'Add Player/Parent','record-payment':'Record Payment','create-event':'Create Event','view-player':'Profile Detail','view-broadcast':'Broadcast Detail','edit-event':'Edit Event','day-events':'Day Events'};
+  const titles={'add-player':'Add Player & Parent','record-payment':'Record Payment','create-event':'Create Event','view-player':'Profile Detail','view-broadcast':'Broadcast Detail','edit-event':'Edit Event','day-events':'Day Events','link-parent':'Link Parent','add-event':'New Event'};
   document.getElementById('modal-title').textContent=titles[id]||'';
   if(templates[id]) document.getElementById('modal-body').innerHTML=templates[id];
   document.getElementById('modal-overlay').classList.add('open');
@@ -783,10 +911,35 @@ function openModal(id) {
 function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
 
 async function addPlayer() {
-  const payload={email:document.getElementById('np-email').value,full_name:document.getElementById('np-name').value,player_name:document.getElementById('np-player').value,grade:document.getElementById('np-grade').value,role:'parent',approved:false};
-  if(!payload.email) return showToast('Email required','error');
-  if(osSupabase){ try { await osSupabase.from('profiles').insert(payload); } catch(e){ showToast('Error: '+e.message,'error'); return; } }
-  showToast('Player added!'); closeModal(); loadPlayers();
+  const pFirst=(document.getElementById('np-pfirst')?.value||'').trim();
+  const pLast=(document.getElementById('np-plast')?.value||'').trim();
+  const grade=document.getElementById('np-grade')?.value||'';
+  const parentName=(document.getElementById('np-name')?.value||'').trim();
+  const parentEmail=(document.getElementById('np-email')?.value||'').trim().toLowerCase();
+  const rel=document.getElementById('np-rel')?.value||'guardian';
+  if(!pFirst) return showToast('Player first name is required','error');
+  if(!parentEmail) return showToast('Parent email is required','error');
+  if(!osSupabase) return;
+  try {
+    // 1. Create athlete record
+    const {data:athlete,error:athErr}=await osSupabase.from('athletes').insert({first_name:pFirst,last_name:pLast||'',grade:grade,enrollment_status:'active'}).select('id').single();
+    if(athErr) { showToast('Error creating player: '+athErr.message,'error'); return; }
+    // 2. Find or create parent profile
+    let profileId;
+    const {data:existing}=await osSupabase.from('profiles').select('id').eq('email',parentEmail).maybeSingle();
+    if(existing) { profileId=existing.id; }
+    else {
+      // Insert into profiles (note: may fail on FK if no auth.users row -- fallback to direct insert)
+      const {data:newProf,error:profErr}=await osSupabase.from('profiles').insert({email:parentEmail,full_name:parentName,player_name:pFirst+(pLast?' '+pLast:''),grade:grade,role:'parent',approved:true}).select('id').single();
+      if(profErr) { showToast('Error creating parent profile: '+profErr.message+'. Parent may need to sign up first.','error'); return; }
+      profileId=newProf.id;
+    }
+    // 3. Link parent to athlete
+    const {error:linkErr}=await osSupabase.rpc('link_parent_to_athlete',{p_profile_id:profileId,p_athlete_id:athlete.id,p_relationship:rel,p_is_primary:true});
+    if(linkErr) { showToast('Player created but link failed: '+linkErr.message,'error'); }
+    else { showToast('Player & parent added!'); }
+    closeModal(); loadPlayers();
+  } catch(e){ showToast('Error: '+e.message,'error'); }
 }
 async function recordPaymentByEmail() {
   const email=document.getElementById('rp-email').value, amount=parseFloat(document.getElementById('rp-amount').value), method=document.getElementById('rp-method').value;
