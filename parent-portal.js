@@ -305,7 +305,13 @@ async function handleLogin() {
                 if (authError.message && authError.message.includes('Invalid login credentials')) {
                     errorMessage = 'Invalid email or password. Please check your credentials and try again.';
                 } else if (authError.message && authError.message.includes('Email not confirmed')) {
-                    errorMessage = 'Please verify your email address before logging in. Check your inbox for the verification link.';
+                    // Show inline resend link
+                    if (errorMsg) {
+                        errorMsg.innerHTML = `Check your inbox for a verification email from noreply@clubgodspeed.com.<br><a href="#" onclick="resendVerificationEmail('${email}'); return false;" style="color:#111;font-weight:700;text-decoration:underline;">Didn't get it? Resend →</a>`;
+                        errorMsg.style.display = 'block';
+                    }
+                    btn.innerHTML = 'Sign In'; btn.disabled = false;
+                    return;
                 } else if (authError.message && authError.message.includes('Too many requests')) {
                     errorMessage = 'Too many login attempts. Please wait a few minutes and try again.';
                 } else if (authError.message === 'Failed to fetch') {
@@ -718,7 +724,27 @@ function loginNewUser(email) {
     loadSignedDocuments(email); // Load signed documents for the new user
 }
 
-// Handle 2FA submission
+// Resend verification email
+window.resendVerificationEmail = async function(email) {
+    try {
+        const sb = window.auth && window.auth.getSupabaseClient ? window.auth.getSupabaseClient() : null;
+        if (!sb) { alert('Could not connect. Please try again.'); return; }
+        email = email || document.getElementById('email')?.value?.trim();
+        if (!email) { alert('Please enter your email first.'); return; }
+        const { error } = await sb.auth.resend({ type: 'signup', email });
+        if (error) throw error;
+        const errorMsg = document.querySelector('.login-error');
+        if (errorMsg) {
+            errorMsg.innerHTML = '✅ Verification email resent! Check your inbox (and spam folder).';
+            errorMsg.style.color = '#059669';
+            errorMsg.style.background = '#d1fae5';
+        }
+    } catch(e) {
+        alert('Could not resend: ' + (e.message || 'Please try again.'));
+    }
+};
+
+
 window.submit2FA = async function () {
     const codeInput = document.getElementById('two-factor-code');
     const emailInput = document.getElementById('email');

@@ -82,18 +82,19 @@
 }
 
 .btn-primary {
-    background-color: #2563eb;
+    background-color: #111;
     color: white !important;
     padding: 0.75rem 1.5rem;
     border-radius: 9999px;
     font-weight: 700;
     transition: background-color 0.2s ease, transform 0.1s ease;
     border: none;
-    /* Fix: Remove default button border */
+    cursor: pointer;
+    font-family: inherit;
 }
 
 .btn-primary:hover {
-    background-color: #1d4ed8;
+    background-color: #333;
     transform: translateY(-1px);
 }
 
@@ -193,8 +194,8 @@
 
 .form-group input:focus {
     background-color: white;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    border-color: #111;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08);
     outline: none;
 }
 
@@ -345,8 +346,9 @@
 }
 
 .nav-item.active {
-    background-color: #eff6ff;
-    color: #2563eb;
+    background-color: #f3f4f6;
+    color: #111;
+    font-weight: 700;
 }
 
 /* Icon Sizing Fixes - CRITICAL */
@@ -388,7 +390,7 @@
 .user-avatar-small {
     width: 40px;
     height: 40px;
-    background: #2563eb;
+    background: #111;
     color: white;
     border-radius: 50%;
     display: flex;
@@ -452,7 +454,7 @@
     border-radius: 12px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     margin-bottom: 2rem;
-    border-left: 4px solid #2563eb;
+    border-left: 4px solid #111;
 }
 
 .welcome-banner h1 {
@@ -782,7 +784,7 @@
 }
 
 .signature-pad-wrapper:hover {
-    border-color: #2563eb;
+    border-color: #111;
 }
 
 .signature-overlay {
