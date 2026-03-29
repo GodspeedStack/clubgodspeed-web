@@ -274,7 +274,7 @@ async function handleLogin() {
                             class="mt-2 w-full py-3 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition">
                             Verify 2FA Code
                         </button>
-                    ;
+                    `;
                     const form = document.querySelector('.login-form');
                     if (form) {
                         form.appendChild(twoFactorDiv);
@@ -332,7 +332,7 @@ async function handleLogin() {
                             class="mt-2 w-full py-3 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition">
                             Verify 2FA Code
                         </button>
-                    ;
+                    `;
                     const form = document.querySelector('.login-form');
                     if (form) {
                         form.appendChild(twoFactorDiv);
@@ -1025,7 +1025,7 @@ function renderParentTrips() {
                 </button>
             </div>
              : ''}
-        ;
+        `;
         container.appendChild(card);
     });
 }
@@ -1402,7 +1402,7 @@ function loadPerformance(parentEmail) {
                 ${dayAvg}
             </div>
         </div>
-        ;
+        `;
     });
 
     listContainer.innerHTML = html;
@@ -1788,7 +1788,7 @@ async function renderTrainingDashboard() {
                     </div>
                     <div style="font-weight:700; color:#444; font-size:13px;">-${safeDuration}</div>
                 </div>
-            ;
+            `;
             }).join('');
         }
 
@@ -1834,7 +1834,7 @@ async function renderTrainingDashboard() {
                     <span>👤 ${safeCoach}</span>
                 </div>
             </div>
-        ;
+        `;
         }).join('');
     }
 
@@ -1862,7 +1862,7 @@ async function renderTrainingDashboard() {
                     </div>
                     <button data-email="${escapeHTML(safeEmail)}" class="btn-primary view-receipt-btn" style="padding: 6px 12px; font-size: 10px; min-width: 88px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; line-height:1.2; border:none; cursor:pointer; box-sizing: border-box;">View Receipt</button>
                </div>
-            ;
+            `;
             }).join('');
         }
 
@@ -1882,7 +1882,7 @@ async function renderTrainingDashboard() {
                 </div>
                 <a href="${safeLink}" class="btn-primary" style="padding: 6px 12px; font-size: 10px; min-width: 88px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; line-height:1.2; border:none; cursor:pointer; box-sizing: border-box;">Download</a>
            </div>
-        ;
+        `;
         }).join('');
 
         docsContainer.innerHTML = docsHtml;
@@ -2484,7 +2484,7 @@ async function loadSkillsPrograms(parentEmail) {
                 </div>
                 ${safeStartDate ? `<div style="font-size: 14px; color: #666; margin-top: 8px;">Started: ${escapeHTML(safeStartDate)}</div>` : ''}
             </div>
-        ;
+        `;
         });
 
         container.innerHTML = html;
@@ -2887,7 +2887,7 @@ function viewTrainingStatement(email) {
                             <td style="${isRecent ? 'font-weight:500;' : ''}">${l.notes}</td>
                             <td style="text-align:right; font-weight:700; ${isRecent ? 'color:#1d4ed8;' : ''}">-${l.time}</td>
                         </tr>
-                        ;
+                        `;
                     }).join('')}
                 </tbody>
             </table>
@@ -3028,7 +3028,7 @@ function handleDemoBilling(container, totalDueEl, statusTextEl, statusCard) {
         <div style="text-align: center; padding: 20px; background: rgba(255,255,255,0.5); border-radius: 12px; color: #888; font-size: 0.9rem;">
             Demo Mode: Please sign in securely to view your open invoices and payment plans.
         </div>
-    ;
+    `;
     if (totalDueEl) totalDueEl.textContent = '$745';
     if (statusTextEl && statusCard) {
         statusTextEl.textContent = '● Action Required';
@@ -3082,7 +3082,7 @@ function renderPlanSelectionUI(container, parentId, supabase, email) {
                 <button id="confirm-plan-btn" class="btn-primary" disabled style="opacity: 0.5; padding: 12px 24px;">Enroll & Continue</button>
             </div>
         </div>
-    ;
+    `;
 
     // Add interactivity script
     window.selectPaymentPlan = function(element, planType, parentId, email) {
@@ -3214,7 +3214,7 @@ function renderPaymentsTimeline(container, payments, plan, supabase) {
                     <div>${actionBtn}</div>
                 </div>
             </div>
-        ;
+        `;
     });
     
     html += `</div>`;
@@ -3242,7 +3242,7 @@ window.openPaymentModal = function(opts) {
         position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);
         display:flex;align-items:center;justify-content:center;padding:16px;
         backdrop-filter:blur(4px);animation:gsPmFadeIn 0.15s ease;
-    ;
+    `;
 
     overlay.innerHTML = `
     <style>
@@ -3846,7 +3846,7 @@ async function fetchAthletePerformance() {
                         </div>
                         <p style="font-size: 0.95rem; color: #374151; line-height: 1.5; margin: 0;">Solid performance in the weekend tournament. Shot selection is improving drastically. Let's focus on boxing out heavier forwards next week in training.</p>
                     </div>
-                ;
+                `;
             }
         }
     } catch (e) {
