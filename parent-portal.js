@@ -1861,27 +1861,27 @@ async function renderTrainingDashboard() {
                         <div style="font-size:11px; color:#166534;">${safeDate} • ${safeAmount} • ${safeStatus}</div>
                     </div>
                     <button data-email="${escapeHTML(safeEmail)}" class="btn-primary view-receipt-btn" style="padding: 6px 12px; font-size: 10px; min-width: 88px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; line-height:1.2; border:none; cursor:pointer; box-sizing: border-box;">View Receipt</button>
- 0              </div>
+               </div>
             `;
             }).join('');
         }
 
-  0     // B. Standard Docs
+       // B. Standard Docs
         docsHtml += data.documents.map(doc => {
- 0          // Sanitize document data
+           // Sanitize document data
             const safeTitle = escapeHTML(doc.title || '');
             const safeDate = escapeHTML(doc.date || '');
             const safeLink = validateURL(doc.link) || '#';
 
             return `
             <div class="doc-item" style="display:flex; align-items:center; gap:12px; padding:12px; border-bottom:1px solid #f0f0f0;">
-       0        <div style="background:#fee2e2; color:#991b1b; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:6px; font-size:10px; font-weight:700;">PDF</div>
+               <div style="background:#fee2e2; color:#991b1b; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:6px; font-size:10px; font-weight:700;">PDF</div>
                 <div style="flex:1;">
                     <div style="font-size:13px; font-weight:600;">${safeTitle}</div>
                     <div style="font-size:11px; color:#888;">Added ${safeDate}</div>
                 </div>
                 <a href="${safeLink}" class="btn-primary" style="padding: 6px 12px; font-size: 10px; min-width: 88px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; line-height:1.2; border:none; cursor:pointer; box-sizing: border-box;">Download</a>
-      0     </div>
+           </div>
         `;
         }).join('');
 
@@ -1899,12 +1899,12 @@ async function calculateRemainingHours(parentEmail) {
     let totalUsed = 0;
 
     // Check Supabase first
-   0if (supabase && window.auth?.isSupabaseAvailable?.()) {
+   if (supabase && window.auth?.isSupabaseAvailable?.()) {
         try {
           const { data: parentAccount, error: accountError } = await supabase
                 .from('profiles')
                 .select('id')
-          0     .eq('email', parentEmail)
+               .eq('email', parentEmail)
                 .single();
 
             if (accountError) {
@@ -1914,12 +1914,12 @@ async function calculateRemainingHours(parentEmail) {
                 const { data: purchases, error: purchasesError } = await supabase
                     .from('training_purchases')
                     .select('hours_purchased, hours_used')
-     0              .eq('parent_id', parentAccount.id)
+                   .eq('parent_id', parentAccount.id)
                     .eq('status', 'active');
 
                 if (purchasesError) {
-                0   console.error('Error fetching purchases:', purchasesError);
-           0        // Fall through to mock data
+                   console.error('Error fetching purchases:', purchasesError);
+                   // Fall through to mock data
                 } else if (purchases) {
                     totalPurchased = purchases.reduce((sum, p) => sum + (parseFloat(p.hours_purchased) || 0), 0);
                     totalUsed = purchases.reduce((sum, p) => sum + (parseFloat(p.hours_used) || 0), 0);
@@ -1937,7 +1937,7 @@ async function calculateRemainingHours(parentEmail) {
         const userRecords = getLedgerProfile(rawUserRecords);
         if (userRecords && userRecords.hours) {
             totalPurchased = userRecords.hours.totalPurchased;
-  0         // UI relies on active progress
+           // UI relies on active progress
             totalUsed = userRecords.hours.totalPurchased - userRecords.hours.remaining; 
         }
     }
@@ -1978,7 +1978,7 @@ async function loadTrainingHours(parentEmail) {
         // Update the main dashboard display elements
         const trainingHoursDisplay = document.getElementById('training-hours-display');
         if (trainingHoursDisplay) {
-        0   trainingHoursDisplay.textContent = userRecords.hours.remaining.toFixed(1);
+           trainingHoursDisplay.textContent = userRecords.hours.remaining.toFixed(1);
         }
 
         const utilizedDisplay = document.getElementById('training-utilized-display');
@@ -1986,7 +1986,7 @@ async function loadTrainingHours(parentEmail) {
             utilizedDisplay.textContent = userRecords.hours.used.toFixed(1);
         }
 
-     0  // Create Log Container if not exists (Training View)
+       // Create Log Container if not exists (Training View)
         // Use existing container or append a new one
         /* Assuming we are in 'training' view context or similar elements exist */
 
@@ -2025,10 +2025,10 @@ async function loadTrainingHours(parentEmail) {
      `         leftContainer.style.alignItems = 'center';
                 leftContainer.style.gap = '10px';
 
-        0       // Subtle Checkmark Icon
+               // Subtle Checkmark Icon
                 const iconDiv = document.createElement('div');
                 iconDiv.innerHTML = `
-                0       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="20 6 9 17 4 12"></polyline>
                         </svg>
      `             `;
