@@ -1086,7 +1086,7 @@ const DOCUMENT_TEMPLATE = {
         <p>I, <strong>{parent_name}</strong>, grant permission for Club Godspeed to use photos/videos of <strong>{child_name}</strong> for social media and marketing.</p>
         <p>I understand these may be posted on Instagram, YouTube, and the website.</p>
         <p>My child's name will not be sold to third parties.</p>
-    
+    `
 };
 
 let currentDocType = null;
@@ -1764,7 +1764,7 @@ async function renderTrainingDashboard() {
                         <span style="font-size:11px; padding:4px 8px; background:${badgeBg}; color:${badgeColor}; border-radius:12px; font-weight:600;">${escapeHTML(badgeText)}</span>
                     </div>
                 </div>
-            }).join('');
+            `}).join('');
         }
 
         // B. Past Usage Logs (User Specific)
@@ -2860,7 +2860,7 @@ function viewTrainingStatement(email) {
                             <td><span style="background:#dcfce7; color:#166534; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:700;">${p.status.toUpperCase()}</span></td>
                             <td style="text-align:right;" class="amount">${p.amount}</td>
                         </tr>
-                    ).join('')}
+                    `).join('')}
                 </tbody>
             </table>
 
@@ -2901,7 +2901,7 @@ function viewTrainingStatement(email) {
             </script>
         </body>
         </html>
-    );
+    `);
     w.document.close();
 }
 
@@ -3828,7 +3828,7 @@ async function fetchAthletePerformance() {
                         </div>
                         <p style="font-size: 0.95rem; color: #374151; line-height: 1.5; margin: 0;">${ev.coach_comments || 'No specific comments provided.'}</p>
                     </div>
-                ).join('');
+                `).join('');
             } else {
                 // Realistic mock fallback reflecting Coach Scott and Coach True
                 notesContainer.innerHTML = `
