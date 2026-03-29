@@ -1011,7 +1011,7 @@ async function recordPaymentByEmail() {
     if(enrollment) { enrollmentId=enrollment.id; }
     else {
       // Auto-enroll: Full Program config + Pay in Full template
-      const {data:cfg}=await osSupabase.from('season_dues_config').select('id,total_amount').eq('tier_name','Full Program').eq('is_active',true).maybeSingle();
+      const {data:cfg}=await osSupabase.from('season_dues_config').select('id,total_amount').eq('program','Full Program').eq('is_active',true).maybeSingle();
       if(!cfg) return showToast('No active season config found. Create one in Season Dues Config first.','error');
       const {data:plan}=await osSupabase.from('payment_plan_templates').select('id').eq('dues_config_id',cfg.id).eq('plan_name','Pay in Full').maybeSingle();
       if(!plan) return showToast('No Pay in Full plan template found for Full Program.','error');
