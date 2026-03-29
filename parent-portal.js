@@ -177,10 +177,20 @@ function routeAuthenticatedUser() {
             if (waitingRoom) waitingRoom.style.display = 'flex';
         } else {
             if (loginView) loginView.style.display = 'none';
-            if (dashboardView) dashboardView.style.display = 'flex';
+            showDashboard();
             updateDashboardProfile(savedEmail);
         }
     }
+}
+
+/** Show the portal dashboard and hide the site nav so it doesn't overlap. */
+function showDashboard() {
+    const dash = document.getElementById('portal-dashboard');
+    if (dash) dash.style.display = 'flex';
+    // Hide the main site navbar — the portal has its own chrome
+    const nav = document.querySelector('nav.navbar');
+    if (nav) nav.style.display = 'none';
+    document.body.style.overflow = 'hidden';
 }
 
 async function handleLogin() {
@@ -444,7 +454,7 @@ async function handleLogin() {
 
             if (loginSuccess) {
                 document.getElementById('portal-login').style.display = 'none';
-                document.getElementById('portal-dashboard').style.display = 'flex';
+                showDashboard();
                 updateDashboardProfile(email);
 
                 // Cohort Designation Mock Setup
@@ -719,7 +729,7 @@ function loginNewUser(email) {
     localStorage.setItem('gba_parent_auth_token', 'valid_token_' + Date.now());
     localStorage.setItem('gba_user_email', email);
     document.getElementById('portal-signup').style.display = 'none';
-    document.getElementById('portal-dashboard').style.display = 'flex';
+    showDashboard();
     updateDashboardProfile(email);
     loadSignedDocuments(email); // Load signed documents for the new user
 }
@@ -771,8 +781,8 @@ window.submit2FA = async function () {
         if (result.success) {
             window.Security.RBAC.setRole(window.Security.RBAC.roles.PARENT);
             document.getElementById('portal-login').style.display = 'none';
-            document.getElementById('portal-dashboard').style.display = 'flex';
-            updateDashboardProfile(email);
+                showDashboard();
+                updateDashboardProfile(email);
             loadSignedDocuments(email); // Load signed documents after 2FA login
             const twoFactorDiv = document.getElementById('two-factor-input');
             if (twoFactorDiv) twoFactorDiv.remove();
@@ -865,6 +875,12 @@ function handleLogout() {
     if (loginForm) loginForm.reset();
     if (submitBtn) submitBtn.textContent = 'Sign In';
     if (greeting) greeting.textContent = 'Guest';
+
+    // Restore site navbar and scroll
+    const nav = document.querySelector('nav.navbar');
+    if (nav) nav.style.display = '';
+    document.body.style.overflow = '';
+
 
     // Reset all document cards to unsigned state
     document.querySelectorAll('.document-card').forEach(card => {
