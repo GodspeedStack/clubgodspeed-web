@@ -424,6 +424,7 @@ async function generateReceiptPDF(
   y -= 25;
 
   // Items
+  if (model.items && model.items.length > 0) {
   for (const item of model.items) {
     let itemText = item.description;
     if (item.quantity > 1) {
