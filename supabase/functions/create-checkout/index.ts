@@ -5,6 +5,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const PORTAL_URL = 'https://www.clubgodspeed.com/parent-portal.html'
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -49,8 +51,8 @@ Deno.serve(async (req) => {
           athleteId: athleteId || '',
           parentId: userId || ''
         },
-        success_url: successUrl,
-        cancel_url: cancelUrl
+        success_url: successUrl || PORTAL_URL,
+        cancel_url: cancelUrl || PORTAL_URL
       }
     } else {
       const { paymentId, amount, installmentNumber, parentEmail, playerName } = payload
@@ -75,8 +77,8 @@ Deno.serve(async (req) => {
           installmentNumber: installmentNumber ? installmentNumber.toString() : '',
           paymentType: 'aau_payment'
         },
-        success_url: `https://www.clubgodspeed.com/parent-portal.html?payment=success&id=${paymentId}`,
-        cancel_url: `https://www.clubgodspeed.com/parent-portal.html?payment=cancelled`
+        success_url: `${PORTAL_URL}?payment=success&id=${paymentId}`,
+        cancel_url: `${PORTAL_URL}?payment=cancelled`
       }
     }
 
