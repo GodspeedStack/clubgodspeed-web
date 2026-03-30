@@ -104,7 +104,7 @@ window.handleAdminLogin = async function() {
 };
 
 // ─── PANEL ROUTING ──────────────────────────────────────────
-const PANEL_TITLES = {dashboard:'Dashboard',players:'Players & Parents',requests:'Login Requests',dues:'Season Dues',orders:'Pro Shop Orders',comms:'Messaging',dataEntry:'Data Entry',calendar:'Calendar',blog:'Blog Posts',memos:'Coach Memos'};
+const PANEL_TITLES = {dashboard:'Dashboard',players:'Players & Parents',requests:'Login Requests',dues:'Season Dues',fundraising:'Fundraising',orders:'Pro Shop Orders',comms:'Messaging',dataEntry:'Data Entry',calendar:'Calendar',blog:'Blog Posts',memos:'Coach Memos'};
 
 function switchPanel(id, btn) {
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
@@ -114,12 +114,12 @@ function switchPanel(id, btn) {
   if(btn) btn.classList.add('active');
   document.getElementById('panel-title').textContent = PANEL_TITLES[id]||id;
   currentPanel = id;
-  const loaders = {players:loadPlayers,requests:loadRequests,dues:loadDues,orders:loadOrders,comms:loadComms,dataEntry:loadDataEntry,calendar:loadCalendar,blog:loadBlog,memos:loadMemos};
+  const loaders = {players:loadPlayers,requests:loadRequests,dues:loadDues,fundraising:loadFundraising,orders:loadOrders,comms:loadComms,dataEntry:loadDataEntry,calendar:loadCalendar,blog:loadBlog,memos:loadMemos};
   if(loaders[id]) loaders[id]();
 }
 
 function refreshCurrent() {
-  const loaders = {dashboard:loadDashboard,players:loadPlayers,requests:loadRequests,dues:loadDues,orders:loadOrders,comms:loadComms,calendar:loadCalendar,blog:loadBlog,memos:loadMemos};
+  const loaders = {dashboard:loadDashboard,players:loadPlayers,requests:loadRequests,dues:loadDues,fundraising:loadFundraising,orders:loadOrders,comms:loadComms,calendar:loadCalendar,blog:loadBlog,memos:loadMemos};
   if(loaders[currentPanel]) loaders[currentPanel]();
 }
 
@@ -451,6 +451,111 @@ async function denyReq(id, email) {
   if(reason===null) return;
   try { if(osSupabase) await osSupabase.rpc('deny_login_request',{request_id:id,reason}); } catch(e){ console.error(e); }
   renderRequests(allRequests);
+}
+
+// ─── FUNDRAISING ────────────────────────────────────────────
+let allFundraising = [];
+
+async function loadFundraising() {
+  if(!osSupabase) return;
+  try {
+    const [frRes, enrRes] = await Promise.all([
+      osSupabase.from('fundraising_totals').select('*').order('total_raised',{ascending:false}),
+      osSupabase.from('parent_dues_enrollment').select('athlete_name,parent_name,total_owed,total_paid,status')
+    ]);
+    const fundraisingRows = frRes.data || [];
+    const enrollments = enrRes.data || [];
+
+    // Match fundraising to enrollment by first name (enrollment uses first name only)
+    allFundraising = enrollments.map(e => {
+      const firstName = (e.athlete_name||'').split(' ')[0].toLowerCase();
+      const match = fundraisingRows.find(f => {
+        const fFirst = (f.athlete_name||'').split(' ')[0].toLowerCase();
+        return fFirst === firstName;
+      });
+      return {
+        athlete: e.athlete_name,
+        parent: e.parent_name,
+        totalOwed: parseFloat(e.total_owed) || 0,
+        totalPaid: parseFloat(e.total_paid) || 0,
+        duesStatus: e.status,
+        raised: match ? parseFloat(match.total_raised) || 0 : 0,
+        parentShares: match ? match.parent_shares : 0,
+        emailShares: match ? match.email_shares : 0,
+        smsShares: match ? match.sms_shares : 0,
+        fullName: match ? match.athlete_name : e.athlete_name
+      };
+    }).sort((a,b) => b.raised - a.raised);
+  } catch(e) { console.error('Fundraising load:', e); }
+  renderFundraising();
+}
+
+function renderFundraising() {
+  const totalRaised = allFundraising.reduce((s,r) => s + r.raised, 0);
+  const participants = allFundraising.filter(r => r.raised > 0).length;
+  const avg = participants ? totalRaised / participants : 0;
+
+  document.getElementById('fr-total-raised').textContent = '$' + totalRaised.toFixed(0);
+  document.getElementById('fr-participants').textContent = participants;
+  document.getElementById('fr-avg').textContent = '$' + avg.toFixed(0);
+
+  const container = document.getElementById('fundraising-cards');
+  if(!allFundraising.length) {
+    container.innerHTML = '<div style="text-align:center;color:var(--muted);padding:32px">No enrollment data found</div>';
+    return;
+  }
+
+  const maxOwed = Math.max(...allFundraising.map(r => r.totalOwed), 1);
+
+  container.innerHTML = `<div style="display:grid;grid-template-columns:180px 1fr 120px;padding:8px 20px;border-bottom:1px solid var(--border)">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted)">Player</div>
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted)">Dues Breakdown</div>
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);text-align:right">Remaining</div>
+  </div>` + allFundraising.map((r, idx) => {
+    const remaining = Math.max(r.totalOwed - r.totalPaid - r.raised, 0);
+    const paidPct = (r.totalPaid / maxOwed) * 100;
+    const raisedPct = (r.raised / maxOwed) * 100;
+    const owesPct = (r.totalOwed / maxOwed) * 100;
+    const raisedLeft = paidPct; // raised bar starts where paid ends
+    const delay = idx * 80;
+    const isZero = remaining <= 0;
+
+    return `<div class="fr-row fr-animate" style="animation-delay:${delay}ms">
+      <div>
+        <div style="font-weight:700;font-size:14px">${r.fullName || r.athlete}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">${r.parent || '--'}</div>
+      </div>
+      <div>
+        <div class="fr-bar-track">
+          <div class="fr-bar-dues" data-width="${owesPct}" style="width:0%"></div>
+          <div class="fr-bar-paid" data-width="${paidPct}" style="width:0%">
+            ${r.totalPaid > 0 ? `<span class="fr-bar-label" style="color:#34c759;right:4px">$${r.totalPaid.toFixed(0)} paid</span>` : ''}
+          </div>
+          <div class="fr-bar-raised" data-width="${raisedPct}" data-left="${raisedLeft}" style="width:0%;left:${raisedLeft}%">
+            ${r.raised > 0 ? `<span class="fr-bar-label" style="color:#ffd60a;right:4px">$${r.raised.toFixed(0)} raised</span>` : ''}
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:4px;font-size:10px;color:var(--muted)">
+          <span>Dues: $${r.totalOwed.toFixed(0)}</span>
+          ${r.totalPaid > 0 ? `<span style="color:#34c759">Paid: $${r.totalPaid.toFixed(0)}</span>` : ''}
+          ${r.raised > 0 ? `<span style="color:#ffd60a">Raised: $${r.raised.toFixed(0)}</span>` : ''}
+          ${r.raised > 0 && r.raised >= r.totalOwed - r.totalPaid ? `<span style="color:#34c759;font-weight:700">COVERED</span>` : ''}
+        </div>
+      </div>
+      <div class="fr-remaining ${isZero ? 'zero' : ''}" style="text-align:right">
+        ${isZero ? '$0' : '$' + remaining.toFixed(0)}
+      </div>
+    </div>`;
+  }).join('');
+
+  // Trigger bar animations after DOM paint
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      container.querySelectorAll('.fr-bar-dues').forEach(el => { el.style.width = el.dataset.width + '%'; });
+      container.querySelectorAll('.fr-bar-paid').forEach(el => { el.style.width = el.dataset.width + '%'; });
+      container.querySelectorAll('.fr-bar-raised').forEach(el => { el.style.width = el.dataset.width + '%'; });
+    }, 50);
+  });
 }
 
 // ─── EMAIL VERIFICATION RESEND ──────────────────────────────

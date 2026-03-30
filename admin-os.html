@@ -260,6 +260,19 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 .cal-day.other-month { opacity: 0.3; }
 .cal-day.today { box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2); }
 .cal-day .day-num { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+/* Fundraising dues-reduction animation */
+.fr-row { display:grid; grid-template-columns:180px 1fr 120px; align-items:center; gap:16px; padding:14px 20px; border-bottom:1px solid var(--border); transition:background 0.15s; }
+.fr-row:hover { background:rgba(255,255,255,0.02); }
+.fr-row:last-child { border-bottom:none; }
+.fr-bar-track { height:28px; background:rgba(255,255,255,0.04); border-radius:6px; position:relative; overflow:hidden; }
+.fr-bar-dues { position:absolute; top:0; left:0; height:100%; background:rgba(255,59,48,0.25); border-radius:6px; transition:width 1.2s cubic-bezier(0.22,1,0.36,1); }
+.fr-bar-paid { position:absolute; top:0; left:0; height:100%; background:rgba(52,199,89,0.35); border-radius:6px; transition:width 1.2s cubic-bezier(0.22,1,0.36,1) 0.3s; }
+.fr-bar-raised { position:absolute; top:0; height:100%; background:rgba(255,214,10,0.4); border-radius:6px; transition:width 1.2s cubic-bezier(0.22,1,0.36,1) 0.6s; }
+.fr-bar-label { position:absolute; top:50%; transform:translateY(-50%); font-size:11px; font-weight:700; padding:0 8px; white-space:nowrap; z-index:2; }
+.fr-remaining { font-size:18px; font-weight:800; font-variant-numeric:tabular-nums; transition:color 0.3s; }
+.fr-remaining.zero { color:#34c759; }
+@keyframes fr-countup { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+.fr-animate { animation: fr-countup 0.5s ease-out both; }
 .roster-tab { transition: background 0.15s, color 0.15s; }
 .roster-tab.active { background: var(--primary) !important; color: #fff !important; }
 .roster-tab:not(.active):hover { background: rgba(255,255,255,0.05) !important; }
@@ -523,6 +536,7 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
   <div class="sb-section">
     <div class="sb-label">Finance</div>
     <button class="sb-link" onclick="switchPanel('dues',this)"><i data-lucide="wallet" class="icon"></i>Dues</button>
+    <button class="sb-link" onclick="switchPanel('fundraising',this)"><i data-lucide="heart-handshake" class="icon"></i>Fundraising</button>
     <button class="sb-link" onclick="switchPanel('orders',this)"><i data-lucide="shopping-bag" class="icon"></i>Orders</button>
   </div>
 
@@ -630,6 +644,19 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
       <div class="card">
         <div class="card-header"><h2>Installment Ledger</h2><button class="btn btn-primary btn-sm" onclick="openModal('record-payment')">+ Record Payment</button></div>
         <table><thead><tr><th>Parent</th><th>Player</th><th>Installment</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Paid Date</th><th>Actions</th></tr></thead><tbody id="dues-tbody"><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px">Loading...</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- FUNDRAISING -->
+    <div class="panel" id="panel-fundraising">
+      <div class="metrics" style="grid-template-columns:repeat(3,1fr)">
+        <div class="metric-card green"><div class="label">Total Raised</div><div class="val" id="fr-total-raised">$--</div></div>
+        <div class="metric-card blue"><div class="label">Players Participating</div><div class="val" id="fr-participants">--</div></div>
+        <div class="metric-card yellow"><div class="label">Avg per Player</div><div class="val" id="fr-avg">$--</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>Dues After Fundraising</h2><span style="font-size:12px;color:var(--muted)">Season dues reduced by funds raised</span></div>
+        <div id="fundraising-cards" style="display:grid;grid-template-columns:1fr;gap:0;padding:0"></div>
       </div>
     </div>
 
@@ -886,7 +913,7 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 
 <script type="module" src="src/lib/env-injector.js"></script>
 <script src="auth-supabase.js?v=20260330" defer></script>
-<script src="admin-os.js?v=20260330c" defer></script>
+<script src="admin-os.js?v=20260330d" defer></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
   function toggleMobileMenu() {
