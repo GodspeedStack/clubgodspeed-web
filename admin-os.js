@@ -1110,7 +1110,8 @@ function renderCalendar() {
         const reg=cl.find(c=>c.id==='register');
         if(!reg||!reg.done) regTag='<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff3b30;margin-right:3px;vertical-align:middle" title="Not Registered"></span>';
       }
-      html+=`<div class="cal-event ${e.event_type||'other'}" onclick="event.stopPropagation();editCalEvent('${e.id}')">${regTag}${e.title||'Event'}</div>`;
+      const multiDay = (e.end_date && e.end_date !== e.start_date) ? ' multi-day' : '';
+      html+=`<div class="cal-event ${e.event_type||'other'}${multiDay}" onclick="event.stopPropagation();editCalEvent('${e.id}')">${regTag}${e.title||'Event'}</div>`;
     });
     if(dayEvents.length>3) html+=`<div style="font-size:10px;color:var(--muted)">+${dayEvents.length-3} more</div>`;
     html+='</div>';
@@ -1147,10 +1148,10 @@ function renderCalList() {
           const reg=cl.find(c=>c.id==='register');
           if(!reg||!reg.done) regTag='<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,0.06);color:var(--muted);font-weight:600;margin-left:6px;border:1px solid var(--border)">NOT REG</span>';
         }
-        rows+=`<tr>
+        rows+=`<tr style="cursor:pointer" onclick="editCalEvent('${e.id}')">
         <td>${dateLabel}</td><td style="color:var(--muted)">${e.start_time||'--'}</td><td style="font-weight:600">${e.title}${regTag}</td>
         <td>${statusTag(e.event_type||'other')}${e.event_type==='tournament'?tournamentProgressBadge(e):''}</td><td style="color:var(--muted)">${e.location||'--'}</td>
-        <td><button class="btn btn-ghost btn-xs" onclick="editCalEvent('${e.id}')">${e.event_type==='tournament'?'Details':'Edit'}</button><button class="btn btn-ghost btn-xs" style="color:#ff3b30" onclick="deleteCalEvent('${e.id}')">Delete</button></td>
+        <td><button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();deleteCalEvent('${e.id}')">Delete</button></td>
       </tr>`;
       });
     });
