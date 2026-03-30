@@ -3197,11 +3197,57 @@ function renderPlanSelectionUI(container, parentId, supabase, email) {
                 </div>
             </div>
             
-            <div style="margin-top: 24px; text-align: right;">
-                <button id="confirm-plan-btn" class="btn-primary" disabled style="opacity: 0.5; padding: 12px 24px;">Enroll & Continue</button>
+            <div style="margin-top: 24px;">
+                <div style="display: flex; justify-content: flex-end;">
+                    <button id="confirm-plan-btn" class="btn-primary" disabled style="opacity: 0.5; padding: 12px 28px; display: flex; align-items: center; gap: 8px; font-weight: 700; transition: opacity 0.2s;">
+                        Enroll &amp; Continue
+                    </button>
+                </div>
+                <div id="enroll-step-tracker" style="display: none; margin-top: 16px; padding: 14px 16px; background: #f9fafb; border-radius: 10px; border: 1px solid #e5e7eb;">
+                    <div id="enroll-step-1" style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <span class="step-icon" style="width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"></span>
+                        <span style="font-size: 0.85rem; color: #6b7280; font-weight: 500;">Creating payment plan</span>
+                    </div>
+                    <div id="enroll-step-2" style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px; opacity: 0.35;">
+                        <span class="step-icon" style="width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"></span>
+                        <span style="font-size: 0.85rem; color: #6b7280; font-weight: 500;">Saving installments</span>
+                    </div>
+                    <div id="enroll-step-3" style="display: flex; align-items: center; gap: 10px; opacity: 0.35;">
+                        <span class="step-icon" style="width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"></span>
+                        <span style="font-size: 0.85rem; color: #6b7280; font-weight: 500;">Confirming enrollment</span>
+                    </div>
+                </div>
+                <div id="enroll-error-msg" style="display: none; margin-top: 12px; padding: 10px 14px; background: #fef2f2; border-radius: 8px; border: 1px solid #fecaca; color: #dc2626; font-size: 0.85rem; font-weight: 500;"></div>
             </div>
         </div>
     `;
+
+    // Inject spinner keyframes once
+    if (!document.getElementById('gs-spinner-style')) {
+        const s = document.createElement('style');
+        s.id = 'gs-spinner-style';
+        s.textContent = `
+            @keyframes gs-spin { to { transform: rotate(360deg); } }
+            .gs-spinner { animation: gs-spin 0.7s linear infinite; }
+        `;
+        document.head.appendChild(s);
+    }
+
+    const SPINNER_SVG = `<svg class="gs-spinner" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#d1d5db" stroke-width="2"/><path d="M8 2a6 6 0 0 1 6 6" stroke="#2563eb" stroke-width="2" stroke-linecap="round"/></svg>`;
+    const CHECK_SVG  = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" fill="#d1fae5"/><path d="M5 8l2.5 2.5L11 5.5" stroke="#059669" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const DOT_SVG    = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" fill="#d1d5db"/></svg>`;
+
+    function setStep(n, state) {
+        // state: 'idle' | 'active' | 'done'
+        const el = document.getElementById(`enroll-step-${n}`);
+        if (!el) return;
+        el.querySelector('.step-icon').innerHTML =
+            state === 'active' ? SPINNER_SVG :
+            state === 'done'   ? CHECK_SVG   : DOT_SVG;
+        el.style.opacity = state === 'idle' ? '0.35' : '1';
+        el.querySelector('span:last-child').style.color =
+            state === 'done' ? '#059669' : state === 'active' ? '#111' : '#6b7280';
+    }
 
     // Add interactivity script
     window.selectPaymentPlan = function(element, planType, parentId, email) {
@@ -3211,27 +3257,35 @@ function renderPlanSelectionUI(container, parentId, supabase, email) {
         });
         element.style.borderColor = '#0071e3';
         element.style.background = '#f0f9ff';
-        
+
         const btn = document.getElementById('confirm-plan-btn');
         btn.disabled = false;
         btn.style.opacity = '1';
         btn.onclick = async () => {
-            btn.innerHTML = 'Creating Plan...';
+            // — Button mutation —
+            btn.innerHTML = `${SPINNER_SVG} <span>Enrolling…</span>`;
             btn.disabled = true;
+            btn.style.opacity = '0.85';
+
+            // — Show step tracker —
+            const tracker = document.getElementById('enroll-step-tracker');
+            const errMsg  = document.getElementById('enroll-error-msg');
+            tracker.style.display = 'block';
+            errMsg.style.display  = 'none';
+            setStep(1, 'active');
+            setStep(2, 'idle');
+            setStep(3, 'idle');
+
             try {
-                // Determine Athlete Name
-                let athleteName = "Your Athlete";
+                // Resolve athlete name
+                let athleteName = 'Your Athlete';
                 const db = typeof getDB === 'function' ? getDB() : JSON.parse(localStorage.getItem('gba_db'));
                 if (db && db.roster) {
                     const athlete = db.roster.find(p => p.parentId === email);
                     if (athlete) athleteName = athlete.name;
                 }
 
-                // Call the utility function via dynamic import or direct edge function call
-                // Assuming we ported 'createPaymentPlan' logic to an Edge Function or run it clientside.
-                // It's cleaner to just run the DB queries here since parent has RLS insert access.
-                
-                // Installment amounts must exactly match the UI plan cards shown to the parent
+                // Installment amounts must exactly match the UI plan cards
                 let installmentsArray = [];
                 if (planType === 'full') {
                     installmentsArray = [{ number: 1, amount: 745.00, dueDate: '2026-04-01' }];
@@ -3249,21 +3303,18 @@ function renderPlanSelectionUI(container, parentId, supabase, email) {
                 }
 
                 const totalAmount = installmentsArray.reduce((sum, i) => sum + i.amount, 0);
-                const planData = {
-                    parent_id: parentId,
-                    player_name: athleteName,
-                    plan_type: planType,
-                    total_amount: totalAmount
-                };
 
+                // Step 1 — create plan record
                 const { data: insertedPlan, error: planError } = await supabase
                     .from('payment_plans')
-                    .insert(planData)
+                    .insert({ parent_id: parentId, player_name: athleteName, plan_type: planType, total_amount: totalAmount })
                     .select()
                     .single();
-
                 if (planError) throw planError;
-                
+                setStep(1, 'done');
+
+                // Step 2 — write installments
+                setStep(2, 'active');
                 const dbInstallments = installmentsArray.map(i => ({
                     plan_id: insertedPlan.id,
                     parent_id: parentId,
@@ -3272,18 +3323,29 @@ function renderPlanSelectionUI(container, parentId, supabase, email) {
                     due_date: i.dueDate,
                     status: 'pending'
                 }));
-                
                 const { error: paymentsError } = await supabase.from('payments').insert(dbInstallments);
                 if (paymentsError) throw paymentsError;
-                
-                // Refresh Billing view
+                setStep(2, 'done');
+
+                // Step 3 — confirm
+                setStep(3, 'active');
+                btn.innerHTML = CHECK_SVG + ' <span>Enrolled</span>';
+                await new Promise(r => setTimeout(r, 600));
+                setStep(3, 'done');
+
+                await new Promise(r => setTimeout(r, 400));
                 renderBilling(email);
-                
+
             } catch (error) {
-                console.error("Plan creation error:", error);
-                godspeedAlert('Failed to set up the payment plan. Please contact support.', 'Error');
-                btn.innerHTML = 'Enroll & Continue';
+                console.error('Plan creation error:', error);
+                // Reset button
+                btn.innerHTML = 'Enroll &amp; Continue';
                 btn.disabled = false;
+                btn.style.opacity = '1';
+                tracker.style.display = 'none';
+                // Show inline error — no modal needed
+                errMsg.textContent = 'Something went wrong setting up your plan. Please try again or contact support.';
+                errMsg.style.display = 'block';
             }
         };
     };
