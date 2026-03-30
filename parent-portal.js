@@ -3345,53 +3345,60 @@ function renderPlanSelectionUI(container, parentId, supabase, email) {
 }
 
 function renderPaymentsTimeline(container, payments, plan, supabase) {
+    const isFullPay = plan && plan.plan_type === 'full';
     let html = `<div style="display: flex; flex-direction: column; gap: 16px;">`;
-    
+
     payments.forEach(payment => {
-        const isPaid = payment.status === 'completed';
-        const dueDate = new Date(payment.due_date);
+        const isPaid    = payment.status === 'completed';
+        const dueDate   = new Date(payment.due_date);
         const isOverdue = !isPaid && dueDate < new Date();
-        
+        const rowLabel  = isFullPay ? 'Full Payment' : `Installment ${payment.installment_number}`;
+        const modalLabel = isFullPay ? 'Full Payment' : `Installment ${payment.installment_number}`;
+
         let statusBadge = '';
-        let actionBtn = '';
+        let actionBtn   = '';
         let borderColor = '#e5e7eb';
-        
+
         if (isPaid) {
-            statusBadge = `<span style="background: #d1fae5; color: #059669; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Paid</span>`;
+            statusBadge = `<span style="background:#d1fae5;color:#059669;padding:4px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;text-transform:uppercase;">Paid</span>`;
             borderColor = '#10b981';
         } else if (isOverdue) {
-            statusBadge = `<span style="background: #fee2e2; color: #ef4444; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Overdue</span>`;
+            statusBadge = `<span style="background:#fee2e2;color:#ef4444;padding:4px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;text-transform:uppercase;">Overdue</span>`;
             borderColor = '#ef4444';
-            actionBtn = `<button class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem; background: #0a0a0a; font-weight:700;" onclick="openPaymentModal({ type:'installment', label:'Installment ${payment.installment_number}', amount:${payment.amount}, paymentId:'${payment.id}', installmentNumber:${payment.installment_number} })">Pay Now &rarr;</button>`;
+            actionBtn   = `<button class="btn-primary" style="padding:8px 16px;font-size:0.85rem;background:#0a0a0a;font-weight:700;" onclick="openPaymentModal({ type:'installment', label:'${modalLabel}', amount:${payment.amount}, paymentId:'${payment.id}', installmentNumber:${payment.installment_number} })">Pay Now &rarr;</button>`;
         } else {
-            statusBadge = `<span style="background: #fef3c7; color: #d97706; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Upcoming</span>`;
+            statusBadge = `<span style="background:#fef3c7;color:#d97706;padding:4px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;text-transform:uppercase;">Upcoming</span>`;
             borderColor = '#f59e0b';
-            actionBtn = `<button class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem; background: #6b7280; font-weight:700;" onclick="openPaymentModal({ type:'installment', label:'Installment ${payment.installment_number}', amount:${payment.amount}, paymentId:'${payment.id}', installmentNumber:${payment.installment_number} })">Pay Early &rarr;</button>`;
+            // Full-pay: always show black "Pay Now". Installment: gray "Pay Early" since not yet due.
+            const btnStyle = isFullPay
+                ? 'background:#0a0a0a;color:#fff;'
+                : 'background:#6b7280;color:#fff;';
+            const btnLabel = isFullPay ? 'Pay Now &rarr;' : 'Pay Early &rarr;';
+            actionBtn = `<button class="btn-primary" style="padding:8px 16px;font-size:0.85rem;font-weight:700;${btnStyle}" onclick="openPaymentModal({ type:'installment', label:'${modalLabel}', amount:${payment.amount}, paymentId:'${payment.id}', installmentNumber:${payment.installment_number} })">${btnLabel}</button>`;
         }
-        
-        // Hide button if it's pending but a previous installment is still unpaid
+
+        // Block later installments until prior ones are paid
         const previousUnpaid = payments.some(p => p.installment_number < payment.installment_number && p.status !== 'completed');
         if (previousUnpaid && !isPaid) {
-            actionBtn = `<span style="font-size: 0.8rem; color: #888;">Complete prior payment first</span>`;
+            actionBtn = `<span style="font-size:0.8rem;color:#888;">Complete prior payment first</span>`;
         }
 
         html += `
-            <div style="background: white; border-radius: 12px; padding: 16px; border: 1px solid ${borderColor}; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; justify-content: space-between; align-items: center;">
+            <div style="background:white;border-radius:12px;padding:16px;border:1px solid ${borderColor};box-shadow:0 2px 4px rgba(0,0,0,0.02);display:flex;justify-content:space-between;align-items:center;">
                 <div>
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px;">
-                        <h5 style="margin: 0; font-size: 1rem; color: #111;">Installment ${payment.installment_number}</h5>
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
+                        <h5 style="margin:0;font-size:1rem;color:#111;">${rowLabel}</h5>
                         ${statusBadge}
                     </div>
-                    <div style="font-size: 0.85rem; color: #666;">Due Date: ${dueDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
+                    <div style="font-size:0.85rem;color:#666;">Due: ${dueDate.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</div>
                 </div>
-                <div style="text-align: right; display: flex; align-items: center; gap: 16px;">
-                    <div style="font-size: 1.2rem; font-weight: 800; color: #111;">$${payment.amount.toFixed(2)}</div>
+                <div style="text-align:right;display:flex;align-items:center;gap:16px;">
+                    <div style="font-size:1.2rem;font-weight:800;color:#111;">$${payment.amount.toFixed(2)}</div>
                     <div>${actionBtn}</div>
                 </div>
-            </div>
-        `;
+            </div>`;
     });
-    
+
     html += `</div>`;
     container.innerHTML = html;
 }
