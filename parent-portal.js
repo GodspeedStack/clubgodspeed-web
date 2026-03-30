@@ -3071,7 +3071,7 @@ window.renderBilling = async function (email) {
 
         if (!plans || plans.length === 0) {
             // No plan selected yet — show plan selection UI
-            statusTextEl.textContent = '● Action Required';
+            statusTextEl.textContent = 'Action Required';
             statusTextEl.style.color = '#ef4444';
             statusCard.style.borderLeftColor = '#ef4444';
             if (totalDueEl) totalDueEl.textContent = '$745.00';
@@ -3100,30 +3100,18 @@ window.renderBilling = async function (email) {
         // Always render the payments timeline — parents can pay early at any time
         renderPaymentsTimeline(container, payments, currentPlan, supabase);
 
-        // Wire "Pay Tuition Securely" to open the first unpaid installment directly
-        const payTuitionBtn = document.querySelector('#billing-status-card button:last-of-type');
-        const firstUnpaid = payments.find(p => p.status !== 'confirmed');
-        if (payTuitionBtn && firstUnpaid) {
-            payTuitionBtn.onclick = () => openPaymentModal({
-                type: 'installment',
-                label: 'Installment ' + firstUnpaid.installment_number,
-                amount: firstUnpaid.amount,
-                paymentId: firstUnpaid.id,
-                installmentNumber: firstUnpaid.installment_number
-            });
-        }
-
         // Update status card
         const pendingPayments = payments.filter(p => p.status !== 'confirmed');
         if (pendingPayments.length > 0) {
             const nextPayment = pendingPayments[0];
             const isOverdue = new Date(nextPayment.due_date) < now;
-            statusTextEl.textContent = isOverdue ? '● Payment Overdue' : '● Payment Due ' + (now < aprilFirst ? 'Apr 1' : 'Soon');
+            const totalRemaining = pendingPayments.reduce((s, p) => s + parseFloat(p.amount), 0);
+            statusTextEl.textContent = isOverdue ? 'Payment Overdue' : 'Payment Due ' + (now < aprilFirst ? 'Apr 1' : 'Soon');
             statusTextEl.style.color = isOverdue ? '#ef4444' : '#f59e0b';
             statusCard.style.borderLeftColor = isOverdue ? '#ef4444' : '#f59e0b';
-            if (totalDueEl) totalDueEl.textContent = '$' + nextPayment.amount.toFixed(2);
+            if (totalDueEl) totalDueEl.textContent = '$' + totalRemaining.toFixed(2);
         } else {
-            statusTextEl.textContent = '● Paid in Full';
+            statusTextEl.textContent = 'Paid in Full';
             statusTextEl.style.color = '#10b981';
             statusCard.style.borderLeftColor = '#10b981';
             if (totalDueEl) totalDueEl.textContent = '$0.00';
@@ -3143,7 +3131,7 @@ function handleDemoBilling(container, totalDueEl, statusTextEl, statusCard) {
     `;
     if (totalDueEl) totalDueEl.textContent = '$745';
     if (statusTextEl && statusCard) {
-        statusTextEl.textContent = '● Action Required';
+        statusTextEl.textContent = 'Action Required';
         statusTextEl.style.color = '#ef4444';
         statusCard.style.borderLeftColor = '#ef4444';
     }
@@ -3346,61 +3334,114 @@ function renderPlanSelectionUI(container, parentId, supabase, email) {
 
 function renderPaymentsTimeline(container, payments, plan, supabase) {
     const isFullPay = plan && plan.plan_type === 'full';
-    let html = `<div style="display: flex; flex-direction: column; gap: 16px;">`;
+
+    // Inject spinner keyframe once
+    if (!document.getElementById('gs-pay-spinner-style')) {
+        const s = document.createElement('style');
+        s.id = 'gs-pay-spinner-style';
+        s.textContent = '@keyframes gsSpin{to{transform:rotate(360deg)}}';
+        document.head.appendChild(s);
+    }
+
+    let html = `<div style="display: flex; flex-direction: column; gap: 12px;">`;
 
     payments.forEach(payment => {
         const isPaid    = payment.status === 'confirmed';
         const dueDate   = new Date(payment.due_date);
         const isOverdue = !isPaid && dueDate < new Date();
         const rowLabel  = isFullPay ? 'Full Payment' : `Installment ${payment.installment_number}`;
-        const modalLabel = isFullPay ? 'Full Payment' : `Installment ${payment.installment_number}`;
+        const btnId     = `gs-pay-btn-${payment.id}`;
 
         let statusBadge = '';
         let actionBtn   = '';
         let borderColor = '#e5e7eb';
 
         if (isPaid) {
-            statusBadge = `<span style="background:#d1fae5;color:#059669;padding:4px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;text-transform:uppercase;">Paid</span>`;
+            statusBadge = `<span style="background:#d1fae5;color:#059669;padding:3px 8px;border-radius:4px;font-size:0.7rem;font-weight:700;text-transform:uppercase;">Paid</span>`;
             borderColor = '#10b981';
         } else if (isOverdue) {
-            statusBadge = `<span style="background:#fee2e2;color:#ef4444;padding:4px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;text-transform:uppercase;">Overdue</span>`;
+            statusBadge = `<span style="background:#fee2e2;color:#ef4444;padding:3px 8px;border-radius:4px;font-size:0.7rem;font-weight:700;text-transform:uppercase;">Overdue</span>`;
             borderColor = '#ef4444';
-            actionBtn   = `<button class="btn-primary" style="padding:8px 16px;font-size:0.85rem;background:#0a0a0a;font-weight:700;" onclick="openPaymentModal({ type:'installment', label:'${modalLabel}', amount:${payment.amount}, paymentId:'${payment.id}', installmentNumber:${payment.installment_number} })">Pay Now &rarr;</button>`;
+            actionBtn   = `<button id="${btnId}" class="btn-primary" style="padding:8px 18px;font-size:0.85rem;background:#0a0a0a;color:#fff;font-weight:700;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;min-width:100px;justify-content:center;" data-payment-id="${payment.id}" data-amount="${payment.amount}" data-installment="${payment.installment_number}" data-label="${rowLabel}" onclick="window._directCheckout(this)">Pay Now</button>`;
         } else {
-            statusBadge = `<span style="background:#fef3c7;color:#d97706;padding:4px 8px;border-radius:4px;font-size:0.75rem;font-weight:700;text-transform:uppercase;">Upcoming</span>`;
+            statusBadge = `<span style="background:#fef3c7;color:#d97706;padding:3px 8px;border-radius:4px;font-size:0.7rem;font-weight:700;text-transform:uppercase;">Upcoming</span>`;
             borderColor = '#f59e0b';
-            // Full-pay: always show black "Pay Now". Installment: gray "Pay Early" since not yet due.
-            const btnStyle = isFullPay
-                ? 'background:#0a0a0a;color:#fff;'
-                : 'background:#6b7280;color:#fff;';
-            const btnLabel = isFullPay ? 'Pay Now &rarr;' : 'Pay Early &rarr;';
-            actionBtn = `<button class="btn-primary" style="padding:8px 16px;font-size:0.85rem;font-weight:700;${btnStyle}" onclick="openPaymentModal({ type:'installment', label:'${modalLabel}', amount:${payment.amount}, paymentId:'${payment.id}', installmentNumber:${payment.installment_number} })">${btnLabel}</button>`;
+            const btnBg = isFullPay ? '#0a0a0a' : '#6b7280';
+            const btnLabel = isFullPay ? 'Pay Now' : 'Pay Early';
+            actionBtn = `<button id="${btnId}" class="btn-primary" style="padding:8px 18px;font-size:0.85rem;background:${btnBg};color:#fff;font-weight:700;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;min-width:100px;justify-content:center;" data-payment-id="${payment.id}" data-amount="${payment.amount}" data-installment="${payment.installment_number}" data-label="${rowLabel}" onclick="window._directCheckout(this)">${btnLabel}</button>`;
         }
 
         // Block later installments until prior ones are paid
         const previousUnpaid = payments.some(p => p.installment_number < payment.installment_number && p.status !== 'confirmed');
         if (previousUnpaid && !isPaid) {
-            actionBtn = `<span style="font-size:0.8rem;color:#888;">Complete prior payment first</span>`;
+            actionBtn = `<span style="font-size:0.75rem;color:#aaa;">Pay prior first</span>`;
         }
 
         html += `
-            <div style="background:white;border-radius:12px;padding:16px;border:1px solid ${borderColor};box-shadow:0 2px 4px rgba(0,0,0,0.02);display:flex;justify-content:space-between;align-items:center;">
+            <div style="background:white;border-radius:10px;padding:14px 16px;border:1px solid ${borderColor};box-shadow:0 1px 3px rgba(0,0,0,0.03);display:flex;justify-content:space-between;align-items:center;">
                 <div>
-                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
-                        <h5 style="margin:0;font-size:1rem;color:#111;">${rowLabel}</h5>
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:2px;">
+                        <span style="margin:0;font-size:0.9rem;font-weight:700;color:#111;">${rowLabel}</span>
                         ${statusBadge}
                     </div>
-                    <div style="font-size:0.85rem;color:#666;">Due: ${dueDate.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</div>
+                    <div style="font-size:0.8rem;color:#888;">${dueDate.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
                 </div>
-                <div style="text-align:right;display:flex;align-items:center;gap:16px;">
-                    <div style="font-size:1.2rem;font-weight:800;color:#111;">$${payment.amount.toFixed(2)}</div>
-                    <div>${actionBtn}</div>
+                <div style="display:flex;align-items:center;gap:14px;">
+                    <div style="font-size:1.1rem;font-weight:800;color:#111;">$${payment.amount.toFixed(2)}</div>
+                    ${actionBtn}
                 </div>
             </div>`;
     });
 
     html += `</div>`;
     container.innerHTML = html;
+}
+
+// ---------------------------------------------------------------------------
+// Direct Checkout — skip the modal, go straight to Stripe (1 click)
+// ---------------------------------------------------------------------------
+window._directCheckout = async function(btn) {
+    if (btn.disabled) return;
+    btn.disabled = true;
+    const origHTML = btn.innerHTML;
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" style="animation:gsSpin 0.7s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`;
+
+    const paymentId   = btn.dataset.paymentId;
+    const amount      = parseFloat(btn.dataset.amount);
+    const installment = parseInt(btn.dataset.installment, 10);
+    const parentEmail = localStorage.getItem('gba_user_email') || '';
+    const playerName  = localStorage.getItem('gba_selected_athlete_name') || 'Athlete';
+
+    try {
+        if (!window.auth || !window.auth.isSupabaseAvailable()) throw new Error('Auth not ready.');
+        const supabase = window.auth.getSupabaseClient();
+
+        const { data, error } = await supabase.functions.invoke('create-checkout', {
+            body: {
+                paymentType: 'aau_payment',
+                paymentId,
+                amount,
+                installmentNumber: installment,
+                parentEmail,
+                playerName
+            }
+        });
+
+        if (error) throw error;
+        if (!data?.url) throw new Error('No checkout URL returned.');
+        window.location.href = data.url;
+
+    } catch (err) {
+        console.error('Direct checkout error:', err);
+        btn.disabled = false;
+        btn.innerHTML = origHTML;
+        // Show inline error below button
+        const errEl = document.createElement('div');
+        errEl.style.cssText = 'color:#ef4444;font-size:0.75rem;margin-top:4px;text-align:center;';
+        errEl.textContent = err.message || 'Payment failed. Try again.';
+        btn.parentElement.appendChild(errEl);
+        setTimeout(() => errEl.remove(), 4000);
+    }
 }
 
 // ---------------------------------------------------------------------------
