@@ -3075,7 +3075,7 @@ window.renderBilling = async function (email) {
             statusTextEl.style.color = '#ef4444';
             statusCard.style.borderLeftColor = '#ef4444';
             if (totalDueEl) totalDueEl.textContent = '$745.00';
-            if (sectionHeaderEl) sectionHeaderEl.textContent = 'Select Your Spring/Summer 2026 Payment Plan';
+            if (sectionHeaderEl) sectionHeaderEl.textContent = 'Payment Plan';
             renderPlanSelectionUI(container, user.id, supabase, email);
             return;
         }
@@ -3095,7 +3095,7 @@ window.renderBilling = async function (email) {
         const now = new Date();
         if (now < aprilFirst) {
             // Enrolled but invoices not yet active — show enrolled confirmation
-            if (sectionHeaderEl) sectionHeaderEl.textContent = 'Your Payment Plan';
+            if (sectionHeaderEl) sectionHeaderEl.textContent = 'Payment Plan';
             const planLabel = currentPlan.plan_type === 'full' ? 'Pay in Full'
                 : currentPlan.plan_type === '2-installment' ? '2 Installments'
                 : '3 Installments';
