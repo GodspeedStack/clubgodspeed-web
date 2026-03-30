@@ -1107,14 +1107,17 @@ function renderCalendar() {
       let regTag='';
       const eTags=Array.isArray(e.tags)?e.tags:[];
       const isBackup=eTags.includes('backup');
-      if(e.event_type==='tournament'&&!isBackup) {
+      if(isBackup) {
+        regTag='<span style="font-size:8px;padding:1px 4px;border-radius:3px;background:rgba(37,99,235,0.1);color:rgba(37,99,235,0.7);font-weight:600;border:1px solid rgba(37,99,235,0.2)">BACKUP</span>';
+      } else if(e.event_type==='tournament') {
         const cl=Array.isArray(e.admin_checklist)?e.admin_checklist:(e.admin_checklist?JSON.parse(e.admin_checklist):[]);
         const reg=cl.find(c=>c.id==='register');
-        if(!reg||!reg.done) regTag='<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff3b30;margin-right:3px;vertical-align:middle" title="Not Registered"></span>';
+        if(!reg||!reg.done) regTag='<span style="font-size:8px;padding:1px 4px;border-radius:3px;background:rgba(255,255,255,0.06);color:var(--muted);font-weight:600;border:1px solid var(--border)">NOT REG</span>';
       }
       const multiDay = (e.end_date && e.end_date !== e.start_date) ? ' multi-day' : '';
       const backupCls = isBackup ? ' backup' : '';
-      html+=`<div class="cal-event ${e.event_type||'other'}${multiDay}${backupCls}" onclick="event.stopPropagation();editCalEvent('${e.id}')">${regTag}${e.title||'Event'}</div>`;
+      const tagLine = regTag ? `<div style="margin-top:1px">${regTag}</div>` : '';
+      html+=`<div class="cal-event ${e.event_type||'other'}${multiDay}${backupCls}" onclick="event.stopPropagation();editCalEvent('${e.id}')"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.title||'Event'}</div>${tagLine}</div>`;
     });
     if(dayEvents.length>3) html+=`<div style="font-size:10px;color:var(--muted)">+${dayEvents.length-3} more</div>`;
     html+='</div>';
@@ -1149,14 +1152,15 @@ function renderCalList() {
         const eTags=Array.isArray(e.tags)?e.tags:[];
         const isBackup=eTags.includes('backup');
         if(isBackup) {
-          regTag='<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(37,99,235,0.1);color:rgba(37,99,235,0.7);font-weight:600;margin-left:6px;border:1px solid rgba(37,99,235,0.2)">BACKUP</span>';
+          regTag='<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(37,99,235,0.1);color:rgba(37,99,235,0.7);font-weight:600;border:1px solid rgba(37,99,235,0.2)">BACKUP</span>';
         } else if(e.event_type==='tournament') {
           const cl=Array.isArray(e.admin_checklist)?e.admin_checklist:(e.admin_checklist?JSON.parse(e.admin_checklist):[]);
           const reg=cl.find(c=>c.id==='register');
-          if(!reg||!reg.done) regTag='<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,0.06);color:var(--muted);font-weight:600;margin-left:6px;border:1px solid var(--border)">NOT REG</span>';
+          if(!reg||!reg.done) regTag='<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,0.06);color:var(--muted);font-weight:600;border:1px solid var(--border)">NOT REG</span>';
         }
+        const listTagLine = regTag ? `<div style="margin-top:3px">${regTag}</div>` : '';
         rows+=`<tr style="cursor:pointer${isBackup?';opacity:0.6':''}" onclick="editCalEvent('${e.id}')">
-        <td>${dateLabel}</td><td style="color:var(--muted)">${fmt12(e.start_time)}</td><td style="font-weight:600">${e.title}${regTag}</td>
+        <td>${dateLabel}</td><td style="color:var(--muted)">${fmt12(e.start_time)}</td><td style="font-weight:600">${e.title}${listTagLine}</td>
         <td>${statusTag(e.event_type||'other')}${e.event_type==='tournament'?tournamentProgressBadge(e):''}</td><td style="color:var(--muted)">${e.location||'--'}</td>
         <td><button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();deleteCalEvent('${e.id}')">Delete</button></td>
       </tr>`;

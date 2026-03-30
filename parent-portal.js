@@ -3686,7 +3686,7 @@ window.openPaymentModal = function(opts) {
 
             <div class="pm-actions">
                 <button class="pm-btn-cancel" onclick="document.getElementById('gs-payment-modal-overlay').remove()">Cancel</button>
-                <button class="pm-btn-confirm" id="pm-submit-btn" onclick="window._submitVenmoModal(${JSON.stringify(opts).replace(/</g,'&lt;')})">
+                <button class="pm-btn-confirm" id="pm-submit-btn">
                     I Sent It
                 </button>
             </div>
@@ -3696,6 +3696,7 @@ window.openPaymentModal = function(opts) {
 
     overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
     document.body.appendChild(overlay);
+    document.getElementById('pm-submit-btn').addEventListener('click', () => window._submitVenmoModal(opts));
     setTimeout(() => document.getElementById('pm-amount-field')?.focus(), 80);
 };
 
@@ -3721,9 +3722,20 @@ window._submitVenmoModal = async function(opts) {
     btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:gsSpin 0.7s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Recording...`;
 
     const supabase    = window.auth.getSupabaseClient();
+
+    // Refresh auth session in case it expired while user paid on phone
+    try { await supabase.auth.getSession(); } catch (_) {}
+
     const parentEmail = localStorage.getItem('gba_user_email') || '';
     const parentName  = localStorage.getItem('gba_user_name') || '';
     const playerName  = localStorage.getItem('gba_selected_athlete_name') || 'Athlete';
+
+    if (!parentEmail) {
+        btn.disabled = false;
+        btn.innerHTML = 'I Sent It';
+        alert('No parent email found. Please sign out and sign back in.');
+        return;
+    }
 
     try {
         const receiptId = 'venmo_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
@@ -3732,9 +3744,9 @@ window._submitVenmoModal = async function(opts) {
             parent_name: parentName,
             player_name: playerName,
             amount: enteredAmount,
-            note: 'Venmo - ' + (opts.label || 'Payment'),
+            note: 'Venmo - ' + (opts.label || 'Payment') + ' (pending confirmation)',
             receipt_id: receiptId,
-            status: 'pending_venmo',
+            status: 'pending_stripe',
             stripe_pi_id: null
         });
         if (error) throw error;
@@ -3798,9 +3810,9 @@ window.submitVenmoConfirmation = async function() {
             parent_name: parentName,
             player_name: playerName,
             amount: enteredAmount,
-            note: (noteInput?.value || '').trim() || 'Venmo payment',
+            note: ((noteInput?.value || '').trim() || 'Venmo payment') + ' (pending confirmation)',
             receipt_id: receiptId,
-            status: 'pending_venmo',
+            status: 'pending_stripe',
             stripe_pi_id: null
         });
         if (error) throw error;
