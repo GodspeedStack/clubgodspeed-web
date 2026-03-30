@@ -947,6 +947,10 @@ function handleLogout() {
 window.switchPortalView = function (viewName, linkElement) {
     if (window.analytics && window.analytics.trackPageView) window.analytics.trackPageView(viewName);
 
+    // Reset scroll to top so section headers are always visible on navigation
+    const mainArea = document.querySelector('.portal-main-v3');
+    if (mainArea) mainArea.scrollTop = 0;
+
     // 1. Hide all views
     document.querySelectorAll('.portal-view').forEach(el => {
         el.style.display = 'none';
