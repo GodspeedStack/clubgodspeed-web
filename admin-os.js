@@ -865,25 +865,31 @@ async function submitGame() {
 
 // ─── CALENDAR ───────────────────────────────────────────────
 async function loadCalendar() {
-  const start=new Date(calYear,calMonth,1), end=new Date(calYear,calMonth+1,0);
   try {
     if(osSupabase) {
-      const {data}=await osSupabase.from('calendar_events').select('*').gte('start_date',start.toISOString().split('T')[0]).lte('start_date',end.toISOString().split('T')[0]).order('start_date',{ascending:true});
-      // Alias start_date → event_date for render compat
+      let query=osSupabase.from('calendar_events').select('*').order('start_date',{ascending:true});
+      if(calView==='list') {
+        // List view: all events from Jan 1 of viewed year onward
+        query=query.gte('start_date',`${calYear}-01-01`).lte('start_date',`${calYear}-12-31`);
+      } else {
+        const start=new Date(calYear,calMonth,1), end=new Date(calYear,calMonth+1,0);
+        query=query.gte('start_date',start.toISOString().split('T')[0]).lte('start_date',end.toISOString().split('T')[0]);
+      }
+      const {data}=await query;
       allCalEvents=(data||[]).map(e=>({...e, event_date: e.start_date}));
     }
   } catch(e){ console.error('Calendar load:',e); }
   renderCalendar();
 }
-function calNav(dir) { calMonth+=dir; if(calMonth>11){calMonth=0;calYear++;} if(calMonth<0){calMonth=11;calYear--;} loadCalendar(); }
+function calNav(dir) { if(calView==='list'){calYear+=dir;}else{calMonth+=dir;if(calMonth>11){calMonth=0;calYear++;}if(calMonth<0){calMonth=11;calYear--;}} loadCalendar(); }
 function setCalView(v) {
   calView=v;
   document.getElementById('cal-view-month').style.opacity=v==='month'?'1':'0.5';
   document.getElementById('cal-view-list').style.opacity=v==='list'?'1':'0.5';
-  renderCalendar();
+  loadCalendar();
 }
 function renderCalendar() {
-  const label=new Date(calYear,calMonth).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  const label=calView==='list'?String(calYear):new Date(calYear,calMonth).toLocaleDateString('en-US',{month:'long',year:'numeric'});
   document.getElementById('cal-month-label').textContent=label;
   if(calView==='list') { renderCalList(); return; }
   const first=new Date(calYear,calMonth,1), last=new Date(calYear,calMonth+1,0);
@@ -907,11 +913,32 @@ function renderCalendar() {
   document.getElementById('cal-container').innerHTML=html;
 }
 function renderCalList() {
-  document.getElementById('cal-container').innerHTML=`<div class="card"><table><thead><tr><th>Date</th><th>Time</th><th>Title</th><th>Type</th><th>Location</th><th>Actions</th></tr></thead><tbody>${allCalEvents.length?allCalEvents.map(e=>`<tr>
-    <td>${fmtShort(e.event_date)}</td><td style="color:var(--muted)">${e.start_time||'--'}</td><td style="font-weight:600">${e.title}</td>
-    <td>${statusTag(e.event_type||'other')}${e.event_type==='tournament'?tournamentProgressBadge(e):''}</td><td style="color:var(--muted)">${e.location||'--'}</td>
-    <td><button class="btn btn-ghost btn-xs" onclick="editCalEvent('${e.id}')">${e.event_type==='tournament'?'Details':'Edit'}</button><button class="btn btn-ghost btn-xs" style="color:#ff3b30" onclick="deleteCalEvent('${e.id}')">Delete</button></td>
-  </tr>`).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px">No events this month</td></tr>'}</tbody></table></div>`;
+  // Group events by month for readability
+  const months={};
+  allCalEvents.forEach(e=>{
+    const d=new Date(e.event_date+'T00:00:00');
+    const key=d.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+    if(!months[key]) months[key]=[];
+    months[key].push(e);
+  });
+  const monthKeys=Object.keys(months);
+  let rows='';
+  if(monthKeys.length) {
+    monthKeys.forEach(mk=>{
+      rows+=`<tr><td colspan="6" style="background:var(--card-bg);font-weight:700;padding:10px 16px;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;color:var(--accent);border-top:2px solid var(--border)">${mk}</td></tr>`;
+      months[mk].forEach(e=>{
+        const dateLabel=e.end_date&&e.end_date!==e.event_date?fmtShort(e.event_date)+' - '+fmtShort(e.end_date):fmtShort(e.event_date);
+        rows+=`<tr>
+        <td>${dateLabel}</td><td style="color:var(--muted)">${e.start_time||'--'}</td><td style="font-weight:600">${e.title}</td>
+        <td>${statusTag(e.event_type||'other')}${e.event_type==='tournament'?tournamentProgressBadge(e):''}</td><td style="color:var(--muted)">${e.location||'--'}</td>
+        <td><button class="btn btn-ghost btn-xs" onclick="editCalEvent('${e.id}')">${e.event_type==='tournament'?'Details':'Edit'}</button><button class="btn btn-ghost btn-xs" style="color:#ff3b30" onclick="deleteCalEvent('${e.id}')">Delete</button></td>
+      </tr>`;
+      });
+    });
+  } else {
+    rows=`<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px">No events in ${calYear}</td></tr>`;
+  }
+  document.getElementById('cal-container').innerHTML=`<div class="card"><table><thead><tr><th>Date</th><th>Time</th><th>Title</th><th>Type</th><th>Location</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 function showDayEvents(dateStr) {
   const dayEvents=allCalEvents.filter(e=>e.event_date===dateStr);
