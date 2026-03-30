@@ -3746,7 +3746,7 @@ window._submitVenmoModal = async function(opts) {
             amount: enteredAmount,
             note: 'Venmo - ' + (opts.label || 'Payment') + ' (pending confirmation)',
             receipt_id: receiptId,
-            status: 'pending_stripe',
+            status: 'pending_venmo',
             stripe_pi_id: null
         });
         if (error) throw error;
@@ -3812,7 +3812,7 @@ window.submitVenmoConfirmation = async function() {
             amount: enteredAmount,
             note: ((noteInput?.value || '').trim() || 'Venmo payment') + ' (pending confirmation)',
             receipt_id: receiptId,
-            status: 'pending_stripe',
+            status: 'pending_venmo',
             stripe_pi_id: null
         });
         if (error) throw error;
