@@ -337,6 +337,9 @@ function viewParentProfile(id) {
       <div><label style="font-size:11px;color:var(--muted)">Player(s)</label><div style="margin-top:4px">${p.player_name||'--'}</div></div>
       <div><label style="font-size:11px;color:var(--muted)">Grade</label><div style="margin-top:4px">${p.grade||'--'}</div></div>
       <div><label style="font-size:11px;color:var(--muted)">Status</label><div style="margin-top:4px;display:flex;align-items:center;gap:8px">${statusTag(p.approved?'Approved':'Pending')}${!p.approved?`<button class="btn btn-ghost btn-xs" onclick="approveProfile('${p.id}')">Approve</button>`:''}</div></div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
+      <button class="btn btn-ghost btn-sm" onclick="resendVerification('${p.email}')" style="width:100%;justify-content:center;gap:6px"><i data-lucide="mail" style="width:14px;height:14px"></i>Resend Email Verification</button>
     </div>`;
 }
 
@@ -421,7 +424,7 @@ function renderRequests(arr) {
     return `<tr><td style="font-weight:600">${r.full_name||'--'}</td><td style="color:var(--muted)">${r.email}</td>
       <td>${statusTag(r.requested_role)}</td><td>${r.grade||'--'} ${r.player_name?'/ '+r.player_name:''}</td>
       <td style="color:var(--muted);font-size:12px">${d}</td><td style="color:var(--muted);font-size:11px">${r.ip_address||'--'}</td>
-      <td>${r.status==='pending'?`<div style="display:flex;gap:6px"><button class="btn btn-ghost btn-xs" style="color:#34c759" onclick="approveReq('${r.id}','${r.email}')">Approve</button><button class="btn btn-ghost btn-xs" style="color:#ff3b30" onclick="denyReq('${r.id}','${r.email}')">Deny</button></div>`:statusTag(r.status)}</td></tr>`;
+      <td>${r.status==='pending'?`<div style="display:flex;gap:6px"><button class="btn btn-ghost btn-xs" style="color:#34c759" onclick="approveReq('${r.id}','${r.email}')">Approve</button><button class="btn btn-ghost btn-xs" style="color:#ff3b30" onclick="denyReq('${r.id}','${r.email}')">Deny</button><button class="btn btn-ghost btn-xs" onclick="resendVerification('${r.email}')" title="Resend verification email">Resend</button></div>`:statusTag(r.status)}</td></tr>`;
   }).join('');
 }
 async function approveReq(id, email) {
@@ -448,6 +451,47 @@ async function denyReq(id, email) {
   if(reason===null) return;
   try { if(osSupabase) await osSupabase.rpc('deny_login_request',{request_id:id,reason}); } catch(e){ console.error(e); }
   renderRequests(allRequests);
+}
+
+// ─── EMAIL VERIFICATION RESEND ──────────────────────────────
+async function resendVerification(email) {
+  if(!osSupabase) { showToast('Not connected','error'); return; }
+  try {
+    const {error}=await osSupabase.auth.resend({type:'signup',email});
+    if(error) throw error;
+    showToast(`Verification email resent to ${email}`);
+  } catch(e) {
+    // If user already confirmed, Supabase returns an error — surface it clearly
+    const msg=e.message||String(e);
+    if(msg.includes('already confirmed')||msg.includes('Email link is invalid')) {
+      showToast(`${email} is already verified`,'info');
+    } else {
+      showToast(`Resend failed for ${email}: ${msg}`,'error');
+    }
+  }
+}
+
+async function resendAllVerifications() {
+  if(!osSupabase) { showToast('Not connected','error'); return; }
+  // Gather all parent emails from profiles
+  const parents=allPlayers.filter(p=>p.role==='parent'&&p.email);
+  if(!parents.length) { showToast('No parent profiles found','error'); return; }
+  if(!confirm(`Resend verification emails to all ${parents.length} parent accounts?\n\nAlready-verified users will be skipped automatically.`)) return;
+  let sent=0, skipped=0, failed=0;
+  showToast(`Sending verification emails to ${parents.length} users...`);
+  for(const p of parents) {
+    try {
+      const {error}=await osSupabase.auth.resend({type:'signup',email:p.email});
+      if(error) {
+        const msg=error.message||'';
+        if(msg.includes('already confirmed')||msg.includes('Email link is invalid')) skipped++;
+        else { failed++; console.warn(`Resend failed for ${p.email}:`,msg); }
+      } else { sent++; }
+    } catch(e) { failed++; console.warn(`Resend error for ${p.email}:`,e); }
+    // Small delay to respect rate limits
+    await new Promise(r=>setTimeout(r,200));
+  }
+  showToast(`Verification emails: ${sent} sent, ${skipped} already verified, ${failed} failed`);
 }
 
 // ─── SEASON DUES ────────────────────────────────────────────
