@@ -1171,33 +1171,126 @@ async function saveCalEvent() {
 // ─── BULK TOURNAMENT UPLOAD ──────────────────────────────────
 function openBulkTournamentUpload() {
   openModal('bulk-tournament');
-  document.getElementById('modal-title').textContent='Bulk Tournament Upload';
+  document.getElementById('modal-title').textContent='Add Tournaments';
   document.getElementById('modal-body').innerHTML=`
-    <p style="color:var(--muted);font-size:13px;margin-bottom:12px">Paste tournament data (text from websites, bracket info, etc). AI will parse dates, locations, and detect 4th vs 5th grade.</p>
-    <div class="field"><label>Paste Tournament Data</label>
-      <textarea id="bulk-raw" style="min-height:180px;border:1px solid var(--border);border-radius:12px;background:rgba(0,0,0,0.3);color:#fff;padding:16px;width:100%;font-family:var(--font-mono,monospace);font-size:13px;resize:vertical" placeholder="Example:
+    <p style="color:var(--muted);font-size:13px;margin-bottom:12px">Paste tournament info from a website, email, or flyer. Dates, locations, grades, and costs are picked up automatically.</p>
+    <div class="field">
+      <textarea id="bulk-raw" style="min-height:200px;border:1px solid var(--border);border-radius:12px;background:rgba(0,0,0,0.3);color:#fff;padding:16px;width:100%;font-family:var(--font-mono,monospace);font-size:13px;resize:vertical;transition:border-color 0.2s" placeholder="Example:
+
 iHoop Spring Classic - April 12-13, 2026
 Location: Allen Fieldhouse, Allen TX
-4th Grade Division
+4th Grade Division -- $425
 
 BigFoot Battle - May 3, 2026
 Location: Southlake Rec Center
-5th Grade"></textarea></div>
-    <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="parseBulkTournaments()" id="bulk-parse-btn">Parse Tournaments</button>
-    <div id="bulk-preview" style="margin-top:16px"></div>`;
+5th Grade -- $380"></textarea>
+      <div id="bulk-hint" style="min-height:20px;margin-top:6px;font-size:12px;transition:opacity 0.2s"></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="addTournaments()" id="bulk-add-btn">Add Tournaments</button>
+    <div id="bulk-result" style="margin-top:12px"></div>`;
 }
 
-async function parseBulkTournaments() {
+async function addTournaments() {
   const raw=document.getElementById('bulk-raw').value.trim();
-  if(!raw) return showToast('Paste tournament data first','error');
-  const btn=document.getElementById('bulk-parse-btn');
-  btn.textContent='Parsing...'; btn.disabled=true;
+  const hint=document.getElementById('bulk-hint');
+  const textarea=document.getElementById('bulk-raw');
+  const btn=document.getElementById('bulk-add-btn');
+  const resultDiv=document.getElementById('bulk-result');
+
+  // Reset state
+  textarea.style.borderColor='var(--border)';
+  hint.style.opacity='0';
+  resultDiv.innerHTML='';
+
+  if(!raw) {
+    textarea.style.borderColor='#ff3b30';
+    hint.innerHTML='<span style="color:#ff3b30">Paste tournament info above to get started.</span>';
+    hint.style.opacity='1';
+    textarea.focus();
+    return;
+  }
+
+  btn.textContent='Adding...'; btn.disabled=true;
   try {
     const parsed=parseTournamentText(raw);
-    if(!parsed.length) { showToast('Could not parse any tournaments','error'); btn.textContent='Parse Tournaments'; btn.disabled=false; return; }
-    renderBulkPreview(parsed);
-    btn.textContent='Parse Tournaments'; btn.disabled=false;
-  } catch(e) { showToast('Parse error: '+e.message,'error'); btn.textContent='Parse Tournaments'; btn.disabled=false; }
+
+    if(!parsed.length) {
+      textarea.style.borderColor='#ff9500';
+      hint.innerHTML='<span style="color:#ff9500">Could not find tournament details. Make sure you include a name and date.</span>';
+      hint.style.opacity='1';
+      btn.textContent='Add Tournaments'; btn.disabled=false;
+      return;
+    }
+
+    // Check each parsed entry for required fields
+    const valid=[], issues=[];
+    parsed.forEach(t=>{
+      if(!t.title&&!t.start_date) issues.push('One entry is missing both a name and date.');
+      else if(!t.start_date) issues.push(`"${t.title}" is missing a date.`);
+      else if(!t.title) issues.push('One entry has a date but no name.');
+      else valid.push(t);
+    });
+
+    if(!valid.length) {
+      textarea.style.borderColor='#ff9500';
+      hint.innerHTML=`<span style="color:#ff9500">${issues[0]||'Could not find a tournament name and date.'}</span>`;
+      hint.style.opacity='1';
+      btn.textContent='Add Tournaments'; btn.disabled=false;
+      return;
+    }
+
+    // Save all valid tournaments
+    if(!osSupabase) { showToast('Not connected','error'); btn.textContent='Add Tournaments'; btn.disabled=false; return; }
+    const session=await osSupabase.auth.getSession();
+    const userId=session.data.session.user.id;
+    let saved=0, errors=0;
+
+    for(const t of valid) {
+      try {
+        const {error}=await osSupabase.rpc('upsert_calendar_event',{
+          p_title:t.title, p_event_type:'tournament', p_start_date:t.start_date,
+          p_end_date:t.end_date||null, p_start_time:t.start_time||null, p_location:t.location||'',
+          p_grade_level:t.grade_level||'both', p_created_by:userId, p_visibility:'public',
+          p_cost:t.cost||null, p_registration_deadline:t.registration_deadline||null,
+          p_notes:t.notes||null, p_admin_checklist:JSON.stringify(buildTournamentChecklist())
+        });
+        if(error) throw error;
+        saved++;
+      } catch(e) { console.error('Save error:',e); errors++; }
+    }
+
+    // Show success summary inline
+    textarea.style.borderColor='#34c759';
+    const cards=valid.map(t=>{
+      const dateLabel=t.end_date&&t.end_date!==t.start_date?fmtShort(t.start_date)+' - '+fmtShort(t.end_date):fmtShort(t.start_date);
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(52,199,89,0.08);border-radius:8px;margin-bottom:4px">
+        <span style="color:#34c759;font-size:16px">&#10003;</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.title}</div>
+          <div style="font-size:11px;color:var(--muted)">${dateLabel}${t.location?' -- '+t.location:''}${t.grade_level&&t.grade_level!=='both'?' -- '+t.grade_level+' grade':''}</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    resultDiv.innerHTML=cards;
+    if(issues.length) {
+      hint.innerHTML=`<span style="color:#ff9500">${saved} added. ${issues.length} skipped (missing info).</span>`;
+      hint.style.opacity='1';
+    } else {
+      hint.innerHTML=`<span style="color:#34c759">${saved} tournament${saved!==1?'s':''} added to the calendar.</span>`;
+      hint.style.opacity='1';
+    }
+
+    btn.textContent='Add Tournaments'; btn.disabled=false;
+    // Reload calendar in background
+    loadCalendar();
+    // Auto-close after brief delay so user sees confirmation
+    setTimeout(()=>{ if(document.querySelector('.modal.active')) closeModal(); }, 2200);
+
+  } catch(e) {
+    showToast('Error: '+e.message,'error');
+    btn.textContent='Add Tournaments'; btn.disabled=false;
+  }
 }
 
 function parseTournamentText(raw) {
@@ -1355,67 +1448,7 @@ function convertTo24(timeStr) {
   return `${String(h).padStart(2,'0')}:${m}`;
 }
 
-function renderBulkPreview(parsed) {
-  const container=document.getElementById('bulk-preview');
-  if(!parsed.length) { container.innerHTML='<p style="color:var(--muted)">No tournaments parsed.</p>'; return; }
-  let html=`<div style="font-weight:700;margin-bottom:8px">${parsed.length} tournament(s) detected:</div>`;
-  parsed.forEach((t,i)=>{
-    html+=`<div style="padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px" id="bulk-t-${i}">
-      <div class="grid2" style="gap:8px">
-        <div class="field"><label style="font-size:11px">Title</label><input type="text" class="bulk-title" value="${t.title}" style="font-size:13px"></div>
-        <div class="field"><label style="font-size:11px">Grade</label><select class="bulk-grade" style="font-size:13px">
-          <option value="4th" ${t.grade_level==='4th'?'selected':''}>4th Grade</option>
-          <option value="5th" ${t.grade_level==='5th'?'selected':''}>5th Grade</option>
-          <option value="both" ${t.grade_level==='both'?'selected':''}>Both</option></select></div>
-        <div class="field"><label style="font-size:11px">Start Date</label><input type="date" class="bulk-start" value="${t.start_date}" style="font-size:13px"></div>
-        <div class="field"><label style="font-size:11px">End Date</label><input type="date" class="bulk-end" value="${t.end_date||''}" style="font-size:13px"></div>
-        <div class="field"><label style="font-size:11px">Location</label><input type="text" class="bulk-location" value="${t.location}" style="font-size:13px"></div>
-        <div class="field"><label style="font-size:11px">Time</label><input type="time" class="bulk-time" value="${t.start_time||''}" style="font-size:13px"></div>
-        <div class="field"><label style="font-size:11px">Cost</label><input type="text" class="bulk-cost" value="${t.cost||''}" style="font-size:13px" placeholder="$0"></div>
-        <div class="field"><label style="font-size:11px">Reg. Deadline</label><input type="date" class="bulk-regdeadline" value="${t.registration_deadline||''}" style="font-size:13px"></div>
-      </div>
-      ${t.notes?`<div style="margin-top:6px;padding:8px;background:rgba(255,255,255,0.04);border-radius:6px;font-size:11px;color:var(--muted);white-space:pre-line;max-height:60px;overflow-y:auto">${t.notes}</div>`:''}
-      <input type="hidden" class="bulk-notes" value="${(t.notes||'').replace(/"/g,'&quot;')}">
-    </div>`;
-  });
-  html+=`<button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="saveBulkTournaments(${parsed.length})">Save ${parsed.length} Tournament(s)</button>`;
-  container.innerHTML=html;
-}
-
-async function saveBulkTournaments(count) {
-  if(!osSupabase) return showToast('Not connected','error');
-  const session=await osSupabase.auth.getSession();
-  const userId=session.data.session.user.id;
-  let saved=0, errors=0;
-  for(let i=0;i<count;i++) {
-    const row=document.getElementById('bulk-t-'+i);
-    if(!row) continue;
-    const title=row.querySelector('.bulk-title').value;
-    const grade=row.querySelector('.bulk-grade').value;
-    const startDate=row.querySelector('.bulk-start').value;
-    const endDate=row.querySelector('.bulk-end').value||null;
-    const location=row.querySelector('.bulk-location').value;
-    const startTime=row.querySelector('.bulk-time').value||null;
-    const cost=row.querySelector('.bulk-cost')?.value||null;
-    const regDeadline=row.querySelector('.bulk-regdeadline')?.value||null;
-    const notes=row.querySelector('.bulk-notes')?.value||null;
-    const defaultChecklist=JSON.stringify(buildTournamentChecklist());
-    if(!title||!startDate) { errors++; continue; }
-    try {
-      const {error}=await osSupabase.rpc('upsert_calendar_event',{
-        p_title:title, p_event_type:'tournament', p_start_date:startDate,
-        p_end_date:endDate, p_start_time:startTime, p_location:location,
-        p_grade_level:grade, p_created_by:userId, p_visibility:'public',
-        p_cost:cost, p_registration_deadline:regDeadline, p_notes:notes,
-        p_admin_checklist:defaultChecklist
-      });
-      if(error) throw error;
-      saved++;
-    } catch(e) { console.error('Bulk save error:',e); errors++; }
-  }
-  showToast(`${saved} tournament(s) saved${errors?' ('+errors+' failed)':''}`);
-  closeModal(); loadCalendar();
-}
+// renderBulkPreview and saveBulkTournaments removed -- replaced by unified addTournaments() above
 
 // ─── TOURNAMENT DETAIL + CHECKLIST ──────────────────────────
 function tournamentProgressBadge(e) {
