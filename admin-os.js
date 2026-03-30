@@ -1736,8 +1736,10 @@ async function toggleTournamentCheck(eventId, idx) {
   try {
     const {error}=await osSupabase.from('calendar_events').update({admin_checklist:checklist}).eq('id',eventId);
     if(error) throw error;
-    e.admin_checklist=checklist;
-    openTournamentDetail(eventId); // re-render
+    // Update ALL copies of this event in allCalEvents (multi-day expansion creates duplicates)
+    allCalEvents.forEach(ev=>{ if(ev.id===eventId) ev.admin_checklist=checklist; });
+    openTournamentDetail(eventId);
+    renderCalendar(); // refresh grid/list behind modal so NOT REG badge updates
   } catch(err) { showToast('Error saving: '+err.message,'error'); }
 }
 
@@ -1746,9 +1748,9 @@ async function initTournamentChecklist(eventId) {
   try {
     const {error}=await osSupabase.from('calendar_events').update({admin_checklist:checklist}).eq('id',eventId);
     if(error) throw error;
-    const e=allCalEvents.find(x=>x.id===eventId);
-    if(e) e.admin_checklist=checklist;
+    allCalEvents.forEach(ev=>{ if(ev.id===eventId) ev.admin_checklist=checklist; });
     openTournamentDetail(eventId);
+    renderCalendar();
   } catch(err) { showToast('Error: '+err.message,'error'); }
 }
 
