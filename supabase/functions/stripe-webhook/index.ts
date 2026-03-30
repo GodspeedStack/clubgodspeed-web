@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
     } else {
       // Standard AAU payment flow
       await supabase.from('payments').update({
-        status: 'paid',
+        status: 'confirmed',
         paid_at: new Date().toISOString(),
         payment_method: 'card',
         stripe_payment_intent_id: session.payment_intent as string

@@ -3102,7 +3102,7 @@ window.renderBilling = async function (email) {
 
         // Wire "Pay Tuition Securely" to open the first unpaid installment directly
         const payTuitionBtn = document.querySelector('#billing-status-card button:last-of-type');
-        const firstUnpaid = payments.find(p => p.status !== 'completed');
+        const firstUnpaid = payments.find(p => p.status !== 'confirmed');
         if (payTuitionBtn && firstUnpaid) {
             payTuitionBtn.onclick = () => openPaymentModal({
                 type: 'installment',
@@ -3114,7 +3114,7 @@ window.renderBilling = async function (email) {
         }
 
         // Update status card
-        const pendingPayments = payments.filter(p => p.status !== 'completed');
+        const pendingPayments = payments.filter(p => p.status !== 'confirmed');
         if (pendingPayments.length > 0) {
             const nextPayment = pendingPayments[0];
             const isOverdue = new Date(nextPayment.due_date) < now;
@@ -3349,7 +3349,7 @@ function renderPaymentsTimeline(container, payments, plan, supabase) {
     let html = `<div style="display: flex; flex-direction: column; gap: 16px;">`;
 
     payments.forEach(payment => {
-        const isPaid    = payment.status === 'completed';
+        const isPaid    = payment.status === 'confirmed';
         const dueDate   = new Date(payment.due_date);
         const isOverdue = !isPaid && dueDate < new Date();
         const rowLabel  = isFullPay ? 'Full Payment' : `Installment ${payment.installment_number}`;
@@ -3378,7 +3378,7 @@ function renderPaymentsTimeline(container, payments, plan, supabase) {
         }
 
         // Block later installments until prior ones are paid
-        const previousUnpaid = payments.some(p => p.installment_number < payment.installment_number && p.status !== 'completed');
+        const previousUnpaid = payments.some(p => p.installment_number < payment.installment_number && p.status !== 'confirmed');
         if (previousUnpaid && !isPaid) {
             actionBtn = `<span style="font-size:0.8rem;color:#888;">Complete prior payment first</span>`;
         }
