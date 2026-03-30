@@ -1061,7 +1061,21 @@ async function loadCalendar() {
         query=query.gte('start_date',start.toISOString().split('T')[0]).lte('start_date',end.toISOString().split('T')[0]);
       }
       const {data}=await query;
-      allCalEvents=(data||[]).map(e=>({...e, event_date: e.start_date}));
+      // Expand multi-day events so they appear on every date in the range
+      allCalEvents=[];
+      for(const e of (data||[])) {
+        allCalEvents.push({...e, event_date: e.start_date});
+        if(e.end_date && e.end_date !== e.start_date) {
+          const start=new Date(e.start_date+'T00:00:00');
+          const end=new Date(e.end_date+'T00:00:00');
+          const cursor=new Date(start);
+          cursor.setDate(cursor.getDate()+1);
+          while(cursor<=end) {
+            allCalEvents.push({...e, event_date: cursor.toISOString().split('T')[0], _isSpan: true});
+            cursor.setDate(cursor.getDate()+1);
+          }
+        }
+      }
     }
   } catch(e){ console.error('Calendar load:',e); }
   renderCalendar();
@@ -1088,8 +1102,16 @@ function renderCalendar() {
     const dateStr=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const isToday=dateStr===todayStr;
     const dayEvents=allCalEvents.filter(e=>e.event_date===dateStr);
-    html+=`<div class="cal-day${isToday?' today':''}" onclick="showDayEvents('${dateStr}')"><div class="day-num">${d}<span class="cal-add-btn" onclick="event.stopPropagation();addCalEventForDate('${dateStr}')" title="Add event">+</span></div>`;
-    dayEvents.slice(0,3).forEach(e=>html+=`<div class="cal-event ${e.event_type||'other'}" onclick="event.stopPropagation();editCalEvent('${e.id}')">${e.title||'Event'}</div>`);
+    html+=`<div class="cal-day${isToday?' today':''}" onclick="showDayEvents('${dateStr}')"><div class="day-num">${d}</div>`;
+    dayEvents.slice(0,3).forEach(e=>{
+      let regTag='';
+      if(e.event_type==='tournament') {
+        const cl=Array.isArray(e.admin_checklist)?e.admin_checklist:(e.admin_checklist?JSON.parse(e.admin_checklist):[]);
+        const reg=cl.find(c=>c.id==='register');
+        if(!reg||!reg.done) regTag='<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff3b30;margin-right:3px;vertical-align:middle" title="Not Registered"></span>';
+      }
+      html+=`<div class="cal-event ${e.event_type||'other'}" onclick="event.stopPropagation();editCalEvent('${e.id}')">${regTag}${e.title||'Event'}</div>`;
+    });
     if(dayEvents.length>3) html+=`<div style="font-size:10px;color:var(--muted)">+${dayEvents.length-3} more</div>`;
     html+='</div>';
   }
@@ -1098,9 +1120,15 @@ function renderCalendar() {
   document.getElementById('cal-container').innerHTML=html;
 }
 function renderCalList() {
+  // Deduplicate expanded multi-day events for list view (show once per real event)
+  const seen=new Set();
+  const uniqueEvents=allCalEvents.filter(e=>{
+    if(seen.has(e.id)) return false;
+    seen.add(e.id); return true;
+  });
   // Group events by month for readability
   const months={};
-  allCalEvents.forEach(e=>{
+  uniqueEvents.forEach(e=>{
     const d=new Date(e.event_date+'T00:00:00');
     const key=d.toLocaleDateString('en-US',{month:'long',year:'numeric'});
     if(!months[key]) months[key]=[];
@@ -1113,8 +1141,14 @@ function renderCalList() {
       rows+=`<tr><td colspan="6" style="background:var(--card-bg);font-weight:700;padding:10px 16px;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;color:var(--accent);border-top:2px solid var(--border)">${mk}</td></tr>`;
       months[mk].forEach(e=>{
         const dateLabel=e.end_date&&e.end_date!==e.event_date?fmtShort(e.event_date)+' - '+fmtShort(e.end_date):fmtShort(e.event_date);
+        let regTag='';
+        if(e.event_type==='tournament') {
+          const cl=Array.isArray(e.admin_checklist)?e.admin_checklist:(e.admin_checklist?JSON.parse(e.admin_checklist):[]);
+          const reg=cl.find(c=>c.id==='register');
+          if(!reg||!reg.done) regTag='<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(255,59,48,0.15);color:#ff3b30;font-weight:600;margin-left:6px">NOT REG</span>';
+        }
         rows+=`<tr>
-        <td>${dateLabel}</td><td style="color:var(--muted)">${e.start_time||'--'}</td><td style="font-weight:600">${e.title}</td>
+        <td>${dateLabel}</td><td style="color:var(--muted)">${e.start_time||'--'}</td><td style="font-weight:600">${e.title}${regTag}</td>
         <td>${statusTag(e.event_type||'other')}${e.event_type==='tournament'?tournamentProgressBadge(e):''}</td><td style="color:var(--muted)">${e.location||'--'}</td>
         <td><button class="btn btn-ghost btn-xs" onclick="editCalEvent('${e.id}')">${e.event_type==='tournament'?'Details':'Edit'}</button><button class="btn btn-ghost btn-xs" style="color:#ff3b30" onclick="deleteCalEvent('${e.id}')">Delete</button></td>
       </tr>`;
@@ -1435,10 +1469,10 @@ function parseTournamentText(raw) {
         if(pipeMatch[4]) entry.end_date=toISO(pipeMatch[2],pipeMatch[4],thisYear);
         continue;
       }
-      // Standard date: "Month Day-Day, Year" or "M/D/YYYY"
+      // Standard date: "Month Day-Day, Year", "Month Day-Day", "M/D/YYYY", cross-month ranges
       if(!entry.start_date) {
-        const dateMatch=line.match(/(\w+\s+\d{1,2}(?:\s*[-\u2013]\s*\d{1,2})?,?\s*\d{4})/i)
-          ||line.match(/(\d{1,2}\/\d{1,2}\/\d{2,4})/);
+        const dateMatch=line.match(/(\w+\s+\d{1,2}(?:(?:st|nd|rd|th))?(?:\s*[-\u2013]\s*(?:\w+\s+)?\d{1,2}(?:(?:st|nd|rd|th))?)?,?\s*\d{0,4})/i)
+          ||line.match(/(\d{1,2}\/\d{1,2}\/\d{2,4}(?:\s*[-\u2013]\s*\d{1,2}\/\d{1,2}\/\d{2,4})?)/);
         if(dateMatch) {
           const parsed=parseDateRange(dateMatch[1]);
           if(parsed.start) entry.start_date=parsed.start;
@@ -1493,21 +1527,46 @@ function parseTournamentText(raw) {
 }
 
 function parseDateRange(str) {
-  // Handle "April 12-13, 2026" or "4/12/2026"
+  // Handle many date formats: "April 12-13, 2026", "4/12/2026", "May 3-4",
+  // "April 12, 2026 - April 13, 2026", "April 12th-13th, 2026"
   const result={start:null,end:null};
-  // "Month Day-Day, Year"
-  const rangeMatch=str.match(/(\w+)\s+(\d{1,2})\s*[-–]\s*(\d{1,2}),?\s*(\d{4})/i);
+  const thisYear=new Date().getFullYear();
+  const cleaned=str.replace(/(st|nd|rd|th)\b/gi,'');
+
+  // "Month Day - Month Day, Year" or "Month Day, Year - Month Day, Year"
+  const crossMonthMatch=cleaned.match(/(\w+)\s+(\d{1,2}),?\s*(?:\d{4})?\s*[-–]\s*(\w+)\s+(\d{1,2}),?\s*(\d{4})?/i);
+  if(crossMonthMatch) {
+    const year=crossMonthMatch[5]||thisYear;
+    result.start=toISO(crossMonthMatch[1],crossMonthMatch[2],year);
+    result.end=toISO(crossMonthMatch[3],crossMonthMatch[4],year);
+    return result;
+  }
+  // "Month Day-Day, Year" or "Month Day-Day" (year optional)
+  const rangeMatch=cleaned.match(/(\w+)\s+(\d{1,2})\s*[-–]\s*(\d{1,2}),?\s*(\d{4})?/i);
   if(rangeMatch) {
-    const [,month,d1,d2,year]=rangeMatch;
-    result.start=toISO(month,d1,year);
-    result.end=toISO(month,d2,year);
+    const year=rangeMatch[4]||thisYear;
+    result.start=toISO(rangeMatch[1],rangeMatch[2],year);
+    result.end=toISO(rangeMatch[1],rangeMatch[3],year);
     return result;
   }
   // "Month Day, Year"
-  const singleMatch=str.match(/(\w+)\s+(\d{1,2}),?\s*(\d{4})/i);
-  if(singleMatch) { result.start=toISO(singleMatch[1],singleMatch[2],singleMatch[3]); return result; }
+  const singleMatch=cleaned.match(/(\w+)\s+(\d{1,2}),?\s*(\d{4})?/i);
+  if(singleMatch) {
+    const year=singleMatch[3]||thisYear;
+    result.start=toISO(singleMatch[1],singleMatch[2],year);
+    return result;
+  }
+  // "M/D/YYYY - M/D/YYYY"
+  const slashRangeMatch=cleaned.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})\s*[-–]\s*(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if(slashRangeMatch) {
+    let y1=slashRangeMatch[3],y2=slashRangeMatch[6];
+    if(y1.length===2) y1='20'+y1; if(y2.length===2) y2='20'+y2;
+    result.start=`${y1}-${slashRangeMatch[1].padStart(2,'0')}-${slashRangeMatch[2].padStart(2,'0')}`;
+    result.end=`${y2}-${slashRangeMatch[4].padStart(2,'0')}-${slashRangeMatch[5].padStart(2,'0')}`;
+    return result;
+  }
   // "M/D/YYYY"
-  const slashMatch=str.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  const slashMatch=cleaned.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
   if(slashMatch) {
     let y=slashMatch[3]; if(y.length===2) y='20'+y;
     result.start=`${y}-${slashMatch[1].padStart(2,'0')}-${slashMatch[2].padStart(2,'0')}`;
@@ -1603,7 +1662,44 @@ function openTournamentDetail(id) {
   }
   html+=`</div>`;
 
-  // Notes section
+  // Registration status tag
+  const registerItem=checklist.find(c=>c.id==='register');
+  const isRegistered=registerItem&&registerItem.done;
+  if(!isRegistered) {
+    html+=`<div style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(255,59,48,0.1);border:1px solid rgba(255,59,48,0.25);border-radius:8px">
+      <span style="color:#ff3b30;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.5px">Not Registered</span>
+    </div>`;
+  }
+
+  // Checklist section (above details/notes)
+  if(checklist.length) {
+    html+=`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.04)">
+        <div style="font-weight:700;font-size:14px">To Do</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:80px;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden">
+            <div style="width:${pct}%;height:100%;background:${pct===100?'#30d158':'var(--accent)'};border-radius:3px;transition:width 0.3s"></div>
+          </div>
+          <span style="font-size:12px;color:${pct===100?'#30d158':'var(--muted)'};font-weight:600">${doneCount}/${total}</span>
+        </div>
+      </div>`;
+    checklist.forEach((item,idx)=>{
+      const doneStyle=item.done?'text-decoration:line-through;color:var(--muted)':'';
+      const checkIcon=item.done
+        ?'<div style="width:20px;height:20px;border-radius:6px;background:#30d158;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>'
+        :'<div style="width:20px;height:20px;border-radius:6px;border:2px solid rgba(255,255,255,0.2);flex-shrink:0;cursor:pointer"></div>';
+      const doneInfo=item.done&&item.done_at?`<span style="font-size:10px;color:var(--muted);margin-left:8px">${fmtShort(item.done_at.split('T')[0])}</span>`:'';
+      html+=`<div style="padding:10px 16px;display:flex;align-items:center;gap:12px;border-top:1px solid var(--border);cursor:pointer;${item.done?'opacity:0.7':''}" id="check-row-${idx}" onclick="toggleTournamentCheck('${e.id}',${idx})">
+        ${checkIcon}
+        <div style="flex:1;font-size:13px;${doneStyle}">${item.label}${doneInfo}</div>
+      </div>`;
+    });
+    html+=`</div>`;
+  } else {
+    html+=`<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">No checklist items. <a href="#" onclick="initTournamentChecklist('${e.id}');return false" style="color:var(--accent)">Add default checklist</a></div>`;
+  }
+
+  // Notes / extended details section (below checklist)
   if(e.notes) {
     html+=`<div style="padding:12px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid var(--border)">
       <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Tournament Details</div>
@@ -1614,33 +1710,6 @@ function openTournamentDetail(id) {
   // Registration URL
   if(e.registration_url) {
     html+=`<a href="${e.registration_url}" target="_blank" style="display:block;padding:10px 16px;background:var(--accent);color:#000;border-radius:8px;text-align:center;font-weight:600;font-size:13px;text-decoration:none">Open Registration Page</a>`;
-  }
-
-  // Checklist section
-  if(checklist.length) {
-    html+=`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
-      <div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.04)">
-        <div style="font-weight:700;font-size:14px">Registration Checklist</div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="width:80px;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden">
-            <div style="width:${pct}%;height:100%;background:${pct===100?'#30d158':'var(--accent)'};border-radius:3px;transition:width 0.3s"></div>
-          </div>
-          <span style="font-size:12px;color:${pct===100?'#30d158':'var(--muted)'};font-weight:600">${doneCount}/${total}</span>
-        </div>
-      </div>`;
-    checklist.forEach((item,idx)=>{
-      const doneStyle=item.done?'text-decoration:line-through;color:var(--muted)':'';
-      const checkIcon=item.done?'<div style="width:20px;height:20px;border-radius:6px;background:#30d158;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>'
-        :'<div style="width:20px;height:20px;border-radius:6px;border:2px solid rgba(255,255,255,0.2);flex-shrink:0;cursor:pointer" onclick="toggleTournamentCheck(\''+e.id+'\','+idx+')"></div>';
-      const doneInfo=item.done&&item.done_at?`<span style="font-size:10px;color:var(--muted);margin-left:8px">${fmtShort(item.done_at.split('T')[0])}</span>`:'';
-      html+=`<div style="padding:10px 16px;display:flex;align-items:center;gap:12px;border-top:1px solid var(--border);${item.done?'opacity:0.7':''}" id="check-row-${idx}">
-        <div style="cursor:pointer" onclick="toggleTournamentCheck('${e.id}',${idx})">${checkIcon}</div>
-        <div style="flex:1;font-size:13px;${doneStyle}">${item.label}${doneInfo}</div>
-      </div>`;
-    });
-    html+=`</div>`;
-  } else {
-    html+=`<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">No checklist items. <a href="#" onclick="initTournamentChecklist('${e.id}');return false" style="color:var(--accent)">Add default checklist</a></div>`;
   }
 
   // Action buttons
