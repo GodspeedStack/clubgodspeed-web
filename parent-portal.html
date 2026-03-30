@@ -1145,7 +1145,7 @@
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                                         Invoice
                                     </button>
-                                    <button onclick="openTuitionPaymentModal()" style="display: flex; align-items: center; gap: 8px; background: #111; color: white; padding: 10px 24px; border-radius: 8px; font-size: 0.95rem; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.25);" onmouseover="this.style.background='#333'" onmouseout="this.style.background='#111'">
+                                    <button onclick="const el=document.getElementById('billing-invoices-list');if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.style.outline='3px solid #0071e3';el.style.borderRadius='12px';setTimeout(()=>{el.style.outline='';el.style.borderRadius='';},1600);}" style="display: flex; align-items: center; gap: 8px; background: #111; color: white; padding: 10px 24px; border-radius: 8px; font-size: 0.95rem; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.25);" onmouseover="this.style.background='#333'" onmouseout="this.style.background='#111'">
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
                                         Pay Tuition Securely
                                     </button>
@@ -1160,7 +1160,7 @@
                                     style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                                     <h3
                                         style="font-size: 14px; text-transform: uppercase; color: #666; font-weight: 600; letter-spacing: 0.05em; margin: 0;">
-                                        Outstanding Invoices</h3>
+                                        Select Your Spring/Summer 2026 Payment Plan</h3>
                                 </div>
                                 <div id="billing-invoices-list"
                                     style="display: flex; flex-direction: column; gap: 12px;">
@@ -1171,16 +1171,7 @@
                                 </div>
                             </div>
 
-                            <!-- Travel Trips (Existing) -->
-                            <div>
-                                <h3
-                                    style="font-size: 14px; text-transform: uppercase; color: #666; margin-bottom: 12px; font-weight: 600; letter-spacing: 0.05em;">
-                                    Trip Payments</h3>
-                                <div id="parent-trips-container"
-                                    style="display: flex; flex-direction: column; gap: 24px;">
-                                    <!-- Injected via JS -->
-                                </div>
-                            </div>
+                            <!-- Trip Payments removed -->
 
                             <!-- DuesTransparency React Widget -->
                             <div id="dues-transparency-root"></div>

@@ -82,19 +82,18 @@
 }
 
 .btn-primary {
-    background-color: #111;
+    background-color: #2563eb;
     color: white !important;
     padding: 0.75rem 1.5rem;
     border-radius: 9999px;
     font-weight: 700;
     transition: background-color 0.2s ease, transform 0.1s ease;
     border: none;
-    cursor: pointer;
-    font-family: inherit;
+    /* Fix: Remove default button border */
 }
 
 .btn-primary:hover {
-    background-color: #333;
+    background-color: #1d4ed8;
     transform: translateY(-1px);
 }
 
@@ -116,6 +115,12 @@
 
 
 /* --- Portal Login View --- */
+/* CSS fallback: if JS fails to clear opacity:0, this animation reveals the portal at 400ms.
+   JS (parent-portal.js) still fires the reveal at 50ms via inline style — this is insurance. */
+@keyframes gs-portal-reveal {
+    to { opacity: 1; }
+}
+
 .portal-container {
     min-height: calc(100vh - 80px);
     /* Subtract nav height */
@@ -124,6 +129,8 @@
     justify-content: center;
     align-items: center;
     padding: 2rem;
+    /* Fallback reveal in case JS is blocked or throws before the 50ms setTimeout fires */
+    animation: gs-portal-reveal 0s 400ms forwards;
 }
 
 .portal-login-view {
@@ -185,17 +192,21 @@
 .form-group input {
     width: 100%;
     padding: 0.75rem 1rem;
-    border: 1px solid #e5e7eb;
+    /* Explicit !important guards against Tailwind Preflight overrides (border-width:0, background:transparent) */
+    border: 1px solid #e5e7eb !important;
     border-radius: 0.75rem;
     font-size: 1rem;
-    background-color: #f9fafb;
+    background-color: #f9fafb !important;
+    color: #111827 !important;
     transition: all 0.2s;
+    appearance: auto;
+    -webkit-appearance: auto;
 }
 
 .form-group input:focus {
-    background-color: white;
-    border-color: #111;
-    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08);
+    background-color: white !important;
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
     outline: none;
 }
 
@@ -346,9 +357,8 @@
 }
 
 .nav-item.active {
-    background-color: #f3f4f6;
-    color: #111;
-    font-weight: 700;
+    background-color: #eff6ff;
+    color: #2563eb;
 }
 
 /* Icon Sizing Fixes - CRITICAL */
@@ -390,7 +400,7 @@
 .user-avatar-small {
     width: 40px;
     height: 40px;
-    background: #111;
+    background: #2563eb;
     color: white;
     border-radius: 50%;
     display: flex;
@@ -454,7 +464,7 @@
     border-radius: 12px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     margin-bottom: 2rem;
-    border-left: 4px solid #111;
+    border-left: 4px solid #2563eb;
 }
 
 .welcome-banner h1 {
@@ -784,7 +794,7 @@
 }
 
 .signature-pad-wrapper:hover {
-    border-color: #111;
+    border-color: #2563eb;
 }
 
 .signature-overlay {
