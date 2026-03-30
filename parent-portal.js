@@ -3090,42 +3090,35 @@ window.renderBilling = async function (email) {
 
         if (paymentsError) throw paymentsError;
 
-        // OUTSTANDING INVOICES section only shown on/after April 1, 2026
+        // Section header: "Payment Plan" before April 1, "Outstanding Invoices" on/after
         const aprilFirst = new Date('2026-04-01T00:00:00');
         const now = new Date();
-        if (now < aprilFirst) {
-            // Enrolled but invoices not yet active — show enrolled confirmation
-            if (sectionHeaderEl) sectionHeaderEl.textContent = 'Payment Plan';
-            const planLabel = currentPlan.plan_type === 'full' ? 'Pay in Full'
-                : currentPlan.plan_type === '2-installment' ? '2 Installments'
-                : '3 Installments';
-            container.innerHTML = `
-                <div style="background:white;border-radius:12px;padding:20px;border:1px solid #d1fae5;box-shadow:0 4px 6px rgba(0,0,0,0.04);">
-                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                        <span style="font-weight:800;font-size:1rem;color:#059669;">You're enrolled!</span>
-                    </div>
-                    <p style="font-size:0.9rem;color:#374151;margin:0 0 8px;">Plan: <strong>${planLabel}</strong></p>
-                    <p style="font-size:0.875rem;color:#6b7280;margin:0;">Your first invoice will appear here on <strong>April 1, 2026</strong>. You'll receive an email reminder before your payment is due.</p>
-                </div>`;
-            if (totalDueEl) totalDueEl.textContent = '$' + (currentPlan.total_amount || 745).toFixed(2);
-            statusTextEl.textContent = '● Enrolled — First payment due Apr 1';
-            statusTextEl.style.color = '#10b981';
-            statusCard.style.borderLeftColor = '#10b981';
-            return;
+        if (sectionHeaderEl) {
+            sectionHeaderEl.textContent = now < aprilFirst ? 'Payment Plan' : 'Outstanding Invoices';
         }
 
-        // On/after April 1 — show Outstanding Invoices
-        if (sectionHeaderEl) sectionHeaderEl.textContent = 'Outstanding Invoices';
-
+        // Always render the payments timeline — parents can pay early at any time
         renderPaymentsTimeline(container, payments, currentPlan, supabase);
 
-        // Update Status Headers
-        const pendingPayments = payments.filter(p => p.status === 'pending');
+        // Wire "Pay Tuition Securely" to open the first unpaid installment directly
+        const payTuitionBtn = document.querySelector('#billing-status-card button:last-of-type');
+        const firstUnpaid = payments.find(p => p.status !== 'completed');
+        if (payTuitionBtn && firstUnpaid) {
+            payTuitionBtn.onclick = () => openPaymentModal({
+                type: 'installment',
+                label: 'Installment ' + firstUnpaid.installment_number,
+                amount: firstUnpaid.amount,
+                paymentId: firstUnpaid.id,
+                installmentNumber: firstUnpaid.installment_number
+            });
+        }
+
+        // Update status card
+        const pendingPayments = payments.filter(p => p.status !== 'completed');
         if (pendingPayments.length > 0) {
             const nextPayment = pendingPayments[0];
-            const isOverdue = new Date(nextPayment.due_date) < new Date();
-            statusTextEl.textContent = isOverdue ? '● Payment Overdue' : '● Upcoming Installment';
+            const isOverdue = new Date(nextPayment.due_date) < now;
+            statusTextEl.textContent = isOverdue ? '● Payment Overdue' : '● Payment Due ' + (now < aprilFirst ? 'Apr 1' : 'Soon');
             statusTextEl.style.color = isOverdue ? '#ef4444' : '#f59e0b';
             statusCard.style.borderLeftColor = isOverdue ? '#ef4444' : '#f59e0b';
             if (totalDueEl) totalDueEl.textContent = '$' + nextPayment.amount.toFixed(2);
