@@ -260,13 +260,8 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 .fr-row { display:grid; grid-template-columns:180px 1fr 120px; align-items:center; gap:16px; padding:14px 20px; border-bottom:1px solid var(--border); transition:background 0.15s; }
 .fr-row:hover { background:rgba(255,255,255,0.02); }
 .fr-row:last-child { border-bottom:none; }
-.fr-bar-track { height:28px; background:rgba(255,255,255,0.04); border-radius:6px; position:relative; overflow:hidden; }
-.fr-bar-dues { position:absolute; top:0; left:0; height:100%; background:rgba(255,255,255,0.08); border-radius:6px; transition:width 1.2s cubic-bezier(0.22,1,0.36,1); }
-.fr-bar-paid { position:absolute; top:0; left:0; height:100%; background:rgba(255,255,255,0.2); border-radius:6px; transition:width 1.2s cubic-bezier(0.22,1,0.36,1) 0.3s; }
-.fr-bar-raised { position:absolute; top:0; height:100%; background:rgba(255,255,255,0.12); border-radius:6px; transition:width 1.2s cubic-bezier(0.22,1,0.36,1) 0.6s; border-left:1px dashed rgba(255,255,255,0.15); }
-.fr-bar-label { position:absolute; top:50%; transform:translateY(-50%); font-size:11px; font-weight:700; padding:0 8px; white-space:nowrap; z-index:2; }
-.fr-remaining { font-size:18px; font-weight:800; font-variant-numeric:tabular-nums; transition:color 0.3s; }
-.fr-remaining.zero { color:var(--text); }
+.fr-bar-track { height:6px; background:rgba(255,255,255,0.06); border-radius:3px; position:relative; overflow:hidden; }
+.fr-bar-progress { position:absolute; top:0; left:0; height:100%; background:rgba(37,99,235,0.4); border-radius:3px; transition:width 1.2s cubic-bezier(0.22,1,0.36,1); }
 @keyframes fr-countup { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
 .fr-animate { animation: fr-countup 0.5s ease-out both; }
 .roster-tab { transition: background 0.15s, color 0.15s; }
@@ -288,6 +283,7 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 .cal-event.deadline { background: rgba(255,255,255,0.06); color: var(--muted); font-style: italic; }
 .cal-event.other { background: rgba(255,255,255,0.04); color: var(--muted); }
 .cal-event.multi-day { box-shadow: 0 0 8px 1px rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.1); }
+.cal-event.backup { opacity: 0.5; font-style: italic; }
 
 /* STATS GRID */
 .stats-grid { overflow-x: auto; margin-bottom: 24px; }
@@ -914,7 +910,7 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 
 <script type="module" src="src/lib/env-injector.js"></script>
 <script src="auth-supabase.js?v=20260330" defer></script>
-<script src="admin-os.js?v=20260330m" defer></script>
+<script src="admin-os.js?v=20260330n" defer></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
   function toggleMobileMenu() {

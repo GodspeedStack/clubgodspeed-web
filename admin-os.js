@@ -16,6 +16,14 @@ let teamRosterCache = {};
 // ─── SHARED UTILITIES ───────────────────────────────────────
 const fmt = (iso) => iso ? new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '--';
 const fmtShort = (iso) => iso ? new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '--';
+function fmt12(t) {
+  if(!t) return '--';
+  const m=t.match(/^(\d{1,2}):(\d{2})/);
+  if(!m) return t;
+  let h=parseInt(m[1]); const min=m[2]; const ampm=h>=12?'PM':'AM';
+  if(h===0) h=12; else if(h>12) h-=12;
+  return `${h}:${min} ${ampm}`;
+}
 
 function showToast(message, type='success') {
   const t = document.createElement('div');
@@ -507,42 +515,36 @@ function renderFundraising() {
 
   const maxOwed = Math.max(...allFundraising.map(r => r.totalOwed), 1);
 
-  container.innerHTML = `<div style="display:grid;grid-template-columns:180px 1fr 120px;padding:8px 20px;border-bottom:1px solid var(--border)">
+  container.innerHTML = `<div style="display:grid;grid-template-columns:180px 1fr 100px;padding:10px 20px;border-bottom:1px solid var(--border)">
     <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted)">Player</div>
-    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted)">Dues Breakdown</div>
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted)">Progress</div>
     <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);text-align:right">Remaining</div>
   </div>` + allFundraising.map((r, idx) => {
     const remaining = Math.max(r.totalOwed - r.totalPaid - r.raised, 0);
-    const paidPct = (r.totalPaid / maxOwed) * 100;
-    const raisedPct = (r.raised / maxOwed) * 100;
-    const owesPct = (r.totalOwed / maxOwed) * 100;
-    const raisedLeft = paidPct; // raised bar starts where paid ends
-    const delay = idx * 80;
+    const progressPct = Math.min(((r.totalPaid + r.raised) / r.totalOwed) * 100, 100);
+    const delay = idx * 60;
     const isZero = remaining <= 0;
+
+    // Build breakdown chips
+    let chips = `<span style="font-size:11px;color:var(--muted)">$${r.totalOwed.toFixed(0)} dues</span>`;
+    if(r.totalPaid > 0) chips += `<span style="font-size:11px;color:rgba(37,99,235,0.8)">$${r.totalPaid.toFixed(0)} paid</span>`;
+    if(r.raised > 0) chips += `<span style="font-size:11px;color:rgba(37,99,235,0.8)">$${r.raised.toFixed(0)} raised</span>`;
+    if(isZero) chips += `<span style="font-size:10px;font-weight:700;color:var(--text);background:rgba(37,99,235,0.15);padding:1px 6px;border-radius:4px">COVERED</span>`;
 
     return `<div class="fr-row fr-animate" style="animation-delay:${delay}ms">
       <div>
-        <div style="font-weight:700;font-size:14px">${r.fullName || r.athlete}</div>
+        <div style="font-weight:700;font-size:14px;color:var(--text)">${r.fullName || r.athlete}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:2px">${r.parent || '--'}</div>
       </div>
       <div>
         <div class="fr-bar-track">
-          <div class="fr-bar-dues" data-width="${owesPct}" style="width:0%"></div>
-          <div class="fr-bar-paid" data-width="${paidPct}" style="width:0%">
-            ${r.totalPaid > 0 ? `<span class="fr-bar-label" style="color:var(--text);right:4px">$${r.totalPaid.toFixed(0)} paid</span>` : ''}
-          </div>
-          <div class="fr-bar-raised" data-width="${raisedPct}" data-left="${raisedLeft}" style="width:0%;left:${raisedLeft}%">
-            ${r.raised > 0 ? `<span class="fr-bar-label" style="color:var(--text);right:4px">$${r.raised.toFixed(0)} raised</span>` : ''}
-          </div>
+          <div class="fr-bar-progress" data-width="${progressPct}" style="width:0%"></div>
         </div>
-        <div style="display:flex;gap:12px;margin-top:4px;font-size:10px;color:var(--muted)">
-          <span>Dues: $${r.totalOwed.toFixed(0)}</span>
-          ${r.totalPaid > 0 ? `<span>Paid: $${r.totalPaid.toFixed(0)}</span>` : ''}
-          ${r.raised > 0 ? `<span>Raised: $${r.raised.toFixed(0)}</span>` : ''}
-          ${r.raised > 0 && r.raised >= r.totalOwed - r.totalPaid ? `<span style="font-weight:700">COVERED</span>` : ''}
+        <div style="display:flex;gap:10px;margin-top:5px;flex-wrap:wrap;align-items:center">
+          ${chips}
         </div>
       </div>
-      <div class="fr-remaining ${isZero ? 'zero' : ''}" style="text-align:right">
+      <div style="text-align:right;font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;color:${isZero?'rgba(37,99,235,0.7)':'var(--text)'}">
         ${isZero ? '$0' : '$' + remaining.toFixed(0)}
       </div>
     </div>`;
@@ -551,9 +553,7 @@ function renderFundraising() {
   // Trigger bar animations after DOM paint
   requestAnimationFrame(() => {
     setTimeout(() => {
-      container.querySelectorAll('.fr-bar-dues').forEach(el => { el.style.width = el.dataset.width + '%'; });
-      container.querySelectorAll('.fr-bar-paid').forEach(el => { el.style.width = el.dataset.width + '%'; });
-      container.querySelectorAll('.fr-bar-raised').forEach(el => { el.style.width = el.dataset.width + '%'; });
+      container.querySelectorAll('.fr-bar-progress').forEach(el => { el.style.width = el.dataset.width + '%'; });
     }, 50);
   });
 }
@@ -1105,13 +1105,16 @@ function renderCalendar() {
     html+=`<div class="cal-day${isToday?' today':''}" onclick="showDayEvents('${dateStr}')"><div class="day-num">${d}</div>`;
     dayEvents.slice(0,3).forEach(e=>{
       let regTag='';
-      if(e.event_type==='tournament') {
+      const eTags=Array.isArray(e.tags)?e.tags:[];
+      const isBackup=eTags.includes('backup');
+      if(e.event_type==='tournament'&&!isBackup) {
         const cl=Array.isArray(e.admin_checklist)?e.admin_checklist:(e.admin_checklist?JSON.parse(e.admin_checklist):[]);
         const reg=cl.find(c=>c.id==='register');
         if(!reg||!reg.done) regTag='<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff3b30;margin-right:3px;vertical-align:middle" title="Not Registered"></span>';
       }
       const multiDay = (e.end_date && e.end_date !== e.start_date) ? ' multi-day' : '';
-      html+=`<div class="cal-event ${e.event_type||'other'}${multiDay}" onclick="event.stopPropagation();editCalEvent('${e.id}')">${regTag}${e.title||'Event'}</div>`;
+      const backupCls = isBackup ? ' backup' : '';
+      html+=`<div class="cal-event ${e.event_type||'other'}${multiDay}${backupCls}" onclick="event.stopPropagation();editCalEvent('${e.id}')">${regTag}${e.title||'Event'}</div>`;
     });
     if(dayEvents.length>3) html+=`<div style="font-size:10px;color:var(--muted)">+${dayEvents.length-3} more</div>`;
     html+='</div>';
@@ -1143,13 +1146,17 @@ function renderCalList() {
       months[mk].forEach(e=>{
         const dateLabel=e.end_date&&e.end_date!==e.event_date?fmtShort(e.event_date)+' - '+fmtShort(e.end_date):fmtShort(e.event_date);
         let regTag='';
-        if(e.event_type==='tournament') {
+        const eTags=Array.isArray(e.tags)?e.tags:[];
+        const isBackup=eTags.includes('backup');
+        if(isBackup) {
+          regTag='<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(37,99,235,0.1);color:rgba(37,99,235,0.7);font-weight:600;margin-left:6px;border:1px solid rgba(37,99,235,0.2)">BACKUP</span>';
+        } else if(e.event_type==='tournament') {
           const cl=Array.isArray(e.admin_checklist)?e.admin_checklist:(e.admin_checklist?JSON.parse(e.admin_checklist):[]);
           const reg=cl.find(c=>c.id==='register');
           if(!reg||!reg.done) regTag='<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,0.06);color:var(--muted);font-weight:600;margin-left:6px;border:1px solid var(--border)">NOT REG</span>';
         }
-        rows+=`<tr style="cursor:pointer" onclick="editCalEvent('${e.id}')">
-        <td>${dateLabel}</td><td style="color:var(--muted)">${e.start_time||'--'}</td><td style="font-weight:600">${e.title}${regTag}</td>
+        rows+=`<tr style="cursor:pointer${isBackup?';opacity:0.6':''}" onclick="editCalEvent('${e.id}')">
+        <td>${dateLabel}</td><td style="color:var(--muted)">${fmt12(e.start_time)}</td><td style="font-weight:600">${e.title}${regTag}</td>
         <td>${statusTag(e.event_type||'other')}${e.event_type==='tournament'?tournamentProgressBadge(e):''}</td><td style="color:var(--muted)">${e.location||'--'}</td>
         <td><button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();deleteCalEvent('${e.id}')">Delete</button></td>
       </tr>`;
@@ -1168,7 +1175,7 @@ function showDayEvents(dateStr) {
     <div style="padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;display:flex;align-items:flex-start;justify-content:space-between">
       <div>
         <div style="font-weight:700">${e.title}</div>
-        <div style="color:var(--muted);font-size:12px;margin-top:4px">${e.start_time||''} ${e.end_time?'- '+e.end_time:''} ${e.location?'| '+e.location:''}</div>
+        <div style="color:var(--muted);font-size:12px;margin-top:4px">${e.start_time?fmt12(e.start_time):''} ${e.end_time?'- '+fmt12(e.end_time):''} ${e.location?'| '+e.location:''}</div>
         ${e.source_type?`<div style="font-size:11px;color:var(--muted);margin-top:4px">Auto-created from ${e.source_type}</div>`:''}
       </div>
       <button class="btn btn-ghost btn-xs" onclick="editCalEvent('${e.id}')" style="flex-shrink:0;margin-left:8px">Edit</button>
@@ -1663,10 +1670,19 @@ function openTournamentDetail(id) {
   }
   html+=`</div>`;
 
+  // Tags (backup, etc.)
+  const eTags=Array.isArray(e.tags)?e.tags:[];
+  const isBackup=eTags.includes('backup');
+  if(isBackup) {
+    html+=`<div style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.2);border-radius:8px">
+      <span style="color:rgba(37,99,235,0.8);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.5px">Backup Tournament</span>
+    </div>`;
+  }
+
   // Registration status tag
   const registerItem=checklist.find(c=>c.id==='register');
   const isRegistered=registerItem&&registerItem.done;
-  if(!isRegistered) {
+  if(!isRegistered&&!isBackup) {
     html+=`<div style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(255,59,48,0.1);border:1px solid rgba(255,59,48,0.25);border-radius:8px">
       <span style="color:#ff3b30;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.5px">Not Registered</span>
     </div>`;

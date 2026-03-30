@@ -1121,7 +1121,8 @@ function renderParentUpcoming(container) {
         html += `<div style="width:8px;min-height:36px;border-radius:4px;background:${c.bg};flex-shrink:0;margin-top:2px;"></div>`;
         html += '<div style="flex:1;min-width:0;">';
         html += `<div style="font-weight:700;font-size:0.9rem;color:#111;">${escapeHTML(e.title)}</div>`;
-        html += `<div style="font-size:0.8rem;color:#6b7280;margin-top:2px;">${dateLabel}${timeLabel ? ' &middot; ' + timeLabel : ''}${e.location ? ' &middot; ' + escapeHTML(e.location) : ''}</div>`;
+        const locLabel = e.location ? escapeHTML(e.location) : 'TBD';
+        html += `<div style="font-size:0.8rem;color:#6b7280;margin-top:2px;">${dateLabel}${timeLabel ? ' &middot; ' + timeLabel : ' &middot; Time TBD'} &middot; ${locLabel}</div>`;
         if (e.cost && Number(e.cost) > 0) {
             html += `<div style="font-size:0.75rem;color:#854d0e;margin-top:4px;font-weight:600;">$${Number(e.cost).toFixed(2)}</div>`;
         }
@@ -1149,8 +1150,8 @@ window.showParentEventDetail = function(eventId) {
     inner += `<button onclick="document.getElementById('pp-event-overlay').remove()" style="position:absolute;top:12px;right:12px;background:none;border:none;font-size:20px;cursor:pointer;color:#6b7280;line-height:1;">&times;</button>`;
     inner += `<span style="font-size:0.7rem;padding:2px 8px;border-radius:999px;background:${c.bg};color:${c.text};font-weight:600;text-transform:capitalize;">${e.event_type || 'event'}</span>`;
     inner += `<h3 style="font-weight:800;font-size:1.15rem;margin:8px 0 4px;color:#111;">${escapeHTML(e.title)}</h3>`;
-    inner += `<div style="font-size:0.85rem;color:#6b7280;">${dateLabel}${timeLabel ? ' &middot; ' + timeLabel : ''}</div>`;
-    if (e.location) inner += `<div style="font-size:0.85rem;color:#6b7280;margin-top:4px;">${escapeHTML(e.location)}</div>`;
+    inner += `<div style="font-size:0.85rem;color:#6b7280;">${dateLabel} &middot; ${timeLabel || 'Time TBD'}</div>`;
+    inner += `<div style="font-size:0.85rem;color:#6b7280;margin-top:4px;">${e.location ? escapeHTML(e.location) : 'Location TBD'}</div>`;
     if (e.cost && Number(e.cost) > 0) inner += `<div style="font-size:0.85rem;color:#854d0e;margin-top:8px;font-weight:600;">Cost: $${Number(e.cost).toFixed(2)}</div>`;
     if (e.notes) inner += `<div style="font-size:0.85rem;color:#374151;margin-top:12px;padding-top:12px;border-top:1px solid #e5e7eb;white-space:pre-wrap;">${escapeHTML(e.notes)}</div>`;
     inner += '</div>';
