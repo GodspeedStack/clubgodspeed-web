@@ -59,6 +59,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100);
     }
 
+    // Handle Stripe redirect return — ?payment=success or ?payment=cancelled
+    (function handleStripeReturn() {
+        const params = new URLSearchParams(window.location.search);
+        const paymentStatus = params.get('payment');
+        if (!paymentStatus) return;
+
+        // Strip the param immediately so refresh doesn't re-trigger
+        const cleanUrl = window.location.pathname;
+        history.replaceState(null, '', cleanUrl);
+
+        if (paymentStatus === 'success') {
+            // Wait for auth + dashboard to be ready, then surface success and refresh billing
+            const onReady = () => {
+                const email = localStorage.getItem('gba_user_email');
+                // Navigate to billing view
+                const billingNav = document.querySelector('[data-view="aau-billing"], [onclick*="aau-billing"]');
+                if (billingNav) billingNav.click();
+                // Show branded success toast
+                if (typeof showToast === 'function') {
+                    showToast('Payment received — your account has been updated.', 'success');
+                } else if (typeof godspeedAlert === 'function') {
+                    godspeedAlert('Your payment was received. Thank you!', 'Payment Confirmed');
+                }
+                // Refresh billing to reflect new payment status
+                if (email && typeof window.renderBilling === 'function') {
+                    setTimeout(() => window.renderBilling(email), 800);
+                }
+            };
+            // Defer until after auth routing completes
+            window.addEventListener('gba:authStateChanged', onReady, { once: true });
+            setTimeout(onReady, 1500); // fallback if event already fired
+        } else if (paymentStatus === 'cancelled') {
+            setTimeout(() => {
+                if (typeof showToast === 'function') {
+                    showToast('Payment cancelled. Your plan is still active — pay any time.', 'info');
+                }
+            }, 800);
+        }
+    })();
+
     initSignaturePad();
     initPortalNav();
 
@@ -3022,13 +3062,16 @@ window.renderBilling = async function (email) {
 
         if (plansError) throw plansError;
 
+        // Helper: update the section header label above billing-invoices-list
+        const sectionHeaderEl = document.querySelector('#view-aau-billing h3');
+
         if (!plans || plans.length === 0) {
-            // No plan selected yet. Show selector.
+            // No plan selected yet — show plan selection UI
             statusTextEl.textContent = '● Action Required';
-            statusTextEl.style.color = '#ef4444'; 
+            statusTextEl.style.color = '#ef4444';
             statusCard.style.borderLeftColor = '#ef4444';
             if (totalDueEl) totalDueEl.textContent = '$745.00';
-            
+            if (sectionHeaderEl) sectionHeaderEl.textContent = 'Select Your Spring/Summer 2026 Payment Plan';
             renderPlanSelectionUI(container, user.id, supabase, email);
             return;
         }
@@ -3042,6 +3085,34 @@ window.renderBilling = async function (email) {
             .order('installment_number', { ascending: true });
 
         if (paymentsError) throw paymentsError;
+
+        // OUTSTANDING INVOICES section only shown on/after April 1, 2026
+        const aprilFirst = new Date('2026-04-01T00:00:00');
+        const now = new Date();
+        if (now < aprilFirst) {
+            // Enrolled but invoices not yet active — show enrolled confirmation
+            if (sectionHeaderEl) sectionHeaderEl.textContent = 'Your Payment Plan';
+            const planLabel = currentPlan.plan_type === 'full' ? 'Pay in Full'
+                : currentPlan.plan_type === '2-installment' ? '2 Installments'
+                : '3 Installments';
+            container.innerHTML = `
+                <div style="background:white;border-radius:12px;padding:20px;border:1px solid #d1fae5;box-shadow:0 4px 6px rgba(0,0,0,0.04);">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        <span style="font-weight:800;font-size:1rem;color:#059669;">You're enrolled!</span>
+                    </div>
+                    <p style="font-size:0.9rem;color:#374151;margin:0 0 8px;">Plan: <strong>${planLabel}</strong></p>
+                    <p style="font-size:0.875rem;color:#6b7280;margin:0;">Your first invoice will appear here on <strong>April 1, 2026</strong>. You'll receive an email reminder before your payment is due.</p>
+                </div>`;
+            if (totalDueEl) totalDueEl.textContent = '$' + (currentPlan.total_amount || 745).toFixed(2);
+            statusTextEl.textContent = '● Enrolled — First payment due Apr 1';
+            statusTextEl.style.color = '#10b981';
+            statusCard.style.borderLeftColor = '#10b981';
+            return;
+        }
+
+        // On/after April 1 — show Outstanding Invoices
+        if (sectionHeaderEl) sectionHeaderEl.textContent = 'Outstanding Invoices';
 
         renderPaymentsTimeline(container, payments, currentPlan, supabase);
 
@@ -3156,37 +3227,38 @@ function renderPlanSelectionUI(container, parentId, supabase, email) {
                 // Assuming we ported 'createPaymentPlan' logic to an Edge Function or run it clientside.
                 // It's cleaner to just run the DB queries here since parent has RLS insert access.
                 
-                const planData = {
-                    parent_id: parentId,
-                    player_name: athleteName,
-                    plan_type: planType,
-                    total_amount: 745.00
-                };
-                
-                const { data: insertedPlan, error: planError } = await supabase
-                    .from('payment_plans')
-                    .insert(planData)
-                    .select()
-                    .single();
-                    
-                if (planError) throw planError;
-                
-                // Build installments
+                // Installment amounts must exactly match the UI plan cards shown to the parent
                 let installmentsArray = [];
                 if (planType === 'full') {
                     installmentsArray = [{ number: 1, amount: 745.00, dueDate: '2026-04-01' }];
                 } else if (planType === '2-installment') {
                     installmentsArray = [
-                        { number: 1, amount: 375.00, dueDate: '2026-04-01' },
-                        { number: 2, amount: 370.00, dueDate: '2026-06-01' }
+                        { number: 1, amount: 362.00, dueDate: '2026-04-01' },
+                        { number: 2, amount: 362.00, dueDate: '2026-06-01' }
                     ];
                 } else if (planType === '3-installment') {
                     installmentsArray = [
-                        { number: 1, amount: 250.00, dueDate: '2026-04-01' },
-                        { number: 2, amount: 250.00, dueDate: '2026-05-01' },
-                        { number: 3, amount: 245.00, dueDate: '2026-06-01' }
+                        { number: 1, amount: 242.00, dueDate: '2026-04-01' },
+                        { number: 2, amount: 242.00, dueDate: '2026-05-01' },
+                        { number: 3, amount: 240.00, dueDate: '2026-06-01' }
                     ];
                 }
+
+                const totalAmount = installmentsArray.reduce((sum, i) => sum + i.amount, 0);
+                const planData = {
+                    parent_id: parentId,
+                    player_name: athleteName,
+                    plan_type: planType,
+                    total_amount: totalAmount
+                };
+
+                const { data: insertedPlan, error: planError } = await supabase
+                    .from('payment_plans')
+                    .insert(planData)
+                    .select()
+                    .single();
+
+                if (planError) throw planError;
                 
                 const dbInstallments = installmentsArray.map(i => ({
                     plan_id: insertedPlan.id,

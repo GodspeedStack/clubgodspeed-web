@@ -75,8 +75,8 @@ Deno.serve(async (req) => {
           installmentNumber: installmentNumber ? installmentNumber.toString() : '',
           paymentType: 'aau_payment'
         },
-        success_url: `${req.headers.get('origin')}/parent-portal?payment=success&id=${paymentId}`,
-        cancel_url: `${req.headers.get('origin')}/parent-portal?payment=cancelled`
+        success_url: `https://www.clubgodspeed.com/parent-portal.html?payment=success&id=${paymentId}`,
+        cancel_url: `https://www.clubgodspeed.com/parent-portal.html?payment=cancelled`
       }
     }
 
