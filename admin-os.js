@@ -1030,8 +1030,11 @@ function parseTournamentText(raw) {
     const lines=block.split('\n').map(l=>l.trim()).filter(Boolean);
     if(!lines.length) continue;
     const entry={title:'',start_date:'',end_date:'',location:'',grade_level:'both',start_time:null};
-    // Title: first line or line without date/location prefix
-    entry.title=lines[0].replace(/^[-*]\s*/,'').replace(/\s*[-:]?\s*$/, '');
+    // Title: first line, strip trailing date portion (e.g. "- April 12-13, 2026")
+    entry.title=lines[0].replace(/^[-*]\s*/,'')
+      .replace(/\s*[-–]+\s*\w+\s+\d{1,2}(?:\s*[-–]\s*\d{1,2})?,?\s*\d{4}\s*$/i,'')
+      .replace(/\s*[-–]+\s*\d{1,2}\/\d{1,2}\/\d{2,4}\s*$/,'')
+      .replace(/\s*[-:]?\s*$/, '');
     for(const line of lines) {
       // Date detection
       const dateMatch=line.match(/(\w+ \d{1,2}(?:\s*[-–]\s*\d{1,2})?,?\s*\d{4})/i)
