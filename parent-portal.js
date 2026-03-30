@@ -59,43 +59,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100);
     }
 
-    // Handle Stripe redirect return — ?payment=success or ?payment=cancelled
-    (function handleStripeReturn() {
+    // Handle Venmo confirmation return — ?payment=venmo_pending
+    (function handlePaymentReturn() {
         const params = new URLSearchParams(window.location.search);
         const paymentStatus = params.get('payment');
         if (!paymentStatus) return;
 
-        // Strip the param immediately so refresh doesn't re-trigger
         const cleanUrl = window.location.pathname;
         history.replaceState(null, '', cleanUrl);
 
-        if (paymentStatus === 'success') {
-            // Wait for auth + dashboard to be ready, then surface success and refresh billing
+        if (paymentStatus === 'venmo_pending') {
             const onReady = () => {
                 const email = localStorage.getItem('gba_user_email');
-                // Navigate to billing view
                 const billingNav = document.querySelector('[data-view="aau-billing"], [onclick*="aau-billing"]');
                 if (billingNav) billingNav.click();
-                // Show branded success toast
                 if (typeof showToast === 'function') {
-                    showToast('Payment received — your account has been updated.', 'success');
-                } else if (typeof godspeedAlert === 'function') {
-                    godspeedAlert('Your payment was received. Thank you!', 'Payment Confirmed');
+                    showToast('Venmo payment recorded. Coach Scott will confirm within 24 hours.', 'success');
                 }
-                // Refresh billing to reflect new payment status
                 if (email && typeof window.renderBilling === 'function') {
                     setTimeout(() => window.renderBilling(email), 800);
                 }
             };
-            // Defer until after auth routing completes
             window.addEventListener('gba:authStateChanged', onReady, { once: true });
-            setTimeout(onReady, 1500); // fallback if event already fired
-        } else if (paymentStatus === 'cancelled') {
-            setTimeout(() => {
-                if (typeof showToast === 'function') {
-                    showToast('Payment cancelled. Your plan is still active — pay any time.', 'info');
-                }
-            }, 800);
+            setTimeout(onReady, 1500);
         }
     })();
 
@@ -3398,78 +3384,45 @@ function renderPaymentsTimeline(container, payments, plan, supabase) {
 }
 
 // ---------------------------------------------------------------------------
-// Direct Checkout — skip the modal, go straight to Stripe (1 click)
+// Direct Checkout — opens Venmo payment modal (interim until Stripe live)
 // ---------------------------------------------------------------------------
-window._directCheckout = async function(btn) {
-    if (btn.disabled) return;
-    btn.disabled = true;
-    const origHTML = btn.innerHTML;
-    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" style="animation:gsSpin 0.7s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`;
-
-    const paymentId   = btn.dataset.paymentId;
+window._directCheckout = function(btn) {
     const amount      = parseFloat(btn.dataset.amount);
     const installment = parseInt(btn.dataset.installment, 10);
-    const parentEmail = localStorage.getItem('gba_user_email') || '';
-    const playerName  = localStorage.getItem('gba_selected_athlete_name') || 'Athlete';
-
-    try {
-        if (!window.auth || !window.auth.isSupabaseAvailable()) throw new Error('Auth not ready.');
-        const supabase = window.auth.getSupabaseClient();
-
-        const { data, error } = await supabase.functions.invoke('create-checkout', {
-            body: {
-                paymentType: 'aau_payment',
-                paymentId,
-                amount,
-                installmentNumber: installment,
-                parentEmail,
-                playerName
-            }
-        });
-
-        if (error) throw error;
-        if (!data?.url) throw new Error('No checkout URL returned.');
-        window.location.href = data.url;
-
-    } catch (err) {
-        console.error('Direct checkout error:', err);
-        btn.disabled = false;
-        btn.innerHTML = origHTML;
-        // Show inline error below button
-        const errEl = document.createElement('div');
-        errEl.style.cssText = 'color:#ef4444;font-size:0.75rem;margin-top:4px;text-align:center;';
-        errEl.textContent = err.message || 'Payment failed. Try again.';
-        btn.parentElement.appendChild(errEl);
-        setTimeout(() => errEl.remove(), 4000);
-    }
+    const label       = btn.dataset.label || 'Payment';
+    openPaymentModal({
+        type: 'installment',
+        label,
+        amount,
+        paymentId: btn.dataset.paymentId,
+        installmentNumber: installment
+    });
 }
 
 // ---------------------------------------------------------------------------
-// Payment Modal — amount input overlay before Stripe redirect
+// Payment Modal — Venmo QR + link (interim until Stripe live account ready)
 // opts: { type: 'installment'|'trip', label, amount, paymentId?, installmentNumber?, tripId? }
 // ---------------------------------------------------------------------------
 window.openPaymentModal = function(opts) {
     const parentEmail = localStorage.getItem('gba_user_email') || '';
     const playerName  = localStorage.getItem('gba_selected_athlete_name') || 'Athlete';
 
-    // Remove any existing modal
     const existing = document.getElementById('gs-payment-modal-overlay');
     if (existing) existing.remove();
 
     const isInstallment = opts.type === 'installment';
     const amountFmt = (v) => '$' + parseFloat(v).toFixed(2);
+    const venmoNote = encodeURIComponent('Godspeed ' + (opts.label || 'Payment') + ' - ' + playerName);
+    const venmoDeepLink = 'https://venmo.com/Coachsco?txn=pay&amount=' + parseFloat(opts.amount).toFixed(2) + '&note=' + venmoNote;
 
     const overlay = document.createElement('div');
     overlay.id = 'gs-payment-modal-overlay';
-    overlay.style.cssText = `
-        position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);
-        display:flex;align-items:center;justify-content:center;padding:16px;
-        backdrop-filter:blur(4px);animation:gsPmFadeIn 0.15s ease;
-    `;
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);animation:gsPmFadeIn 0.15s ease;';
 
     overlay.innerHTML = `
     <style>
         @keyframes gsPmFadeIn { from { opacity:0; transform:scale(0.97); } to { opacity:1; transform:scale(1); } }
+        @keyframes gsSpin { to { transform:rotate(360deg); } }
         #gs-payment-modal { background:#fff; border-radius:16px; width:100%; max-width:440px; overflow:hidden;
             box-shadow:0 24px 64px rgba(0,0,0,0.22); font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif; }
         #gs-payment-modal .pm-header { background:#0a0a0a; color:#fff; padding:24px 28px 20px; }
@@ -3482,32 +3435,39 @@ window.openPaymentModal = function(opts) {
         #gs-payment-modal .pm-row:last-child { border-bottom:none; }
         #gs-payment-modal .pm-label { color:#6b7280; font-weight:500; }
         #gs-payment-modal .pm-val { color:#111; font-weight:700; }
-        #gs-payment-modal .pm-amount-wrap { margin:20px 0 8px; }
-        #gs-payment-modal .pm-amount-wrap label { display:block; font-size:0.75rem; font-weight:700;
-            text-transform:uppercase; letter-spacing:0.06em; color:#6b7280; margin-bottom:6px; }
+        #gs-payment-modal .pm-venmo-grid { display:flex; gap:16px; align-items:flex-start; margin:20px 0 16px; }
+        #gs-payment-modal .pm-qr { flex-shrink:0; text-align:center; }
+        #gs-payment-modal .pm-qr img { width:110px; height:110px; border-radius:8px; border:1px solid #e5e7eb; }
+        #gs-payment-modal .pm-qr-caption { font-size:0.68rem; color:#9ca3af; margin-top:4px; }
+        #gs-payment-modal .pm-venmo-right { flex:1; min-width:0; }
+        #gs-payment-modal .pm-venmo-btn { display:block; background:#008CFF; color:#fff; text-align:center;
+            font-weight:800; font-size:0.95rem; padding:14px; border-radius:10px; text-decoration:none;
+            letter-spacing:0.02em; transition:background 0.15s; }
+        #gs-payment-modal .pm-venmo-btn:hover { background:#0070CC; }
+        #gs-payment-modal .pm-amount-wrap { margin-top:12px; }
+        #gs-payment-modal .pm-amount-wrap label { display:block; font-size:0.7rem; font-weight:700;
+            text-transform:uppercase; letter-spacing:0.06em; color:#6b7280; margin-bottom:4px; }
         #gs-payment-modal .pm-amount-input { display:flex; align-items:center; border:2px solid #e5e7eb;
             border-radius:10px; overflow:hidden; transition:border-color 0.15s; }
         #gs-payment-modal .pm-amount-input:focus-within { border-color:#0a0a0a; }
-        #gs-payment-modal .pm-amount-input span { padding:0 12px; font-size:1.15rem; font-weight:700; color:#6b7280; }
-        #gs-payment-modal .pm-amount-input input { flex:1; border:none; outline:none; font-size:1.35rem;
-            font-weight:800; color:#0a0a0a; padding:12px 8px 12px 0; background:transparent; width:100%; }
-        #gs-payment-modal .pm-note { font-size:0.78rem; color:#9ca3af; margin:6px 0 0; }
-        #gs-payment-modal .pm-actions { display:flex; gap:10px; margin-top:24px; }
-        #gs-payment-modal .pm-btn-pay { flex:1; background:#0a0a0a; color:#fff; border:none;
+        #gs-payment-modal .pm-amount-input span { padding:0 10px; font-size:1rem; font-weight:700; color:#6b7280; }
+        #gs-payment-modal .pm-amount-input input { flex:1; border:none; outline:none; font-size:1.15rem;
+            font-weight:800; color:#0a0a0a; padding:10px 8px 10px 0; background:transparent; width:100%; }
+        #gs-payment-modal .pm-actions { display:flex; gap:10px; margin-top:20px; }
+        #gs-payment-modal .pm-btn-confirm { flex:1; background:#0a0a0a; color:#fff; border:none;
             padding:14px 20px; border-radius:10px; font-size:0.9rem; font-weight:800;
             text-transform:uppercase; letter-spacing:0.05em; cursor:pointer; transition:background 0.15s;
             display:flex; align-items:center; justify-content:center; gap:8px; }
-        #gs-payment-modal .pm-btn-pay:hover { background:#1f2937; }
-        #gs-payment-modal .pm-btn-pay:disabled { background:#9ca3af; cursor:not-allowed; }
+        #gs-payment-modal .pm-btn-confirm:hover { background:#1f2937; }
+        #gs-payment-modal .pm-btn-confirm:disabled { background:#9ca3af; cursor:not-allowed; }
         #gs-payment-modal .pm-btn-cancel { background:#f3f4f6; color:#374151; border:none;
             padding:14px 16px; border-radius:10px; font-size:0.9rem; font-weight:600; cursor:pointer; }
-        #gs-payment-modal .pm-lock { font-size:0.75rem; color:#9ca3af; text-align:center; margin-top:14px;
-            display:flex; align-items:center; justify-content:center; gap:5px; }
+        #gs-payment-modal .pm-footer { font-size:0.75rem; color:#9ca3af; text-align:center; margin-top:14px; }
     </style>
     <div id="gs-payment-modal">
         <div class="pm-header">
             <h2>Godspeed Basketball</h2>
-            <p>Secure Payment &mdash; ${escapeHTML(opts.label)}</p>
+            <p>Venmo Payment - ${escapeHTML(opts.label)}</p>
         </div>
         <div class="pm-body">
             <div class="pm-row">
@@ -3516,48 +3476,53 @@ window.openPaymentModal = function(opts) {
             </div>
             <div class="pm-row">
                 <span class="pm-label">Paying As</span>
-                <span class="pm-val" style="font-size:0.85rem;">${escapeHTML(parentEmail) || '—'}</span>
+                <span class="pm-val" style="font-size:0.85rem;">${escapeHTML(parentEmail) || '-'}</span>
             </div>
             ${isInstallment ? `<div class="pm-row">
                 <span class="pm-label">Balance Due</span>
                 <span class="pm-val">${amountFmt(opts.amount)}</span>
             </div>` : ''}
 
-            <div class="pm-amount-wrap">
-                <label>Amount to Pay</label>
-                <div class="pm-amount-input">
-                    <span>$</span>
-                    <input type="number" id="pm-amount-field" min="1" step="0.01"
-                        value="${parseFloat(opts.amount).toFixed(2)}" autocomplete="off" inputmode="decimal">
+            <p style="font-size:0.82rem;color:#374151;margin:16px 0 0;line-height:1.5;">Send your payment via Venmo, then tap <strong>I Sent It</strong> below.</p>
+
+            <div class="pm-venmo-grid">
+                <div class="pm-qr">
+                    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAXIAAAFyAQAAAADAX2ykAAAC40lEQVR4nO2cQYrjMBBFX40Ms5QhB+ijKFebI80N7KPkAA32skHmz0JS7KahQzOJsaFqYeToLT4UJVWV5Jj4iY2/foSD8847/1J+tmpXgNE66qhfzK5zR5vv9tHj/BP5DggZAGO+ZEtaTMw9EEGQIQ0A82UHPc6/gq/BCcDcYdYHra8lxK876nH+WXz36W0xgbD094JgwSDsqsf5l/OL1cHcfZ08gX7nv/CSyh6MXQkqqZW9ZaQJIEoadtTj/DP5paTHQFCJ2jQFkW6/ZVeA0czM+r30OP88voO4tjg+TMyLCTIa3zIQM9sWyNH0O//AJEmktj6XUZpAmoI0xExdmqOk4Wj6nf/eNimUAGpuFYUBJuYOI753pL9dPp5+5x+YNLVaNymjIapGbYlf2qO8Hk2/899bid/i4LF/x9LNUC2NFlNpZ8V30z56nH8uX0ujkjBPoIEgiFKdXaPb4/eEfKtw2zJMUnNtTa3cv2fmW2sj1qyZ4unm2pY637fjo+l3/oGt/m3xmyGpWkEG8Pg9J1/qXw2xFcHFjWX/vS/XMeP17yn5DuYepZuh0YKs+HI2gMU09hNAkJVD4KPpd/6B1fglqCbRkqRp279q3S1fn8/Hb/qTzZdqnp6C2sZMS7eOpt/5ByYptyK4eFqqVe96KhhbvuX+PRlf47f4MlbXtuPgUFfqweujs/KsHoS1dRVrJNeauKXT7t+z8S1+772MNNXHWiTV/dfroxPytT+ZtNa/60Rdn+ur778n5NHGpnoMWIP402+eP5+SZ43Qbf3bWpNrpeT51Wn5cHfoYvUxm5Xfxh40sBhjv5ce55/Hl/N9Kx+pxNyJ+SIg5HYLul2HTtpDj/Ov5IMY3zKMbx+2Sa2Gcid6fz3O/y9/v6GxbUiuVe969Qqvf8/Lbw/5b10dwWKkaTG7xtbCPKh+57/j1+8XFtOfvn7EIN06GPsgDXOHXWf//vd8vOkxszH/fwbnnT8Q/w9A0FAAh8LckAAAAABJRU5ErkJggg==" alt="Venmo QR">
+                    <div class="pm-qr-caption">Scan with Venmo</div>
                 </div>
-                <p class="pm-note">
-                    ${isInstallment
-                        ? 'You may pay a partial amount. Remaining balance will stay as pending.'
-                        : 'Pre-filled from program fee. Adjust if needed.'}
-                </p>
+                <div class="pm-venmo-right">
+                    <a href="${venmoDeepLink}" target="_blank" rel="noopener" class="pm-venmo-btn">Open Venmo</a>
+                    <div style="font-size:0.75rem;color:#9ca3af;margin-top:6px;text-align:center;">@Coachsco</div>
+                    <div class="pm-amount-wrap">
+                        <label>Amount to send</label>
+                        <div class="pm-amount-input">
+                            <span>$</span>
+                            <input type="number" id="pm-amount-field" min="1" step="0.01"
+                                value="${parseFloat(opts.amount).toFixed(2)}" autocomplete="off" inputmode="decimal">
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="pm-actions">
                 <button class="pm-btn-cancel" onclick="document.getElementById('gs-payment-modal-overlay').remove()">Cancel</button>
-                <button class="pm-btn-pay" id="pm-submit-btn" onclick="window._submitPaymentModal(${JSON.stringify(opts).replace(/</g,'&lt;')})">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    Pay Securely
+                <button class="pm-btn-confirm" id="pm-submit-btn" onclick="window._submitVenmoModal(${JSON.stringify(opts).replace(/</g,'&lt;')})">
+                    I Sent It
                 </button>
             </div>
-            <p class="pm-lock">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                Powered by Stripe &mdash; card details never touch our servers
-            </p>
+            <p class="pm-footer">Coach Scott will confirm your Venmo within 24 hours.</p>
         </div>
     </div>`;
 
-    // Close on backdrop click
     overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
     document.body.appendChild(overlay);
     setTimeout(() => document.getElementById('pm-amount-field')?.focus(), 80);
 };
 
-window._submitPaymentModal = async function(opts) {
+// ---------------------------------------------------------------------------
+// Submit Venmo confirmation — records pending_venmo payment in DB for admin review
+// ---------------------------------------------------------------------------
+window._submitVenmoModal = async function(opts) {
     const amountInput = document.getElementById('pm-amount-field');
     const btn = document.getElementById('pm-submit-btn');
     const enteredAmount = parseFloat(amountInput?.value);
@@ -3573,70 +3538,108 @@ window._submitPaymentModal = async function(opts) {
     }
 
     btn.disabled = true;
-    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 0.8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Connecting…`;
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:gsSpin 0.7s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Recording...`;
 
-    const supabase   = window.auth.getSupabaseClient();
+    const supabase    = window.auth.getSupabaseClient();
     const parentEmail = localStorage.getItem('gba_user_email') || '';
+    const parentName  = localStorage.getItem('gba_user_name') || '';
     const playerName  = localStorage.getItem('gba_selected_athlete_name') || 'Athlete';
 
     try {
-        let body;
-        if (opts.type === 'installment') {
-            body = {
-                paymentType: 'aau_payment',
-                paymentId: opts.paymentId,
-                amount: enteredAmount,
-                installmentNumber: opts.installmentNumber,
-                parentEmail,
-                playerName
-            };
-        } else {
-            // Trip / program payment — pre-insert a payment record first so webhook can reference it
-            const { data: newPayment, error: insertErr } = await supabase
-                .from('payments')
-                .insert({
-                    parent_id: localStorage.getItem('gba_parent_id') || null,
-                    installment_number: 1,
-                    amount: enteredAmount,
-                    due_date: new Date().toISOString().split('T')[0],
-                    status: 'pending',
-                    notes: opts.label || 'Program payment'
-                })
-                .select('id')
-                .single();
-
-            if (insertErr) throw insertErr;
-
-            body = {
-                paymentType: 'aau_payment',
-                paymentId: newPayment.id,
-                amount: enteredAmount,
-                installmentNumber: 1,
-                parentEmail,
-                playerName,
-                description: opts.label
-            };
-        }
-
-        const { data, error } = await supabase.functions.invoke('create-checkout', { body });
+        const receiptId = 'venmo_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+        const { error } = await supabase.from('dues_payments').insert({
+            parent_email: parentEmail,
+            parent_name: parentName,
+            player_name: playerName,
+            amount: enteredAmount,
+            note: 'Venmo - ' + (opts.label || 'Payment'),
+            receipt_id: receiptId,
+            status: 'pending_venmo',
+            stripe_pi_id: null
+        });
         if (error) throw error;
-        if (!data?.url) throw new Error('No checkout URL returned.');
 
-        // Close modal, redirect to Stripe
         document.getElementById('gs-payment-modal-overlay')?.remove();
-        window.location.href = data.url;
 
+        if (typeof showToast === 'function') {
+            showToast('Venmo payment recorded. Coach Scott will confirm within 24 hours.', 'success');
+        }
+        // Refresh billing view
+        if (parentEmail && typeof window.renderBilling === 'function') {
+            setTimeout(() => window.renderBilling(parentEmail), 600);
+        }
     } catch (err) {
-        console.error('Payment modal error:', err);
+        console.error('Venmo confirmation error:', err);
         btn.disabled = false;
-        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Pay Securely`;
-        alert('Payment failed to start: ' + (err.message || 'Unknown error. Please try again.'));
+        btn.innerHTML = 'I Sent It';
+        alert('Could not record payment: ' + (err.message || 'Please try again.'));
     }
 };
 
 // Legacy alias — keeps any old direct calls working
 window.triggerStripeCheckout = function(paymentId, amount, installmentNumber) {
     openPaymentModal({ type: 'installment', label: 'Installment ' + installmentNumber, amount, paymentId, installmentNumber });
+};
+
+// Static tuition modal — Venmo confirmation from the HTML overlay
+window.submitVenmoConfirmation = async function() {
+    const amountInput = document.getElementById('tuition-pay-amount');
+    const noteInput   = document.getElementById('tuition-pay-note');
+    const btn         = document.getElementById('tuition-pay-submit-btn');
+    const errDiv      = document.getElementById('tuition-pay-error');
+    const enteredAmount = parseFloat(amountInput?.value);
+
+    errDiv.style.display = 'none';
+    if (!enteredAmount || enteredAmount < 1) {
+        errDiv.textContent = 'Enter the amount you sent on Venmo.';
+        errDiv.style.display = 'block';
+        amountInput?.focus();
+        return;
+    }
+    if (!window.auth || !window.auth.isSupabaseAvailable()) {
+        errDiv.textContent = 'Not connected. Refresh and try again.';
+        errDiv.style.display = 'block';
+        return;
+    }
+
+    btn.disabled = true;
+    const origText = btn.textContent;
+    btn.textContent = 'Recording...';
+
+    const supabase    = window.auth.getSupabaseClient();
+    const parentEmail = localStorage.getItem('gba_user_email') || '';
+    const parentName  = localStorage.getItem('gba_user_name') || '';
+    const playerName  = localStorage.getItem('gba_selected_athlete_name') || 'Athlete';
+
+    try {
+        const receiptId = 'venmo_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+        const { error } = await supabase.from('dues_payments').insert({
+            parent_email: parentEmail,
+            parent_name: parentName,
+            player_name: playerName,
+            amount: enteredAmount,
+            note: (noteInput?.value || '').trim() || 'Venmo payment',
+            receipt_id: receiptId,
+            status: 'pending_venmo',
+            stripe_pi_id: null
+        });
+        if (error) throw error;
+
+        closeTuitionPaymentModal();
+        if (typeof showToast === 'function') {
+            showToast('Venmo payment recorded. Coach Scott will confirm within 24 hours.', 'success');
+        }
+        if (parentEmail && typeof window.renderBilling === 'function') {
+            setTimeout(() => window.renderBilling(parentEmail), 600);
+        }
+    } catch (err) {
+        console.error('Venmo confirmation error:', err);
+        errDiv.textContent = 'Could not record: ' + (err.message || 'Try again.');
+        errDiv.style.display = 'block';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = origText;
+    }
 };
 
 /**

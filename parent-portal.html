@@ -1312,43 +1312,54 @@
         </div>
     </div>
 
-    <!-- TUITION PAYMENT MODAL -->
+    <!-- TUITION PAYMENT MODAL (Venmo interim) -->
     <div id="tuition-payment-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);z-index:99999;align-items:center;justify-content:center;padding:20px;">
       <div style="background:#fff;border-radius:20px;max-width:480px;width:100%;box-shadow:0 40px 80px rgba(0,0,0,0.3);overflow:hidden;">
-        <!-- Header -->
         <div style="background:#111;padding:24px 28px;display:flex;align-items:center;justify-content:space-between;">
           <div>
             <div style="font-size:0.7rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:4px;">Club Godspeed</div>
             <div style="font-size:1.2rem;font-weight:900;color:#fff;letter-spacing:-0.02em;">AAU Season Dues</div>
           </div>
-          <button onclick="closeTuitionPaymentModal()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">✕</button>
+          <button onclick="closeTuitionPaymentModal()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">&#10005;</button>
         </div>
-        <!-- Body -->
         <div style="padding:28px;">
           <div style="background:#f9f9f9;border-radius:12px;padding:16px 20px;margin-bottom:24px;border:1px solid #f0f0f0;">
             <div style="font-size:0.75rem;font-weight:700;color:#86868b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Balance Due</div>
             <div id="tuition-modal-balance" style="font-size:2rem;font-weight:900;color:#111;letter-spacing:-0.03em;">$745.00</div>
             <div style="font-size:0.8rem;color:#86868b;margin-top:2px;">Spring / Summer 2026 Season</div>
           </div>
-          <div style="margin-bottom:20px;">
-            <label style="display:block;font-size:0.8rem;font-weight:700;color:#1d1d1f;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Payment Amount</label>
-            <div style="position:relative;">
-              <span style="position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:1.2rem;font-weight:700;color:#86868b;">$</span>
-              <input id="tuition-pay-amount" type="number" min="1" placeholder="0.00" step="0.01" style="width:100%;padding:14px 16px 14px 36px;border-radius:12px;border:2px solid #e5e5ea;font-size:1.3rem;font-weight:700;color:#111;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color 0.2s;" onfocus="this.style.borderColor='#111'" onblur="this.style.borderColor='#e5e5ea'">
-            </div>
-            <div style="display:flex;gap:8px;margin-top:10px;">
-              <button onclick="document.getElementById('tuition-pay-amount').value='745'" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e5e5ea;background:#f9f9f9;font-size:0.8rem;font-weight:700;cursor:pointer;color:#111;">$745 Full</button>
-              <button onclick="document.getElementById('tuition-pay-amount').value='375'" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e5e5ea;background:#f9f9f9;font-size:0.8rem;font-weight:700;cursor:pointer;color:#111;">$375 Half</button>
-              <button onclick="document.getElementById('tuition-pay-amount').value='250'" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e5e5ea;background:#f9f9f9;font-size:0.8rem;font-weight:700;cursor:pointer;color:#111;">$250</button>
-            </div>
-          </div>
-          <div style="margin-bottom:24px;">
-            <label style="display:block;font-size:0.8rem;font-weight:700;color:#1d1d1f;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Note (optional)</label>
-            <input id="tuition-pay-note" type="text" placeholder="e.g. April installment" style="width:100%;padding:12px 16px;border-radius:12px;border:2px solid #e5e5ea;font-size:0.95rem;color:#111;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color 0.2s;" onfocus="this.style.borderColor='#111'" onblur="this.style.borderColor='#e5e5ea'">
-          </div>
           <div id="tuition-pay-error" style="display:none;background:#fff0f0;color:#cc0000;border-radius:8px;padding:10px 14px;font-size:0.85rem;font-weight:600;margin-bottom:16px;"></div>
-          <button id="tuition-pay-submit-btn" onclick="submitTuitionPayment()" style="width:100%;padding:16px;background:#111;color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:800;letter-spacing:0.02em;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='#333'" onmouseout="this.style.background='#111'">Submit Payment</button>
-          <p style="text-align:center;font-size:0.75rem;color:#86868b;margin-top:12px;margin-bottom:0;">🔒 Secured by Stripe. Your payment info is never stored on our servers.</p>
+          <!-- Venmo instructions kept intentionally minimal -->
+          <p style="font-size:0.85rem;color:#333;margin:0 0 16px;line-height:1.5;">Send your payment via Venmo, then tap <strong>I Sent It</strong> below so we can match it to your account.</p>
+          <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:20px;">
+            <div style="flex-shrink:0;text-align:center;">
+              <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAXIAAAFyAQAAAADAX2ykAAAC40lEQVR4nO2cQYrjMBBFX40Ms5QhB+ijKFebI80N7KPkAA32skHmz0JS7KahQzOJsaFqYeToLT4UJVWV5Jj4iY2/foSD8847/1J+tmpXgNE66qhfzK5zR5vv9tHj/BP5DggZAGO+ZEtaTMw9EEGQIQ0A82UHPc6/gq/BCcDcYdYHra8lxK876nH+WXz36W0xgbD094JgwSDsqsf5l/OL1cHcfZ08gX7nv/CSyh6MXQkqqZW9ZaQJIEoadtTj/DP5paTHQFCJ2jQFkW6/ZVeA0czM+r30OP88voO4tjg+TMyLCTIa3zIQM9sWyNH0O//AJEmktj6XUZpAmoI0xExdmqOk4Wj6nf/eNimUAGpuFYUBJuYOI753pL9dPp5+5x+YNLVaNymjIapGbYlf2qO8Hk2/899bid/i4LF/x9LNUC2NFlNpZ8V30z56nH8uX0ujkjBPoIEgiFKdXaPb4/eEfKtw2zJMUnNtTa3cv2fmW2sj1qyZ4unm2pY637fjo+l3/oGt/m3xmyGpWkEG8Pg9J1/qXw2xFcHFjWX/vS/XMeP17yn5DuYepZuh0YKs+HI2gMU09hNAkJVD4KPpd/6B1fglqCbRkqRp279q3S1fn8/Hb/qTzZdqnp6C2sZMS7eOpt/5ByYptyK4eFqqVe96KhhbvuX+PRlf47f4MlbXtuPgUFfqweujs/KsHoS1dRVrJNeauKXT7t+z8S1+772MNNXHWiTV/dfroxPytT+ZtNa/60Rdn+ur778n5NHGpnoMWIP402+eP5+SZ43Qbf3bWpNrpeT51Wn5cHfoYvUxm5Xfxh40sBhjv5ce55/Hl/N9Kx+pxNyJ+SIg5HYLul2HTtpDj/Ov5IMY3zKMbx+2Sa2Gcid6fz3O/y9/v6GxbUiuVe969Qqvf8/Lbw/5b10dwWKkaTG7xtbCPKh+57/j1+8XFtOfvn7EIN06GPsgDXOHXWf//vd8vOkxszH/fwbnnT8Q/w9A0FAAh8LckAAAAABJRU5ErkJggg==" alt="Venmo QR" style="width:120px;height:120px;border-radius:8px;border:1px solid #e5e5ea;">
+              <div style="font-size:0.7rem;color:#86868b;margin-top:4px;">Scan with Venmo app</div>
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:0.8rem;font-weight:700;color:#86868b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Or pay with link</div>
+              <a href="https://venmo.com/Coachsco" target="_blank" rel="noopener" style="display:block;background:#008CFF;color:#fff;text-align:center;font-weight:800;font-size:0.95rem;padding:14px;border-radius:10px;text-decoration:none;letter-spacing:0.02em;transition:background 0.15s;" onmouseover="this.style.background='#0070CC'" onmouseout="this.style.background='#008CFF'">Open Venmo</a>
+              <div style="font-size:0.75rem;color:#86868b;margin-top:6px;text-align:center;">@Coachsco</div>
+              <div style="margin-top:12px;">
+                <label style="display:block;font-size:0.75rem;font-weight:700;color:#86868b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Amount to send</label>
+                <div style="position:relative;">
+                  <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:1.1rem;font-weight:700;color:#86868b;">$</span>
+                  <input id="tuition-pay-amount" type="number" min="1" placeholder="0.00" step="0.01" style="width:100%;padding:10px 12px 10px 30px;border-radius:10px;border:2px solid #e5e5ea;font-size:1.1rem;font-weight:700;color:#111;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color 0.2s;" onfocus="this.style.borderColor='#111'" onblur="this.style.borderColor='#e5e5ea'">
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:16px;">
+            <button onclick="document.getElementById('tuition-pay-amount').value='745'" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e5e5ea;background:#f9f9f9;font-size:0.8rem;font-weight:700;cursor:pointer;color:#111;">$745 Full</button>
+            <button onclick="document.getElementById('tuition-pay-amount').value='375'" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e5e5ea;background:#f9f9f9;font-size:0.8rem;font-weight:700;cursor:pointer;color:#111;">$375 Half</button>
+            <button onclick="document.getElementById('tuition-pay-amount').value='250'" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e5e5ea;background:#f9f9f9;font-size:0.8rem;font-weight:700;cursor:pointer;color:#111;">$250</button>
+          </div>
+          <div style="margin-bottom:16px;">
+            <label style="display:block;font-size:0.75rem;font-weight:700;color:#86868b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Note (optional)</label>
+            <input id="tuition-pay-note" type="text" placeholder="e.g. April installment" style="width:100%;padding:10px 14px;border-radius:10px;border:2px solid #e5e5ea;font-size:0.9rem;color:#111;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color 0.2s;" onfocus="this.style.borderColor='#111'" onblur="this.style.borderColor='#e5e5ea'">
+          </div>
+          <button id="tuition-pay-submit-btn" onclick="submitVenmoConfirmation()" style="width:100%;padding:16px;background:#111;color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:800;letter-spacing:0.02em;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='#333'" onmouseout="this.style.background='#111'">I Sent It</button>
+          <p style="text-align:center;font-size:0.75rem;color:#86868b;margin-top:12px;margin-bottom:0;">Your payment will be confirmed by Coach Scott within 24 hours.</p>
         </div>
       </div>
     </div>
@@ -1366,7 +1377,7 @@
     <script src="supabase-data-bridge.js" defer></script>
     <script src="export-functions.js" defer></script>
     <script src="receipt-view.js" defer></script>
-    <script src="parent-portal.js?v=8" defer></script>
+    <script src="parent-portal.js?v=9" defer></script>
     <!-- Non-critical scripts (async for independent loading) -->
     <script src="branded-modal.js"></script>
     <script src="documents-view.js" defer></script>
@@ -1393,8 +1404,8 @@
                 <span id="training-cart-total-amount">$0.00</span>
             </div>
             <div id="training-cart-error" style="display: none; background: #fff0f0; color: #cc0000; padding: 10px 14px; border-radius: 6px; font-size: 13px; margin-bottom: 16px;"></div>
-            <button id="training-cart-checkout-btn" onclick="TrainingCart.handleCheckout()" style="background: #1A3A8F; color: white; border: none; border-radius: 8px; padding: 14px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%;">Pay securely with card</button>
-            <p style="font-size: 12px; color: #888; text-align: center; margin-top: 12px;">Secured by Stripe. Your card info is never stored on our servers.</p>
+            <a href="https://venmo.com/Coachsco" target="_blank" rel="noopener" id="training-cart-checkout-btn" style="display:block;background:#008CFF;color:white;border:none;border-radius:8px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;width:100%;text-align:center;text-decoration:none;box-sizing:border-box;">Pay with Venmo</a>
+            <p style="font-size: 12px; color: #888; text-align: center; margin-top: 12px;">Send payment to @Coachsco on Venmo. Coach Scott will confirm within 24 hours.</p>
         </div>
     </div>
     <style>

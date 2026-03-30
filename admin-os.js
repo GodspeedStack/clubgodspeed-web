@@ -26,8 +26,8 @@ function showToast(message, type='success') {
 }
 
 function statusTag(status) {
-  const map = {paid:'tag-green',completed:'tag-green',delivered:'tag-green',confirmed:'tag-green',
-    pending:'tag-yellow',processing:'tag-yellow',unfulfilled:'tag-yellow',draft:'tag-yellow',
+  const map = {paid:'tag-green',completed:'tag-green',delivered:'tag-green',confirmed:'tag-green',manual:'tag-green',
+    pending:'tag-yellow',processing:'tag-yellow',unfulfilled:'tag-yellow',draft:'tag-yellow',pending_venmo:'tag-blue',
     overdue:'tag-red',refunded:'tag-red',denied:'tag-red',
     shipped:'tag-blue',sent:'tag-blue',published:'tag-green',partial:'tag-yellow',unpaid:'tag-red',waived:'tag-gray'};
   return `<span class="tag ${map[status]||'tag-gray'}">${status}</span>`;
@@ -623,7 +623,8 @@ async function loadDues() {
     window._duesPaymentsChannel = osSupabase
       .channel('admin-dues-payments')
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'dues_payments'},(payload)=>{
-        showToast(`💳 New payment: ${payload.new.parent_name||payload.new.parent_email} — $${(+payload.new.amount).toFixed(2)}`);
+        const isVenmo = payload.new.status === 'pending_venmo';
+        showToast(`${isVenmo?'📱':'💳'} ${isVenmo?'Venmo pending':'Payment'}: ${payload.new.parent_name||payload.new.parent_email} — $${(+payload.new.amount).toFixed(2)}`);
         loadDues();
       }).subscribe();
   }
@@ -648,14 +649,22 @@ function renderDuesPaymentsFeed(payments) {
   tbody.innerHTML = payments.map(p => {
     const d = p.payment_date ? new Date(p.payment_date).toLocaleDateString() : '--';
     const done = p.status === 'completed' || p.status === 'manual';
-    return `<tr>
+    const isVenmoPending = p.status === 'pending_venmo';
+    const displayStatus = isVenmoPending ? 'Venmo Pending' : p.status;
+    let actionBtn = '';
+    if (isVenmoPending) {
+      actionBtn = `<button class="btn btn-primary btn-xs" style="background:#34c759;border-color:#34c759" onclick="confirmVenmoPayment('${p.id}','${(+p.amount).toFixed(2)}','${(p.parent_email||'').replace(/'/g,"\\'")}','${(p.player_name||'').replace(/'/g,"\\'")}')">Confirm</button>`;
+    } else if (!done) {
+      actionBtn = `<button class="btn btn-ghost btn-xs" onclick="markDuesPaymentPaid('${p.id}')">Mark Paid</button>`;
+    }
+    return `<tr${isVenmoPending?' style="background:rgba(0,140,255,0.06)"':''}>
       <td style="font-weight:600">${p.parent_name||p.parent_email||'--'}</td>
       <td style="color:var(--muted)">${p.player_name||'--'}</td>
       <td>$${(+p.amount).toFixed(2)}</td>
       <td style="color:var(--muted);font-size:12px">${p.note||'--'}</td>
       <td style="color:var(--muted);font-size:12px">${d}</td>
-      <td>${statusTag(p.status)}</td>
-      <td>${!done?`<button class="btn btn-ghost btn-xs" onclick="markDuesPaymentPaid('${p.id}')">Mark Paid</button>`:''}</td>
+      <td>${statusTag(displayStatus)}</td>
+      <td>${actionBtn}</td>
     </tr>`;
   }).join('');
 }
@@ -664,6 +673,33 @@ async function markDuesPaymentPaid(id) {
   try { if(osSupabase) await osSupabase.from('dues_payments').update({status:'manual'}).eq('id',id); }
   catch(e){ showToast('Error: '+e.message,'error'); return; }
   showToast('Payment marked as completed'); loadDues();
+}
+async function confirmVenmoPayment(paymentId, amount, parentEmail, playerName) {
+  if(!confirm(`Confirm Venmo payment of $${amount} from ${parentEmail||playerName}?`)) return;
+  try {
+    if(!osSupabase) return;
+    // 1. Mark dues_payments row as completed
+    await osSupabase.from('dues_payments').update({status:'completed'}).eq('id',paymentId);
+    // 2. Find enrollment and update total_paid
+    if(parentEmail) {
+      const {data:enr}=await osSupabase.from('parent_dues_enrollment').select('id,total_paid,total_owed,status').eq('parent_email',parentEmail).maybeSingle();
+      if(enr) {
+        const newPaid=parseFloat(enr.total_paid||0)+parseFloat(amount);
+        const newStatus=newPaid>=parseFloat(enr.total_owed)?'paid_in_full':enr.status;
+        await osSupabase.from('parent_dues_enrollment').update({total_paid:newPaid,status:newStatus}).eq('id',enr.id);
+      }
+    }
+    // 3. Find next unpaid installment and mark it paid
+    if(parentEmail) {
+      const {data:inst}=await osSupabase.from('dues_installments')
+        .select('id,enrollment:parent_dues_enrollment!enrollment_id(parent_email)')
+        .in('status',['pending','overdue'])
+        .order('installment_number',{ascending:true}).limit(50);
+      const match=(inst||[]).find(i=>i.enrollment?.parent_email===parentEmail);
+      if(match) await osSupabase.from('dues_installments').update({status:'paid',paid_at:new Date().toISOString()}).eq('id',match.id);
+    }
+    showToast('Venmo payment confirmed'); loadDues();
+  } catch(e) { showToast('Error: '+e.message,'error'); }
 }
 function renderDues() {
   let items=allInstallments;
