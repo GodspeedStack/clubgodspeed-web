@@ -1159,6 +1159,55 @@ async function deleteCalEvent(id) {
   try { if(osSupabase) await osSupabase.from('calendar_events').delete().eq('id',id); showToast('Event deleted'); loadCalendar(); }
   catch(e){ showToast('Error: '+e.message,'error'); }
 }
+
+async function publishCalendarToParents() {
+  const btn = document.getElementById('btn-publish-calendar');
+  if (!osSupabase) { showToast('Not connected to database', 'error'); return; }
+
+  // Find unpublished events (published_at IS NULL)
+  const { data: unpublished, error: fetchErr } = await osSupabase
+    .from('calendar_events')
+    .select('id, title, event_type, start_date, start_time, location')
+    .is('published_at', null)
+    .in('visibility', ['public', 'team_only'])
+    .order('start_date', { ascending: true });
+
+  if (fetchErr) { showToast('Error: ' + fetchErr.message, 'error'); return; }
+  if (!unpublished || !unpublished.length) { showToast('All events are already published.', 'info'); return; }
+
+  if (!confirm(`Publish ${unpublished.length} event(s) to the parent portal and send email notification?`)) return;
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Publishing...'; }
+
+  try {
+    // Set published_at on all unpublished events
+    const ids = unpublished.map(e => e.id);
+    const now = new Date().toISOString();
+    const { error: updateErr } = await osSupabase
+      .from('calendar_events')
+      .update({ published_at: now })
+      .in('id', ids);
+
+    if (updateErr) throw updateErr;
+
+    // Invoke edge function to send email notifications
+    try {
+      await osSupabase.functions.invoke('send-calendar-update', {
+        body: { event_ids: ids }
+      });
+    } catch (emailErr) {
+      console.error('Email notification error (events still published):', emailErr);
+    }
+
+    showToast(`Published ${unpublished.length} event(s) to parents.`, 'success');
+    loadCalendar();
+  } catch (e) {
+    showToast('Publish error: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Publish to Parents'; }
+  }
+}
+
 function calEventForm(e={}) {
   const types=['practice','game','tournament','meeting','camp','tryout','fundraiser','deadline','other'];
   const typeOpts=types.map(t=>`<option value="${t}" ${e.event_type===t?'selected':''}>${t.charAt(0).toUpperCase()+t.slice(1)}</option>`).join('');

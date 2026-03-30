@@ -815,6 +815,7 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
           <button class="btn btn-ghost btn-sm" id="cal-view-list" onclick="setCalView('list')" style="opacity:0.5">List</button>
           <button class="btn btn-ghost btn-sm" onclick="openBulkTournamentUpload()" style="border:1px solid var(--accent)">Paste Tournaments</button>
           <button class="btn btn-primary btn-sm" onclick="addCalEventForDate(new Date().toISOString().split('T')[0])">+ Event</button>
+          <button class="btn btn-sm" id="btn-publish-calendar" onclick="publishCalendarToParents()" style="background:#10b981;color:#fff;border:none;font-weight:700;">Publish to Parents</button>
         </div>
       </div>
       <div id="cal-container"></div>
@@ -913,7 +914,7 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 
 <script type="module" src="src/lib/env-injector.js"></script>
 <script src="auth-supabase.js?v=20260330" defer></script>
-<script src="admin-os.js?v=20260330f" defer></script>
+<script src="admin-os.js?v=20260330g" defer></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
   function toggleMobileMenu() {
