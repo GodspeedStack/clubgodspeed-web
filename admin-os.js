@@ -909,8 +909,8 @@ function renderCalendar() {
 function renderCalList() {
   document.getElementById('cal-container').innerHTML=`<div class="card"><table><thead><tr><th>Date</th><th>Time</th><th>Title</th><th>Type</th><th>Location</th><th>Actions</th></tr></thead><tbody>${allCalEvents.length?allCalEvents.map(e=>`<tr>
     <td>${fmtShort(e.event_date)}</td><td style="color:var(--muted)">${e.start_time||'--'}</td><td style="font-weight:600">${e.title}</td>
-    <td>${statusTag(e.event_type||'other')}</td><td style="color:var(--muted)">${e.location||'--'}</td>
-    <td><button class="btn btn-ghost btn-xs" onclick="editCalEvent('${e.id}')">Edit</button><button class="btn btn-ghost btn-xs" style="color:#ff3b30" onclick="deleteCalEvent('${e.id}')">Delete</button></td>
+    <td>${statusTag(e.event_type||'other')}${e.event_type==='tournament'?tournamentProgressBadge(e):''}</td><td style="color:var(--muted)">${e.location||'--'}</td>
+    <td><button class="btn btn-ghost btn-xs" onclick="editCalEvent('${e.id}')">${e.event_type==='tournament'?'Details':'Edit'}</button><button class="btn btn-ghost btn-xs" style="color:#ff3b30" onclick="deleteCalEvent('${e.id}')">Delete</button></td>
   </tr>`).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px">No events this month</td></tr>'}</tbody></table></div>`;
 }
 function showDayEvents(dateStr) {
@@ -936,6 +936,8 @@ function addCalEventForDate(dateStr) {
 }
 function editCalEvent(id) {
   const e=allCalEvents.find(x=>x.id===id); if(!e) return;
+  // Tournaments open the detail/checklist panel instead of raw form
+  if(e.event_type==='tournament') { openTournamentDetail(id); return; }
   openModal('edit-event');
   document.getElementById('modal-title').textContent='Edit Event';
   document.getElementById('modal-body').innerHTML=calEventForm(e);
@@ -1106,6 +1108,31 @@ function parseTournamentText(raw) {
       const timeMatch=line.match(/(\d{1,2}:\d{2}\s*(?:am|pm)?)/i);
       if(timeMatch&&!entry.start_time) entry.start_time=convertTo24(timeMatch[1]);
     }
+    // Cost detection: "$395-450", "$250", "$100 per team"
+    for(const line of lines) {
+      const costMatch=line.match(/(\$\d[\d,]*(?:\s*[-–]\s*\$?\d[\d,]*)?(?:\s*(?:per|\/)\s*\w+)?)/i);
+      if(costMatch&&!entry.cost) { entry.cost=costMatch[1]; break; }
+    }
+    // Registration deadline: "Registration Closes April 26th, 2026"
+    for(const line of lines) {
+      const regMatch=line.match(/registration\s+(?:closes?|deadline|due|ends?)\s+(\w+\s+\d{1,2}(?:st|nd|rd|th)?,?\s*\d{4})/i);
+      if(regMatch&&!entry.registration_deadline) {
+        const cleaned=regMatch[1].replace(/(st|nd|rd|th)/i,'');
+        const p=parseDateRange(cleaned);
+        if(p.start) entry.registration_deadline=p.start;
+        break;
+      }
+    }
+    // Notes: collect detail lines (rules, requirements, etc) that aren't title/date/location
+    const noteLines=[];
+    for(const line of lines) {
+      if(line===entry.title||line===entry.location) continue;
+      if(/\|\s*\w+\s+\d/i.test(line)) continue; // pipe date line
+      if(phoneRe.test(line)||/^\$/.test(line)) continue;
+      if(detailRe.test(line)||/call\/text|further assistance/i.test(line)) noteLines.push(line);
+    }
+    if(noteLines.length) entry.notes=noteLines.join('\n');
+
     if(entry.title) results.push(entry);
   }
   return results;
@@ -1168,7 +1195,11 @@ function renderBulkPreview(parsed) {
         <div class="field"><label style="font-size:11px">End Date</label><input type="date" class="bulk-end" value="${t.end_date||''}" style="font-size:13px"></div>
         <div class="field"><label style="font-size:11px">Location</label><input type="text" class="bulk-location" value="${t.location}" style="font-size:13px"></div>
         <div class="field"><label style="font-size:11px">Time</label><input type="time" class="bulk-time" value="${t.start_time||''}" style="font-size:13px"></div>
+        <div class="field"><label style="font-size:11px">Cost</label><input type="text" class="bulk-cost" value="${t.cost||''}" style="font-size:13px" placeholder="$0"></div>
+        <div class="field"><label style="font-size:11px">Reg. Deadline</label><input type="date" class="bulk-regdeadline" value="${t.registration_deadline||''}" style="font-size:13px"></div>
       </div>
+      ${t.notes?`<div style="margin-top:6px;padding:8px;background:rgba(255,255,255,0.04);border-radius:6px;font-size:11px;color:var(--muted);white-space:pre-line;max-height:60px;overflow-y:auto">${t.notes}</div>`:''}
+      <input type="hidden" class="bulk-notes" value="${(t.notes||'').replace(/"/g,'&quot;')}">
     </div>`;
   });
   html+=`<button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="saveBulkTournaments(${parsed.length})">Save ${parsed.length} Tournament(s)</button>`;
@@ -1189,12 +1220,18 @@ async function saveBulkTournaments(count) {
     const endDate=row.querySelector('.bulk-end').value||null;
     const location=row.querySelector('.bulk-location').value;
     const startTime=row.querySelector('.bulk-time').value||null;
+    const cost=row.querySelector('.bulk-cost')?.value||null;
+    const regDeadline=row.querySelector('.bulk-regdeadline')?.value||null;
+    const notes=row.querySelector('.bulk-notes')?.value||null;
+    const defaultChecklist=JSON.stringify(buildTournamentChecklist());
     if(!title||!startDate) { errors++; continue; }
     try {
       const {error}=await osSupabase.rpc('upsert_calendar_event',{
         p_title:title, p_event_type:'tournament', p_start_date:startDate,
         p_end_date:endDate, p_start_time:startTime, p_location:location,
-        p_grade_level:grade, p_created_by:userId, p_visibility:'public'
+        p_grade_level:grade, p_created_by:userId, p_visibility:'public',
+        p_cost:cost, p_registration_deadline:regDeadline, p_notes:notes,
+        p_admin_checklist:defaultChecklist
       });
       if(error) throw error;
       saved++;
@@ -1202,6 +1239,153 @@ async function saveBulkTournaments(count) {
   }
   showToast(`${saved} tournament(s) saved${errors?' ('+errors+' failed)':''}`);
   closeModal(); loadCalendar();
+}
+
+// ─── TOURNAMENT DETAIL + CHECKLIST ──────────────────────────
+function tournamentProgressBadge(e) {
+  const cl=Array.isArray(e.admin_checklist)?e.admin_checklist:(e.admin_checklist?JSON.parse(e.admin_checklist):[]);
+  if(!cl.length) return '';
+  const done=cl.filter(c=>c.done).length, total=cl.length, pct=Math.round(done/total*100);
+  const color=pct===100?'#30d158':pct>0?'#ff9500':'rgba(255,255,255,0.2)';
+  return ` <span style="display:inline-flex;align-items:center;gap:4px;margin-left:6px;font-size:11px;color:${color};font-weight:600"><span style="display:inline-block;width:32px;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden"><span style="display:block;width:${pct}%;height:100%;background:${color};border-radius:2px"></span></span>${done}/${total}</span>`;
+}
+
+function buildTournamentChecklist() {
+  return [
+    {id:'register',label:'Register team on tournament site',done:false,done_at:null,done_by:null},
+    {id:'payment',label:'Submit tournament payment',done:false,done_at:null,done_by:null},
+    {id:'rosters',label:'Upload/submit team roster',done:false,done_at:null,done_by:null},
+    {id:'proof',label:'Prepare proof of age/grade docs',done:false,done_at:null,done_by:null},
+    {id:'travel',label:'Coordinate travel/hotels if needed',done:false,done_at:null,done_by:null},
+    {id:'notify',label:'Notify parents of tournament details',done:false,done_at:null,done_by:null},
+    {id:'confirm',label:'Confirm registration received',done:false,done_at:null,done_by:null}
+  ];
+}
+
+function openTournamentDetail(id) {
+  const e=allCalEvents.find(x=>x.id===id);
+  if(!e) return;
+  openModal('tournament-detail');
+  document.getElementById('modal-title').textContent=e.title||'Tournament';
+  const checklist=Array.isArray(e.admin_checklist)?e.admin_checklist:(e.admin_checklist?JSON.parse(e.admin_checklist):[]);
+  const doneCount=checklist.filter(c=>c.done).length;
+  const total=checklist.length;
+  const pct=total?Math.round(doneCount/total*100):0;
+  const startFmt=e.start_date?fmtShort(e.start_date):'TBD';
+  const endFmt=e.end_date&&e.end_date!==e.start_date?' - '+fmtShort(e.end_date):'';
+  const deadlineFmt=e.registration_deadline?fmtShort(e.registration_deadline):null;
+  const daysUntil=e.start_date?Math.ceil((new Date(e.start_date)-new Date())/(1000*60*60*24)):null;
+  const urgencyColor=daysUntil!==null&&daysUntil<=7?'#ff3b30':daysUntil!==null&&daysUntil<=14?'#ff9500':'var(--muted)';
+
+  let html=`<div style="display:flex;flex-direction:column;gap:16px">`;
+
+  // Header info cards
+  html+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">`;
+  html+=`<div style="padding:12px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid var(--border)">
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Date</div>
+    <div style="font-weight:700;margin-top:4px">${startFmt}${endFmt}</div>
+    ${daysUntil!==null?`<div style="font-size:12px;color:${urgencyColor};margin-top:2px">${daysUntil>0?daysUntil+' days away':daysUntil===0?'Today':'Passed'}</div>`:''}
+  </div>`;
+  if(e.location) html+=`<div style="padding:12px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid var(--border)">
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Location</div>
+    <div style="font-weight:700;margin-top:4px">${e.location}</div>
+  </div>`;
+  if(e.cost) html+=`<div style="padding:12px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid var(--border)">
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Cost</div>
+    <div style="font-weight:700;margin-top:4px">${e.cost}</div>
+  </div>`;
+  if(e.grade_level) html+=`<div style="padding:12px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid var(--border)">
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Grade</div>
+    <div style="font-weight:700;margin-top:4px">${e.grade_level==='both'?'4th + 5th':e.grade_level+' Grade'}</div>
+  </div>`;
+  if(deadlineFmt) {
+    const deadlineDays=Math.ceil((new Date(e.registration_deadline)-new Date())/(1000*60*60*24));
+    const dlColor=deadlineDays<=3?'#ff3b30':deadlineDays<=7?'#ff9500':'var(--text)';
+    html+=`<div style="padding:12px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Reg. Deadline</div>
+      <div style="font-weight:700;margin-top:4px;color:${dlColor}">${deadlineFmt}</div>
+      <div style="font-size:12px;color:${dlColor};margin-top:2px">${deadlineDays>0?deadlineDays+' days left':deadlineDays===0?'Today':'Overdue'}</div>
+    </div>`;
+  }
+  html+=`</div>`;
+
+  // Notes section
+  if(e.notes) {
+    html+=`<div style="padding:12px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Tournament Details</div>
+      <div style="font-size:13px;color:var(--text);white-space:pre-line;line-height:1.5">${e.notes}</div>
+    </div>`;
+  }
+
+  // Registration URL
+  if(e.registration_url) {
+    html+=`<a href="${e.registration_url}" target="_blank" style="display:block;padding:10px 16px;background:var(--accent);color:#000;border-radius:8px;text-align:center;font-weight:600;font-size:13px;text-decoration:none">Open Registration Page</a>`;
+  }
+
+  // Checklist section
+  if(checklist.length) {
+    html+=`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.04)">
+        <div style="font-weight:700;font-size:14px">Registration Checklist</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:80px;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden">
+            <div style="width:${pct}%;height:100%;background:${pct===100?'#30d158':'var(--accent)'};border-radius:3px;transition:width 0.3s"></div>
+          </div>
+          <span style="font-size:12px;color:${pct===100?'#30d158':'var(--muted)'};font-weight:600">${doneCount}/${total}</span>
+        </div>
+      </div>`;
+    checklist.forEach((item,idx)=>{
+      const doneStyle=item.done?'text-decoration:line-through;color:var(--muted)':'';
+      const checkIcon=item.done?'<div style="width:20px;height:20px;border-radius:6px;background:#30d158;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>'
+        :'<div style="width:20px;height:20px;border-radius:6px;border:2px solid rgba(255,255,255,0.2);flex-shrink:0;cursor:pointer" onclick="toggleTournamentCheck(\''+e.id+'\','+idx+')"></div>';
+      const doneInfo=item.done&&item.done_at?`<span style="font-size:10px;color:var(--muted);margin-left:8px">${fmtShort(item.done_at.split('T')[0])}</span>`:'';
+      html+=`<div style="padding:10px 16px;display:flex;align-items:center;gap:12px;border-top:1px solid var(--border);${item.done?'opacity:0.7':''}" id="check-row-${idx}">
+        <div style="cursor:pointer" onclick="toggleTournamentCheck('${e.id}',${idx})">${checkIcon}</div>
+        <div style="flex:1;font-size:13px;${doneStyle}">${item.label}${doneInfo}</div>
+      </div>`;
+    });
+    html+=`</div>`;
+  } else {
+    html+=`<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">No checklist items. <a href="#" onclick="initTournamentChecklist('${e.id}');return false" style="color:var(--accent)">Add default checklist</a></div>`;
+  }
+
+  // Action buttons
+  html+=`<div style="display:flex;gap:8px;margin-top:4px">
+    <button class="btn btn-ghost btn-sm" style="flex:1" onclick="editCalEvent('${e.id}')">Edit Event</button>
+    <button class="btn btn-ghost btn-sm" style="flex:1;color:#ff3b30" onclick="deleteCalEvent('${e.id}');closeModal()">Delete</button>
+  </div>`;
+  html+=`</div>`;
+
+  document.getElementById('modal-body').innerHTML=html;
+}
+
+async function toggleTournamentCheck(eventId, idx) {
+  const e=allCalEvents.find(x=>x.id===eventId);
+  if(!e) return;
+  const checklist=Array.isArray(e.admin_checklist)?[...e.admin_checklist]:(e.admin_checklist?JSON.parse(e.admin_checklist):[]);
+  if(!checklist[idx]) return;
+  const session=await osSupabase.auth.getSession();
+  const userId=session.data.session?.user?.id||null;
+  checklist[idx].done=!checklist[idx].done;
+  checklist[idx].done_at=checklist[idx].done?new Date().toISOString():null;
+  checklist[idx].done_by=checklist[idx].done?userId:null;
+  try {
+    const {error}=await osSupabase.from('calendar_events').update({admin_checklist:checklist}).eq('id',eventId);
+    if(error) throw error;
+    e.admin_checklist=checklist;
+    openTournamentDetail(eventId); // re-render
+  } catch(err) { showToast('Error saving: '+err.message,'error'); }
+}
+
+async function initTournamentChecklist(eventId) {
+  const checklist=buildTournamentChecklist();
+  try {
+    const {error}=await osSupabase.from('calendar_events').update({admin_checklist:checklist}).eq('id',eventId);
+    if(error) throw error;
+    const e=allCalEvents.find(x=>x.id===eventId);
+    if(e) e.admin_checklist=checklist;
+    openTournamentDetail(eventId);
+  } catch(err) { showToast('Error: '+err.message,'error'); }
 }
 
 // ─── BLOG ───────────────────────────────────────────────────
