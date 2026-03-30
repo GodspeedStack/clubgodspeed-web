@@ -165,8 +165,8 @@ async function loadDashboard() {
     <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
       <div><div style="font-weight:600;font-size:13px">${r.full_name||r.email}</div><div style="color:var(--muted);font-size:11px">${r.email}</div></div>
       <div style="display:flex;gap:6px">
-        <button class="btn btn-ghost btn-xs" style="color:#34c759" onclick="approveReq('${r.id}','${r.email}')">Approve</button>
-        <button class="btn btn-ghost btn-xs" style="color:#ff3b30" onclick="denyReq('${r.id}','${r.email}')">Deny</button>
+        <button class="btn btn-ghost btn-xs" onclick="approveReq('${r.id}','${r.email}')">Approve</button>
+        <button class="btn btn-ghost btn-xs" onclick="denyReq('${r.id}','${r.email}')">Deny</button>
       </div>
     </div>`).join('') : '<p style="color:var(--muted);font-size:13px">No pending requests.</p>';
 
@@ -529,17 +529,17 @@ function renderFundraising() {
         <div class="fr-bar-track">
           <div class="fr-bar-dues" data-width="${owesPct}" style="width:0%"></div>
           <div class="fr-bar-paid" data-width="${paidPct}" style="width:0%">
-            ${r.totalPaid > 0 ? `<span class="fr-bar-label" style="color:#34c759;right:4px">$${r.totalPaid.toFixed(0)} paid</span>` : ''}
+            ${r.totalPaid > 0 ? `<span class="fr-bar-label" style="color:var(--text);right:4px">$${r.totalPaid.toFixed(0)} paid</span>` : ''}
           </div>
           <div class="fr-bar-raised" data-width="${raisedPct}" data-left="${raisedLeft}" style="width:0%;left:${raisedLeft}%">
-            ${r.raised > 0 ? `<span class="fr-bar-label" style="color:#ffd60a;right:4px">$${r.raised.toFixed(0)} raised</span>` : ''}
+            ${r.raised > 0 ? `<span class="fr-bar-label" style="color:var(--text);right:4px">$${r.raised.toFixed(0)} raised</span>` : ''}
           </div>
         </div>
         <div style="display:flex;gap:12px;margin-top:4px;font-size:10px;color:var(--muted)">
           <span>Dues: $${r.totalOwed.toFixed(0)}</span>
-          ${r.totalPaid > 0 ? `<span style="color:#34c759">Paid: $${r.totalPaid.toFixed(0)}</span>` : ''}
-          ${r.raised > 0 ? `<span style="color:#ffd60a">Raised: $${r.raised.toFixed(0)}</span>` : ''}
-          ${r.raised > 0 && r.raised >= r.totalOwed - r.totalPaid ? `<span style="color:#34c759;font-weight:700">COVERED</span>` : ''}
+          ${r.totalPaid > 0 ? `<span>Paid: $${r.totalPaid.toFixed(0)}</span>` : ''}
+          ${r.raised > 0 ? `<span>Raised: $${r.raised.toFixed(0)}</span>` : ''}
+          ${r.raised > 0 && r.raised >= r.totalOwed - r.totalPaid ? `<span style="font-weight:700">COVERED</span>` : ''}
         </div>
       </div>
       <div class="fr-remaining ${isZero ? 'zero' : ''}" style="text-align:right">
@@ -1138,14 +1138,14 @@ function renderCalList() {
   let rows='';
   if(monthKeys.length) {
     monthKeys.forEach(mk=>{
-      rows+=`<tr><td colspan="6" style="background:var(--card-bg);font-weight:700;padding:10px 16px;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;color:var(--accent);border-top:2px solid var(--border)">${mk}</td></tr>`;
+      rows+=`<tr><td colspan="6" style="background:rgba(0,0,0,0.2);font-weight:700;padding:10px 16px;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);border-top:1px solid var(--border)">${mk}</td></tr>`;
       months[mk].forEach(e=>{
         const dateLabel=e.end_date&&e.end_date!==e.event_date?fmtShort(e.event_date)+' - '+fmtShort(e.end_date):fmtShort(e.event_date);
         let regTag='';
         if(e.event_type==='tournament') {
           const cl=Array.isArray(e.admin_checklist)?e.admin_checklist:(e.admin_checklist?JSON.parse(e.admin_checklist):[]);
           const reg=cl.find(c=>c.id==='register');
-          if(!reg||!reg.done) regTag='<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(255,59,48,0.15);color:#ff3b30;font-weight:600;margin-left:6px">NOT REG</span>';
+          if(!reg||!reg.done) regTag='<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,0.06);color:var(--muted);font-weight:600;margin-left:6px;border:1px solid var(--border)">NOT REG</span>';
         }
         rows+=`<tr>
         <td>${dateLabel}</td><td style="color:var(--muted)">${e.start_time||'--'}</td><td style="font-weight:600">${e.title}${regTag}</td>
