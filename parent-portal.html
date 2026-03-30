@@ -718,6 +718,9 @@
                             <iframe src="calendar-embed.html?role=parent" id="main-calendar-iframe"
                                 style="width: 100%; height: 100%; border: none;"></iframe>
                         </div>
+
+                        <!-- Tournaments Section -->
+                        <div id="tournament-schedule-container" style="margin-top: 24px;"></div>
                     </div>
 
                     <!-- VIEW: TRAINING -->
@@ -1384,6 +1387,7 @@
     <script src="branded-modal.js"></script>
     <script src="documents-view.js" defer></script>
     <script src="document-tracker-integration.js" defer></script>
+    <script src="tournament-schedule.js" defer></script>
     <script src="scripts/verify-setup.js" defer></script>
     <script src="src/components/MobileBottomNav.js" defer></script>
     <script src="nav-security.js" defer></script>
@@ -1417,6 +1421,41 @@
     <link rel="stylesheet" href="/build/style.css?v=18">
     <script src="/build/dues-widget.js?v=18"></script>
     <script src="mobile-menu.js"></script>
+
+    <!-- Tournament Schedule Initialization -->
+    <script>
+    (function() {
+        let tournamentsLoaded = false;
+
+        function initTournaments() {
+            if (tournamentsLoaded) return;
+            if (typeof TournamentSchedule === 'undefined') return;
+            var client = window.auth && window.auth.getSupabaseClient ? window.auth.getSupabaseClient() : null;
+            if (!client) return;
+            TournamentSchedule.init(client);
+            TournamentSchedule.load().then(function() {
+                TournamentSchedule.render('tournament-schedule-container');
+                tournamentsLoaded = true;
+            });
+        }
+
+        // Hook into view switching to load tournaments when calendar tab is shown
+        const origSwitch = window.switchPortalView;
+        if (origSwitch) {
+            window.switchPortalView = function(viewName, linkElement) {
+                origSwitch.call(this, viewName, linkElement);
+                if (viewName === 'calendar') initTournaments();
+            };
+        }
+
+        // Also handle direct hash navigation
+        if (window.location.hash === '#calendar' || window.location.hash === '#tournaments') {
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(initTournaments, 500);
+            });
+        }
+    })();
+    </script>
 </body>
 
 </html>

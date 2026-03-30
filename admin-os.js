@@ -868,8 +868,9 @@ async function loadCalendar() {
   const start=new Date(calYear,calMonth,1), end=new Date(calYear,calMonth+1,0);
   try {
     if(osSupabase) {
-      const {data}=await osSupabase.from('calendar_events').select('*').gte('event_date',start.toISOString().split('T')[0]).lte('event_date',end.toISOString().split('T')[0]).order('event_date',{ascending:true});
-      allCalEvents=data||[];
+      const {data}=await osSupabase.from('calendar_events').select('*').gte('start_date',start.toISOString().split('T')[0]).lte('start_date',end.toISOString().split('T')[0]).order('start_date',{ascending:true});
+      // Alias start_date → event_date for render compat
+      allCalEvents=(data||[]).map(e=>({...e, event_date: e.start_date}));
     }
   } catch(e){ console.error('Calendar load:',e); }
   renderCalendar();
@@ -945,9 +946,13 @@ async function deleteCalEvent(id) {
   catch(e){ showToast('Error: '+e.message,'error'); }
 }
 function calEventForm(e={}) {
+  const types=['practice','game','tournament','meeting','camp','tryout','fundraiser','deadline','other'];
+  const typeOpts=types.map(t=>`<option value="${t}" ${e.event_type===t?'selected':''}>${t.charAt(0).toUpperCase()+t.slice(1)}</option>`).join('');
+  const gradeVis=e.event_type==='tournament'?'':'display:none';
   return `<div class="field"><label>Title</label><input type="text" id="ev-title" value="${e.title||''}"></div>
-    <div class="grid2"><div class="field"><label>Type</label><select id="ev-type"><option value="practice" ${e.event_type==='practice'?'selected':''}>Practice</option><option value="game" ${e.event_type==='game'?'selected':''}>Game</option><option value="meeting" ${e.event_type==='meeting'?'selected':''}>Meeting</option><option value="deadline" ${e.event_type==='deadline'?'selected':''}>Deadline</option><option value="other" ${e.event_type==='other'?'selected':''}>Other</option></select></div>
-    <div class="field"><label>Date</label><input type="date" id="ev-date" value="${e.event_date||''}"></div>
+    <div class="grid2"><div class="field"><label>Type</label><select id="ev-type" onchange="document.getElementById('ev-grade-wrap').style.display=this.value==='tournament'?'':'none'">${typeOpts}</select></div>
+    <div class="field" id="ev-grade-wrap" style="${gradeVis}"><label>Grade Level</label><select id="ev-grade"><option value="" ${!e.grade_level?'selected':''}>--</option><option value="4th" ${e.grade_level==='4th'?'selected':''}>4th Grade</option><option value="5th" ${e.grade_level==='5th'?'selected':''}>5th Grade</option><option value="both" ${e.grade_level==='both'?'selected':''}>Both</option></select></div>
+    <div class="field"><label>Date</label><input type="date" id="ev-date" value="${e.event_date||e.start_date||''}"></div>
     <div class="field"><label>Start Time</label><input type="time" id="ev-start" value="${e.start_time||''}"></div>
     <div class="field"><label>End Time</label><input type="time" id="ev-end" value="${e.end_time||''}"></div></div>
     <div class="field"><label>Location</label><input type="text" id="ev-location" value="${e.location||''}"></div>
@@ -959,8 +964,20 @@ function calEventForm(e={}) {
 }
 async function saveCalEvent() {
   const id=document.getElementById('ev-id').value;
-  const payload={p_id:id||null,p_title:document.getElementById('ev-title').value,p_event_type:document.getElementById('ev-type').value,p_event_date:document.getElementById('ev-date').value,p_start_time:document.getElementById('ev-start').value||null,p_end_time:document.getElementById('ev-end').value||null,p_location:document.getElementById('ev-location').value,p_description:document.getElementById('ev-desc').value};
-  if(!payload.p_title||!payload.p_event_date) return showToast('Title and date required','error');
+  const evType=document.getElementById('ev-type').value;
+  const gradeEl=document.getElementById('ev-grade');
+  const payload={
+    p_id:id||null,
+    p_title:document.getElementById('ev-title').value,
+    p_event_type:evType,
+    p_start_date:document.getElementById('ev-date').value,
+    p_start_time:document.getElementById('ev-start').value||null,
+    p_end_time:document.getElementById('ev-end').value||null,
+    p_location:document.getElementById('ev-location').value,
+    p_description:document.getElementById('ev-desc').value||null,
+    p_grade_level:evType==='tournament'&&gradeEl?gradeEl.value||null:null
+  };
+  if(!payload.p_title||!payload.p_start_date) return showToast('Title and date required','error');
   try {
     if(osSupabase) {
       const session=await osSupabase.auth.getSession();
@@ -971,6 +988,175 @@ async function saveCalEvent() {
     }
     showToast(id?'Event updated':'Event created'); closeModal(); loadCalendar();
   } catch(e){ showToast('Error: '+e.message,'error'); }
+}
+
+// ─── BULK TOURNAMENT UPLOAD ──────────────────────────────────
+function openBulkTournamentUpload() {
+  openModal('bulk-tournament');
+  document.getElementById('modal-title').textContent='Bulk Tournament Upload';
+  document.getElementById('modal-body').innerHTML=`
+    <p style="color:var(--muted);font-size:13px;margin-bottom:12px">Paste tournament data (text from websites, bracket info, etc). AI will parse dates, locations, and detect 4th vs 5th grade.</p>
+    <div class="field"><label>Paste Tournament Data</label>
+      <textarea id="bulk-raw" style="min-height:180px;border:1px solid var(--border);border-radius:12px;background:rgba(0,0,0,0.3);color:#fff;padding:16px;width:100%;font-family:var(--font-mono,monospace);font-size:13px;resize:vertical" placeholder="Example:
+iHoop Spring Classic - April 12-13, 2026
+Location: Allen Fieldhouse, Allen TX
+4th Grade Division
+
+BigFoot Battle - May 3, 2026
+Location: Southlake Rec Center
+5th Grade"></textarea></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="parseBulkTournaments()" id="bulk-parse-btn">Parse Tournaments</button>
+    <div id="bulk-preview" style="margin-top:16px"></div>`;
+}
+
+async function parseBulkTournaments() {
+  const raw=document.getElementById('bulk-raw').value.trim();
+  if(!raw) return showToast('Paste tournament data first','error');
+  const btn=document.getElementById('bulk-parse-btn');
+  btn.textContent='Parsing...'; btn.disabled=true;
+  try {
+    const parsed=parseTournamentText(raw);
+    if(!parsed.length) { showToast('Could not parse any tournaments','error'); btn.textContent='Parse Tournaments'; btn.disabled=false; return; }
+    renderBulkPreview(parsed);
+    btn.textContent='Parse Tournaments'; btn.disabled=false;
+  } catch(e) { showToast('Parse error: '+e.message,'error'); btn.textContent='Parse Tournaments'; btn.disabled=false; }
+}
+
+function parseTournamentText(raw) {
+  // AI-assisted parser: split into blocks, extract date/location/grade per block
+  const blocks=raw.split(/\n\s*\n/).filter(b=>b.trim());
+  const results=[];
+  for(const block of blocks) {
+    const lines=block.split('\n').map(l=>l.trim()).filter(Boolean);
+    if(!lines.length) continue;
+    const entry={title:'',start_date:'',end_date:'',location:'',grade_level:'both',start_time:null};
+    // Title: first line or line without date/location prefix
+    entry.title=lines[0].replace(/^[-*]\s*/,'').replace(/\s*[-:]?\s*$/, '');
+    for(const line of lines) {
+      // Date detection
+      const dateMatch=line.match(/(\w+ \d{1,2}(?:\s*[-–]\s*\d{1,2})?,?\s*\d{4})/i)
+        ||line.match(/(\d{1,2}\/\d{1,2}\/\d{2,4})/);
+      if(dateMatch) {
+        const parsed=parseDateRange(dateMatch[1]);
+        if(parsed.start) entry.start_date=parsed.start;
+        if(parsed.end) entry.end_date=parsed.end;
+      }
+      // Location detection
+      const locMatch=line.match(/(?:location|venue|at|@)\s*[:\-]?\s*(.+)/i);
+      if(locMatch) entry.location=locMatch[1].trim();
+      // Grade detection
+      if(/4th\s*grade|4th\s*gr|u10.*4|grade\s*4/i.test(line)&&!/5th/i.test(line)) entry.grade_level='4th';
+      else if(/5th\s*grade|5th\s*gr|u11.*5|grade\s*5/i.test(line)&&!/4th/i.test(line)) entry.grade_level='5th';
+      else if(/both|all\s*grades|4th.*5th|5th.*4th/i.test(line)) entry.grade_level='both';
+      // Time detection
+      const timeMatch=line.match(/(\d{1,2}:\d{2}\s*(?:am|pm)?)/i);
+      if(timeMatch) entry.start_time=convertTo24(timeMatch[1]);
+    }
+    // Fallback: if no location found in prefixed format, check 2nd/3rd lines
+    if(!entry.location&&lines.length>1) {
+      for(let i=1;i<lines.length;i++) {
+        if(!lines[i].match(/\d{4}/)&&!lines[i].match(/grade/i)&&lines[i].length>5) {
+          entry.location=lines[i]; break;
+        }
+      }
+    }
+    // Only add if we have at least a title
+    if(entry.title) results.push(entry);
+  }
+  return results;
+}
+
+function parseDateRange(str) {
+  // Handle "April 12-13, 2026" or "4/12/2026"
+  const result={start:null,end:null};
+  // "Month Day-Day, Year"
+  const rangeMatch=str.match(/(\w+)\s+(\d{1,2})\s*[-–]\s*(\d{1,2}),?\s*(\d{4})/i);
+  if(rangeMatch) {
+    const [,month,d1,d2,year]=rangeMatch;
+    result.start=toISO(month,d1,year);
+    result.end=toISO(month,d2,year);
+    return result;
+  }
+  // "Month Day, Year"
+  const singleMatch=str.match(/(\w+)\s+(\d{1,2}),?\s*(\d{4})/i);
+  if(singleMatch) { result.start=toISO(singleMatch[1],singleMatch[2],singleMatch[3]); return result; }
+  // "M/D/YYYY"
+  const slashMatch=str.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if(slashMatch) {
+    let y=slashMatch[3]; if(y.length===2) y='20'+y;
+    result.start=`${y}-${slashMatch[1].padStart(2,'0')}-${slashMatch[2].padStart(2,'0')}`;
+    return result;
+  }
+  return result;
+}
+
+function toISO(month,day,year) {
+  const months={jan:1,feb:2,mar:3,apr:4,april:4,may:5,jun:6,june:6,jul:7,july:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12};
+  const m=months[month.toLowerCase().slice(0,3)]||parseInt(month);
+  return `${year}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+}
+
+function convertTo24(timeStr) {
+  const match=timeStr.match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i);
+  if(!match) return null;
+  let h=parseInt(match[1]), m=match[2];
+  if(match[3]) {
+    const pm=match[3].toLowerCase()==='pm';
+    if(pm&&h<12) h+=12; if(!pm&&h===12) h=0;
+  }
+  return `${String(h).padStart(2,'0')}:${m}`;
+}
+
+function renderBulkPreview(parsed) {
+  const container=document.getElementById('bulk-preview');
+  if(!parsed.length) { container.innerHTML='<p style="color:var(--muted)">No tournaments parsed.</p>'; return; }
+  let html=`<div style="font-weight:700;margin-bottom:8px">${parsed.length} tournament(s) detected:</div>`;
+  parsed.forEach((t,i)=>{
+    html+=`<div style="padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px" id="bulk-t-${i}">
+      <div class="grid2" style="gap:8px">
+        <div class="field"><label style="font-size:11px">Title</label><input type="text" class="bulk-title" value="${t.title}" style="font-size:13px"></div>
+        <div class="field"><label style="font-size:11px">Grade</label><select class="bulk-grade" style="font-size:13px">
+          <option value="4th" ${t.grade_level==='4th'?'selected':''}>4th Grade</option>
+          <option value="5th" ${t.grade_level==='5th'?'selected':''}>5th Grade</option>
+          <option value="both" ${t.grade_level==='both'?'selected':''}>Both</option></select></div>
+        <div class="field"><label style="font-size:11px">Start Date</label><input type="date" class="bulk-start" value="${t.start_date}" style="font-size:13px"></div>
+        <div class="field"><label style="font-size:11px">End Date</label><input type="date" class="bulk-end" value="${t.end_date||''}" style="font-size:13px"></div>
+        <div class="field"><label style="font-size:11px">Location</label><input type="text" class="bulk-location" value="${t.location}" style="font-size:13px"></div>
+        <div class="field"><label style="font-size:11px">Time</label><input type="time" class="bulk-time" value="${t.start_time||''}" style="font-size:13px"></div>
+      </div>
+    </div>`;
+  });
+  html+=`<button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="saveBulkTournaments(${parsed.length})">Save ${parsed.length} Tournament(s)</button>`;
+  container.innerHTML=html;
+}
+
+async function saveBulkTournaments(count) {
+  if(!osSupabase) return showToast('Not connected','error');
+  const session=await osSupabase.auth.getSession();
+  const userId=session.data.session.user.id;
+  let saved=0, errors=0;
+  for(let i=0;i<count;i++) {
+    const row=document.getElementById('bulk-t-'+i);
+    if(!row) continue;
+    const title=row.querySelector('.bulk-title').value;
+    const grade=row.querySelector('.bulk-grade').value;
+    const startDate=row.querySelector('.bulk-start').value;
+    const endDate=row.querySelector('.bulk-end').value||null;
+    const location=row.querySelector('.bulk-location').value;
+    const startTime=row.querySelector('.bulk-time').value||null;
+    if(!title||!startDate) { errors++; continue; }
+    try {
+      const {error}=await osSupabase.rpc('upsert_calendar_event',{
+        p_title:title, p_event_type:'tournament', p_start_date:startDate,
+        p_end_date:endDate, p_start_time:startTime, p_location:location,
+        p_grade_level:grade, p_created_by:userId, p_visibility:'public'
+      });
+      if(error) throw error;
+      saved++;
+    } catch(e) { console.error('Bulk save error:',e); errors++; }
+  }
+  showToast(`${saved} tournament(s) saved${errors?' ('+errors+' failed)':''}`);
+  closeModal(); loadCalendar();
 }
 
 // ─── BLOG ───────────────────────────────────────────────────
