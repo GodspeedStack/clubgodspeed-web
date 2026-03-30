@@ -229,9 +229,9 @@ function routeAuthenticatedUser() {
 function showDashboard() {
     const dash = document.getElementById('portal-dashboard');
     if (dash) dash.style.display = 'flex';
-    // Hide the main site navbar — the portal has its own chrome
+    // nav-unified.css forces .navbar { display: flex !important } — must beat it with setProperty
     const nav = document.querySelector('nav.navbar');
-    if (nav) nav.style.display = 'none';
+    if (nav) nav.style.setProperty('display', 'none', 'important');
     document.body.style.overflow = 'hidden';
 }
 
@@ -920,7 +920,7 @@ function handleLogout() {
 
     // Restore site navbar and scroll
     const nav = document.querySelector('nav.navbar');
-    if (nav) nav.style.display = '';
+    if (nav) nav.style.removeProperty('display');
     document.body.style.overflow = '';
 
 
