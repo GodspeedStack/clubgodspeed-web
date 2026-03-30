@@ -1023,47 +1023,89 @@ async function parseBulkTournaments() {
 }
 
 function parseTournamentText(raw) {
-  // AI-assisted parser: split into blocks, extract date/location/grade per block
-  const blocks=raw.split(/\n\s*\n/).filter(b=>b.trim());
+  // Smart parser: collapses blank lines, detects event boundaries by title patterns,
+  // handles pipe-delimited "CITY, STATE | MONTH DAY-DAY" and infers missing year.
+  const allLines=raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  if(!allLines.length) return [];
+
+  const detailRe=/^(please note|your team|no refunds|if you need|powered by|registration|open to|unsigned|normal|excellent|\d\+\s*game|championship|awards|teams must|proof of|\$\d)/i;
+  const dateRe=/\b(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d/i;
+  const phoneRe=/^\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]?\d{4}$/;
+
+  function isTitleLine(line) {
+    if(line.length<4) return false;
+    if(detailRe.test(line)||phoneRe.test(line)) return false;
+    if(/^\$/.test(line)) return false;
+    // Must be mostly uppercase (>55% of alpha chars)
+    const alpha=line.replace(/[^a-zA-Z]/g,'');
+    if(alpha.length<3) return false;
+    return (alpha.replace(/[^A-Z]/g,'').length/alpha.length)>0.55;
+  }
+
+  // Split into event blocks using title detection
+  const eventBlocks=[];
+  let cur=[];
+  let curHasDate=false;
+  for(const line of allLines) {
+    // If this looks like a new title AND the current block already has date info, start new event
+    if(cur.length>0&&curHasDate&&isTitleLine(line)&&!line.includes('|')) {
+      eventBlocks.push(cur);
+      cur=[];
+      curHasDate=false;
+    }
+    cur.push(line);
+    if(dateRe.test(line)||/\|\s*\w+\s+\d{1,2}/i.test(line)||/\d{1,2}\/\d{1,2}\/\d{2,4}/.test(line)) curHasDate=true;
+  }
+  if(cur.length) eventBlocks.push(cur);
+
+  const thisYear=new Date().getFullYear();
   const results=[];
-  for(const block of blocks) {
-    const lines=block.split('\n').map(l=>l.trim()).filter(Boolean);
-    if(!lines.length) continue;
+  for(const lines of eventBlocks) {
     const entry={title:'',start_date:'',end_date:'',location:'',grade_level:'both',start_time:null};
-    // Title: first line, strip trailing date portion (e.g. "- April 12-13, 2026")
+
+    // Title: first line, strip trailing date portion
     entry.title=lines[0].replace(/^[-*]\s*/,'')
-      .replace(/\s*[-–]+\s*\w+\s+\d{1,2}(?:\s*[-–]\s*\d{1,2})?,?\s*\d{4}\s*$/i,'')
-      .replace(/\s*[-–]+\s*\d{1,2}\/\d{1,2}\/\d{2,4}\s*$/,'')
-      .replace(/\s*[-:]?\s*$/, '');
+      .replace(/\s*[-\u2013]+\s*\w+\s+\d{1,2}(?:\s*[-\u2013]\s*\d{1,2})?,?\s*\d{4}\s*$/i,'')
+      .replace(/\s*[-\u2013]+\s*\d{1,2}\/\d{1,2}\/\d{2,4}\s*$/,'')
+      .replace(/\s*[-:]?\s*$/,'');
+
     for(const line of lines) {
-      // Date detection
-      const dateMatch=line.match(/(\w+ \d{1,2}(?:\s*[-–]\s*\d{1,2})?,?\s*\d{4})/i)
-        ||line.match(/(\d{1,2}\/\d{1,2}\/\d{2,4})/);
-      if(dateMatch) {
-        const parsed=parseDateRange(dateMatch[1]);
-        if(parsed.start) entry.start_date=parsed.start;
-        if(parsed.end) entry.end_date=parsed.end;
+      // Pipe format: "CITY, STATE | MAY 2-3" (year inferred)
+      const pipeMatch=line.match(/^(.+?)\s*\|\s*(\w+)\s+(\d{1,2})(?:\s*[-\u2013]\s*(\d{1,2}))?/i);
+      if(pipeMatch&&!entry.start_date) {
+        const loc=pipeMatch[1].trim();
+        if(loc&&!entry.location) entry.location=loc;
+        entry.start_date=toISO(pipeMatch[2],pipeMatch[3],thisYear);
+        if(pipeMatch[4]) entry.end_date=toISO(pipeMatch[2],pipeMatch[4],thisYear);
+        continue;
       }
-      // Location detection
-      const locMatch=line.match(/(?:location|venue|at|@)\s*[:\-]?\s*(.+)/i);
-      if(locMatch) entry.location=locMatch[1].trim();
+      // Standard date: "Month Day-Day, Year" or "M/D/YYYY"
+      if(!entry.start_date) {
+        const dateMatch=line.match(/(\w+\s+\d{1,2}(?:\s*[-\u2013]\s*\d{1,2})?,?\s*\d{4})/i)
+          ||line.match(/(\d{1,2}\/\d{1,2}\/\d{2,4})/);
+        if(dateMatch) {
+          const parsed=parseDateRange(dateMatch[1]);
+          if(parsed.start) entry.start_date=parsed.start;
+          if(parsed.end) entry.end_date=parsed.end;
+        }
+      }
+      // Location: prefixed format
+      if(!entry.location) {
+        const locMatch=line.match(/\b(?:location|venue)\s*[:\-]?\s*(.+)/i)||line.match(/(?:^|\s)(?:at|@)\s*[:\-]\s*(.+)/i);
+        if(locMatch) entry.location=(locMatch[1]||locMatch[2]||'').trim();
+      }
+      // Location: "City, State" standalone (no pipe, no date, no detail)
+      if(!entry.location&&/^[A-Z][A-Za-z\s.]+,\s*[A-Za-z\s]+$/.test(line)&&!dateRe.test(line)&&!detailRe.test(line)) {
+        entry.location=line;
+      }
       // Grade detection
       if(/4th\s*grade|4th\s*gr|u10.*4|grade\s*4/i.test(line)&&!/5th/i.test(line)) entry.grade_level='4th';
       else if(/5th\s*grade|5th\s*gr|u11.*5|grade\s*5/i.test(line)&&!/4th/i.test(line)) entry.grade_level='5th';
       else if(/both|all\s*grades|4th.*5th|5th.*4th/i.test(line)) entry.grade_level='both';
       // Time detection
       const timeMatch=line.match(/(\d{1,2}:\d{2}\s*(?:am|pm)?)/i);
-      if(timeMatch) entry.start_time=convertTo24(timeMatch[1]);
+      if(timeMatch&&!entry.start_time) entry.start_time=convertTo24(timeMatch[1]);
     }
-    // Fallback: if no location found in prefixed format, check 2nd/3rd lines
-    if(!entry.location&&lines.length>1) {
-      for(let i=1;i<lines.length;i++) {
-        if(!lines[i].match(/\d{4}/)&&!lines[i].match(/grade/i)&&lines[i].length>5) {
-          entry.location=lines[i]; break;
-        }
-      }
-    }
-    // Only add if we have at least a title
     if(entry.title) results.push(entry);
   }
   return results;
