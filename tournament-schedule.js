@@ -17,8 +17,8 @@ const TournamentSchedule = (() => {
     if (!supabase) return;
     const { data, error } = await supabase
       .from('calendar_events')
-      .select('id,title,start_date,start_time,end_time,location,location_url,grade_level,description,end_date')
-      .in('event_type', ['tournament', 'season'])
+      .select('id,title,event_type,start_date,start_time,end_time,end_date,location,location_url,grade_level,description,cost,tags')
+      .in('event_type', ['tournament', 'season', 'game', 'camp'])
       .eq('is_cancelled', false)
       .not('published_at', 'is', null)
       .in('visibility', ['public', 'team_only'])
@@ -170,42 +170,91 @@ const TournamentSchedule = (() => {
     }
   }
 
+  // ─── TYPE BADGE ─────────────────────────────────────────────
+  function typeBadge(eventType) {
+    const colors = {
+      tournament: { bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
+      season:     { bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0' },
+      game:       { bg: '#fefce8', color: '#a16207', border: '#fef08a' },
+      camp:       { bg: '#fdf4ff', color: '#7e22ce', border: '#e9d5ff' }
+    };
+    const c = colors[eventType] || { bg: '#f3f4f6', color: '#374151', border: '#e5e7eb' };
+    const label = (eventType || 'event').toUpperCase();
+    return `<span style="display:inline-block;font-size:10px;padding:2px 8px;border-radius:4px;background:${c.bg};color:${c.color};border:1px solid ${c.border};font-weight:700;letter-spacing:0.04em">${label}</span>`;
+  }
+
+  function formatDateShort(dateStr) {
+    return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', {
+      month: 'short', day: 'numeric'
+    });
+  }
+
   // ─── RENDER (for parent portal) ───────────────────────────
   function render(containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
     if (!tournaments.length) {
-      container.innerHTML = '<p style="color:#6b7280;text-align:center;padding:32px">No upcoming tournaments scheduled.</p>';
+      container.innerHTML = '<p style="color:#6b7280;text-align:center;padding:32px">No upcoming events scheduled.</p>';
       return;
     }
 
+    // Group by month
+    const months = {};
+    tournaments.forEach(t => {
+      const d = new Date(t.start_date + 'T12:00:00');
+      const key = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      if (!months[key]) months[key] = [];
+      months[key].push(t);
+    });
+
     let html = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
-        <h3 style="margin:0;font-size:18px;font-weight:700">Upcoming Tournaments</h3>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:8px">
+        <h3 style="margin:0;font-size:18px;font-weight:800;text-transform:uppercase;letter-spacing:-0.01em;color:#111">Our Schedule</h3>
         <div style="display:flex;gap:8px">
           <button onclick="TournamentSchedule.downloadPDF()" style="padding:8px 16px;border-radius:8px;border:1px solid #d1d5db;background:#fff;color:#374151;font-size:13px;font-weight:600;cursor:pointer">Download PDF</button>
           <button onclick="TournamentSchedule.downloadICS()" style="padding:8px 16px;border-radius:8px;border:none;background:#2563eb;color:#fff;font-size:13px;font-weight:600;cursor:pointer">Add All to Calendar</button>
         </div>
       </div>`;
 
-    for (const t of tournaments) {
+    for (const [month, events] of Object.entries(months)) {
       html += `
-      <div style="border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:12px;background:#fff">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+      <div style="margin-bottom:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;margin-bottom:4px;border-bottom:2px solid #e5e7eb">
+          <span style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#111">${month}</span>
+          <span style="font-size:11px;font-weight:600;color:#9ca3af">${events.length} event${events.length > 1 ? 's' : ''}</span>
+        </div>`;
+
+      for (const t of events) {
+        const isBackup = Array.isArray(t.tags) && t.tags.includes('backup');
+        const dateLabel = t.end_date && t.end_date !== t.start_date
+          ? `${formatDateShort(t.start_date)} - ${formatDateShort(t.end_date)}`
+          : formatDateShort(t.start_date);
+        const locationText = t.location
+          ? (t.location_url ? `<a href="${t.location_url}" target="_blank" style="color:#2563eb;text-decoration:none">${t.location}</a>` : t.location)
+          : '--';
+        const backupTag = isBackup ? '<span style="display:inline-block;font-size:10px;padding:2px 6px;border-radius:4px;background:#eff6ff;color:#2563eb;font-weight:700;border:1px solid #bfdbfe;margin-left:6px">BACKUP</span>' : '';
+
+        html += `
+        <div style="display:grid;grid-template-columns:90px 1fr auto;gap:12px;padding:12px 0;border-bottom:1px solid #f3f4f6;align-items:center">
           <div>
-            <div style="font-weight:700;font-size:16px;color:#111827">${t.title}</div>
-            <div style="color:#6b7280;font-size:13px;margin-top:4px">${gradeLabel(t.grade_level)}</div>
+            <div style="font-size:13px;font-weight:700;color:#111">${dateLabel}</div>
+            ${t.start_time ? `<div style="font-size:11px;color:#9ca3af;margin-top:2px">${formatTime(t.start_time)}</div>` : ''}
           </div>
-          <button onclick="TournamentSchedule.downloadSingleICS(TournamentSchedule.getById('${t.id}'))" style="padding:6px 12px;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#374151;font-size:12px;cursor:pointer;white-space:nowrap">Add to Calendar</button>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:12px">
-          <div><div style="font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em">Date</div><div style="font-size:14px;color:#374151;margin-top:2px">${formatDate(t.start_date)}${t.end_date && t.end_date !== t.start_date ? ' - ' + formatDate(t.end_date) : ''}</div></div>
-          <div><div style="font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em">Time</div><div style="font-size:14px;color:#374151;margin-top:2px">${t.start_time ? formatTime(t.start_time) : 'TBD'}</div></div>
-          <div><div style="font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em">Location</div><div style="font-size:14px;color:#374151;margin-top:2px">${t.location ? (t.location_url ? `<a href="${t.location_url}" target="_blank" style="color:#2563eb">${t.location}</a>` : t.location) : 'TBD'}</div></div>
-        </div>
-        ${t.description ? `<div style="margin-top:12px;font-size:13px;color:#6b7280;line-height:1.5">${t.description}</div>` : ''}
-      </div>`;
+          <div>
+            <div style="font-weight:700;font-size:14px;color:#111827">${t.title}${backupTag}</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
+              ${typeBadge(t.event_type)}
+              <span style="font-size:12px;color:#6b7280">${locationText}</span>
+            </div>
+          </div>
+          <div>
+            <button onclick="TournamentSchedule.downloadSingleICS(TournamentSchedule.getById('${t.id}'))" style="padding:6px 10px;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#374151;font-size:11px;cursor:pointer;white-space:nowrap;font-weight:600">+ Calendar</button>
+          </div>
+        </div>`;
+      }
+
+      html += '</div>';
     }
 
     container.innerHTML = html;

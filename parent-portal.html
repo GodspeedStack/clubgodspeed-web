@@ -711,17 +711,16 @@
 
                     <!-- VIEW: CALENDAR -->
                     <div id="view-calendar" class="portal-view" style="display: none;">
-                        <div class="section-header"
-                            style="display: flex; justify-content: space-between; align-items: center;">
-                            <h2 style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 1.35rem; color: #111; letter-spacing: -0.02em; text-transform: uppercase;">Schedule</h2>
-                        </div>
-                        <div class="calendar-wrapper-v3">
-                            <iframe src="calendar-embed.html?role=parent" id="main-calendar-iframe"
-                                style="width: 100%; height: 100%; border: none;"></iframe>
-                        </div>
+                        <!-- Schedule List (primary content) -->
+                        <div id="tournament-schedule-container"></div>
 
-                        <!-- Tournaments Section -->
-                        <div id="tournament-schedule-container" style="margin-top: 24px;"></div>
+                        <!-- Calendar -->
+                        <div style="margin-top:32px">
+                          <div class="calendar-wrapper-v3">
+                              <iframe src="calendar-embed.html?role=parent" id="main-calendar-iframe"
+                                  style="width: 100%; height: 100%; border: none;"></iframe>
+                          </div>
+                        </div>
                     </div>
 
                     <!-- VIEW: TRAINING -->
@@ -1383,7 +1382,7 @@
     <script src="branded-modal.js"></script>
     <script src="documents-view.js" defer></script>
     <script src="document-tracker-integration.js" defer></script>
-    <script src="tournament-schedule.js?v=20260331" defer></script>
+    <script src="tournament-schedule.js?v=20260331b" defer></script>
     <script src="scripts/verify-setup.js" defer></script>
     <script src="src/components/MobileBottomNav.js" defer></script>
     <script src="nav-security.js" defer></script>
