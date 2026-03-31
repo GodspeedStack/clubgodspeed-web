@@ -1308,19 +1308,25 @@ function runPublishQA(events) {
 }
 
 function showPublishAuditModal(events, audit) {
+  // Build per-event error/warning index
+  const errorIds = new Set();
+  audit.errors.forEach(e => (e.ids || []).forEach(id => errorIds.add(id)));
+  const warnIds = new Set();
+  audit.warnings.forEach(w => (w.ids || []).forEach(id => warnIds.add(id)));
+
   const hasErrors = audit.errors.length > 0;
   const hasWarnings = audit.warnings.length > 0;
   const clean = !hasErrors && !hasWarnings;
 
   let html = `<div style="margin-bottom:16px">
-    <div style="font-size:14px;color:var(--muted);margin-bottom:12px">${events.length} event(s) ready to publish to parents.</div>`;
+    <div style="font-size:14px;color:var(--muted);margin-bottom:12px">${events.length} unpublished event(s) found. Select which to approve.</div>`;
 
   if (clean) {
-    html += `<div style="padding:12px 16px;border-radius:8px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);color:#22c55e;font-weight:600;font-size:13px;margin-bottom:16px">All checks passed. Ready to send.</div>`;
+    html += `<div style="padding:12px 16px;border-radius:8px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);color:#22c55e;font-weight:600;font-size:13px;margin-bottom:16px">All checks passed.</div>`;
   }
 
   if (hasErrors) {
-    html += `<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Errors (fix before sending)</div>`;
+    html += `<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Errors</div>`;
     audit.errors.forEach(e => {
       html += `<div style="padding:10px 14px;border-radius:8px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);color:#fca5a5;font-size:13px;margin-bottom:6px">${e.msg}</div>`;
     });
@@ -1328,68 +1334,112 @@ function showPublishAuditModal(events, audit) {
   }
 
   if (hasWarnings) {
-    html += `<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Warnings (review recommended)</div>`;
+    html += `<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Warnings</div>`;
     audit.warnings.forEach(w => {
       html += `<div style="padding:10px 14px;border-radius:8px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.15);color:#fbbf24;font-size:13px;margin-bottom:6px">${w.msg}</div>`;
     });
     html += `</div>`;
   }
 
-  // Event preview table
-  html += `<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Events to publish</div>
-  <div style="max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
-  <table style="width:100%;font-size:13px"><thead><tr style="background:rgba(0,0,0,0.2)"><th style="padding:8px 12px;text-align:left">Event</th><th style="padding:8px 12px;text-align:left">Date</th><th style="padding:8px 12px;text-align:left">Location</th></tr></thead><tbody>`;
+  // Event selection table with checkboxes
+  html += `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+    <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">Select events to publish</div>
+    <label style="font-size:12px;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:4px"><input type="checkbox" id="qa-select-all" checked onchange="document.querySelectorAll('.qa-ev-cb').forEach(c=>{if(!c.disabled)c.checked=this.checked});updatePublishBtn()"> Select all</label>
+  </div>
+  <div style="max-height:240px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
+  <table style="width:100%;font-size:13px"><thead><tr style="background:rgba(0,0,0,0.2)"><th style="padding:8px 8px;width:32px"></th><th style="padding:8px 12px;text-align:left">Event</th><th style="padding:8px 12px;text-align:left">Date</th><th style="padding:8px 12px;text-align:left">Location</th><th style="padding:8px 8px;text-align:center;width:60px">Status</th></tr></thead><tbody>`;
   events.forEach(e => {
     const dateLabel = e.end_date && e.end_date !== e.start_date ? fmtShort(e.start_date) + ' - ' + fmtShort(e.end_date) : fmtShort(e.start_date);
-    html += `<tr><td style="padding:6px 12px;border-top:1px solid var(--border)">${e.title}</td><td style="padding:6px 12px;border-top:1px solid var(--border);white-space:nowrap">${dateLabel}</td><td style="padding:6px 12px;border-top:1px solid var(--border)">${e.location || 'TBD'}</td></tr>`;
+    const hasErr = errorIds.has(e.id);
+    const hasWarn = warnIds.has(e.id);
+    const badge = hasErr ? '<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(239,68,68,0.1);color:#ef4444;font-weight:600">ERROR</span>'
+      : hasWarn ? '<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(245,158,11,0.1);color:#f59e0b;font-weight:600">WARN</span>'
+      : '<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(34,197,94,0.1);color:#22c55e;font-weight:600">OK</span>';
+    const disabled = hasErr ? 'disabled' : '';
+    const checked = hasErr ? '' : 'checked';
+    const rowOpacity = hasErr ? 'opacity:0.4' : '';
+    html += `<tr style="${rowOpacity}"><td style="padding:6px 8px;border-top:1px solid var(--border);text-align:center"><input type="checkbox" class="qa-ev-cb" data-id="${e.id}" ${checked} ${disabled} onchange="updatePublishBtn()"></td><td style="padding:6px 12px;border-top:1px solid var(--border);font-weight:600">${e.title}</td><td style="padding:6px 12px;border-top:1px solid var(--border);white-space:nowrap">${dateLabel}</td><td style="padding:6px 12px;border-top:1px solid var(--border)">${e.location || 'TBD'}</td><td style="padding:6px 8px;border-top:1px solid var(--border);text-align:center">${badge}</td></tr>`;
   });
   html += `</tbody></table></div></div>`;
 
+  // Publish mode toggle
+  html += `<div style="margin-top:16px;margin-bottom:16px;padding:12px 16px;border-radius:8px;border:1px solid var(--border);background:rgba(0,0,0,0.15)">
+    <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">Publish mode</div>
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:8px"><input type="radio" name="qa-publish-mode" value="email" checked> <span style="font-size:13px"><strong>Email + Portal</strong> -- send email to all parents and mark as published</span></label>
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="qa-publish-mode" value="portal"> <span style="font-size:13px"><strong>Portal only</strong> -- mark as published (visible on portal) but do not send email</span></label>
+  </div>`;
+
   // Action buttons
-  const publishDisabled = hasErrors ? 'disabled style="opacity:0.4;cursor:not-allowed"' : '';
-  html += `<div style="display:flex;gap:8px;margin-top:16px">
-    <button class="btn btn-primary" style="flex:1" ${publishDisabled} onclick="confirmPublish()" id="qa-publish-btn">${hasErrors ? 'Fix errors to publish' : 'Confirm & Send to Parents'}</button>
+  html += `<div style="display:flex;gap:8px">
+    <button class="btn btn-primary" style="flex:1" onclick="confirmPublish()" id="qa-publish-btn">Approve & Publish Selected</button>
     <button class="btn btn-ghost" style="flex:0 0 auto" onclick="closeModal()">Cancel</button>
   </div>`;
 
-  // Store events for confirmPublish
+  // Store all events for reference
   window._pendingPublishEvents = events;
 
   openModal('publish-audit');
   document.getElementById('modal-title').textContent = 'Pre-Publish QA Audit';
   document.getElementById('modal-body').innerHTML = html;
+  updatePublishBtn();
+}
+
+function updatePublishBtn() {
+  const checked = document.querySelectorAll('.qa-ev-cb:checked');
+  const btn = document.getElementById('qa-publish-btn');
+  if (!btn) return;
+  if (checked.length === 0) {
+    btn.disabled = true;
+    btn.style.opacity = '0.4';
+    btn.textContent = 'Select events to publish';
+  } else {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.textContent = `Approve & Publish ${checked.length} Event${checked.length > 1 ? 's' : ''}`;
+  }
 }
 
 async function confirmPublish() {
-  const events = window._pendingPublishEvents;
-  if (!events || !events.length) return;
+  const allEvents = window._pendingPublishEvents;
+  if (!allEvents) return;
+
+  // Gather only checked event IDs
+  const checkedIds = [];
+  document.querySelectorAll('.qa-ev-cb:checked').forEach(cb => checkedIds.push(cb.dataset.id));
+  if (!checkedIds.length) return;
+
+  const mode = document.querySelector('input[name="qa-publish-mode"]:checked')?.value || 'email';
   const btn = document.getElementById('qa-publish-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Publishing...'; }
 
   try {
-    const ids = events.map(e => e.id);
     const now = new Date().toISOString();
     const { error: updateErr } = await osSupabase
       .from('calendar_events')
       .update({ published_at: now })
-      .in('id', ids);
+      .in('id', checkedIds);
 
     if (updateErr) throw updateErr;
 
-    try {
-      await osSupabase.functions.invoke('send-calendar-update', {
-        body: { event_ids: ids }
-      });
-    } catch (emailErr) {
-      console.error('Email notification error (events still published):', emailErr);
+    // Only invoke email if mode is "email"
+    if (mode === 'email') {
+      try {
+        await osSupabase.functions.invoke('send-calendar-update', {
+          body: { event_ids: checkedIds }
+        });
+      } catch (emailErr) {
+        console.error('Email notification error (events still published):', emailErr);
+      }
+      showToast(`Published ${checkedIds.length} event(s) and emailed parents.`, 'success');
+    } else {
+      showToast(`Published ${checkedIds.length} event(s) to portal (no email sent).`, 'success');
     }
 
-    showToast(`Published ${events.length} event(s) to parents.`, 'success');
     closeModal();
     loadCalendar();
   } catch (e) {
     showToast('Publish error: ' + e.message, 'error');
-    if (btn) { btn.disabled = false; btn.textContent = 'Confirm & Send to Parents'; }
+    if (btn) { btn.disabled = false; btn.textContent = 'Approve & Publish Selected'; }
   } finally {
     window._pendingPublishEvents = null;
   }
