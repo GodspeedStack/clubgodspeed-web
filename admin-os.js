@@ -428,15 +428,33 @@ async function loadRequests() {
 }
 function renderRequests(arr) {
   const pending=arr.filter(r=>r.status==='pending');
+  const resolved=arr.filter(r=>r.status!=='pending');
   document.getElementById('req-count-label').textContent=`${pending.length} pending`;
   document.getElementById('pending-badge').textContent=pending.length;
-  document.getElementById('req-tbody').innerHTML=arr.map(r=>{
-    const d=fmt(r.created_at);
-    return `<tr><td style="font-weight:600">${r.full_name||'--'}</td><td style="color:var(--muted)">${r.email}</td>
-      <td>${statusTag(r.requested_role)}</td><td>${r.grade||'--'} ${r.player_name?'/ '+r.player_name:''}</td>
-      <td style="color:var(--muted);font-size:12px">${d}</td><td style="color:var(--muted);font-size:11px">${r.ip_address||'--'}</td>
-      <td>${r.status==='pending'?`<div style="display:flex;gap:6px"><button class="btn btn-ghost btn-xs" style="color:#34c759" onclick="approveReq('${r.id}','${r.email}')">Approve</button><button class="btn btn-ghost btn-xs" style="color:#ff3b30" onclick="denyReq('${r.id}','${r.email}')">Deny</button><button class="btn btn-ghost btn-xs" onclick="resendVerification('${r.email}')" title="Resend verification email">Resend</button></div>`:statusTag(r.status)}</td></tr>`;
-  }).join('');
+  let rows='';
+  if(!pending.length) {
+    rows='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">No pending requests.</td></tr>';
+  } else {
+    rows=pending.map(r=>{
+      const d=fmt(r.created_at);
+      return `<tr><td style="font-weight:600">${r.full_name||'--'}</td><td style="color:var(--muted)">${r.email}</td>
+        <td>${statusTag(r.requested_role)}</td><td>${r.grade||'--'} ${r.player_name?'/ '+r.player_name:''}</td>
+        <td style="color:var(--muted);font-size:12px">${d}</td><td style="color:var(--muted);font-size:11px">${r.ip_address||'--'}</td>
+        <td><div style="display:flex;gap:6px"><button class="btn btn-ghost btn-xs" style="color:#34c759" onclick="approveReq('${r.id}','${r.email}')">Approve</button><button class="btn btn-ghost btn-xs" style="color:#ff3b30" onclick="denyReq('${r.id}','${r.email}')">Deny</button><button class="btn btn-ghost btn-xs" onclick="resendVerification('${r.email}')" title="Resend verification email">Resend</button></div></td></tr>`;
+    }).join('');
+  }
+  // Resolved history (collapsed)
+  if(resolved.length) {
+    rows+=`<tr><td colspan="7" style="padding:12px 0 4px"><button class="btn btn-ghost btn-xs" onclick="document.querySelectorAll('.resolved-row').forEach(el=>el.style.display=el.style.display==='none'?'':'none')" style="font-size:11px;color:var(--muted)">Show ${resolved.length} resolved</button></td></tr>`;
+    rows+=resolved.map(r=>{
+      const d=fmt(r.created_at);
+      return `<tr class="resolved-row" style="display:none;opacity:0.5"><td style="font-weight:600">${r.full_name||'--'}</td><td style="color:var(--muted)">${r.email}</td>
+        <td>${statusTag(r.requested_role)}</td><td>${r.grade||'--'} ${r.player_name?'/ '+r.player_name:''}</td>
+        <td style="color:var(--muted);font-size:12px">${d}</td><td style="color:var(--muted);font-size:11px">${r.ip_address||'--'}</td>
+        <td>${statusTag(r.status)}</td></tr>`;
+    }).join('');
+  }
+  document.getElementById('req-tbody').innerHTML=rows;
 }
 function syncDashboardPending() {
   const pending = allRequests.filter(r => r.status === 'pending');
