@@ -683,7 +683,7 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
             </div>
             <div style="display:flex;gap:8px"><input type="text" id="player-search" placeholder="Search..." style="width:200px" oninput="filterPlayers()"><button class="btn btn-primary btn-sm" onclick="openModal('add-player')">+ Add</button></div>
           </div>
-          <table id="players-table"><thead><tr><th>Player</th><th>Parent(s)</th><th>Grade</th><th>Email</th><th>Phone</th><th>Status</th><th></th></tr></thead><tbody id="players-tbody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px">Loading roster...</td></tr></tbody></table>
+          <table id="players-table"><thead><tr><th style="width:36px"></th><th style="width:40px">#</th><th>Full Name</th><th>Phone</th><th>DOB</th><th>Grade</th><th>Play Style</th><th>Training</th><th>Parent Account</th><th style="width:36px"></th></tr></thead><tbody id="players-tbody"><tr><td colspan="10" style="text-align:center;color:var(--muted);padding:32px">Loading roster...</td></tr></tbody></table>
         </div>
       </div>
 
@@ -1145,7 +1145,7 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 
 <script type="module" src="src/lib/env-injector.js"></script>
 <script src="auth-supabase.js?v=20260330" defer></script>
-<script src="admin-os.js?v=20260331r" defer></script>
+<script src="admin-os.js?v=20260331s" defer></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
   function toggleMobileMenu() {

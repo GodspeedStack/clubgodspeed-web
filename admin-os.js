@@ -263,25 +263,36 @@ function switchRosterView(view) {
   if(view==='players') renderRosterByPlayer(allRosterAthletes); else renderRosterByParent(allPlayers);
 }
 
+// ── Position label map ──
+const POS_LABELS = {PG:'Point Guard',SG:'Shooting Guard',SF:'Small Forward',PF:'Power Forward',C:'Center',G:'Guard',F:'Forward',UTIL:'Utility'};
+
 // ── Player-centric view ──
 function renderRosterByPlayer(arr) {
   const q=(document.getElementById('player-search')?.value||'').toLowerCase();
   const filtered=q?arr.filter(a=>(a.display_name||'').toLowerCase().includes(q)||(a.parents||[]).some(p=>(p.full_name||'').toLowerCase().includes(q)||(p.email||'').toLowerCase().includes(q))):arr;
   const tbody=document.getElementById('players-tbody');
-  if(!filtered.length){ tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px">No players found. Click "+ Add" to add a player.</td></tr>'; return; }
+  if(!filtered.length){ tbody.innerHTML='<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:32px">No players found. Click "+ Add" to add a player.</td></tr>'; return; }
+  const esc=s=>(s||'').replace(/"/g,'&quot;');
   tbody.innerHTML=filtered.map(a=>{
-    const esc=s=>(s||'').replace(/"/g,'&quot;');
-    const parentInputs=(a.parents||[]).length?(a.parents||[]).map(p=>`<input class="row-input row-input-sm" value="${esc(p.full_name||p.email)}" data-profile-id="${p.profile_id}" data-field="full_name" onblur="saveParentInline(this)" onkeydown="if(event.key==='Enter'){this.blur()}" placeholder="Parent name">`).join(''):`<span style="color:var(--muted);font-size:12px">No parent linked</span>`;
-    const parentEmails=(a.parents||[]).map(p=>p.email).join(', ')||'--';
     const parentPhones=(a.parents||[]).map(p=>p.phone).filter(Boolean).join(', ')||'--';
+    const dobStr=a.date_of_birth?new Date(a.date_of_birth+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'--';
+    const posLabel=a.position?POS_LABELS[a.position]||a.position:'--';
+    const enrolled=a.enrollment_status==='active';
+    // Parent link: show linked parent name or "Link" button
+    const parentLink=(a.parents||[]).length
+      ?(a.parents||[]).map(p=>`<span style="font-size:12px">${p.full_name||p.email}</span>`).join('<br>')
+      :`<button class="btn-tbl btn-tbl-add" onclick="openLinkParent('${a.athlete_id}','${esc(a.display_name)}')">Link</button>`;
     return `<tr>
-      <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar">${(a.first_name||'?')[0].toUpperCase()}</div><div><input class="row-input" value="${esc(a.display_name)}" data-athlete-id="${a.athlete_id}" data-orig-first="${esc(a.first_name)}" data-orig-last="${esc(a.last_name)}" onblur="savePlayerInline(this)" onkeydown="if(event.key==='Enter'){this.blur()}" placeholder="Player name"><div style="color:var(--muted);font-size:11px;padding-left:6px">${a.enrollment_status||'active'}</div></div></div></td>
-      <td style="min-width:140px">${parentInputs}</td>
+      <td><button class="btn-tbl btn-tbl-add" onclick="openModal('add-player')" title="Add player">+</button></td>
+      <td style="text-align:center;font-weight:700;color:var(--muted)">${a.jersey_number!=null?a.jersey_number:'--'}</td>
+      <td><input class="row-input" value="${esc(a.display_name)}" data-athlete-id="${a.athlete_id}" data-orig-first="${esc(a.first_name)}" data-orig-last="${esc(a.last_name)}" onblur="savePlayerInline(this)" onkeydown="if(event.key==='Enter'){this.blur()}" placeholder="Player name"></td>
+      <td style="color:var(--muted);font-size:12px">${parentPhones}</td>
+      <td style="color:var(--muted);font-size:12px">${dobStr}</td>
       <td>${a.grade?statusTag(a.grade):'--'}</td>
-      <td style="color:var(--muted);font-size:12px">${parentEmails}</td>
-      <td style="color:var(--muted)">${parentPhones}</td>
-      <td>${statusTag(a.enrollment_status==='active'?'Active':'Inactive')}</td>
-      <td><button class="btn btn-ghost btn-xs" onclick="viewAthlete('${a.athlete_id}')">View</button></td></tr>`;
+      <td style="font-size:12px">${posLabel}</td>
+      <td>${enrolled?'<span class="tag tag-green">Yes</span>':'<span class="tag tag-red">No</span>'}</td>
+      <td>${parentLink}</td>
+      <td><button class="btn-tbl btn-tbl-rm" onclick="removeAthlete('${a.athlete_id}','${esc(a.display_name)}')" title="Remove player">&minus;</button></td></tr>`;
   }).join('');
 }
 
@@ -358,6 +369,50 @@ async function saveParentInline(el) {
 function filterPlayers() {
   if(rosterView==='players') renderRosterByPlayer(allRosterAthletes); else renderRosterByParent(allPlayers);
 }
+
+// ── Remove athlete (soft-delete: set enrollment_status = 'inactive') ──
+async function removeAthlete(athleteId, name) {
+  if(!confirm(`Remove ${name} from the active roster? They will be set to inactive.`)) return;
+  try {
+    if(!osSupabase) return;
+    const {error}=await osSupabase.from('athletes').update({enrollment_status:'inactive'}).eq('id',athleteId);
+    if(error){ showToast('Remove failed: '+error.message,'error'); return; }
+    allRosterAthletes=allRosterAthletes.filter(a=>a.athlete_id!==athleteId);
+    renderRosterByPlayer(allRosterAthletes);
+    showToast(`${name} removed from active roster`);
+  } catch(e){ showToast('Error: '+e.message,'error'); }
+}
+window.removeAthlete=removeAthlete;
+
+// ── Link parent to athlete modal ──
+function openLinkParent(athleteId, athleteName) {
+  // Build parent selector from allPlayers (profiles with role=parent, no link to this athlete yet)
+  const linkedIds=new Set((allRosterAthletes.find(a=>a.athlete_id===athleteId)?.parents||[]).map(p=>p.profile_id));
+  const available=allPlayers.filter(p=>p.role==='parent'&&!linkedIds.has(p.id));
+  if(!available.length){ showToast('No unlinked parent accounts available. A parent must register first.','info'); return; }
+  const options=available.map(p=>`<option value="${p.id}">${p.full_name||p.email} (${p.email})</option>`).join('');
+  document.getElementById('modal-body').innerHTML=`
+    <div class="field"><label>Select Parent Account</label><select id="link-parent-select" style="width:100%">${options}</select></div>
+    <div class="field"><label>Relationship</label><select id="link-parent-rel" style="width:100%"><option value="guardian">Guardian</option><option value="mother">Mother</option><option value="father">Father</option><option value="other">Other</option></select></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="doLinkParent('${athleteId}')">Link Parent</button>`;
+  document.getElementById('modal-title').textContent='Link Parent to '+athleteName;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+window.openLinkParent=openLinkParent;
+
+async function doLinkParent(athleteId) {
+  const profileId=document.getElementById('link-parent-select').value;
+  const rel=document.getElementById('link-parent-rel').value;
+  if(!profileId||!osSupabase) return;
+  try {
+    const {error}=await osSupabase.rpc('link_parent_to_athlete',{p_profile_id:profileId,p_athlete_id:athleteId,p_relationship:rel,p_is_primary:false});
+    if(error){ showToast('Link failed: '+error.message,'error'); return; }
+    closeModal();
+    showToast('Parent linked successfully');
+    await loadPlayers(); // Refresh roster with new link
+  } catch(e){ showToast('Error: '+e.message,'error'); }
+}
+window.doLinkParent=doLinkParent;
 
 // ── View Athlete Detail (player-centric) ──
 function viewAthlete(athleteId) {
@@ -2327,10 +2382,15 @@ function openModal(id) {
     'add-player': `
       <h3 style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">PLAYER INFO</h3>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div class="field"><label>Player First Name</label><input type="text" id="np-pfirst" placeholder="e.g. Aiden"></div>
-        <div class="field"><label>Player Last Name</label><input type="text" id="np-plast" placeholder="e.g. Johnson"></div>
+        <div class="field"><label>First Name</label><input type="text" id="np-pfirst" placeholder="e.g. Aiden"></div>
+        <div class="field"><label>Last Name</label><input type="text" id="np-plast" placeholder="e.g. Johnson"></div>
       </div>
-      <div class="field"><label>Grade</label><select id="np-grade"><option value="4th">4th</option><option value="5th">5th</option><option value="3rd">3rd</option><option value="6th">6th</option></select></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div class="field"><label>Jersey #</label><input type="number" id="np-jersey" min="0" max="99" placeholder="e.g. 23"></div>
+        <div class="field"><label>DOB</label><input type="date" id="np-dob"></div>
+        <div class="field"><label>Grade</label><select id="np-grade"><option value="4th">4th</option><option value="5th">5th</option><option value="3rd">3rd</option><option value="6th">6th</option></select></div>
+      </div>
+      <div class="field"><label>Play Style / Position</label><select id="np-position"><option value="">-- Select --</option><option value="PG">Point Guard</option><option value="SG">Shooting Guard</option><option value="SF">Small Forward</option><option value="PF">Power Forward</option><option value="C">Center</option><option value="G">Guard</option><option value="F">Forward</option><option value="UTIL">Utility</option></select></div>
       <hr style="border-color:var(--border);margin:12px 0">
       <h3 style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">PARENT / GUARDIAN INFO</h3>
       <div class="field"><label>Parent Full Name</label><input type="text" id="np-name" placeholder="e.g. Jane Johnson"></div>
@@ -2358,8 +2418,15 @@ async function addPlayer() {
   if(!parentEmail) return showToast('Parent email is required','error');
   if(!osSupabase) return;
   try {
+    const jersey=document.getElementById('np-jersey')?.value;
+    const dob=document.getElementById('np-dob')?.value||null;
+    const position=document.getElementById('np-position')?.value||null;
     // 1. Create athlete record
-    const {data:athlete,error:athErr}=await osSupabase.from('athletes').insert({first_name:pFirst,last_name:pLast||'',grade:grade,enrollment_status:'active'}).select('id').single();
+    const athleteRow={first_name:pFirst,last_name:pLast||'',grade:grade,enrollment_status:'active'};
+    if(jersey!==''&&jersey!=null) athleteRow.jersey_number=parseInt(jersey,10);
+    if(dob) athleteRow.date_of_birth=dob;
+    if(position) athleteRow.position=position;
+    const {data:athlete,error:athErr}=await osSupabase.from('athletes').insert(athleteRow).select('id').single();
     if(athErr) { showToast('Error creating player: '+athErr.message,'error'); return; }
     // 2. Find or create parent profile
     let profileId;
