@@ -204,7 +204,7 @@ function routeAuthenticatedUser() {
             if (loginView) loginView.style.display = 'none';
             showDashboard();
             updateDashboardProfile(savedEmail);
-            checkCalendarBadge();
+            // Calendar badge check removed (iframe calendar)
         } else {
             if (loginView) loginView.style.display = 'none';
             if (waitingRoom) waitingRoom.style.display = 'flex';
@@ -989,230 +989,36 @@ window.switchPortalView = function (viewName, linkElement) {
     }
 
     if (viewName === 'calendar') {
-        loadParentCalendar();
+        injectTrainingEvents();
     }
 }
 
-// --- Parent Calendar (Supabase-powered) ---
-let ppCalMonth = new Date().getMonth();
-let ppCalYear = new Date().getFullYear();
-let ppCalEvents = [];
+// --- Parent Calendar (iframe-based with practice schedule) ---
+function injectTrainingEvents() {
+    const db = getDB();
+    const training = db.training;
+    if (!training || !training.upcomingSessions) return;
 
-const PP_EVENT_COLORS = {
-    practice:   { bg: '#dcfce7', text: '#166534' },
-    game:       { bg: '#dbeafe', text: '#1e40af' },
-    tournament: { bg: '#fef9c3', text: '#854d0e' },
-    meeting:    { bg: '#f3e8ff', text: '#6b21a8' },
-    other:      { bg: '#f3f4f6', text: '#374151' }
-};
+    const iframe = document.querySelector('#view-calendar iframe');
+    if (iframe) {
+        const events = training.upcomingSessions.map(sess => ({
+            type: 'training',
+            title: sess.program,
+            fullTitle: `${sess.program}: ${sess.topic}`,
+            time: sess.time,
+            date: sess.date,
+            loc: sess.location,
+            desc: sess.topic,
+            pillClass: 'event-training',
+        }));
 
-window.calNavParent = function(dir) {
-    ppCalMonth += dir;
-    if (ppCalMonth > 11) { ppCalMonth = 0; ppCalYear++; }
-    if (ppCalMonth < 0) { ppCalMonth = 11; ppCalYear--; }
-    renderParentCalGrid();
-};
-
-async function loadParentCalendar() {
-    const grid = document.getElementById('pp-cal-grid');
-    const upcoming = document.getElementById('pp-upcoming-events');
-    if (!grid) return;
-
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:#6b7280;">Loading schedule...</div>';
-
-    const supabase = window.auth?.getSupabaseClient?.();
-    if (!supabase) {
-        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:#6b7280;">Sign in to view the schedule.</div>';
-        return;
-    }
-
-    try {
-        const { data, error } = await supabase
-            .from('calendar_events')
-            .select('id, title, event_type, start_date, start_time, end_date, end_time, location, notes, cost, published_at')
-            .not('published_at', 'is', null)
-            .in('visibility', ['public', 'team_only'])
-            .order('start_date', { ascending: true });
-
-        if (error) throw error;
-        ppCalEvents = data || [];
-
-        renderParentCalGrid();
-        renderParentUpcoming(upcoming);
-        clearCalendarBadge(supabase);
-    } catch (e) {
-        console.error('Parent calendar load:', e);
-        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:#ef4444;">Could not load schedule. Please try again.</div>';
-    }
-}
-
-function renderParentCalGrid() {
-    const grid = document.getElementById('pp-cal-grid');
-    const label = document.getElementById('pp-cal-month-label');
-    if (!grid) return;
-
-    const monthName = new Date(ppCalYear, ppCalMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    if (label) label.textContent = monthName;
-
-    const first = new Date(ppCalYear, ppCalMonth, 1);
-    const last = new Date(ppCalYear, ppCalMonth + 1, 0);
-    const startDay = first.getDay();
-    const totalDays = last.getDate();
-    const todayStr = new Date().toISOString().split('T')[0];
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-    let html = '';
-    // Day headers
-    days.forEach(d => {
-        html += `<div style="padding:8px 4px;text-align:center;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;background:#f9fafb;">${d}</div>`;
-    });
-
-    // Leading empty cells
-    for (let i = 0; i < startDay; i++) {
-        html += '<div style="min-height:80px;border-top:1px solid #e5e7eb;background:#f9fafb;"></div>';
-    }
-
-    // Day cells
-    for (let d = 1; d <= totalDays; d++) {
-        const dateStr = `${ppCalYear}-${String(ppCalMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-        const isToday = dateStr === todayStr;
-        const dayEvents = ppCalEvents.filter(e => e.start_date === dateStr);
-
-        html += `<div style="min-height:80px;border-top:1px solid #e5e7eb;padding:4px;${isToday ? 'background:#eff6ff;' : ''}">`;
-        html += `<div style="font-size:12px;font-weight:${isToday ? '800' : '600'};color:${isToday ? '#2563eb' : '#374151'};margin-bottom:2px;">${d}</div>`;
-
-        dayEvents.slice(0, 2).forEach(e => {
-            const c = PP_EVENT_COLORS[e.event_type] || PP_EVENT_COLORS.other;
-            html += `<div onclick="showParentEventDetail('${e.id}')" style="cursor:pointer;font-size:10px;padding:2px 4px;border-radius:4px;margin-bottom:1px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;background:${c.bg};color:${c.text};font-weight:600;">${escapeHTML(e.title)}</div>`;
-        });
-        if (dayEvents.length > 2) {
-            html += `<div style="font-size:10px;color:#6b7280;">+${dayEvents.length - 2} more</div>`;
-        }
-        html += '</div>';
-    }
-
-    // Trailing empty cells
-    const filled = startDay + totalDays;
-    const remaining = filled % 7 === 0 ? 0 : 7 - (filled % 7);
-    for (let i = 0; i < remaining; i++) {
-        html += '<div style="min-height:80px;border-top:1px solid #e5e7eb;background:#f9fafb;"></div>';
-    }
-
-    grid.innerHTML = html;
-}
-
-function renderParentUpcoming(container) {
-    if (!container) return;
-    const today = new Date().toISOString().split('T')[0];
-    const upcoming = ppCalEvents.filter(e => e.start_date >= today).slice(0, 8);
-
-    if (!upcoming.length) {
-        container.innerHTML = '<p style="color:#6b7280;text-align:center;padding:16px;">No upcoming events.</p>';
-        return;
-    }
-
-    let html = '<h3 style="font-family:\'Inter\',sans-serif;font-weight:800;font-size:1rem;color:#111;margin-bottom:12px;text-transform:uppercase;letter-spacing:-0.01em;">Upcoming</h3>';
-    upcoming.forEach(e => {
-        const c = PP_EVENT_COLORS[e.event_type] || PP_EVENT_COLORS.other;
-        const dateLabel = formatParentDate(e.start_date, e.end_date);
-        const timeLabel = e.start_time ? formatParentTime(e.start_time) + (e.end_time ? ' - ' + formatParentTime(e.end_time) : '') : '';
-
-        html += `<div onclick="showParentEventDetail('${e.id}')" style="cursor:pointer;display:flex;align-items:flex-start;gap:12px;padding:12px;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:8px;background:#fff;transition:box-shadow 0.15s;" onmouseenter="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'" onmouseleave="this.style.boxShadow='none'">`;
-        html += `<div style="width:8px;min-height:36px;border-radius:4px;background:${c.bg};flex-shrink:0;margin-top:2px;"></div>`;
-        html += '<div style="flex:1;min-width:0;">';
-        html += `<div style="font-weight:700;font-size:0.9rem;color:#111;">${escapeHTML(e.title)}</div>`;
-        const locLabel = e.location ? escapeHTML(e.location) : 'TBD';
-        html += `<div style="font-size:0.8rem;color:#6b7280;margin-top:2px;">${dateLabel}${timeLabel ? ' &middot; ' + timeLabel : ' &middot; Time TBD'} &middot; ${locLabel}</div>`;
-        if (e.cost && Number(e.cost) > 0) {
-            html += `<div style="font-size:0.75rem;color:#854d0e;margin-top:4px;font-weight:600;">$${Number(e.cost).toFixed(2)}</div>`;
-        }
-        html += '</div>';
-        html += `<span style="font-size:0.7rem;padding:2px 8px;border-radius:999px;background:${c.bg};color:${c.text};font-weight:600;white-space:nowrap;text-transform:capitalize;flex-shrink:0;">${e.event_type || 'event'}</span>`;
-        html += '</div>';
-    });
-
-    container.innerHTML = html;
-}
-
-window.showParentEventDetail = function(eventId) {
-    const e = ppCalEvents.find(x => x.id === eventId);
-    if (!e) return;
-    const c = PP_EVENT_COLORS[e.event_type] || PP_EVENT_COLORS.other;
-    const dateLabel = formatParentDate(e.start_date, e.end_date);
-    const timeLabel = e.start_time ? formatParentTime(e.start_time) + (e.end_time ? ' - ' + formatParentTime(e.end_time) : '') : '';
-
-    const overlay = document.createElement('div');
-    overlay.id = 'pp-event-overlay';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
-    overlay.onclick = function(ev) { if (ev.target === overlay) overlay.remove(); };
-
-    let inner = `<div style="background:#fff;border-radius:16px;max-width:420px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.15);position:relative;">`;
-    inner += `<button onclick="document.getElementById('pp-event-overlay').remove()" style="position:absolute;top:12px;right:12px;background:none;border:none;font-size:20px;cursor:pointer;color:#6b7280;line-height:1;">&times;</button>`;
-    inner += `<span style="font-size:0.7rem;padding:2px 8px;border-radius:999px;background:${c.bg};color:${c.text};font-weight:600;text-transform:capitalize;">${e.event_type || 'event'}</span>`;
-    inner += `<h3 style="font-weight:800;font-size:1.15rem;margin:8px 0 4px;color:#111;">${escapeHTML(e.title)}</h3>`;
-    inner += `<div style="font-size:0.85rem;color:#6b7280;">${dateLabel} &middot; ${timeLabel || 'Time TBD'}</div>`;
-    inner += `<div style="font-size:0.85rem;color:#6b7280;margin-top:4px;">${e.location ? escapeHTML(e.location) : 'Location TBD'}</div>`;
-    if (e.cost && Number(e.cost) > 0) inner += `<div style="font-size:0.85rem;color:#854d0e;margin-top:8px;font-weight:600;">Cost: $${Number(e.cost).toFixed(2)}</div>`;
-    if (e.notes) inner += `<div style="font-size:0.85rem;color:#374151;margin-top:12px;padding-top:12px;border-top:1px solid #e5e7eb;white-space:pre-wrap;">${escapeHTML(e.notes)}</div>`;
-    inner += '</div>';
-
-    overlay.innerHTML = inner;
-    document.body.appendChild(overlay);
-};
-
-function formatParentDate(startDate, endDate) {
-    if (!startDate) return '';
-    const opts = { weekday: 'short', month: 'short', day: 'numeric' };
-    const start = new Date(startDate + 'T00:00:00');
-    if (endDate && endDate !== startDate) {
-        const end = new Date(endDate + 'T00:00:00');
-        return start.toLocaleDateString('en-US', opts) + ' - ' + end.toLocaleDateString('en-US', opts);
-    }
-    return start.toLocaleDateString('en-US', opts);
-}
-
-function formatParentTime(timeStr) {
-    if (!timeStr) return '';
-    const [h, m] = timeStr.split(':').map(Number);
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    const hour12 = h % 12 || 12;
-    return `${hour12}:${String(m).padStart(2, '0')} ${ampm}`;
-}
-
-async function clearCalendarBadge(supabase) {
-    try {
-        const badge = document.getElementById('cal-update-badge');
-        if (badge) badge.style.display = 'none';
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-            await supabase.from('profiles').update({ calendar_last_seen: new Date().toISOString() }).eq('id', user.id);
-        }
-    } catch (e) {
-        console.error('Badge clear error:', e);
-    }
-}
-
-async function checkCalendarBadge() {
-    try {
-        const supabase = window.auth?.getSupabaseClient?.();
-        if (!supabase) return;
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data: profile } = await supabase.from('profiles').select('calendar_last_seen').eq('id', user.id).single();
-        const lastSeen = profile?.calendar_last_seen;
-
-        let query = supabase.from('calendar_events').select('published_at').not('published_at', 'is', null).order('published_at', { ascending: false }).limit(1);
-        const { data: latest } = await query;
-
-        const badge = document.getElementById('cal-update-badge');
-        if (badge && latest?.length) {
-            const latestPublished = new Date(latest[0].published_at);
-            const hasNew = !lastSeen || latestPublished > new Date(lastSeen);
-            badge.style.display = hasNew ? 'inline-block' : 'none';
-        }
-    } catch (e) {
-        console.error('Badge check error:', e);
+        iframe.contentWindow.postMessage({ type: 'injectEvents', events: events }, '*');
+        setTimeout(() => {
+            iframe.contentWindow.postMessage({ type: 'injectEvents', events: events }, '*');
+        }, 500);
+        iframe.onload = () => {
+            iframe.contentWindow.postMessage({ type: 'injectEvents', events: events }, '*');
+        };
     }
 }
 

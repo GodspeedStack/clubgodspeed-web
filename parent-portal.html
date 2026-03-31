@@ -711,18 +711,17 @@
 
                     <!-- VIEW: CALENDAR -->
                     <div id="view-calendar" class="portal-view" style="display: none;">
-                        <div class="section-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-                            <h2 style="font-family:'Inter',sans-serif;font-weight:800;font-size:1.35rem;color:#111;letter-spacing:-0.02em;text-transform:uppercase;">Schedule</h2>
-                            <div style="display:flex;align-items:center;gap:8px;">
-                                <button onclick="calNavParent(-1)" style="background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">&lsaquo;</button>
-                                <span id="pp-cal-month-label" style="font-weight:700;font-size:0.95rem;min-width:140px;text-align:center;"></span>
-                                <button onclick="calNavParent(1)" style="background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">&rsaquo;</button>
-                            </div>
+                        <div class="section-header"
+                            style="display: flex; justify-content: space-between; align-items: center;">
+                            <h2 style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 1.35rem; color: #111; letter-spacing: -0.02em; text-transform: uppercase;">Schedule</h2>
                         </div>
-                        <!-- Month grid -->
-                        <div id="pp-cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;background:#fff;"></div>
-                        <!-- Upcoming events list -->
-                        <div id="pp-upcoming-events" style="margin-top:24px;"></div>
+                        <div class="calendar-wrapper-v3">
+                            <iframe src="calendar-embed.html?role=parent" id="main-calendar-iframe"
+                                style="width: 100%; height: 100%; border: none;"></iframe>
+                        </div>
+
+                        <!-- Tournaments Section -->
+                        <div id="tournament-schedule-container" style="margin-top: 24px;"></div>
                     </div>
 
                     <!-- VIEW: TRAINING -->
