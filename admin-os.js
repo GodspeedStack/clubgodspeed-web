@@ -1192,15 +1192,19 @@ async function loadCalendar() {
         const start=new Date(calYear,calMonth,1), end=new Date(calYear,calMonth+1,0);
         query=query.gte('start_date',start.toISOString().split('T')[0]).lte('start_date',end.toISOString().split('T')[0]);
       }
-      const {data}=await query;
-      // Load practice cancellations for current view range
-      practiceCancellations = new Set();
+      // Parallel fetch: events + practice cancellations
       const viewStart = calView==='list' ? `${calYear}-01-01` : new Date(calYear,calMonth,1).toISOString().split('T')[0];
       const viewEnd = calView==='list' ? `${calYear}-12-31` : new Date(calYear,calMonth+1,0).toISOString().split('T')[0];
-      const {data:cancels} = await osSupabase.from('calendar_events')
-        .select('start_date,title')
-        .eq('event_type','practice').eq('is_cancelled',true)
-        .gte('start_date',viewStart).lte('start_date',viewEnd);
+      const [evResult, cancelResult] = await Promise.all([
+        query,
+        osSupabase.from('calendar_events')
+          .select('start_date,title')
+          .eq('event_type','practice').eq('is_cancelled',true)
+          .gte('start_date',viewStart).lte('start_date',viewEnd)
+      ]);
+      const data = evResult.data;
+      const cancels = cancelResult.data;
+      practiceCancellations = new Set();
       (cancels||[]).forEach(c => {
         const d = new Date(c.start_date+'T12:00:00');
         practiceCancellations.add(c.start_date + '|' + d.getDay());

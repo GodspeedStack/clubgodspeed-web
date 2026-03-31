@@ -260,10 +260,9 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 32px; }
 .cal-header { padding: 12px 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); text-align: center; background: rgba(0,0,0,0.3); }
 .cal-day {
-  min-height: 100px; padding: 8px; background: var(--card); cursor: pointer; transition: background 0.15s ease;
+  min-height: 100px; padding: 8px; background: var(--card); cursor: pointer;
   display: flex; flex-direction: column; gap: 4px;
 }
-.cal-day:hover { background: transparent; }
 .cal-day.other-month { opacity: 0.3; }
 .cal-day.today { box-shadow: inset 0 0 0 1px rgba(37,99,235,0.25); }
 .cal-day .day-num { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
@@ -283,8 +282,7 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 .row-input:focus { border-color: var(--primary); background: rgba(37,99,235,0.08); outline: none; }
 .row-input.saved { border-color: #22c55e; background: rgba(34,197,94,0.08); }
 .row-input-sm { font-size: 12px; font-weight: 400; color: var(--muted); padding: 2px 6px; }
-.cal-add-btn { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: rgba(37,99,235,0.25); color: #60a5fa; font-size: 14px; font-weight: 700; line-height: 18px; text-align: center; cursor: pointer; transition: background 0.15s; opacity: 0.5; }
-.cal-add-btn:hover { background: rgba(37,99,235,0.5); color: #fff; opacity: 1; }
+.cal-add-btn { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: rgba(37,99,235,0.25); color: #60a5fa; font-size: 14px; font-weight: 700; line-height: 18px; text-align: center; cursor: pointer; opacity: 0.5; }
 .cal-event { font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
 .cal-event.practice { background: rgba(255,255,255,0.06); color: var(--text); }
 .cal-event.game { background: rgba(255,255,255,0.1); color: var(--text); font-weight: 700; }
@@ -502,12 +500,10 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 .tourn-tier.premier { background: rgba(0,113,227,0.12); color: #0071e3; border: 1px solid rgba(0,113,227,0.25); }
 .tourn-tier.select { background: rgba(255,204,0,0.12); color: #ffcc00; border: 1px solid rgba(255,204,0,0.25); }
 .tourn-tier.open { background: rgba(255,255,255,0.06); color: var(--muted); border: 1px solid rgba(255,255,255,0.1); }
-.tourn-act { background: none; border: none; cursor: pointer; font-size: 15px; padding: 4px; transition: transform 0.15s, opacity 0.15s; opacity: 0.6; }
-.tourn-act:hover { opacity: 1; transform: scale(1.15); }
+.tourn-act { background: none; border: none; cursor: pointer; font-size: 15px; padding: 4px; opacity: 0.6; }
 
 /* Schedule cards (dark theme) */
-.ds-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px 24px; margin-bottom: 12px; display: grid; grid-template-columns: 70px 1fr auto; gap: 20px; align-items: center; transition: border-color 0.2s, box-shadow 0.2s; cursor: pointer; }
-.ds-card:hover { border-color: var(--border-light); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+.ds-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px 24px; margin-bottom: 12px; display: grid; grid-template-columns: 70px 1fr auto; gap: 20px; align-items: center; cursor: pointer; }
 .ds-card-date { text-align: center; }
 .ds-card-mon { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--primary); }
 .ds-card-day { font-size: 28px; font-weight: 900; color: var(--text); line-height: 1; }
@@ -1059,7 +1055,7 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 
 <script type="module" src="src/lib/env-injector.js"></script>
 <script src="auth-supabase.js?v=20260330" defer></script>
-<script src="admin-os.js?v=20260331i" defer></script>
+<script src="admin-os.js?v=20260331j" defer></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
   function toggleMobileMenu() {
