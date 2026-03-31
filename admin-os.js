@@ -168,15 +168,7 @@ async function loadDashboard() {
   document.getElementById('m-collected').textContent='$'+collected.toFixed(0);
   document.getElementById('m-outstanding').textContent='$'+outstanding.toFixed(0);
   document.getElementById('pending-badge').textContent=requests.length;
-
-  document.getElementById('dash-pending-list').innerHTML = requests.length ? requests.slice(0,4).map(r=>`
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-      <div><div style="font-weight:600;font-size:13px">${r.full_name||r.email}</div><div style="color:var(--muted);font-size:11px">${r.email}</div></div>
-      <div style="display:flex;gap:6px">
-        <button class="btn btn-ghost btn-xs" onclick="approveReq('${r.id}','${r.email}')">Approve</button>
-        <button class="btn btn-ghost btn-xs" onclick="denyReq('${r.id}','${r.email}')">Deny</button>
-      </div>
-    </div>`).join('') : '<p style="color:var(--muted);font-size:13px">No pending requests.</p>';
+  renderDashboardPending(requests);
 
   const unpaid=dues.filter(d=>d.payment_status==='unpaid'||d.payment_status==='partial');
   document.getElementById('dash-dues-list').innerHTML = unpaid.length ? unpaid.slice(0,4).map(d=>`
@@ -186,6 +178,17 @@ async function loadDashboard() {
     </div>`).join('') : '<p style="color:var(--muted);font-size:13px">All dues current!</p>';
 
   document.getElementById('dash-activity').innerHTML='<p style="color:var(--muted);font-size:13px">No recent activity.</p>';
+}
+
+function renderDashboardPending(requests) {
+  document.getElementById('dash-pending-list').innerHTML = requests.length ? requests.slice(0,4).map(r=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div><div style="font-weight:600;font-size:13px">${r.full_name||r.email}</div><div style="color:var(--muted);font-size:11px">${r.email}</div></div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-xs" onclick="approveReq('${r.id}','${r.email}')">Approve</button>
+        <button class="btn btn-ghost btn-xs" onclick="denyReq('${r.id}','${r.email}')">Deny</button>
+      </div>
+    </div>`).join('') : '<p style="color:var(--muted);font-size:13px">No pending requests.</p>';
 }
 
 // ─── PLAYERS & PARENTS ──────────────────────────────────────
@@ -435,13 +438,20 @@ function renderRequests(arr) {
       <td>${r.status==='pending'?`<div style="display:flex;gap:6px"><button class="btn btn-ghost btn-xs" style="color:#34c759" onclick="approveReq('${r.id}','${r.email}')">Approve</button><button class="btn btn-ghost btn-xs" style="color:#ff3b30" onclick="denyReq('${r.id}','${r.email}')">Deny</button><button class="btn btn-ghost btn-xs" onclick="resendVerification('${r.email}')" title="Resend verification email">Resend</button></div>`:statusTag(r.status)}</td></tr>`;
   }).join('');
 }
+function syncDashboardPending() {
+  const pending = allRequests.filter(r => r.status === 'pending');
+  document.getElementById('m-pending').textContent = pending.length;
+  document.getElementById('pending-badge').textContent = pending.length;
+  renderDashboardPending(pending);
+}
+
 async function approveReq(id, email) {
   if(!confirm(`Approve ${email}?`)) return;
-  // Optimistic UI: update local state immediately
+  // Optimistic UI: update local state + both render targets immediately
   const req = allRequests.find(r => r.id === id);
   if(req) req.status = 'approved';
   renderRequests(allRequests);
-  loadDashboard();
+  syncDashboardPending();
   showToast(`${email} approved`);
   // DB + welcome email in background
   try {
@@ -459,11 +469,11 @@ async function approveReq(id, email) {
 async function denyReq(id, email) {
   const reason=prompt(`Reason for denying ${email}? (optional)`);
   if(reason===null) return;
-  // Optimistic UI: update local state immediately
+  // Optimistic UI: update local state + both render targets immediately
   const req = allRequests.find(r => r.id === id);
   if(req) req.status = 'denied';
   renderRequests(allRequests);
-  loadDashboard();
+  syncDashboardPending();
   showToast(`${email} denied`);
   // DB in background
   try { if(osSupabase) await osSupabase.rpc('deny_login_request',{request_id:id,reason}); }
