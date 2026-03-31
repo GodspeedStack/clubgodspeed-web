@@ -1553,24 +1553,64 @@ async function depublishEvent(id) {
 
 // ─── BULK TOURNAMENT UPLOAD ──────────────────────────────────
 function openBulkTournamentUpload() {
-  openModal('bulk-tournament');
-  document.getElementById('modal-title').textContent='Add Tournaments';
+  openModal('add-event');
+  document.getElementById('modal-title').textContent='Add Event';
+  const types=['practice','game','tournament','season','meeting','camp','tryout','fundraiser','deadline','other'];
+  const typeOpts=types.map(t=>`<option value="${t}">${t.charAt(0).toUpperCase()+t.slice(1)}</option>`).join('');
   document.getElementById('modal-body').innerHTML=`
-    <p style="color:var(--muted);font-size:13px;margin-bottom:12px">Paste tournament info from a website, email, or flyer. Dates, locations, grades, and costs are picked up automatically.</p>
-    <div class="field">
-      <textarea id="bulk-raw" style="min-height:200px;border:1px solid var(--border);border-radius:12px;background:rgba(0,0,0,0.3);color:#fff;padding:16px;width:100%;font-family:var(--font-mono,monospace);font-size:13px;resize:vertical;transition:border-color 0.2s" placeholder="Example:
-
-iHoop Spring Classic - April 12-13, 2026
-Location: Allen Fieldhouse, Allen TX
-4th Grade Division -- $425
-
-BigFoot Battle - May 3, 2026
-Location: Southlake Rec Center
-5th Grade -- $380"></textarea>
-      <div id="bulk-hint" style="min-height:20px;margin-top:6px;font-size:12px;transition:opacity 0.2s"></div>
+    <div id="quick-add-form">
+      <div class="field"><label>Title</label><input id="qa-title" type="text" placeholder="e.g. No Practice Today"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="field"><label>Date</label><input id="qa-date" type="date"></div>
+        <div class="field"><label>End Date <span style="color:var(--muted);font-size:11px">(optional)</span></label><input id="qa-end-date" type="date"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="field"><label>Type</label><select id="qa-type">${typeOpts}</select></div>
+        <div class="field"><label>Location <span style="color:var(--muted);font-size:11px">(optional)</span></label><input id="qa-loc" type="text" placeholder="e.g. Northeast Early College"></div>
+      </div>
+      <div id="qa-hint" style="min-height:20px;margin-top:4px;font-size:12px"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="quickAddEvent()" id="qa-add-btn">Add Event</button>
     </div>
-    <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="addTournaments()" id="bulk-add-btn">Add Tournaments</button>
-    <div id="bulk-result" style="margin-top:12px"></div>`;
+    <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px">
+      <button class="btn btn-ghost btn-sm" style="width:100%;font-size:12px" onclick="toggleBulkPaste()">Paste Multiple Tournaments</button>
+      <div id="bulk-paste-area" style="display:none;margin-top:12px">
+        <textarea id="bulk-raw" style="min-height:160px;border:1px solid var(--border);border-radius:12px;background:rgba(0,0,0,0.3);color:#fff;padding:16px;width:100%;font-family:var(--font-mono,monospace);font-size:13px;resize:vertical" placeholder="Paste tournament info from a website, email, or flyer..."></textarea>
+        <div id="bulk-hint" style="min-height:20px;margin-top:6px;font-size:12px"></div>
+        <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="addTournaments()" id="bulk-add-btn">Add Tournaments</button>
+        <div id="bulk-result" style="margin-top:12px"></div>
+      </div>
+    </div>`;
+}
+function toggleBulkPaste() {
+  const area=document.getElementById('bulk-paste-area');
+  area.style.display=area.style.display==='none'?'block':'none';
+}
+async function quickAddEvent() {
+  const title=document.getElementById('qa-title').value.trim();
+  const date=document.getElementById('qa-date').value;
+  const endDate=document.getElementById('qa-end-date').value||null;
+  const type=document.getElementById('qa-type').value;
+  const loc=document.getElementById('qa-loc').value.trim();
+  const hint=document.getElementById('qa-hint');
+  const btn=document.getElementById('qa-add-btn');
+  hint.innerHTML='';
+  if(!title||!date) { hint.innerHTML='<span style="color:#ff3b30">Title and date are required.</span>'; return; }
+  btn.textContent='Adding...'; btn.disabled=true;
+  try {
+    if(!osSupabase) throw new Error('Not connected');
+    const session=await osSupabase.auth.getSession();
+    const userId=session.data.session.user.id;
+    const {error}=await osSupabase.rpc('upsert_calendar_event',{
+      p_title:title, p_event_type:type, p_start_date:date,
+      p_end_date:endDate, p_location:loc||null,
+      p_grade_level:'both', p_created_by:userId, p_visibility:'public'
+    });
+    if(error) throw error;
+    hint.innerHTML=`<span style="color:#34c759">Added "${title}" to the calendar.</span>`;
+    btn.textContent='Add Event'; btn.disabled=false;
+    loadCalendar();
+    setTimeout(()=>{ if(document.querySelector('.modal.active')) closeModal(); },1500);
+  } catch(e) { hint.innerHTML=`<span style="color:#ff3b30">Error: ${e.message}</span>`; btn.textContent='Add Event'; btn.disabled=false; }
 }
 
 async function addTournaments() {
