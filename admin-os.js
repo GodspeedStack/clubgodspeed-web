@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('input[name="bc-audience"]').forEach(r => r.addEventListener('change', () => {
     document.getElementById('bc-team').style.display = r.value==='team'&&r.checked ? 'block' : 'none';
   }));
-  setTimeout(init, 900);
+  init();
 });
 
 function getOrCreateSupabaseClient() {
@@ -154,8 +154,8 @@ async function loadDashboard() {
   try {
     if(osSupabase) {
       const [p,r,d] = await Promise.all([
-        osSupabase.from('profiles').select('*'),
-        osSupabase.from('login_requests').select('*').eq('status','pending'),
+        osSupabase.from('profiles').select('id,approved').eq('approved',true),
+        osSupabase.from('login_requests').select('id,full_name,email,status,created_at').eq('status','pending').order('created_at',{ascending:false}).limit(10),
         osSupabase.from('parent_dues_enrollment').select('id,total_owed,total_paid,status'),
       ]);
       profiles=p.data||[]; requests=r.data||[]; dues=d.data||[];
@@ -420,7 +420,7 @@ async function approveProfile(id) {
 
 // ─── LOGIN REQUESTS ─────────────────────────────────────────
 async function loadRequests() {
-  try { if(osSupabase){ const {data}=await osSupabase.from('login_requests').select('*').order('created_at',{ascending:false}); allRequests=data||[]; } } catch(e){}
+  try { if(osSupabase){ const {data}=await osSupabase.from('login_requests').select('id,full_name,email,requested_role,grade,player_name,status,created_at,ip_address').order('created_at',{ascending:false}); allRequests=data||[]; } } catch(e){}
   renderRequests(allRequests);
 }
 function renderRequests(arr) {
@@ -2357,3 +2357,434 @@ window.fmtM = (pre,post) => fmtEd(pre,post,'memo-body');
 window.fmtMLine = (prefix) => fmtEdLine(prefix,'memo-body');
 
 function doLogout() { if(window.auth?.logout) window.auth.logout(); else window.location.href='index.html'; }
+
+// ============================================================
+// TOURNAMENT CATALOG + SCHEDULE BUILDER
+// ============================================================
+
+const TOURN_MOCK=[
+{id:'t1',name:'Rocky Mountain Showdown',organizer_name:'Bigfoot Hoops',organizer_circuit:'Bigfoot Hoops',start_date:'2026-04-11',end_date:'2026-04-12',city:'Denver',state:'CO',region:'Mountain West',event_type:'tournament',gender:'boys',age_groups:'10U-17U',cost_min:325,cost_max:375,game_guarantee:3,rank_competition:7,rank_exposure:6,rank_circuit:7,rank_composite:6.7,rank_tier:'Premier',ability_level:'Competitive',is_certified:true,source_page:'colorado'},
+{id:'t2',name:'Front Range Classic',organizer_name:'Prep Hoops',organizer_circuit:'Prep Hoops',start_date:'2026-04-18',end_date:'2026-04-19',city:'Aurora',state:'CO',region:'Mountain West',event_type:'tournament',gender:'boys',age_groups:'10U-14U',cost_min:300,cost_max:350,game_guarantee:3,rank_competition:8,rank_exposure:8,rank_circuit:8,rank_composite:8.0,rank_tier:'Elite',ability_level:'Elite/Competitive',is_certified:true,source_page:'colorado'},
+{id:'t3',name:'Mile High Madness',organizer_name:'Game Time Events',organizer_circuit:'Game Time Events',start_date:'2026-04-25',end_date:'2026-04-26',city:'Lakewood',state:'CO',region:'Mountain West',event_type:'tournament',gender:'coed',age_groups:'8U-14U',cost_min:250,cost_max:300,game_guarantee:3,rank_competition:6,rank_exposure:5,rank_circuit:7,rank_composite:5.9,rank_tier:'Select',ability_level:'Competitive',is_certified:true,source_page:'colorado'},
+{id:'t4',name:'Pikes Peak Invitational',organizer_name:'HoopSource',organizer_circuit:'HoopSource',start_date:'2026-05-02',end_date:'2026-05-03',city:'Colorado Springs',state:'CO',region:'Mountain West',event_type:'tournament',gender:'boys',age_groups:'10U-17U',cost_min:350,cost_max:400,game_guarantee:4,rank_competition:8,rank_exposure:7,rank_circuit:8,rank_composite:7.7,rank_tier:'Premier',ability_level:'Elite/Competitive',is_certified:true,source_page:'colorado'},
+{id:'t5',name:'Colorado Crossover',organizer_name:'Jr EYBL',organizer_circuit:'Jr EYBL',start_date:'2026-05-09',end_date:'2026-05-10',city:'Denver',state:'CO',region:'Mountain West',event_type:'tournament',gender:'boys',age_groups:'10U-17U',cost_min:400,cost_max:450,game_guarantee:4,rank_competition:9,rank_exposure:9,rank_circuit:8,rank_composite:8.8,rank_tier:'Elite',ability_level:'Elite',is_certified:true,is_ncaa_certified:true,source_page:'colorado'},
+{id:'t6',name:'Spring Tipoff Classic',organizer_name:'Bigfoot Hoops',organizer_circuit:'Bigfoot Hoops',start_date:'2026-05-16',end_date:'2026-05-17',city:'Thornton',state:'CO',region:'Mountain West',event_type:'tournament',gender:'boys',age_groups:'8U-14U',cost_min:275,cost_max:325,game_guarantee:3,rank_competition:6,rank_exposure:5,rank_circuit:7,rank_composite:5.9,rank_tier:'Select',ability_level:'Competitive/Developmental',is_certified:true,source_page:'colorado'},
+{id:'t7',name:'Memorial Day Showcase',organizer_name:'Prep Hoops',organizer_circuit:'Prep Hoops',start_date:'2026-05-23',end_date:'2026-05-25',city:'Denver',state:'CO',region:'Mountain West',event_type:'showcase',gender:'boys',age_groups:'12U-17U',cost_min:450,cost_max:500,game_guarantee:4,rank_competition:9,rank_exposure:9,rank_circuit:8,rank_composite:8.8,rank_tier:'Elite',ability_level:'Elite',is_certified:true,is_ncaa_certified:true,source_page:'colorado'},
+{id:'t8',name:'Denver Dribble Fest',organizer_name:'Colorado Hoops',organizer_circuit:'Independent',start_date:'2026-04-11',end_date:'2026-04-11',city:'Denver',state:'CO',region:'Mountain West',event_type:'1-day',gender:'coed',age_groups:'8U-12U',cost_min:75,cost_max:100,game_guarantee:2,rank_competition:3,rank_exposure:2,rank_circuit:4,rank_composite:2.9,rank_tier:'Open',ability_level:'Developmental',is_certified:false,source_page:'colorado'},
+{id:'t9',name:'Texas Takeover',organizer_name:'Nike EYBL',organizer_circuit:'Nike EYBL',start_date:'2026-06-06',end_date:'2026-06-08',city:'Dallas',state:'TX',region:'South',event_type:'tournament',gender:'boys',age_groups:'10U-17U',cost_min:500,cost_max:600,game_guarantee:5,rank_competition:10,rank_exposure:10,rank_circuit:10,rank_composite:10.0,rank_tier:'Elite',ability_level:'Elite',is_certified:true,is_ncaa_certified:true,source_page:'texas'},
+{id:'t10',name:'Lone Star Shootout',organizer_name:'Prep Hoops',organizer_circuit:'Prep Hoops',start_date:'2026-06-13',end_date:'2026-06-14',city:'Houston',state:'TX',region:'South',event_type:'tournament',gender:'boys',age_groups:'10U-17U',cost_min:375,cost_max:425,game_guarantee:4,rank_competition:8,rank_exposure:8,rank_circuit:8,rank_composite:8.0,rank_tier:'Elite',ability_level:'Elite/Competitive',is_certified:true,source_page:'texas'},
+{id:'t11',name:'Arizona Desert Classic',organizer_name:'Game Time Events',organizer_circuit:'Game Time Events',start_date:'2026-06-20',end_date:'2026-06-21',city:'Phoenix',state:'AZ',region:'West',event_type:'tournament',gender:'boys',age_groups:'10U-14U',cost_min:350,cost_max:400,game_guarantee:3,rank_competition:7,rank_exposure:6,rank_circuit:7,rank_composite:6.7,rank_tier:'Premier',ability_level:'Competitive',is_certified:true,source_page:'arizona'},
+{id:'t12',name:'Summer Slam Hoopfest',organizer_name:'HoopSource',organizer_circuit:'HoopSource',start_date:'2026-06-27',end_date:'2026-06-29',city:'Denver',state:'CO',region:'Mountain West',event_type:'tournament',gender:'boys',age_groups:'10U-17U',cost_min:400,cost_max:475,game_guarantee:4,rank_competition:8,rank_exposure:7,rank_circuit:8,rank_composite:7.7,rank_tier:'Premier',ability_level:'Elite/Competitive',is_certified:true,source_page:'colorado'},
+{id:'t13',name:'4th of July Classic',organizer_name:'Bigfoot Hoops',organizer_circuit:'Bigfoot Hoops',start_date:'2026-07-03',end_date:'2026-07-05',city:'Denver',state:'CO',region:'Mountain West',event_type:'tournament',gender:'boys',age_groups:'8U-17U',cost_min:350,cost_max:425,game_guarantee:4,rank_competition:7,rank_exposure:6,rank_circuit:7,rank_composite:6.7,rank_tier:'Premier',ability_level:'Competitive',is_certified:true,source_page:'colorado'},
+{id:'t14',name:'Mountain West Championships',organizer_name:'Jr EYBL',organizer_circuit:'Jr EYBL',start_date:'2026-07-10',end_date:'2026-07-12',city:'Denver',state:'CO',region:'Mountain West',event_type:'tournament',gender:'boys',age_groups:'10U-17U',cost_min:450,cost_max:525,game_guarantee:5,rank_competition:9,rank_exposure:9,rank_circuit:8,rank_composite:8.8,rank_tier:'Elite',ability_level:'Elite',is_certified:true,is_ncaa_certified:true,source_page:'colorado'},
+{id:'t15',name:'All-American Showcase',organizer_name:'Under Armour',organizer_circuit:'Under Armour',start_date:'2026-07-17',end_date:'2026-07-19',city:'Las Vegas',state:'NV',region:'West',event_type:'showcase',gender:'boys',age_groups:'12U-17U',cost_min:550,cost_max:650,game_guarantee:5,rank_competition:10,rank_exposure:10,rank_circuit:10,rank_composite:10.0,rank_tier:'Elite',ability_level:'Elite',is_certified:true,is_ncaa_certified:true,source_page:'nevada'},
+{id:'t16',name:'Rocky Mountain 3v3 Jam',organizer_name:'Colorado Hoops',organizer_circuit:'Independent',start_date:'2026-05-02',end_date:'2026-05-02',city:'Boulder',state:'CO',region:'Mountain West',event_type:'3v3',gender:'coed',age_groups:'8U-14U',cost_min:75,cost_max:100,game_guarantee:4,rank_competition:3,rank_exposure:2,rank_circuit:4,rank_composite:2.9,rank_tier:'Open',ability_level:'Developmental',is_certified:false,source_page:'colorado'},
+{id:'t17',name:'Centennial State Slam',organizer_name:'Prep Hoops',organizer_circuit:'Prep Hoops',start_date:'2026-05-30',end_date:'2026-05-31',city:'Fort Collins',state:'CO',region:'Mountain West',event_type:'tournament',gender:'boys',age_groups:'10U-14U',cost_min:300,cost_max:350,game_guarantee:3,rank_competition:7,rank_exposure:7,rank_circuit:8,rank_composite:7.3,rank_tier:'Premier',ability_level:'Competitive',is_certified:true,source_page:'colorado'},
+{id:'t18',name:'Kansas City Classic',organizer_name:'Bigfoot Hoops',organizer_circuit:'Bigfoot Hoops',start_date:'2026-06-06',end_date:'2026-06-07',city:'Kansas City',state:'KS',region:'Midwest',event_type:'tournament',gender:'boys',age_groups:'10U-17U',cost_min:325,cost_max:375,game_guarantee:3,rank_competition:7,rank_exposure:6,rank_circuit:7,rank_composite:6.7,rank_tier:'Premier',ability_level:'Competitive',is_certified:true,source_page:'kansas'},
+{id:'t19',name:'Utah Summer Hoops',organizer_name:'HoopSource',organizer_circuit:'HoopSource',start_date:'2026-07-24',end_date:'2026-07-25',city:'Salt Lake City',state:'UT',region:'Mountain West',event_type:'tournament',gender:'boys',age_groups:'10U-14U',cost_min:325,cost_max:375,game_guarantee:3,rank_competition:7,rank_exposure:6,rank_circuit:8,rank_composite:6.9,rank_tier:'Premier',ability_level:'Competitive',is_certified:true,source_page:'utah'},
+{id:'t20',name:'Western Regionals',organizer_name:'Nike EYBL',organizer_circuit:'Nike EYBL',start_date:'2026-07-31',end_date:'2026-08-02',city:'Los Angeles',state:'CA',region:'West',event_type:'tournament',gender:'boys',age_groups:'10U-17U',cost_min:550,cost_max:650,game_guarantee:5,rank_competition:10,rank_exposure:10,rank_circuit:10,rank_composite:10.0,rank_tier:'Elite',ability_level:'Elite',is_certified:true,is_ncaa_certified:true,source_page:'california'},
+{id:'t21',name:'Denver Skills Camp',organizer_name:'Colorado Hoops',organizer_circuit:'Independent',start_date:'2026-04-04',end_date:'2026-04-05',city:'Denver',state:'CO',region:'Mountain West',event_type:'camp',gender:'coed',age_groups:'8U-14U',cost_min:125,cost_max:175,game_guarantee:null,rank_competition:3,rank_exposure:3,rank_circuit:4,rank_composite:3.3,rank_tier:'Open',ability_level:'Developmental',is_certified:false,source_page:'colorado'},
+{id:'t22',name:'New Mexico Invitational',organizer_name:'Game Time Events',organizer_circuit:'Game Time Events',start_date:'2026-06-13',end_date:'2026-06-14',city:'Albuquerque',state:'NM',region:'Mountain West',event_type:'tournament',gender:'boys',age_groups:'10U-14U',cost_min:300,cost_max:350,game_guarantee:3,rank_competition:6,rank_exposure:5,rank_circuit:7,rank_composite:5.9,rank_tier:'Select',ability_level:'Competitive',is_certified:true,source_page:'new_mexico'},
+{id:'t23',name:'Colorado Premier League',organizer_name:'Jr EYBL',organizer_circuit:'Jr EYBL',start_date:'2026-04-18',end_date:'2026-06-20',city:'Denver',state:'CO',region:'Mountain West',event_type:'league',gender:'boys',age_groups:'10U-14U',cost_min:600,cost_max:750,game_guarantee:10,rank_competition:9,rank_exposure:8,rank_circuit:8,rank_composite:8.5,rank_tier:'Elite',ability_level:'Elite/Competitive',is_certified:true,source_page:'colorado'},
+{id:'t24',name:'Oklahoma Thunder Classic',organizer_name:'Prep Hoops',organizer_circuit:'Prep Hoops',start_date:'2026-07-10',end_date:'2026-07-12',city:'Oklahoma City',state:'OK',region:'South',event_type:'tournament',gender:'boys',age_groups:'10U-17U',cost_min:350,cost_max:400,game_guarantee:4,rank_competition:7,rank_exposure:7,rank_circuit:8,rank_composite:7.3,rank_tier:'Premier',ability_level:'Competitive',is_certified:true,source_page:'oklahoma'},
+{id:'t25',name:'Wyoming Shootout',organizer_name:'Bigfoot Hoops',organizer_circuit:'Bigfoot Hoops',start_date:'2026-08-08',end_date:'2026-08-09',city:'Cheyenne',state:'WY',region:'Mountain West',event_type:'tournament',gender:'boys',age_groups:'10U-14U',cost_min:275,cost_max:325,game_guarantee:3,rank_competition:5,rank_exposure:4,rank_circuit:7,rank_composite:5.2,rank_tier:'Select',ability_level:'Competitive/Developmental',is_certified:true,source_page:'wyoming'}
+];
+
+let allTournaments=[];
+let filteredTourn=[];
+let tournPage=1;
+const TOURN_PER_PAGE=15;
+let tournSortCol='start_date';
+let tournSortDir='asc';
+let tournSchedule=[];
+const MONTH_NAMES_T=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+let tournLive=false;
+async function loadTournaments(){
+  tournLive=false;
+  if(osSupabase){
+    try{
+      const {data,error}=await osSupabase.from('tournament_catalog').select('*').order('start_date');
+      if(!error&&data&&data.length>0){allTournaments=data;tournLive=true;}
+    }catch(e){console.warn('tournament_catalog query failed, using mock:',e.message);}
+  }
+  if(!tournLive) allTournaments=TOURN_MOCK.slice();
+  // Load schedule from Supabase if live
+  if(osSupabase&&tournLive){
+    try{
+      const {data:sched}=await osSupabase.from('team_schedule_view').select('*').order('start_date');
+      if(sched&&sched.length>0){
+        tournSchedule=sched.map(s=>({
+          id:s.schedule_id,tournament_id:s.tournament_id,tournament_name:s.tournament_name,
+          organizer_name:s.organizer_name,start_date:s.start_date,end_date:s.end_date,
+          city:s.city,state:s.state,event_type:s.event_type,rank_tier:s.rank_tier,
+          rank_composite:s.rank_composite,cost_min:s.cost_min,cost_max:s.cost_max,
+          game_guarantee:s.game_guarantee,status:s.status,division:s.division,
+          registration_cost:s.registration_cost,payment_status:s.payment_status,
+          confirmation_code:s.confirmation_code,travel_required:s.travel_required,
+          hotel_cost:s.hotel_cost,notes:s.schedule_notes,_live:true
+        }));
+      }
+    }catch(e){console.warn('team_schedule_view query failed:',e.message);}
+  }
+  const stSel=document.getElementById('tf-state');
+  if(stSel&&stSel.options.length<=1){
+    const states=[...new Set(allTournaments.map(t=>t.state))].sort();
+    states.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;stSel.appendChild(o);});
+  }
+  applyTournFilters();
+  updateTournStats();
+  renderSchedView();
+  updateSchedBadge();
+}
+
+function switchTournTab(tab,btn){
+  document.querySelectorAll('#panel-tournaments .sub-tab').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('ttab-catalog').style.display=tab==='catalog'?'':'none';
+  document.getElementById('ttab-schedule').style.display=tab==='schedule'?'':'none';
+  if(tab==='schedule') renderSchedView();
+}
+window.switchTournTab=switchTournTab;
+
+function updateTournStats(){
+  const t=allTournaments;
+  document.getElementById('tm-total').textContent=t.length;
+  document.getElementById('tm-co').textContent=t.filter(x=>x.state==='CO').length;
+  document.getElementById('tm-elite').textContent=t.filter(x=>x.rank_tier==='Elite').length;
+  const costs=t.filter(x=>x.cost_max).map(x=>x.cost_max);
+  document.getElementById('tm-cost').textContent=costs.length?'$'+Math.round(costs.reduce((a,b)=>a+b,0)/costs.length):'--';
+  document.getElementById('tm-states').textContent=new Set(t.map(x=>x.state)).size;
+}
+
+function applyTournFilters(){
+  const st=document.getElementById('tf-state')?.value||'';
+  const ty=document.getElementById('tf-type')?.value||'';
+  const ti=document.getElementById('tf-tier')?.value||'';
+  const ge=document.getElementById('tf-gender')?.value||'';
+  const se=(document.getElementById('tf-search')?.value||'').toLowerCase();
+  filteredTourn=allTournaments.filter(t=>{
+    if(st&&t.state!==st) return false;
+    if(ty&&t.event_type!==ty) return false;
+    if(ti&&t.rank_tier!==ti) return false;
+    if(ge&&t.gender!==ge) return false;
+    if(se&&!t.name.toLowerCase().includes(se)&&!(t.organizer_name||'').toLowerCase().includes(se)) return false;
+    return true;
+  });
+  tournPage=1;
+  renderTournTable();
+}
+window.applyTournFilters=applyTournFilters;
+
+function clearTournFilters(){
+  ['tf-state','tf-type','tf-tier','tf-gender'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const se=document.getElementById('tf-search');if(se)se.value='';
+  applyTournFilters();
+}
+window.clearTournFilters=clearTournFilters;
+
+function sortTourn(col){
+  if(tournSortCol===col) tournSortDir=tournSortDir==='asc'?'desc':'asc';
+  else{tournSortCol=col;tournSortDir='asc';}
+  filteredTourn.sort((a,b)=>{
+    let va=a[col],vb=b[col];
+    if(va==null) va='';if(vb==null) vb='';
+    if(typeof va==='number'&&typeof vb==='number') return tournSortDir==='asc'?va-vb:vb-va;
+    return tournSortDir==='asc'?String(va).localeCompare(String(vb)):String(vb).localeCompare(String(va));
+  });
+  renderTournTable();
+}
+window.sortTourn=sortTourn;
+
+function tTierTag(tier){
+  if(!tier) return '<span class="tourn-tier open">Unrated</span>';
+  return `<span class="tourn-tier ${tier.toLowerCase()}">${tier}</span>`;
+}
+function tCost(min,max){
+  if(!min&&!max) return '--';
+  if(min===max||!max) return '$'+min;
+  return '$'+min+'-$'+max;
+}
+function tDate(start,end){
+  if(!start) return '--';
+  const s=new Date(start+'T12:00:00');
+  if(!end||start===end) return s.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  const e=new Date(end+'T12:00:00');
+  if(s.getMonth()===e.getMonth()) return s.toLocaleDateString('en-US',{month:'short',day:'numeric'})+'-'+e.getDate();
+  return s.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' - '+e.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+function isScheduled(t){return tournSchedule.some(s=>s.tournament_id===t.id&&s.status!=='cancelled');}
+function datesOverlap(s1,e1,s2,e2){return s1<=e2&&s2<=e1;}
+
+function renderTournTable(){
+  const tbody=document.getElementById('tourn-tbody');
+  if(!tbody) return;
+  const start=(tournPage-1)*TOURN_PER_PAGE;
+  const page=filteredTourn.slice(start,start+TOURN_PER_PAGE);
+  tbody.innerHTML=page.map((t)=>{
+    const idx=allTournaments.indexOf(t);
+    const onSched=isScheduled(t);
+    return `<tr style="cursor:pointer" onclick="openTournModal(${idx})">
+      <td style="font-weight:600;max-width:200px">${t.name}</td>
+      <td style="color:var(--muted);font-size:13px">${t.organizer_name||'--'}</td>
+      <td>${tDate(t.start_date,t.end_date)}</td>
+      <td>${t.city}, ${t.state}</td>
+      <td>${t.event_type}</td>
+      <td>${tCost(t.cost_min,t.cost_max)}</td>
+      <td>${t.rank_competition||'--'}</td>
+      <td>${t.rank_exposure||'--'}</td>
+      <td>${t.rank_circuit||'--'}</td>
+      <td>${tTierTag(t.rank_tier)}</td>
+      <td onclick="event.stopPropagation()">
+        ${onSched
+          ?'<button class="btn-xs btn-ghost" style="color:#ef4444" onclick="toggleSched('+idx+')">Remove</button>'
+          :'<button class="btn-xs btn-primary" onclick="toggleSched('+idx+')">+ Schedule</button>'}
+      </td></tr>`;
+  }).join('');
+  // Pagination
+  const totalPages=Math.ceil(filteredTourn.length/TOURN_PER_PAGE);
+  const pag=document.getElementById('tourn-pagination');
+  if(pag){
+    if(totalPages<=1){pag.innerHTML='';return;}
+    let html='';
+    if(tournPage>1) html+=`<button class="btn-xs btn-ghost" onclick="setTournPage(${tournPage-1})">Prev</button>`;
+    html+=`<span style="color:var(--muted);font-size:13px;padding:4px 8px">Page ${tournPage} of ${totalPages}</span>`;
+    if(tournPage<totalPages) html+=`<button class="btn-xs btn-ghost" onclick="setTournPage(${tournPage+1})">Next</button>`;
+    pag.innerHTML=html;
+  }
+}
+function setTournPage(p){tournPage=p;renderTournTable();}
+window.setTournPage=setTournPage;
+
+function toggleSched(idx){
+  const t=allTournaments[idx];if(!t) return;
+  if(isScheduled(t)) removeSched(t); else addToSched(t);
+}
+window.toggleSched=toggleSched;
+
+async function addToSched(t){
+  const conflict=tournSchedule.find(s=>s.status!=='cancelled'&&datesOverlap(s.start_date,s.end_date,t.start_date,t.end_date));
+  if(conflict){showToast(`Schedule conflict: overlaps with "${conflict.tournament_name}" (${tDate(conflict.start_date,conflict.end_date)})`,'error');return;}
+  const entry={
+    id:'sched-'+Date.now(),tournament_id:t.id,tournament_name:t.name,organizer_name:t.organizer_name,
+    start_date:t.start_date,end_date:t.end_date,city:t.city,state:t.state,event_type:t.event_type,
+    rank_tier:t.rank_tier,rank_composite:t.rank_composite,cost_min:t.cost_min,cost_max:t.cost_max,
+    game_guarantee:t.game_guarantee,status:'planned',division:'10U',
+    registration_cost:t.cost_max||t.cost_min||0,payment_status:'unpaid',
+    travel_required:t.state!=='CO',hotel_cost:t.state!=='CO'?150:null,notes:''
+  };
+  // Persist to Supabase if live
+  if(osSupabase&&tournLive){
+    try{
+      const {data,error}=await osSupabase.from('team_tournament_schedule').insert({
+        tournament_id:t.id,start_date:t.start_date,end_date:t.end_date,
+        status:'planned',division:'10U',registration_cost:entry.registration_cost,
+        payment_status:'unpaid',travel_required:entry.travel_required,
+        hotel_cost:entry.hotel_cost
+      }).select('id').single();
+      if(error){showToast('DB error: '+error.message,'error');return;}
+      entry.id=data.id;entry._live=true;
+    }catch(e){showToast('Save failed: '+e.message,'error');return;}
+  }
+  tournSchedule.push(entry);
+  showToast(`Added "${t.name}" to schedule`);
+  updateSchedBadge();renderTournTable();renderSchedView();
+}
+
+async function removeSched(t){
+  const idx=tournSchedule.findIndex(s=>s.tournament_id===t.id&&s.status!=='cancelled');
+  if(idx>=0){
+    const entry=tournSchedule[idx];
+    if(osSupabase&&entry._live){
+      const {error}=await osSupabase.from('team_tournament_schedule').delete().eq('id',entry.id);
+      if(error){showToast('DB error: '+error.message,'error');return;}
+    }
+    tournSchedule.splice(idx,1);showToast(`Removed "${t.name}" from schedule`);updateSchedBadge();renderTournTable();renderSchedView();
+  }
+}
+
+function updateSchedBadge(){
+  const active=tournSchedule.filter(s=>s.status!=='cancelled').length;
+  const badge=document.getElementById('sched-badge');
+  if(badge){badge.textContent=active;badge.style.display=active>0?'':'none';}
+  const tabBadge=document.getElementById('sched-tab-count');
+  if(tabBadge) tabBadge.textContent=active;
+}
+
+function renderSchedView(){
+  const container=document.getElementById('sched-content');if(!container) return;
+  const active=tournSchedule.filter(s=>s.status!=='cancelled');
+  if(active.length===0){
+    container.innerHTML=`<div class="ds-empty"><div style="font-size:48px;margin-bottom:16px">📅</div><div style="font-size:18px;font-weight:600;margin-bottom:8px">No tournaments scheduled</div><div style="color:var(--muted)">Browse the catalog and click "+ Schedule" to build your spring/summer season.</div></div>`;
+    return;
+  }
+  active.sort((a,b)=>a.start_date.localeCompare(b.start_date));
+  const totalCost=active.reduce((s,x)=>s+(x.registration_cost||0)+(x.hotel_cost||0),0);
+  const travelCount=active.filter(x=>x.travel_required).length;
+  const totalGames=active.reduce((s,x)=>s+(x.game_guarantee||0),0);
+  let html=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px">
+    <div class="metric-card" style="padding:16px"><div class="label">Events</div><div class="val" style="font-size:24px;margin:4px 0">${active.length}</div></div>
+    <div class="metric-card" style="padding:16px"><div class="label">Est. Cost</div><div class="val" style="font-size:24px;margin:4px 0">$${totalCost.toLocaleString()}</div></div>
+    <div class="metric-card" style="padding:16px"><div class="label">Travel</div><div class="val" style="font-size:24px;margin:4px 0">${travelCount}</div></div>
+    <div class="metric-card" style="padding:16px"><div class="label">Games</div><div class="val" style="font-size:24px;margin:4px 0">${totalGames}+</div></div>
+  </div>`;
+  html+=renderSchedTimeline(active);
+  let curMonth='';
+  active.forEach((s)=>{
+    const d=new Date(s.start_date+'T12:00:00');
+    const ml=MONTH_NAMES_T[d.getMonth()]+' '+d.getFullYear();
+    if(ml!==curMonth){curMonth=ml;html+=`<div class="ds-month-label">${ml}</div>`;}
+    const si=tournSchedule.indexOf(s);
+    html+=`<div class="ds-card" onclick="openSchedDetail(${si})">
+      <div class="ds-card-date"><div style="font-size:22px;font-weight:700">${d.getDate()}</div><div style="font-size:12px;color:var(--muted)">${MONTH_NAMES_T[d.getMonth()]}</div></div>
+      <div class="ds-card-info">
+        <div style="font-weight:600;font-size:15px">${s.tournament_name}</div>
+        <div style="color:var(--muted);font-size:13px;margin-top:2px">${s.city}, ${s.state} &middot; ${tDate(s.start_date,s.end_date)} &middot; ${s.event_type}</div>
+        <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
+          ${tTierTag(s.rank_tier)}
+          <span class="tag-blue" style="font-size:11px">${s.status}</span>
+          <span class="tag-gray" style="font-size:11px">${s.payment_status}</span>
+          ${s.travel_required?'<span class="tag-yellow" style="font-size:11px">Travel</span>':''}
+        </div>
+      </div>
+      <div class="ds-card-actions">
+        <div style="font-weight:600;font-size:15px">$${((s.registration_cost||0)+(s.hotel_cost||0)).toLocaleString()}</div>
+        <div style="color:var(--muted);font-size:12px">${s.game_guarantee?s.game_guarantee+' games':''}</div>
+      </div>
+    </div>`;
+  });
+  container.innerHTML=html;
+}
+
+function renderSchedTimeline(events){
+  if(!events.length) return '';
+  const minD=new Date(events[0].start_date+'T12:00:00');
+  const maxD=new Date(events[events.length-1].end_date+'T12:00:00');
+  let html='<div class="ds-tl-wrap">';
+  let cur=new Date(minD.getFullYear(),minD.getMonth(),1);
+  const end=new Date(maxD.getFullYear(),maxD.getMonth()+1,0);
+  while(cur<=end){
+    const y=cur.getFullYear(),m=cur.getMonth();
+    const daysInMonth=new Date(y,m+1,0).getDate();
+    const firstDay=new Date(y,m,1).getDay();
+    html+=`<div class="ds-tl-month"><div class="ds-tl-month-title">${MONTH_NAMES_T[m]} ${y}</div><div class="ds-tl-grid">`;
+    ['S','M','T','W','T','F','S'].forEach(d=>{html+=`<div class="ds-tl-day-hdr">${d}</div>`;});
+    for(let i=0;i<firstDay;i++) html+='<div class="ds-tl-cell empty"></div>';
+    for(let d=1;d<=daysInMonth;d++){
+      const iso=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const hit=events.find(e=>iso>=e.start_date&&iso<=e.end_date);
+      const isStart=events.some(e=>e.start_date===iso);
+      const isEnd=events.some(e=>e.end_date===iso);
+      let cls='ds-tl-cell';
+      if(hit) cls+=' ds-tl-active';
+      if(isStart) cls+=' ds-tl-start';
+      if(isEnd) cls+=' ds-tl-end';
+      html+=`<div class="${cls}" title="${hit?hit.tournament_name:''}">${d}</div>`;
+    }
+    html+='</div></div>';
+    cur=new Date(y,m+1,1);
+  }
+  html+='</div>';
+  return html;
+}
+
+function openSchedDetail(si){
+  const s=tournSchedule[si];if(!s) return;
+  document.getElementById('modal-title').textContent=s.tournament_name;
+  document.getElementById('modal-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+      <div><span style="color:var(--muted);font-size:13px">Dates</span><br><strong>${tDate(s.start_date,s.end_date)}</strong></div>
+      <div><span style="color:var(--muted);font-size:13px">Location</span><br><strong>${s.city}, ${s.state}</strong></div>
+      <div><span style="color:var(--muted);font-size:13px">Type</span><br><strong>${s.event_type}</strong></div>
+      <div><span style="color:var(--muted);font-size:13px">Tier</span><br>${tTierTag(s.rank_tier)}</div>
+      <div><span style="color:var(--muted);font-size:13px">Composite</span><br><strong>${s.rank_composite!=null?Number(s.rank_composite).toFixed(1):'--'}</strong></div>
+      <div><span style="color:var(--muted);font-size:13px">Games</span><br><strong>${s.game_guarantee||'--'}</strong></div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="field"><label>Status</label><select id="sd-status" style="padding:10px 14px">
+        ${['planned','registered','paid','completed','cancelled'].map(v=>`<option value="${v}" ${v===s.status?'selected':''}>${v.charAt(0).toUpperCase()+v.slice(1)}</option>`).join('')}
+      </select></div>
+      <div class="field"><label>Division</label><input id="sd-division" value="${s.division||''}" style="padding:10px 14px"></div>
+      <div class="field"><label>Registration Cost ($)</label><input id="sd-regcost" type="number" value="${s.registration_cost||''}" style="padding:10px 14px"></div>
+      <div class="field"><label>Payment Status</label><select id="sd-paystatus" style="padding:10px 14px">
+        ${['unpaid','deposit','paid','refunded'].map(v=>`<option value="${v}" ${v===s.payment_status?'selected':''}>${v.charAt(0).toUpperCase()+v.slice(1)}</option>`).join('')}
+      </select></div>
+      <div class="field"><label>Hotel ($)</label><input id="sd-hotel" type="number" value="${s.hotel_cost||''}" style="padding:10px 14px"></div>
+      <div class="field"><label>Confirmation Code</label><input id="sd-confirm" value="${s.confirmation_code||''}" style="padding:10px 14px"></div>
+    </div>
+    <div class="field" style="margin-bottom:16px"><label>Notes</label><textarea id="sd-notes" rows="3" style="padding:10px 14px;width:100%;resize:vertical">${s.notes||''}</textarea></div>
+    <div style="display:flex;gap:12px;justify-content:flex-end">
+      <button class="btn-sm btn-danger" onclick="removeSchedEntry(${si})">Remove</button>
+      <button class="btn-sm btn-primary" onclick="saveSchedDetail(${si})">Save Changes</button>
+    </div>`;
+  openModal('modal-overlay');
+}
+window.openSchedDetail=openSchedDetail;
+
+async function saveSchedDetail(si){
+  const s=tournSchedule[si];if(!s) return;
+  s.status=document.getElementById('sd-status').value;
+  s.division=document.getElementById('sd-division').value;
+  s.registration_cost=parseFloat(document.getElementById('sd-regcost').value)||0;
+  s.payment_status=document.getElementById('sd-paystatus').value;
+  s.hotel_cost=parseFloat(document.getElementById('sd-hotel').value)||null;
+  s.confirmation_code=document.getElementById('sd-confirm').value;
+  s.notes=document.getElementById('sd-notes').value;
+  if(osSupabase&&s._live){
+    const {error}=await osSupabase.from('team_tournament_schedule').update({
+      status:s.status,division:s.division,registration_cost:s.registration_cost,
+      payment_status:s.payment_status,hotel_cost:s.hotel_cost,
+      confirmation_code:s.confirmation_code,notes:s.notes
+    }).eq('id',s.id);
+    if(error){showToast('DB save failed: '+error.message,'error');return;}
+  }
+  showToast('Schedule entry updated');closeModal();renderSchedView();updateSchedBadge();
+}
+window.saveSchedDetail=saveSchedDetail;
+
+async function removeSchedEntry(si){
+  const s=tournSchedule[si];if(!s) return;
+  if(osSupabase&&s._live){
+    const {error}=await osSupabase.from('team_tournament_schedule').delete().eq('id',s.id);
+    if(error){showToast('DB delete failed: '+error.message,'error');return;}
+  }
+  tournSchedule.splice(si,1);showToast('Removed from schedule');closeModal();renderSchedView();renderTournTable();updateSchedBadge();
+}
+window.removeSchedEntry=removeSchedEntry;
+
+function openTournModal(idx){
+  const t=allTournaments[idx];if(!t) return;
+  const onSched=isScheduled(t);
+  document.getElementById('modal-title').textContent=t.name;
+  document.getElementById('modal-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+      <div><span style="color:var(--muted);font-size:13px">Organizer</span><br><strong>${t.organizer_name||'--'}</strong></div>
+      <div><span style="color:var(--muted);font-size:13px">Circuit</span><br><strong>${t.organizer_circuit||'--'}</strong></div>
+      <div><span style="color:var(--muted);font-size:13px">Dates</span><br><strong>${tDate(t.start_date,t.end_date)}</strong></div>
+      <div><span style="color:var(--muted);font-size:13px">Location</span><br><strong>${t.city}, ${t.state}</strong></div>
+      <div><span style="color:var(--muted);font-size:13px">Type</span><br><strong>${t.event_type}</strong></div>
+      <div><span style="color:var(--muted);font-size:13px">Gender</span><br><strong>${t.gender}</strong></div>
+      <div><span style="color:var(--muted);font-size:13px">Age Groups</span><br><strong>${t.age_groups||'--'}</strong></div>
+      <div><span style="color:var(--muted);font-size:13px">Cost</span><br><strong>${tCost(t.cost_min,t.cost_max)}</strong></div>
+      <div><span style="color:var(--muted);font-size:13px">Games</span><br><strong>${t.game_guarantee||'--'}</strong></div>
+      <div><span style="color:var(--muted);font-size:13px">Ability</span><br><strong>${t.ability_level||'--'}</strong></div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:16px;margin-bottom:16px">
+      <div style="font-weight:600;margin-bottom:8px">Rankings</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div>Competition: <strong>${t.rank_competition||'--'}</strong>/10</div>
+        <div>Exposure: <strong>${t.rank_exposure||'--'}</strong>/10</div>
+        <div>Circuit: <strong>${t.rank_circuit||'--'}</strong>/10</div>
+        <div>Composite: <strong>${t.rank_composite!=null?Number(t.rank_composite).toFixed(1):'--'}</strong></div>
+        <div>Tier: ${tTierTag(t.rank_tier)}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;justify-content:flex-end;border-top:1px solid var(--border);padding-top:16px">
+      ${onSched
+        ?'<button class="btn-sm btn-danger" onclick="toggleSched('+idx+');closeModal()">Remove from Schedule</button>'
+        :'<button class="btn-sm btn-primary" onclick="toggleSched('+idx+');closeModal()">Add to Schedule</button>'}
+      <button class="btn-sm btn-ghost" onclick="closeModal()">Close</button>
+    </div>`;
+  openModal('modal-overlay');
+}
+window.openTournModal=openTournModal;
