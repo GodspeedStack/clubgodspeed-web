@@ -302,6 +302,15 @@ const OB = (() => {
         if (DOC_STEPS[currentStep]) {
             setTimeout(() => initSigCanvas(DOC_STEPS[currentStep]), 100);
         }
+
+        // Personalize Venmo button with athlete name in note
+        const venmoBtn = document.getElementById('venmo-pay-btn');
+        if (venmoBtn) {
+            const note = athleteName
+                ? encodeURIComponent('Godspeed Basketball - ' + athleteName)
+                : encodeURIComponent('Godspeed Basketball');
+            venmoBtn.href = 'https://venmo.com/Coachsco?txn=pay&note=' + note;
+        }
     }
 
     // ── Authentication ──
