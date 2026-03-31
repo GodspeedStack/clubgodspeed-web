@@ -1292,6 +1292,18 @@ function runPublishQA(events) {
     }
   });
 
+  // 8. Tournament > 3 days should be a "season"
+  events.forEach(e => {
+    if (e.event_type === 'tournament' && e.end_date && e.end_date !== e.start_date) {
+      const d1 = new Date(e.start_date + 'T12:00:00');
+      const d2 = new Date(e.end_date + 'T12:00:00');
+      const span = Math.round((d2 - d1) / 86400000) + 1;
+      if (span > 3) {
+        errors.push({ ids: [e.id], msg: `"${e.title}" spans ${span} days but is labeled "tournament". Events longer than 3 days should be labeled "season".` });
+      }
+    }
+  });
+
   return { errors, warnings };
 }
 
@@ -1384,7 +1396,7 @@ async function confirmPublish() {
 }
 
 function calEventForm(e={}) {
-  const types=['practice','game','tournament','meeting','camp','tryout','fundraiser','deadline','other'];
+  const types=['practice','game','tournament','season','meeting','camp','tryout','fundraiser','deadline','other'];
   const typeOpts=types.map(t=>`<option value="${t}" ${e.event_type===t?'selected':''}>${t.charAt(0).toUpperCase()+t.slice(1)}</option>`).join('');
   const gradeVis=e.event_type==='tournament'?'':'display:none';
   return `<div class="field"><label>Title</label><input type="text" id="ev-title" value="${e.title||''}"></div>
