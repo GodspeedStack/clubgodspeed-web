@@ -2563,7 +2563,7 @@ function renderTournTable(){
         <td style="text-align:center" onclick="event.stopPropagation()">
           ${onSched
             ?'<button class="btn-tbl btn-tbl-rm" onclick="toggleSched('+idx+')">Remove</button>'
-            :'<button class="btn-tbl btn-tbl-add" onclick="toggleSched('+idx+')">+ Add</button>'}
+            :'<button class="btn-tbl btn-tbl-add" onclick="toggleSched('+idx+')">Add</button>'}
         </td></tr>`;
     }).join('');
   }
