@@ -33,6 +33,28 @@ function showToast(message, type='success') {
   setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, 3000);
 }
 
+function confirmModal(title,body,onConfirm){
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center';
+  const card=document.createElement('div');
+  card.style.cssText='background:var(--card,#1e1e2e);border:1px solid var(--border,#333);border-radius:12px;padding:28px 32px;max-width:420px;width:90%;color:var(--fg,#e0e0e0);font-family:inherit';
+  const h=document.createElement('div');
+  h.style.cssText='font-size:16px;font-weight:700;margin-bottom:12px';h.textContent=title;
+  const p=document.createElement('div');
+  p.style.cssText='font-size:14px;line-height:1.5;white-space:pre-line;color:var(--muted,#aaa);margin-bottom:24px';p.textContent=body;
+  const row=document.createElement('div');
+  row.style.cssText='display:flex;gap:10px;justify-content:flex-end';
+  const cancel=document.createElement('button');
+  cancel.textContent='Cancel';cancel.className='btn-xs btn-ghost';
+  cancel.onclick=()=>overlay.remove();
+  const confirm=document.createElement('button');
+  confirm.textContent='Add Anyway';confirm.style.cssText='padding:8px 18px;border-radius:8px;border:none;background:#3b82f6;color:#fff;font-weight:600;cursor:pointer;font-size:13px';
+  confirm.onclick=()=>{overlay.remove();onConfirm();};
+  row.append(cancel,confirm);card.append(h,p,row);overlay.append(card);
+  overlay.onclick=e=>{if(e.target===overlay)overlay.remove();};
+  document.body.appendChild(overlay);
+}
+
 function statusTag(status) {
   const map = {paid:'tag-green',completed:'tag-green',delivered:'tag-green',confirmed:'tag-green',manual:'tag-green',
     pending:'tag-yellow',processing:'tag-yellow',unfulfilled:'tag-yellow',draft:'tag-yellow',pending_venmo:'tag-blue',
@@ -2625,9 +2647,9 @@ function toggleSched(idx){
 }
 window.toggleSched=toggleSched;
 
-async function addToSched(t){
+async function addToSched(t,force){
   const conflict=tournSchedule.find(s=>s.status!=='cancelled'&&datesOverlap(s.start_date,s.end_date,t.start_date,t.end_date));
-  if(conflict){showToast(`Schedule conflict: overlaps with "${conflict.tournament_name}" (${tDate(conflict.start_date,conflict.end_date)})`,'error');return;}
+  if(conflict&&!force){confirmModal(`Schedule Conflict`,`"${t.name}" (${tDate(t.start_date,t.end_date)}) overlaps with "${conflict.tournament_name}" (${tDate(conflict.start_date,conflict.end_date)}).\n\nAdd anyway?`,()=>addToSched(t,true));return;}
   const entry={
     id:'sched-'+Date.now(),tournament_id:t.id,tournament_name:t.name,organizer_name:t.organizer_name,
     start_date:t.start_date,end_date:t.end_date,city:t.city,state:t.state,event_type:t.event_type,
