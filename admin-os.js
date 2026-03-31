@@ -2648,6 +2648,7 @@ function toggleSched(idx){
 window.toggleSched=toggleSched;
 
 async function addToSched(t,force){
+  if(isScheduled(t)){showToast(`"${t.name}" is already on the schedule`,'error');return;}
   const conflict=tournSchedule.find(s=>s.status!=='cancelled'&&datesOverlap(s.start_date,s.end_date,t.start_date,t.end_date));
   if(conflict&&!force){confirmModal(`Schedule Conflict`,`"${t.name}" (${tDate(t.start_date,t.end_date)}) overlaps with "${conflict.tournament_name}" (${tDate(conflict.start_date,conflict.end_date)}).\n\nAdd anyway?`,()=>addToSched(t,true));return;}
   const entry={
