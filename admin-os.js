@@ -1603,7 +1603,9 @@ async function quickAddEvent() {
     const {error}=await osSupabase.rpc('upsert_calendar_event',{
       p_title:title, p_event_type:type, p_start_date:date,
       p_end_date:endDate, p_location:loc||null,
-      p_grade_level:'both', p_created_by:userId, p_visibility:'public'
+      p_grade_level:'both', p_created_by:userId, p_visibility:'public',
+      p_cost:null, p_registration_deadline:null, p_registration_url:null,
+      p_notes:null, p_admin_checklist:null
     });
     if(error) throw error;
     hint.innerHTML=`<span style="color:#34c759">Added "${title}" to the calendar.</span>`;
