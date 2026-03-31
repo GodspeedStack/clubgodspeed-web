@@ -1178,7 +1178,7 @@ function renderCalendar() {
     // Practice pill (tap to toggle)
     if(practice) {
       const off=practice.cancelled;
-      html+=`<div style="font-size:10px;padding:3px 6px;border-radius:4px;margin-bottom:2px;cursor:pointer;transition:all 0.15s;${off?'opacity:0.3;background:rgba(255,255,255,0.04);color:var(--muted);text-decoration:line-through;border:1px solid transparent':'background:rgba(37,99,235,0.1);color:#60a5fa;border:1px solid rgba(37,99,235,0.25)'}" onclick="event.stopPropagation();togglePractice('${dateStr}',${dow})" title="${off?'Click to restore':'Click to cancel'}">${practice.title}</div>`;
+      html+=`<div style="font-size:10px;padding:3px 6px;border-radius:4px;margin-bottom:2px;cursor:pointer;transition:all 0.15s;${off?'color:rgba(255,255,255,0.25);text-decoration:line-through;background:transparent;border:none':'background:rgba(37,99,235,0.1);color:#60a5fa;border:1px solid rgba(37,99,235,0.25)'}" onclick="event.stopPropagation();togglePractice('${dateStr}',${dow})" title="${off?'Click to restore':'Click to cancel'}">${practice.title}</div>`;
     }
     dayEvents.slice(0,3).forEach(e=>{
       let regTag='';
