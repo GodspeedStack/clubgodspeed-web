@@ -55,7 +55,6 @@ function buildEmailHtml(events: CalendarEvent[]): string {
       <tr>
         <td style="padding:12px 16px;border-bottom:1px solid #e5e7eb">
           <div style="font-weight:700;font-size:15px;color:#111827">${e.title}${typeBadge}</div>
-          ${e.notes ? `<div style="color:#6b7280;font-size:12px;margin-top:4px">${e.notes}</div>` : ''}
         </td>
         <td style="padding:12px 16px;border-bottom:1px solid #e5e7eb;color:#374151;font-size:14px;white-space:nowrap">
           ${dateLabel}${time ? '<br>' + time : ''}
