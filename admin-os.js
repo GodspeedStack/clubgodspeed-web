@@ -1212,10 +1212,10 @@ async function publishCalendarToParents() {
   const btn = document.getElementById('btn-publish-calendar');
   if (!osSupabase) { showToast('Not connected to database', 'error'); return; }
 
-  // Find unpublished events (published_at IS NULL)
+  // Fetch ALL unpublished, parent-visible events
   const { data: unpublished, error: fetchErr } = await osSupabase
     .from('calendar_events')
-    .select('id, title, event_type, start_date, start_time, location')
+    .select('id, title, event_type, start_date, end_date, start_time, end_time, location, visibility, notes, cost, description')
     .is('published_at', null)
     .in('visibility', ['public', 'team_only'])
     .order('start_date', { ascending: true });
@@ -1223,13 +1223,139 @@ async function publishCalendarToParents() {
   if (fetchErr) { showToast('Error: ' + fetchErr.message, 'error'); return; }
   if (!unpublished || !unpublished.length) { showToast('All events are already published.', 'info'); return; }
 
-  if (!confirm(`Publish ${unpublished.length} event(s) to the parent portal and send email notification?`)) return;
+  // ── PRE-PUBLISH QA AUDIT ──
+  const audit = runPublishQA(unpublished);
+  showPublishAuditModal(unpublished, audit);
+}
 
+function runPublishQA(events) {
+  const warnings = []; // yellow -- review recommended
+  const errors = [];   // red -- should fix before sending
+
+  // 1. Duplicate detection: same title within 7 days
+  for (let i = 0; i < events.length; i++) {
+    for (let j = i + 1; j < events.length; j++) {
+      if (events[i].title.trim().toLowerCase() === events[j].title.trim().toLowerCase()) {
+        const d1 = new Date(events[i].start_date + 'T12:00:00');
+        const d2 = new Date(events[j].start_date + 'T12:00:00');
+        const gap = Math.abs(d2 - d1) / 86400000;
+        if (gap <= 7) {
+          errors.push({ ids: [events[i].id, events[j].id], msg: `Possible duplicate: "${events[i].title}" appears on ${events[i].start_date} and ${events[j].start_date}. Should this be a multi-day event?` });
+        }
+      }
+    }
+  }
+
+  // 2. Missing location
+  events.forEach(e => {
+    if (!e.location || e.location.trim() === '' || e.location.trim().toUpperCase() === 'TBD') {
+      warnings.push({ ids: [e.id], msg: `"${e.title}" has no confirmed location (${e.location || 'empty'}).` });
+    }
+  });
+
+  // 3. Dates in the past
+  const today = new Date().toISOString().split('T')[0];
+  events.forEach(e => {
+    const endOrStart = e.end_date || e.start_date;
+    if (endOrStart < today) {
+      errors.push({ ids: [e.id], msg: `"${e.title}" (${e.start_date}) is in the past.` });
+    }
+  });
+
+  // 4. Cost/price info that might leak
+  events.forEach(e => {
+    const haystack = [e.notes, e.description, e.title].filter(Boolean).join(' ');
+    if (/\$\d/.test(haystack) || /cost|price|fee|early.?bird/i.test(haystack)) {
+      warnings.push({ ids: [e.id], msg: `"${e.title}" may contain pricing info in title/description/notes. Verify this is parent-appropriate.` });
+    }
+  });
+
+  // 5. Admin-sounding language leak check
+  events.forEach(e => {
+    const haystack = [e.notes, e.description, e.title].filter(Boolean).join(' ');
+    if (/internal|admin.?only|do not share|coach.?note|staff|budget|roster.?lock|placeholder/i.test(haystack)) {
+      errors.push({ ids: [e.id], msg: `"${e.title}" contains admin-only language that should not be sent to parents.` });
+    }
+  });
+
+  // 6. Missing end_date for multi-word tournaments that look multi-day
+  events.forEach(e => {
+    if (e.event_type === 'tournament' && !e.end_date) {
+      warnings.push({ ids: [e.id], msg: `Tournament "${e.title}" has no end date. Is this a multi-day event?` });
+    }
+  });
+
+  // 7. Basic title cleanup check
+  events.forEach(e => {
+    if (e.title !== e.title.trim() || /\s{2,}/.test(e.title)) {
+      warnings.push({ ids: [e.id], msg: `"${e.title}" has extra whitespace in the title.` });
+    }
+  });
+
+  return { errors, warnings };
+}
+
+function showPublishAuditModal(events, audit) {
+  const hasErrors = audit.errors.length > 0;
+  const hasWarnings = audit.warnings.length > 0;
+  const clean = !hasErrors && !hasWarnings;
+
+  let html = `<div style="margin-bottom:16px">
+    <div style="font-size:14px;color:var(--muted);margin-bottom:12px">${events.length} event(s) ready to publish to parents.</div>`;
+
+  if (clean) {
+    html += `<div style="padding:12px 16px;border-radius:8px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);color:#22c55e;font-weight:600;font-size:13px;margin-bottom:16px">All checks passed. Ready to send.</div>`;
+  }
+
+  if (hasErrors) {
+    html += `<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Errors (fix before sending)</div>`;
+    audit.errors.forEach(e => {
+      html += `<div style="padding:10px 14px;border-radius:8px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);color:#fca5a5;font-size:13px;margin-bottom:6px">${e.msg}</div>`;
+    });
+    html += `</div>`;
+  }
+
+  if (hasWarnings) {
+    html += `<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Warnings (review recommended)</div>`;
+    audit.warnings.forEach(w => {
+      html += `<div style="padding:10px 14px;border-radius:8px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.15);color:#fbbf24;font-size:13px;margin-bottom:6px">${w.msg}</div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Event preview table
+  html += `<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Events to publish</div>
+  <div style="max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
+  <table style="width:100%;font-size:13px"><thead><tr style="background:rgba(0,0,0,0.2)"><th style="padding:8px 12px;text-align:left">Event</th><th style="padding:8px 12px;text-align:left">Date</th><th style="padding:8px 12px;text-align:left">Location</th></tr></thead><tbody>`;
+  events.forEach(e => {
+    const dateLabel = e.end_date && e.end_date !== e.start_date ? fmtShort(e.start_date) + ' - ' + fmtShort(e.end_date) : fmtShort(e.start_date);
+    html += `<tr><td style="padding:6px 12px;border-top:1px solid var(--border)">${e.title}</td><td style="padding:6px 12px;border-top:1px solid var(--border);white-space:nowrap">${dateLabel}</td><td style="padding:6px 12px;border-top:1px solid var(--border)">${e.location || 'TBD'}</td></tr>`;
+  });
+  html += `</tbody></table></div></div>`;
+
+  // Action buttons
+  const publishDisabled = hasErrors ? 'disabled style="opacity:0.4;cursor:not-allowed"' : '';
+  html += `<div style="display:flex;gap:8px;margin-top:16px">
+    <button class="btn btn-primary" style="flex:1" ${publishDisabled} onclick="confirmPublish()" id="qa-publish-btn">${hasErrors ? 'Fix errors to publish' : 'Confirm & Send to Parents'}</button>
+    <button class="btn btn-ghost" style="flex:0 0 auto" onclick="closeModal()">Cancel</button>
+  </div>`;
+
+  // Store events for confirmPublish
+  window._pendingPublishEvents = events;
+
+  openModal('publish-audit');
+  document.getElementById('modal-title').textContent = 'Pre-Publish QA Audit';
+  document.getElementById('modal-body').innerHTML = html;
+}
+
+async function confirmPublish() {
+  const events = window._pendingPublishEvents;
+  if (!events || !events.length) return;
+  const btn = document.getElementById('qa-publish-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Publishing...'; }
 
   try {
-    // Set published_at on all unpublished events
-    const ids = unpublished.map(e => e.id);
+    const ids = events.map(e => e.id);
     const now = new Date().toISOString();
     const { error: updateErr } = await osSupabase
       .from('calendar_events')
@@ -1238,7 +1364,6 @@ async function publishCalendarToParents() {
 
     if (updateErr) throw updateErr;
 
-    // Invoke edge function to send email notifications
     try {
       await osSupabase.functions.invoke('send-calendar-update', {
         body: { event_ids: ids }
@@ -1247,12 +1372,14 @@ async function publishCalendarToParents() {
       console.error('Email notification error (events still published):', emailErr);
     }
 
-    showToast(`Published ${unpublished.length} event(s) to parents.`, 'success');
+    showToast(`Published ${events.length} event(s) to parents.`, 'success');
+    closeModal();
     loadCalendar();
   } catch (e) {
     showToast('Publish error: ' + e.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Confirm & Send to Parents'; }
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Publish to Parents'; }
+    window._pendingPublishEvents = null;
   }
 }
 
