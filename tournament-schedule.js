@@ -18,8 +18,10 @@ const TournamentSchedule = (() => {
     const { data, error } = await supabase
       .from('calendar_events')
       .select('id,title,start_date,start_time,end_time,location,location_url,grade_level,description,end_date')
-      .eq('event_type', 'tournament')
+      .in('event_type', ['tournament', 'season'])
       .eq('is_cancelled', false)
+      .not('published_at', 'is', null)
+      .in('visibility', ['public', 'team_only'])
       .gte('start_date', new Date().toISOString().split('T')[0])
       .order('start_date', { ascending: true });
     if (error) { console.error('Tournament load error:', error); return; }
