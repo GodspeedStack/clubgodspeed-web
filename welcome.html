@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Godspeed Basketball</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --gs-black: #1d1d1f;
+            --gs-white: #fafafa;
+            --gs-blue: #0071e3;
+            --gs-blue-dark: #0051a8;
+            --gs-gray-50: #f5f5f7;
+            --gs-gray-100: #e8e8ed;
+            --gs-gray-300: #d2d2d7;
+            --gs-gray-500: #86868b;
+            --gs-gray-700: #424245;
+            --gs-green: #166534;
+            --gs-green-bg: #dcfce7;
+            --gs-red: #dc2626;
+            --gs-red-bg: #fef2f2;
+            --gs-amber: #92400e;
+            --gs-amber-bg: #fef3c7;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --shadow-card: 0 4px 24px rgba(0,0,0,0.06);
+            --shadow-elevated: 0 12px 40px rgba(0,0,0,0.12);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--gs-gray-50);
+            color: var(--gs-black);
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+        }
+
+        /* ── Header bar ── */
+        .ob-header {
+            background: var(--gs-black);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .ob-header-brand {
+            font-family: 'Syncopate', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            color: white;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        /* ── Progress stepper ── */
+        .ob-stepper {
+            background: white;
+            border-bottom: 1px solid var(--gs-gray-100);
+            padding: 20px 24px;
+            position: sticky;
+            top: 52px;
+            z-index: 99;
+        }
+        .ob-stepper-inner {
+            max-width: 720px;
+            margin: 0 auto;
+        }
+        .ob-step-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--gs-gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .ob-step-count {
+            font-variant-numeric: tabular-nums;
+        }
+        .ob-progress-track {
+            width: 100%;
+            height: 6px;
+            background: var(--gs-gray-100);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .ob-progress-fill {
+            height: 100%;
+            background: var(--gs-black);
+            border-radius: 3px;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 0%;
+        }
+        .ob-step-dots {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            padding: 0 2px;
+        }
+        .ob-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--gs-gray-100);
+            border: 2px solid var(--gs-gray-300);
+            transition: all 0.3s ease;
+            cursor: default;
+        }
+        .ob-dot.completed {
+            background: var(--gs-black);
+            border-color: var(--gs-black);
+        }
+        .ob-dot.active {
+            background: white;
+            border-color: var(--gs-black);
+            box-shadow: 0 0 0 3px rgba(29,29,31,0.15);
+        }
+
+        /* ── Main content area ── */
+        .ob-main {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 32px 20px 120px;
+        }
+
+        /* ── Step panels ── */
+        .ob-step {
+            display: none;
+            animation: fadeSlideIn 0.4s ease;
+        }
+        .ob-step.active {
+            display: block;
+        }
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Card containers ── */
+        .ob-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            box-shadow: var(--shadow-card);
+            margin-bottom: 20px;
+        }
+        .ob-card h2 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+            line-height: 1.2;
+        }
+        .ob-card h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--gs-black);
+        }
+        .ob-card p {
+            color: var(--gs-gray-700);
+            line-height: 1.65;
+            font-size: 0.95rem;
+        }
+        .ob-card p + p {
+            margin-top: 12px;
+        }
+
+        /* ── Welcome hero ── */
+        .ob-hero {
+            text-align: center;
+            padding: 48px 32px;
+        }
+        .ob-hero-tagline {
+            font-family: 'Syncopate', sans-serif;
+            font-weight: 700;
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--gs-gray-500);
+            margin-bottom: 16px;
+        }
+        .ob-hero h1 {
+            font-size: 2.2rem;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            margin-bottom: 16px;
+        }
+        .ob-hero-sub {
+            font-size: 1.05rem;
+            color: var(--gs-gray-700);
+            line-height: 1.6;
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        /* ── Pillars ── */
+        .ob-pillars {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            margin: 28px 0;
+        }
+        .ob-pillar {
+            text-align: center;
+            padding: 20px 12px;
+            border-radius: var(--radius-md);
+            background: var(--gs-gray-50);
+        }
+        .ob-pillar-icon {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+        .ob-pillar-title {
+            font-weight: 800;
+            font-size: 0.7rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--gs-black);
+        }
+
+        /* ── Values section ── */
+        .ob-values {
+            list-style: none;
+            padding: 0;
+        }
+        .ob-values li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--gs-gray-100);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: var(--gs-gray-700);
+        }
+        .ob-values li:last-child { border-bottom: none; }
+        .ob-values .val-icon {
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            margin-top: 1px;
+        }
+        .val-icon.green { background: var(--gs-green-bg); }
+        .val-icon.red { background: var(--gs-red-bg); }
+
+        /* ── Zero-tolerance callout ── */
+        .ob-callout {
+            border-radius: var(--radius-md);
+            padding: 20px 24px;
+            margin: 20px 0;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        .ob-callout.warning {
+            background: var(--gs-red-bg);
+            border-left: 4px solid var(--gs-red);
+            color: #7f1d1d;
+        }
+        .ob-callout.info {
+            background: #eff6ff;
+            border-left: 4px solid var(--gs-blue);
+            color: #1e3a5f;
+        }
+        .ob-callout strong {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+
+        /* ── Auth buttons ── */
+        .ob-auth-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        .ob-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 16px 24px;
+            border-radius: 9999px;
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            text-decoration: none;
+            width: 100%;
+        }
+        .ob-btn-primary {
+            background: var(--gs-black);
+            color: white;
+        }
+        .ob-btn-primary:hover {
+            background: #333;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+        .ob-btn-primary:disabled {
+            background: var(--gs-gray-300);
+            color: var(--gs-gray-500);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .ob-btn-google {
+            background: white;
+            color: var(--gs-black);
+            border: 1.5px solid var(--gs-gray-300);
+        }
+        .ob-btn-google:hover {
+            border-color: var(--gs-gray-500);
+            background: var(--gs-gray-50);
+        }
+        .ob-btn-secondary {
+            background: transparent;
+            color: var(--gs-blue);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .ob-btn-secondary:hover { text-decoration: underline; }
+
+        .ob-divider {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: var(--gs-gray-500);
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .ob-divider::before, .ob-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--gs-gray-100);
+        }
+
+        /* ── Form inputs ── */
+        .ob-input-group {
+            margin-bottom: 16px;
+        }
+        .ob-input-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--gs-gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+        }
+        .ob-input {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            border: 1.5px solid var(--gs-gray-300);
+            background: var(--gs-gray-50);
+            font-size: 1rem;
+            font-family: inherit;
+            color: var(--gs-black);
+            outline: none;
+            transition: all 0.2s;
+        }
+        .ob-input:focus {
+            border-color: var(--gs-black);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(29,29,31,0.08);
+        }
+        .ob-input.error {
+            border-color: var(--gs-red);
+        }
+        .ob-error-text {
+            color: var(--gs-red);
+            font-size: 0.8rem;
+            margin-top: 4px;
+            display: none;
+        }
+
+        /* ── Document step ── */
+        .ob-doc-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .ob-doc-badge {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 4px 12px;
+            border-radius: 9999px;
+        }
+        .ob-doc-badge.required { background: var(--gs-amber-bg); color: var(--gs-amber); }
+        .ob-doc-badge.signed { background: var(--gs-green-bg); color: var(--gs-green); }
+
+        .ob-doc-scroll {
+            background: var(--gs-gray-50);
+            border: 1px solid var(--gs-gray-100);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            line-height: 1.7;
+            color: var(--gs-gray-700);
+        }
+        .ob-doc-scroll h4 {
+            color: var(--gs-black);
+            font-weight: 700;
+            margin: 16px 0 8px;
+            font-size: 0.95rem;
+        }
+        .ob-doc-scroll h4:first-child { margin-top: 0; }
+        .ob-doc-scroll ul {
+            padding-left: 20px;
+            margin: 8px 0;
+        }
+        .ob-doc-scroll li {
+            margin-bottom: 4px;
+        }
+
+        /* ── Signature area ── */
+        .ob-sig-section {
+            background: var(--gs-gray-50);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-top: 16px;
+        }
+        .ob-sig-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .ob-sig-canvas-wrap {
+            position: relative;
+            height: 120px;
+            border: 1.5px dashed var(--gs-gray-300);
+            border-radius: var(--radius-sm);
+            background: white;
+            overflow: hidden;
+            margin-bottom: 8px;
+            cursor: crosshair;
+        }
+        .ob-sig-canvas-wrap canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        .ob-sig-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--gs-gray-300);
+            font-weight: 600;
+            font-size: 0.9rem;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        .ob-sig-canvas-wrap.has-sig .ob-sig-overlay { opacity: 0; }
+        .ob-sig-clear {
+            font-size: 0.8rem;
+            color: var(--gs-gray-500);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 500;
+            text-align: right;
+            display: block;
+            margin-left: auto;
+        }
+        .ob-sig-clear:hover { color: var(--gs-red); }
+
+        .ob-agree-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin: 16px 0;
+        }
+        .ob-agree-row input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-top: 2px;
+            accent-color: var(--gs-black);
+            flex-shrink: 0;
+        }
+        .ob-agree-row label {
+            font-size: 0.9rem;
+            line-height: 1.4;
+            color: var(--gs-gray-700);
+            cursor: pointer;
+        }
+
+        /* ── Completion ── */
+        .ob-complete-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--gs-green-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 2rem;
+        }
+
+        /* ── Fixed bottom bar ── */
+        .ob-bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid var(--gs-gray-100);
+            padding: 16px 24px;
+            z-index: 100;
+        }
+        .ob-bottom-inner {
+            max-width: 720px;
+            margin: 0 auto;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .ob-bottom-inner .ob-btn {
+            flex: 1;
+        }
+        .ob-btn-back {
+            background: var(--gs-gray-50);
+            color: var(--gs-gray-700);
+            border: 1.5px solid var(--gs-gray-300);
+            flex: 0 0 auto !important;
+            width: auto !important;
+            padding: 16px 20px;
+        }
+        .ob-btn-back:hover { background: var(--gs-gray-100); }
+
+        /* ── Loading spinner ── */
+        .ob-spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Responsive ── */
+        @media (max-width: 600px) {
+            .ob-hero h1 { font-size: 1.6rem; }
+            .ob-card { padding: 24px 20px; }
+            .ob-pillars { grid-template-columns: 1fr; gap: 10px; }
+            .ob-sig-row { grid-template-columns: 1fr; }
+            .ob-hero { padding: 32px 20px; }
+        }
+
+        /* ── Hide state ── */
+        [hidden] { display: none !important; }
+    </style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header class="ob-header">
+    <span class="ob-header-brand">Godspeed Basketball</span>
+</header>
+
+<!-- ── Progress Stepper ── -->
+<div class="ob-stepper" id="ob-stepper" hidden>
+    <div class="ob-stepper-inner">
+        <div class="ob-step-label">
+            <span id="ob-step-name">Welcome</span>
+            <span class="ob-step-count" id="ob-step-count">1 of 9</span>
+        </div>
+        <div class="ob-progress-track">
+            <div class="ob-progress-fill" id="ob-progress-fill"></div>
+        </div>
+        <div class="ob-step-dots" id="ob-step-dots"></div>
+    </div>
+</div>
+
+<!-- ── Main Content ── -->
+<main class="ob-main">
+
+    <!-- ═══ STEP 0: WELCOME ═══ -->
+    <div class="ob-step active" data-step="0">
+        <div class="ob-card ob-hero">
+            <div class="ob-hero-tagline">Brotherhood. Habits. Success.</div>
+            <h1>Welcome to the Godspeed Family</h1>
+            <p class="ob-hero-sub">You are joining a program built on discipline, accountability, and genuine love for the game. We are not just building basketball players. We are building young men.</p>
+        </div>
+
+        <div class="ob-card">
+            <h3>Our Three Pillars</h3>
+            <div class="ob-pillars">
+                <div class="ob-pillar">
+                    <div class="ob-pillar-icon">&#9878;</div>
+                    <div class="ob-pillar-title">Brotherhood</div>
+                </div>
+                <div class="ob-pillar">
+                    <div class="ob-pillar-icon">&#9881;</div>
+                    <div class="ob-pillar-title">Habits</div>
+                </div>
+                <div class="ob-pillar">
+                    <div class="ob-pillar-icon">&#9733;</div>
+                    <div class="ob-pillar-title">Success</div>
+                </div>
+            </div>
+            <p>Every practice, every game, and every interaction within Godspeed is intentional. We expect effort, respect, and commitment from our players and our parents. In return, we will give your son the tools, coaching, and competitive environment to grow both on and off the court.</p>
+        </div>
+
+        <div class="ob-card">
+            <h3>What We Expect</h3>
+            <ul class="ob-values">
+                <li>
+                    <span class="val-icon green">&#10003;</span>
+                    <span><strong style="color: var(--gs-black);">Show up on time, every time.</strong> Consistent attendance at practices and games is non-negotiable. Your son's teammates are counting on him.</span>
+                </li>
+                <li>
+                    <span class="val-icon green">&#10003;</span>
+                    <span><strong style="color: var(--gs-black);">Respect coaches, referees, and opponents.</strong> We teach our players to compete hard and lose with dignity. We expect parents to model the same.</span>
+                </li>
+                <li>
+                    <span class="val-icon green">&#10003;</span>
+                    <span><strong style="color: var(--gs-black);">Communicate proactively.</strong> If something comes up, reach out early. We work with families, not against them.</span>
+                </li>
+                <li>
+                    <span class="val-icon green">&#10003;</span>
+                    <span><strong style="color: var(--gs-black);">Support the brotherhood.</strong> Cheer for every player. Celebrate every teammate's win. This is a team, not a showcase.</span>
+                </li>
+            </ul>
+
+            <div class="ob-callout warning" style="margin-top: 24px;">
+                <strong>Zero-Tolerance Policy</strong>
+                Godspeed has zero tolerance for the following from players or parents: verbal abuse of coaches, referees, or other parents; sideline coaching that contradicts staff; negative talk about teammates; and failure to uphold financial commitments without prior communication. Violations may result in immediate suspension or removal from the program with no refund. We protect this culture for every family in the program.
+            </div>
+        </div>
+
+        <div class="ob-card">
+            <h3>Help Us Build This</h3>
+            <p>Godspeed is not a drop-off program. We need parents who want to be part of something special. Volunteer to help at tournaments. Share ideas that strengthen our community. Hold us accountable the same way we hold your son accountable. The best programs are built by families who invest more than money.</p>
+        </div>
+    </div>
+
+    <!-- ═══ STEP 1: CREATE ACCOUNT / SIGN IN ═══ -->
+    <div class="ob-step" data-step="1">
+        <div class="ob-card">
+            <h2>Create Your Account</h2>
+            <p style="margin-bottom: 24px;">Set up your parent portal account to track your son's progress, view schedules, and manage documents.</p>
+
+            <div class="ob-auth-section">
+                <button class="ob-btn ob-btn-google" id="btn-google-auth" onclick="OB.authGoogle()">
+                    <svg width="20" height="20" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                    Continue with Google
+                </button>
+
+                <div class="ob-divider">or</div>
+
+                <div id="email-auth-form">
+                    <div class="ob-input-group">
+                        <label for="ob-email">Email Address</label>
+                        <input type="email" id="ob-email" class="ob-input" placeholder="name@example.com" autocomplete="email">
+                        <div class="ob-error-text" id="ob-email-error"></div>
+                    </div>
+                    <div class="ob-input-group">
+                        <label for="ob-password">Password</label>
+                        <input type="password" id="ob-password" class="ob-input" placeholder="Minimum 6 characters" minlength="6" autocomplete="new-password">
+                        <div class="ob-error-text" id="ob-password-error"></div>
+                    </div>
+                    <div class="ob-input-group" id="ob-name-group">
+                        <label for="ob-parent-name">Parent / Guardian Name</label>
+                        <input type="text" id="ob-parent-name" class="ob-input" placeholder="Your full name" autocomplete="name">
+                    </div>
+                    <div class="ob-input-group" id="ob-athlete-group">
+                        <label for="ob-athlete-name">Athlete Name</label>
+                        <input type="text" id="ob-athlete-name" class="ob-input" placeholder="Your child's full name">
+                    </div>
+                    <button class="ob-btn ob-btn-primary" id="btn-email-auth" onclick="OB.authEmail()">Create Account</button>
+                    <button class="ob-btn ob-btn-secondary" id="btn-toggle-login" onclick="OB.toggleLoginMode()">Already have an account? Sign in</button>
+                </div>
+            </div>
+
+            <div id="ob-auth-status" hidden>
+                <div style="text-align: center; padding: 24px;">
+                    <div class="ob-complete-icon" style="width: 56px; height: 56px; font-size: 1.4rem;">&#10003;</div>
+                    <p style="font-weight: 600; margin-top: 12px;" id="ob-auth-name"></p>
+                    <p style="color: var(--gs-gray-500); font-size: 0.9rem;" id="ob-auth-email"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ STEP 2: PARENT GUIDE ═══ -->
+    <div class="ob-step" data-step="2">
+        <div class="ob-card">
+            <div class="ob-doc-header">
+                <h2>2026 Season Guide</h2>
+                <span class="ob-doc-badge required">Review Required</span>
+            </div>
+            <p style="margin-bottom: 16px;">Please review the season guide which covers practice schedules, tournament calendar, fees, and program expectations.</p>
+            <div style="border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--gs-gray-100);">
+                <iframe src="season-guide.html" style="width: 100%; height: 400px; border: none;" id="ob-guide-iframe"></iframe>
+            </div>
+            <div class="ob-callout info" style="margin-top: 16px;">
+                <strong>Take Your Time</strong>
+                Scroll through the entire guide before continuing. This document covers everything you need to know about the upcoming season.
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ STEP 3: ATHLETIC WAIVER ═══ -->
+    <div class="ob-step" data-step="3">
+        <div class="ob-card">
+            <div class="ob-doc-header">
+                <h2>Athletic Liability Waiver</h2>
+                <span class="ob-doc-badge required" id="badge-athletic">Signature Required</span>
+            </div>
+            <div class="ob-doc-scroll" id="doc-athletic">
+                <h4>Release and Waiver of Liability</h4>
+                <p>In consideration of being allowed to participate in any way in the Godspeed Basketball athletic program, related events and activities, I, the undersigned parent/guardian, acknowledge, appreciate, and agree that:</p>
+                <h4>Assumption of Risk</h4>
+                <p>The risk of injury from the activities involved in this program is significant, including the potential for permanent paralysis and death. While particular rules, equipment, and personal discipline may reduce this risk, the risk of serious injury does exist. I knowingly and freely assume all such risks, both known and unknown, even if arising from the negligence of the releasees named below, and assume full responsibility for my child's participation.</p>
+                <h4>Waiver and Release</h4>
+                <p>I, for myself, my child, and on behalf of my heirs, assigns, personal representatives and next of kin, hereby release and hold harmless Godspeed Basketball, its coaches, instructors, agents, and other participants, with respect to any and all injury, disability, death, or loss or damage to person or property, whether caused by the negligence of the releasees or otherwise.</p>
+                <h4>Medical Authorization</h4>
+                <p>I authorize Godspeed Basketball coaching staff to seek emergency medical treatment for my child in the event I cannot be reached.</p>
+                <p>I have read this release of liability and assumption of risk agreement, fully understand its terms, and understand that I am giving up substantial rights, including my right to sue. I acknowledge that I am signing the agreement freely and voluntarily.</p>
+            </div>
+            <div class="ob-sig-section" id="sig-section-athletic">
+                <div class="ob-sig-row">
+                    <div class="ob-input-group" style="margin-bottom: 0;">
+                        <label>Child's Name</label>
+                        <input type="text" class="ob-input ob-child-name" readonly>
+                    </div>
+                    <div class="ob-input-group" style="margin-bottom: 0;">
+                        <label>Parent Name</label>
+                        <input type="text" class="ob-input ob-parent-name-field" readonly>
+                    </div>
+                </div>
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--gs-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Signature</label>
+                <div class="ob-sig-canvas-wrap" id="sig-wrap-athletic">
+                    <canvas id="sig-canvas-athletic"></canvas>
+                    <div class="ob-sig-overlay">Sign Here</div>
+                </div>
+                <button class="ob-sig-clear" onclick="OB.clearSig('athletic')">Clear Signature</button>
+                <div class="ob-agree-row">
+                    <input type="checkbox" id="agree-athletic">
+                    <label for="agree-athletic">I have read and agree to the Athletic Liability Waiver. <span style="color: var(--gs-gray-500); font-size: 0.85em;">(Date: <span class="ob-date"></span>)</span></label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ STEP 4: MEDICAL CONSENT ═══ -->
+    <div class="ob-step" data-step="4">
+        <div class="ob-card">
+            <div class="ob-doc-header">
+                <h2>Medical Consent</h2>
+                <span class="ob-doc-badge required" id="badge-medical">Signature Required</span>
+            </div>
+            <div class="ob-doc-scroll" id="doc-medical">
+                <h4>Emergency Medical Authorization</h4>
+                <p>I, the undersigned parent/guardian, hereby give my consent for emergency medical treatment of my child in the event of injury, accident, or illness during participation in any Godspeed Basketball program activities. This includes, but is not limited to, practices, games, tournaments, travel, and related events.</p>
+                <h4>Medical Information</h4>
+                <p>I understand that it is my responsibility to provide accurate and up-to-date medical information to the coaching staff, including any allergies, medications, or medical conditions that may affect my child's participation. I will notify the coaching staff immediately of any changes to my child's medical status.</p>
+                <h4>Insurance</h4>
+                <p>I understand that Godspeed Basketball does not provide medical insurance coverage for participants. I agree to maintain adequate health insurance for my child and to be responsible for all medical expenses incurred as a result of participation in the program.</p>
+                <h4>Authorization</h4>
+                <p>In the event that I cannot be reached during an emergency, I hereby give permission to the coaching staff to authorize necessary medical treatment for my child. I release Godspeed Basketball and its staff from any liability arising from the provision of emergency medical care.</p>
+            </div>
+            <div class="ob-sig-section" id="sig-section-medical">
+                <div class="ob-sig-row">
+                    <div class="ob-input-group" style="margin-bottom: 0;">
+                        <label>Child's Name</label>
+                        <input type="text" class="ob-input ob-child-name" readonly>
+                    </div>
+                    <div class="ob-input-group" style="margin-bottom: 0;">
+                        <label>Parent Name</label>
+                        <input type="text" class="ob-input ob-parent-name-field" readonly>
+                    </div>
+                </div>
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--gs-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Signature</label>
+                <div class="ob-sig-canvas-wrap" id="sig-wrap-medical">
+                    <canvas id="sig-canvas-medical"></canvas>
+                    <div class="ob-sig-overlay">Sign Here</div>
+                </div>
+                <button class="ob-sig-clear" onclick="OB.clearSig('medical')">Clear Signature</button>
+                <div class="ob-agree-row">
+                    <input type="checkbox" id="agree-medical">
+                    <label for="agree-medical">I have read and agree to the Medical Consent form. <span style="color: var(--gs-gray-500); font-size: 0.85em;">(Date: <span class="ob-date"></span>)</span></label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ STEP 5: PRACTICE CONSENT ═══ -->
+    <div class="ob-step" data-step="5">
+        <div class="ob-card">
+            <div class="ob-doc-header">
+                <h2>Practice Commitment</h2>
+                <span class="ob-doc-badge required" id="badge-practice">Signature Required</span>
+            </div>
+            <div class="ob-doc-scroll" id="doc-practice">
+                <h4>Training Intensity Agreement</h4>
+                <p>Godspeed Basketball practices are designed to be high-intensity, competitive training sessions. By signing this agreement, I acknowledge and agree to the following:</p>
+                <h4>Practice Schedule</h4>
+                <ul>
+                    <li>Monday: Mandatory Skills Training at NEC (4:00 PM - 5:30 PM)</li>
+                    <li>Tuesday: Team Practice at B.F. Elementary School (5:30 PM - 7:00 PM)</li>
+                    <li>Thursday: Team Practice at B.F. Elementary School (5:30 PM - 7:00 PM)</li>
+                </ul>
+                <h4>Attendance Policy</h4>
+                <p>Regular attendance at all scheduled practices is expected. If your child will miss a practice, you must notify the coaching staff at least 2 hours in advance. Unexcused absences affect the entire team and may impact your child's playing time in games and tournaments.</p>
+                <h4>Physical Demands</h4>
+                <p>Training sessions include sprinting, agility drills, strength conditioning, and full-court gameplay. I acknowledge that these activities are physically demanding and confirm that my child is physically able to participate. I will notify coaches immediately if my child has any physical limitation that could affect participation.</p>
+                <h4>Equipment</h4>
+                <p>Players are expected to arrive with proper basketball shoes, a water bottle, and appropriate athletic clothing. Godspeed Basketball is not responsible for lost or damaged personal property.</p>
+            </div>
+            <div class="ob-sig-section" id="sig-section-practice">
+                <div class="ob-sig-row">
+                    <div class="ob-input-group" style="margin-bottom: 0;">
+                        <label>Child's Name</label>
+                        <input type="text" class="ob-input ob-child-name" readonly>
+                    </div>
+                    <div class="ob-input-group" style="margin-bottom: 0;">
+                        <label>Parent Name</label>
+                        <input type="text" class="ob-input ob-parent-name-field" readonly>
+                    </div>
+                </div>
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--gs-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Signature</label>
+                <div class="ob-sig-canvas-wrap" id="sig-wrap-practice">
+                    <canvas id="sig-canvas-practice"></canvas>
+                    <div class="ob-sig-overlay">Sign Here</div>
+                </div>
+                <button class="ob-sig-clear" onclick="OB.clearSig('practice')">Clear Signature</button>
+                <div class="ob-agree-row">
+                    <input type="checkbox" id="agree-practice">
+                    <label for="agree-practice">I have read and agree to the Practice Commitment. <span style="color: var(--gs-gray-500); font-size: 0.85em;">(Date: <span class="ob-date"></span>)</span></label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ STEP 6: CODE OF CONDUCT ═══ -->
+    <div class="ob-step" data-step="6">
+        <div class="ob-card">
+            <div class="ob-doc-header">
+                <h2>Parental Code of Conduct</h2>
+                <span class="ob-doc-badge required" id="badge-conduct">Signature Required</span>
+            </div>
+            <div class="ob-doc-scroll" id="doc-conduct">
+                <h4>Parent and Guardian Expectations</h4>
+                <p>Godspeed Basketball is built on mutual respect between coaches, players, and families. Your behavior as a parent directly shapes your child's experience and the culture of this program. By signing this agreement, you commit to the following:</p>
+                <h4>Sideline Conduct</h4>
+                <ul>
+                    <li>I will encourage my child and all players positively at all times during games and practices.</li>
+                    <li>I will not coach from the sideline, yell instructions to players, or contradict coaching staff during games or practices.</li>
+                    <li>I will respect all game officials. I understand that referees are human and disagreements with calls are never an excuse for verbal abuse.</li>
+                    <li>I will not engage in negative talk about other players, parents, or coaches within earshot of any players.</li>
+                </ul>
+                <h4>Communication Standards</h4>
+                <ul>
+                    <li>I will direct all concerns about coaching decisions, playing time, or strategy to the coaching staff privately, never during or immediately after a game.</li>
+                    <li>I will observe a 24-hour cooling-off period before raising concerns after a game.</li>
+                    <li>I will communicate schedule conflicts or issues in advance through proper channels.</li>
+                </ul>
+                <h4>Financial Responsibility</h4>
+                <ul>
+                    <li>I will meet all financial obligations on time as outlined in the season dues agreement.</li>
+                    <li>If I experience financial hardship, I will communicate proactively with the program director rather than simply missing payments.</li>
+                </ul>
+                <h4>Consequences</h4>
+                <p>Violations of this code of conduct will result in the following escalation: first offense is a verbal warning, second offense is a written warning, and third offense is suspension or removal from the program. Severe violations such as physical threats, racist or discriminatory language, or dangerous behavior result in immediate removal with no prior warning required.</p>
+            </div>
+            <div class="ob-sig-section" id="sig-section-conduct">
+                <div class="ob-sig-row">
+                    <div class="ob-input-group" style="margin-bottom: 0;">
+                        <label>Child's Name</label>
+                        <input type="text" class="ob-input ob-child-name" readonly>
+                    </div>
+                    <div class="ob-input-group" style="margin-bottom: 0;">
+                        <label>Parent Name</label>
+                        <input type="text" class="ob-input ob-parent-name-field" readonly>
+                    </div>
+                </div>
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--gs-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Signature</label>
+                <div class="ob-sig-canvas-wrap" id="sig-wrap-conduct">
+                    <canvas id="sig-canvas-conduct"></canvas>
+                    <div class="ob-sig-overlay">Sign Here</div>
+                </div>
+                <button class="ob-sig-clear" onclick="OB.clearSig('conduct')">Clear Signature</button>
+                <div class="ob-agree-row">
+                    <input type="checkbox" id="agree-conduct">
+                    <label for="agree-conduct">I have read and agree to the Parental Code of Conduct. <span style="color: var(--gs-gray-500); font-size: 0.85em;">(Date: <span class="ob-date"></span>)</span></label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ STEP 7: MEDIA RELEASE ═══ -->
+    <div class="ob-step" data-step="7">
+        <div class="ob-card">
+            <div class="ob-doc-header">
+                <h2>Photo &amp; Video Release</h2>
+                <span class="ob-doc-badge required" id="badge-media">Signature Required</span>
+            </div>
+            <div class="ob-doc-scroll" id="doc-media">
+                <h4>Media Consent and Release</h4>
+                <p>I hereby grant Godspeed Basketball, its coaches, and authorized representatives permission to photograph and/or video record my child during practices, games, tournaments, and any other program-related activities.</p>
+                <h4>Usage Rights</h4>
+                <p>I understand that these images and recordings may be used for the following purposes:</p>
+                <ul>
+                    <li>Social media posts and stories (Instagram, Twitter/X, Facebook, YouTube)</li>
+                    <li>Program website and marketing materials</li>
+                    <li>Game film and training analysis shared within the team</li>
+                    <li>Promotional content for Godspeed Basketball events</li>
+                    <li>Local media coverage of games and tournaments</li>
+                </ul>
+                <h4>Terms</h4>
+                <p>I understand that no compensation will be provided for the use of my child's image or likeness. I understand that I may revoke this consent at any time by providing written notice to the program director, but that such revocation will not apply to materials already published or distributed.</p>
+                <p>I release Godspeed Basketball from any claims arising from the use of my child's image or likeness as described above.</p>
+            </div>
+            <div class="ob-sig-section" id="sig-section-media">
+                <div class="ob-sig-row">
+                    <div class="ob-input-group" style="margin-bottom: 0;">
+                        <label>Child's Name</label>
+                        <input type="text" class="ob-input ob-child-name" readonly>
+                    </div>
+                    <div class="ob-input-group" style="margin-bottom: 0;">
+                        <label>Parent Name</label>
+                        <input type="text" class="ob-input ob-parent-name-field" readonly>
+                    </div>
+                </div>
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--gs-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Signature</label>
+                <div class="ob-sig-canvas-wrap" id="sig-wrap-media">
+                    <canvas id="sig-canvas-media"></canvas>
+                    <div class="ob-sig-overlay">Sign Here</div>
+                </div>
+                <button class="ob-sig-clear" onclick="OB.clearSig('media')">Clear Signature</button>
+                <div class="ob-agree-row">
+                    <input type="checkbox" id="agree-media">
+                    <label for="agree-media">I have read and agree to the Photo &amp; Video Release. <span style="color: var(--gs-gray-500); font-size: 0.85em;">(Date: <span class="ob-date"></span>)</span></label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ STEP 8: PAYMENT ACKNOWLEDGMENT ═══ -->
+    <div class="ob-step" data-step="8">
+        <div class="ob-card">
+            <div class="ob-doc-header">
+                <h2>Payment Information</h2>
+                <span class="ob-doc-badge required">Acknowledgment Required</span>
+            </div>
+            <p style="margin-bottom: 20px;">Season dues and payment plans are managed through the parent portal. Review the information below and acknowledge that you understand the payment structure.</p>
+
+            <div class="ob-doc-scroll">
+                <h4>Season Dues</h4>
+                <p>Detailed dues amounts, payment plan options, and deadlines are available in your parent portal under the Payments tab. Payment plans may include monthly installments with specific due dates.</p>
+                <h4>Accepted Payment Methods</h4>
+                <ul>
+                    <li>Venmo: @Coachsco (include athlete name in payment note)</li>
+                    <li>Online payment via the parent portal (coming soon)</li>
+                </ul>
+                <h4>Late Payment Policy</h4>
+                <p>Payments are expected on time per your selected payment plan. If you anticipate difficulty meeting a payment deadline, please contact the program director in advance. Communication goes a long way. Unresponsive accounts with outstanding balances may result in your child being held from tournament participation until the balance is resolved.</p>
+                <h4>Refund Policy</h4>
+                <p>Due to the nature of team commitments, tournament registrations, and facility reservations, refunds are generally not available after the season begins. Exceptions are made on a case-by-case basis at the discretion of the program director.</p>
+            </div>
+
+            <div class="ob-agree-row" style="margin-top: 20px;">
+                <input type="checkbox" id="agree-payment">
+                <label for="agree-payment">I understand the payment structure and agree to meet my financial obligations to the program on time.</label>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ STEP 9: COMPLETE ═══ -->
+    <div class="ob-step" data-step="9">
+        <div class="ob-card" style="text-align: center;">
+            <div class="ob-complete-icon">&#10003;</div>
+            <h2>You Are All Set</h2>
+            <p style="margin-bottom: 8px;">Welcome to the Godspeed family. All documents have been signed and your account is ready.</p>
+            <p style="color: var(--gs-gray-500); font-size: 0.9rem; margin-bottom: 28px;">You can access your signed documents, schedules, and payment information anytime through the parent portal.</p>
+            <a href="parent-portal.html" class="ob-btn ob-btn-primary" style="max-width: 360px; margin: 0 auto; display: flex;">
+                Go to Parent Portal
+            </a>
+        </div>
+    </div>
+
+</main>
+
+<!-- ── Bottom Navigation Bar ── -->
+<div class="ob-bottom-bar" id="ob-bottom-bar">
+    <div class="ob-bottom-inner">
+        <button class="ob-btn ob-btn-back" id="ob-btn-back" onclick="OB.prev()" hidden>Back</button>
+        <button class="ob-btn ob-btn-primary" id="ob-btn-next" onclick="OB.next()">Get Started</button>
+    </div>
+</div>
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="module" src="src/lib/env-injector.js"></script>
+<script src="onboarding.js"></script>
+</body>
+</html>

@@ -112,7 +112,7 @@ window.handleAdminLogin = async function() {
 };
 
 // ─── PANEL ROUTING ──────────────────────────────────────────
-const PANEL_TITLES = {dashboard:'Dashboard',players:'Players & Parents',requests:'Login Requests',dues:'Season Dues',fundraising:'Fundraising',orders:'Pro Shop Orders',comms:'Messaging',dataEntry:'Data Entry',calendar:'Calendar',blog:'Blog Posts',memos:'Coach Memos',tournaments:'Tournaments'};
+const PANEL_TITLES = {dashboard:'Dashboard',players:'Players & Parents',requests:'Login Requests',onboarding:'Onboarding',dues:'Season Dues',fundraising:'Fundraising',orders:'Pro Shop Orders',comms:'Messaging',dataEntry:'Data Entry',calendar:'Calendar',blog:'Blog Posts',memos:'Coach Memos',tournaments:'Tournaments'};
 
 function switchPanel(id, btn) {
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
@@ -122,12 +122,12 @@ function switchPanel(id, btn) {
   if(btn) btn.classList.add('active');
   document.getElementById('panel-title').textContent = PANEL_TITLES[id]||id;
   currentPanel = id;
-  const loaders = {players:loadPlayers,requests:loadRequests,dues:loadDues,fundraising:loadFundraising,orders:loadOrders,comms:loadComms,dataEntry:loadDataEntry,calendar:loadCalendar,blog:loadBlog,memos:loadMemos,tournaments:loadTournaments};
+  const loaders = {players:loadPlayers,requests:loadRequests,onboarding:loadOnboarding,dues:loadDues,fundraising:loadFundraising,orders:loadOrders,comms:loadComms,dataEntry:loadDataEntry,calendar:loadCalendar,blog:loadBlog,memos:loadMemos,tournaments:loadTournaments};
   if(loaders[id]) loaders[id]();
 }
 
 function refreshCurrent() {
-  const loaders = {dashboard:loadDashboard,players:loadPlayers,requests:loadRequests,dues:loadDues,fundraising:loadFundraising,orders:loadOrders,comms:loadComms,calendar:loadCalendar,blog:loadBlog,memos:loadMemos,tournaments:loadTournaments};
+  const loaders = {dashboard:loadDashboard,players:loadPlayers,requests:loadRequests,onboarding:loadOnboarding,dues:loadDues,fundraising:loadFundraising,orders:loadOrders,comms:loadComms,calendar:loadCalendar,blog:loadBlog,memos:loadMemos,tournaments:loadTournaments};
   if(loaders[currentPanel]) loaders[currentPanel]();
 }
 
@@ -2833,3 +2833,193 @@ function openTournModal(idx){
   openModal('modal-overlay');
 }
 window.openTournModal=openTournModal;
+
+// ─── ONBOARDING ANALYTICS ────────────────────────────────────
+let obAllRows = [];
+let obCurrentFilter = 'all';
+
+const OB_STEP_LABELS = {
+  welcome: 'Welcome',
+  account_created: 'Account Created',
+  parent_guide: 'Season Guide',
+  athletic_waiver: 'Athletic Waiver',
+  medical_consent: 'Medical Consent',
+  practice_consent: 'Practice Consent',
+  code_of_conduct: 'Code of Conduct',
+  media_release: 'Media Release',
+  payment_setup: 'Payment Info',
+  complete: 'Complete'
+};
+
+const OB_STEP_ORDER = Object.keys(OB_STEP_LABELS);
+
+async function loadOnboarding() {
+  if (!osSupabase) return;
+  try {
+    const { data, error } = await osSupabase
+      .from('onboarding_sessions')
+      .select('*')
+      .order('last_activity', { ascending: false });
+
+    if (error) throw error;
+    obAllRows = (data || []).map(r => {
+      const health = r.completed_at ? 'complete'
+        : (new Date() - new Date(r.last_activity)) > 72*3600*1000 ? 'at_risk'
+        : (new Date() - new Date(r.last_activity)) > 48*3600*1000 ? 'stale'
+        : 'active';
+      return { ...r, health };
+    });
+
+    renderObMetrics();
+    renderObFunnel();
+    renderObTable();
+    updateObBadge();
+  } catch (e) {
+    console.error('Onboarding load failed:', e);
+  }
+}
+
+function renderObMetrics() {
+  const total = obAllRows.length;
+  const done = obAllRows.filter(r => r.health === 'complete').length;
+  const stale = obAllRows.filter(r => r.health === 'stale').length;
+  const risk = obAllRows.filter(r => r.health === 'at_risk').length;
+
+  document.getElementById('ob-m-total').textContent = total;
+  document.getElementById('ob-m-done').textContent = done;
+  document.getElementById('ob-m-stale').textContent = stale;
+  document.getElementById('ob-m-risk').textContent = risk;
+  document.getElementById('ob-m-rate').textContent = total ? Math.round((done / total) * 100) + '% completion rate' : '-- % completion rate';
+}
+
+function renderObFunnel() {
+  const container = document.getElementById('ob-funnel');
+  if (!container) return;
+
+  // Count how many people reached or passed each step
+  const counts = {};
+  OB_STEP_ORDER.forEach(step => counts[step] = 0);
+  obAllRows.forEach(row => {
+    const idx = OB_STEP_ORDER.indexOf(row.current_step);
+    for (let i = 0; i <= idx; i++) {
+      counts[OB_STEP_ORDER[i]]++;
+    }
+  });
+
+  const max = obAllRows.length || 1;
+  container.innerHTML = OB_STEP_ORDER.map(step => {
+    const count = counts[step];
+    const pct = Math.round((count / max) * 100);
+    const color = step === 'complete' ? '#22c55e' : 'var(--primary)';
+    return `<div style="display:flex;align-items:center;gap:12px">
+      <span style="min-width:120px;font-size:12px;color:var(--muted);text-align:right">${OB_STEP_LABELS[step]}</span>
+      <div style="flex:1;height:24px;background:var(--surface);border-radius:6px;overflow:hidden;position:relative">
+        <div style="height:100%;width:${pct}%;background:${color};border-radius:6px;transition:width 0.5s"></div>
+      </div>
+      <span style="min-width:50px;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">${count} <span style="font-weight:400;color:var(--muted);font-size:11px">(${pct}%)</span></span>
+    </div>`;
+  }).join('');
+}
+
+function renderObTable() {
+  const tbody = document.getElementById('ob-tbody');
+  if (!tbody) return;
+
+  const filtered = obCurrentFilter === 'all' ? obAllRows : obAllRows.filter(r => r.health === obCurrentFilter);
+
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--muted)">No onboarding sessions found</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(r => {
+    const healthBadge = {
+      active: '<span style="background:rgba(59,130,246,0.15);color:#60a5fa;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600">Active</span>',
+      stale: '<span style="background:rgba(245,158,11,0.15);color:#fbbf24;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600">Stale</span>',
+      at_risk: '<span style="background:rgba(239,68,68,0.15);color:#f87171;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600">At Risk</span>',
+      complete: '<span style="background:rgba(34,197,94,0.15);color:#4ade80;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600">Complete</span>'
+    }[r.health];
+
+    const stepLabel = OB_STEP_LABELS[r.current_step] || r.current_step;
+    const stepIdx = OB_STEP_ORDER.indexOf(r.current_step);
+    const stepPct = Math.round(((stepIdx + 1) / OB_STEP_ORDER.length) * 100);
+
+    const started = r.started_at ? new Date(r.started_at).toLocaleDateString() : '--';
+    const lastAct = r.last_activity ? timeAgo(new Date(r.last_activity)) : '--';
+
+    return `<tr>
+      <td style="font-weight:600">${esc(r.parent_name || r.email || '--')}</td>
+      <td>${esc(r.athlete_name || '--')}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:4px;background:var(--surface);border-radius:2px;min-width:60px">
+            <div style="height:100%;width:${stepPct}%;background:${r.health==='complete'?'#22c55e':'var(--primary)'};border-radius:2px"></div>
+          </div>
+          <span style="font-size:12px;white-space:nowrap">${stepLabel}</span>
+        </div>
+      </td>
+      <td>${healthBadge}</td>
+      <td style="font-size:13px;color:var(--muted)">${started}</td>
+      <td style="font-size:13px;color:var(--muted)">${lastAct}</td>
+      <td style="text-align:center">${r.reminder_count || 0}</td>
+      <td style="text-align:center">
+        ${r.health !== 'complete' ? `<button class="btn-sm btn-ghost" onclick="sendObReminder('${r.id}','${esc(r.email)}')" title="Send reminder">Nudge</button>` : '<span style="color:var(--muted);font-size:12px">Done</span>'}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function obFilter(filter, btn) {
+  obCurrentFilter = filter;
+  document.querySelectorAll('.ob-filter').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderObTable();
+}
+window.obFilter = obFilter;
+
+function updateObBadge() {
+  const badge = document.getElementById('ob-badge');
+  if (!badge) return;
+  const needsAttention = obAllRows.filter(r => r.health === 'stale' || r.health === 'at_risk').length;
+  if (needsAttention > 0) {
+    badge.style.display = 'inline';
+    badge.textContent = needsAttention;
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+async function sendObReminder(sessionId, email) {
+  if (!osSupabase) return;
+  try {
+    // Invoke edge function
+    const { error } = await osSupabase.functions.invoke('send-onboarding-reminder', {
+      body: { session_id: sessionId, email: email }
+    });
+    if (error) throw error;
+
+    // Update reminder count locally
+    await osSupabase.from('onboarding_sessions')
+      .update({ reminder_count: obAllRows.find(r => r.id === sessionId)?.reminder_count + 1 || 1, last_reminder: new Date().toISOString() })
+      .eq('id', sessionId);
+
+    showToast('Reminder sent to ' + email, 'success');
+    loadOnboarding();
+  } catch (e) {
+    showToast('Failed to send reminder: ' + e.message, 'error');
+  }
+}
+window.sendObReminder = sendObReminder;
+
+function timeAgo(date) {
+  const seconds = Math.floor((new Date() - date) / 1000);
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return minutes + 'm ago';
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return hours + 'h ago';
+  const days = Math.floor(hours / 24);
+  return days + 'd ago';
+}
+
+function esc(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
