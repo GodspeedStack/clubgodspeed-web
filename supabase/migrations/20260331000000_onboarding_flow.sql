@@ -236,7 +236,7 @@ CREATE POLICY onboarding_sessions_coach_read ON onboarding_sessions
         EXISTS (
             SELECT 1 FROM profiles
             WHERE id = auth.uid()
-              AND role IN ('coach', 'director', 'admin')
+              AND role IN ('coach', 'director')
         )
     );
 
@@ -245,7 +245,7 @@ CREATE POLICY onboarding_events_coach_read ON onboarding_events
         EXISTS (
             SELECT 1 FROM profiles
             WHERE id = auth.uid()
-              AND role IN ('coach', 'director', 'admin')
+              AND role IN ('coach', 'director')
         )
     );
 
