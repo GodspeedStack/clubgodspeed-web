@@ -511,11 +511,11 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 .tourn-tier.open { background: rgba(255,255,255,0.05); color: #6b7280; }
 .tourn-act { background: none; border: none; cursor: pointer; font-size: 15px; padding: 4px; opacity: 0.6; }
 
-/* Schedule cards (dark theme) */
-.ds-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px 24px; margin-bottom: 12px; display: grid; grid-template-columns: 70px 1fr auto; gap: 20px; align-items: center; cursor: pointer; }
-.ds-card-date { text-align: center; }
-.ds-card-mon { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--primary); }
-.ds-card-day { font-size: 28px; font-weight: 900; color: var(--text); line-height: 1; }
+/* Schedule event cards */
+.ds-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px 24px; margin-bottom: 10px; display: grid; grid-template-columns: 56px 1fr auto; gap: 20px; align-items: center; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease; }
+.ds-card:hover { background: var(--surface-hover); border-color: var(--border-light); }
+.ds-card-mon { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--primary); }
+.ds-card-day { font-size: 26px; font-weight: 900; color: var(--text); line-height: 1; margin: 2px 0; }
 .ds-card-range { font-size: 10px; color: var(--muted); font-weight: 500; }
 .ds-card-info h4 { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 4px; letter-spacing: -0.01em; }
 .ds-card-meta { font-size: 12px; color: var(--muted); font-weight: 500; display: flex; gap: 16px; flex-wrap: wrap; }
@@ -528,20 +528,7 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 .ds-month-label { font-size: 13px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; padding: 8px 0; margin-bottom: 8px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
 .ds-month-count { font-weight: 600; font-size: 11px; color: rgba(255,255,255,0.3); }
 
-/* Schedule timeline (dark theme) */
-.ds-tl-month { margin-bottom: 24px; }
-.ds-tl-month-label { font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text); margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
-.ds-tl-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border-radius: 8px; overflow: hidden; }
-.ds-tl-hdr { padding: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); text-align: center; background: rgba(0,0,0,0.4); }
-.ds-tl-day { min-height: 54px; padding: 4px; background: var(--card); font-size: 10px; position: relative; }
-.ds-tl-day.today { box-shadow: inset 0 0 0 1px rgba(37,99,235,0.3); }
-.ds-tl-day.outside { opacity: 0.25; }
-.ds-tl-day-num { font-weight: 700; color: var(--muted); margin-bottom: 2px; }
-.ds-tl-evt { padding: 1px 4px; border-radius: 3px; font-size: 9px; font-weight: 700; margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
-.ds-tl-evt.planned { background: rgba(37,99,235,0.15); color: #60a5fa; border-left: 2px solid var(--primary); }
-.ds-tl-evt.registered { background: rgba(52,199,89,0.12); color: #34c759; border-left: 2px solid #34c759; }
-.ds-tl-evt.paid { background: rgba(52,199,89,0.2); color: #22c55e; border-left: 2px solid #22c55e; }
-.ds-tl-evt.completed { background: rgba(255,255,255,0.04); color: var(--muted); border-left: 2px solid var(--muted); }
+/* Schedule timeline -- removed, replaced by event cards */
 
 /* Floating practice save bar */
 .practice-save-bar {

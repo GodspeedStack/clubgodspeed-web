@@ -2660,77 +2660,59 @@ function renderSchedView(){
   const container=document.getElementById('sched-content');if(!container) return;
   const active=tournSchedule.filter(s=>s.status!=='cancelled');
   if(active.length===0){
-    container.innerHTML=`<div class="ds-empty"><div style="font-size:48px;margin-bottom:16px">📅</div><div style="font-size:18px;font-weight:600;margin-bottom:8px">No tournaments scheduled</div><div style="color:var(--muted)">Browse the catalog and click "+ Schedule" to build your spring/summer season.</div></div>`;
+    container.innerHTML=`<div class="ds-empty"><h3>No tournaments scheduled</h3><p>Browse the catalog and tap Add to build your season.</p></div>`;
     return;
   }
   active.sort((a,b)=>a.start_date.localeCompare(b.start_date));
-  const totalCost=active.reduce((s,x)=>s+(x.registration_cost||0)+(x.hotel_cost||0),0);
+  const totalCost=active.reduce((s,x)=>s+(parseFloat(x.registration_cost)||0)+(parseFloat(x.hotel_cost)||0),0);
   const travelCount=active.filter(x=>x.travel_required).length;
-  const totalGames=active.reduce((s,x)=>s+(x.game_guarantee||0),0);
-  let html=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px">
-    <div class="metric-card" style="padding:16px"><div class="label">Events</div><div class="val" style="font-size:24px;margin:4px 0">${active.length}</div></div>
-    <div class="metric-card" style="padding:16px"><div class="label">Est. Cost</div><div class="val" style="font-size:24px;margin:4px 0">$${totalCost.toLocaleString()}</div></div>
-    <div class="metric-card" style="padding:16px"><div class="label">Travel</div><div class="val" style="font-size:24px;margin:4px 0">${travelCount}</div></div>
-    <div class="metric-card" style="padding:16px"><div class="label">Games</div><div class="val" style="font-size:24px;margin:4px 0">${totalGames}+</div></div>
+  const totalGames=active.reduce((s,x)=>s+(parseInt(x.game_guarantee,10)||0),0);
+  // Metric cards
+  let html=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px">
+    <div class="metric-card" style="padding:20px"><div class="label">Events</div><div class="val" style="font-size:26px;margin:6px 0 2px">${active.length}</div></div>
+    <div class="metric-card" style="padding:20px"><div class="label">Est. Cost</div><div class="val" style="font-size:26px;margin:6px 0 2px">$${totalCost.toLocaleString()}</div></div>
+    <div class="metric-card" style="padding:20px"><div class="label">Travel</div><div class="val" style="font-size:26px;margin:6px 0 2px">${travelCount}</div></div>
+    <div class="metric-card" style="padding:20px"><div class="label">Games</div><div class="val" style="font-size:26px;margin:6px 0 2px">${totalGames}+</div></div>
   </div>`;
-  html+=renderSchedTimeline(active);
+  // Event cards grouped by month
   let curMonth='';
   active.forEach((s)=>{
     const d=new Date(s.start_date+'T12:00:00');
     const ml=MONTH_NAMES_T[d.getMonth()]+' '+d.getFullYear();
-    if(ml!==curMonth){curMonth=ml;html+=`<div class="ds-month-label">${ml}</div>`;}
+    if(ml!==curMonth){
+      curMonth=ml;
+      const cnt=active.filter(x=>{const xd=new Date(x.start_date+'T12:00:00');return MONTH_NAMES_T[xd.getMonth()]+' '+xd.getFullYear()===ml;}).length;
+      html+=`<div class="ds-month-label">${ml}<span class="ds-month-count">${cnt} event${cnt>1?'s':''}</span></div>`;
+    }
     const si=tournSchedule.indexOf(s);
+    const cost=((parseFloat(s.registration_cost)||0)+(parseFloat(s.hotel_cost)||0));
+    const statusCls=s.status==='paid'||s.status==='registered'?'color:#4ade80':'color:#60a5fa';
     html+=`<div class="ds-card" onclick="openSchedDetail(${si})">
-      <div class="ds-card-date"><div style="font-size:22px;font-weight:700">${d.getDate()}</div><div style="font-size:12px;color:var(--muted)">${MONTH_NAMES_T[d.getMonth()]}</div></div>
+      <div style="text-align:center;min-width:48px">
+        <div class="ds-card-mon">${MONTH_NAMES_T[d.getMonth()]}</div>
+        <div class="ds-card-day">${d.getDate()}</div>
+        <div class="ds-card-range">${tDate(s.start_date,s.end_date)}</div>
+      </div>
       <div class="ds-card-info">
-        <div style="font-weight:600;font-size:15px">${s.tournament_name}</div>
-        <div style="color:var(--muted);font-size:13px;margin-top:2px">${s.city}, ${s.state} &middot; ${tDate(s.start_date,s.end_date)} &middot; ${s.event_type}</div>
-        <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
+        <h4>${s.tournament_name}</h4>
+        <div class="ds-card-meta">
+          <span>${s.city}, ${s.state}</span>
+          <span>${s.event_type}</span>
+          ${s.game_guarantee?`<span>${s.game_guarantee} games</span>`:''}
+        </div>
+        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center">
           ${tTierTag(s.rank_tier)}
-          <span class="tag-blue" style="font-size:11px">${s.status}</span>
-          <span class="tag-gray" style="font-size:11px">${s.payment_status}</span>
-          ${s.travel_required?'<span class="tag-yellow" style="font-size:11px">Travel</span>':''}
+          <span style="font-size:11px;font-weight:600;${statusCls}">${s.status}</span>
+          <span style="font-size:11px;color:var(--muted)">${s.payment_status}</span>
+          ${s.travel_required?'<span style="font-size:11px;color:#fbbf24">Travel</span>':''}
         </div>
       </div>
-      <div class="ds-card-actions">
-        <div style="font-weight:600;font-size:15px">$${((s.registration_cost||0)+(s.hotel_cost||0)).toLocaleString()}</div>
-        <div style="color:var(--muted);font-size:12px">${s.game_guarantee?s.game_guarantee+' games':''}</div>
+      <div class="ds-card-right">
+        <div style="font-weight:700;font-size:16px">${cost?'$'+cost.toLocaleString():''}</div>
       </div>
     </div>`;
   });
   container.innerHTML=html;
-}
-
-function renderSchedTimeline(events){
-  if(!events.length) return '';
-  const minD=new Date(events[0].start_date+'T12:00:00');
-  const maxD=new Date(events[events.length-1].end_date+'T12:00:00');
-  let html='<div class="ds-tl-wrap">';
-  let cur=new Date(minD.getFullYear(),minD.getMonth(),1);
-  const end=new Date(maxD.getFullYear(),maxD.getMonth()+1,0);
-  while(cur<=end){
-    const y=cur.getFullYear(),m=cur.getMonth();
-    const daysInMonth=new Date(y,m+1,0).getDate();
-    const firstDay=new Date(y,m,1).getDay();
-    html+=`<div class="ds-tl-month"><div class="ds-tl-month-title">${MONTH_NAMES_T[m]} ${y}</div><div class="ds-tl-grid">`;
-    ['S','M','T','W','T','F','S'].forEach(d=>{html+=`<div class="ds-tl-day-hdr">${d}</div>`;});
-    for(let i=0;i<firstDay;i++) html+='<div class="ds-tl-cell empty"></div>';
-    for(let d=1;d<=daysInMonth;d++){
-      const iso=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      const hit=events.find(e=>iso>=e.start_date&&iso<=e.end_date);
-      const isStart=events.some(e=>e.start_date===iso);
-      const isEnd=events.some(e=>e.end_date===iso);
-      let cls='ds-tl-cell';
-      if(hit) cls+=' ds-tl-active';
-      if(isStart) cls+=' ds-tl-start';
-      if(isEnd) cls+=' ds-tl-end';
-      html+=`<div class="${cls}" title="${hit?hit.tournament_name:''}">${d}</div>`;
-    }
-    html+='</div></div>';
-    cur=new Date(y,m+1,1);
-  }
-  html+='</div>';
-  return html;
 }
 
 function openSchedDetail(si){
