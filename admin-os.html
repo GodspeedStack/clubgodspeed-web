@@ -973,63 +973,58 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 
     <!-- TOURNAMENTS -->
     <div class="panel" id="panel-tournaments">
-      <!-- Sub-tabs: Catalog | Our Schedule -->
+      <!-- Sub-tabs -->
       <div class="sub-tabs" id="tourn-tabs">
         <button class="sub-tab active" data-ttab="catalog" onclick="switchTournTab('catalog',this)">Catalog</button>
         <button class="sub-tab" data-ttab="schedule" onclick="switchTournTab('schedule',this)">Our Schedule<span id="sched-tab-count" style="margin-left:6px;font-size:10px;opacity:0.6"></span></button>
       </div>
 
-      <!-- CATALOG SUB-TAB -->
+      <!-- CATALOG -->
       <div id="ttab-catalog">
-        <!-- Stat cards -->
-        <div class="metrics" style="grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:24px;" id="tourn-metrics">
-          <div class="metric-card" style="padding:24px"><div class="label">Total Tournaments</div><div class="val" style="font-size:28px;margin:8px 0 4px" id="tm-total">--</div><div class="sub">In catalog</div></div>
-          <div class="metric-card" style="padding:24px"><div class="label">Colorado</div><div class="val" style="font-size:28px;margin:8px 0 4px" id="tm-co">--</div><div class="sub">Home state</div></div>
-          <div class="metric-card" style="padding:24px"><div class="label">Elite Tier</div><div class="val" style="font-size:28px;margin:8px 0 4px" id="tm-elite">--</div><div class="sub">Top ranked</div></div>
-          <div class="metric-card" style="padding:24px"><div class="label">Avg Cost</div><div class="val" style="font-size:28px;margin:8px 0 4px" id="tm-cost">--</div><div class="sub">Entry fee</div></div>
-          <div class="metric-card" style="padding:24px"><div class="label">States</div><div class="val" style="font-size:28px;margin:8px 0 4px" id="tm-states">--</div><div class="sub">Covered</div></div>
+        <!-- Stats row -->
+        <div class="metrics" style="grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+          <div class="metric-card" style="padding:20px"><div class="label">Tournaments</div><div class="val" style="font-size:26px;margin:6px 0 2px" id="tm-total">--</div><div class="sub" id="tm-source">Loading...</div></div>
+          <div class="metric-card" style="padding:20px"><div class="label">Colorado</div><div class="val" style="font-size:26px;margin:6px 0 2px" id="tm-co">--</div><div class="sub">Home state events</div></div>
+          <div class="metric-card" style="padding:20px"><div class="label">Avg Entry</div><div class="val" style="font-size:26px;margin:6px 0 2px" id="tm-cost">--</div><div class="sub">Per tournament</div></div>
+          <div class="metric-card" style="padding:20px"><div class="label">Tier Breakdown</div><div class="val" style="font-size:13px;margin:8px 0 2px;display:flex;gap:6px;flex-wrap:wrap" id="tm-tiers">--</div><div class="sub">By ranking</div></div>
         </div>
 
         <!-- Filters -->
-        <div class="card" style="margin-bottom:16px">
-          <div style="padding:16px 24px;display:grid;grid-template-columns:repeat(5,1fr) auto;gap:12px;align-items:end">
-            <div class="field" style="margin:0"><label>State</label><select id="tf-state" onchange="applyTournFilters()" style="padding:10px 14px"><option value="">All States</option></select></div>
-            <div class="field" style="margin:0"><label>Type</label><select id="tf-type" onchange="applyTournFilters()" style="padding:10px 14px"><option value="">All Types</option><option value="tournament">Tournament</option><option value="1-day">1-Day</option><option value="3v3">3v3</option><option value="showcase">Showcase</option></select></div>
-            <div class="field" style="margin:0"><label>Tier</label><select id="tf-tier" onchange="applyTournFilters()" style="padding:10px 14px"><option value="">All Tiers</option><option value="Elite">Elite</option><option value="Premier">Premier</option><option value="Select">Select</option><option value="Open">Open</option></select></div>
-            <div class="field" style="margin:0"><label>Gender</label><select id="tf-gender" onchange="applyTournFilters()" style="padding:10px 14px"><option value="">All</option><option value="boys">Boys</option><option value="girls">Girls</option><option value="coed">Coed</option></select></div>
-            <div class="field" style="margin:0"><label>Search</label><input id="tf-search" placeholder="Name or organizer..." oninput="applyTournFilters()" style="padding:10px 14px"></div>
-            <div style="display:flex;gap:8px;padding-bottom:2px">
-              <button class="btn btn-ghost btn-sm" onclick="clearTournFilters()">Clear</button>
-              <button class="btn btn-primary btn-sm" onclick="openTournModal()">+ Add</button>
-            </div>
-          </div>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+          <input id="tf-search" placeholder="Search tournaments..." oninput="applyTournFilters()" style="padding:10px 16px;flex:1;min-width:200px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:14px">
+          <select id="tf-state" onchange="applyTournFilters()" style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:13px"><option value="">All States</option></select>
+          <select id="tf-tier" onchange="applyTournFilters()" style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:13px"><option value="">All Tiers</option><option value="Elite">Elite</option><option value="Premier">Premier</option><option value="Select">Select</option><option value="Open">Open</option></select>
+          <select id="tf-type" onchange="applyTournFilters()" style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:13px"><option value="">All Types</option><option value="tournament">Tournament</option><option value="1-day">1-Day</option><option value="3v3">3v3</option><option value="showcase">Showcase</option></select>
+          <select id="tf-gender" onchange="applyTournFilters()" style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:13px;display:none"><option value="">All</option><option value="boys">Boys</option><option value="girls">Girls</option><option value="coed">Coed</option></select>
+          <button class="btn btn-ghost btn-sm" onclick="clearTournFilters()" style="padding:10px 16px;border-radius:12px;font-size:13px">Clear</button>
+        </div>
+
+        <!-- Results count -->
+        <div id="tourn-results-bar" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding:0 4px">
+          <span id="tourn-count-label" style="font-size:13px;color:var(--muted)">Loading tournaments...</span>
+          <div id="tourn-pagination" style="display:flex;gap:6px;align-items:center"></div>
         </div>
 
         <!-- Table -->
-        <div class="card" style="margin-bottom:0">
+        <div class="card" style="margin-bottom:0;overflow-x:auto">
           <table>
             <thead>
               <tr>
-                <th style="cursor:pointer" onclick="sortTourn('name')">Name</th>
-                <th style="cursor:pointer" onclick="sortTourn('organizer')">Organizer</th>
+                <th style="cursor:pointer;min-width:180px" onclick="sortTourn('name')">Tournament</th>
                 <th style="cursor:pointer" onclick="sortTourn('start_date')">Dates</th>
                 <th>Location</th>
-                <th style="cursor:pointer" onclick="sortTourn('event_type')">Type</th>
-                <th style="cursor:pointer" onclick="sortTourn('cost_max')">Cost</th>
-                <th style="cursor:pointer" onclick="sortTourn('rank_competition')">Comp</th>
-                <th style="cursor:pointer" onclick="sortTourn('rank_exposure')">Exp</th>
-                <th style="cursor:pointer" onclick="sortTourn('rank_circuit')">Circ</th>
-                <th style="cursor:pointer" onclick="sortTourn('rank_tier')">Tier</th>
-                <th style="width:80px">Actions</th>
+                <th style="cursor:pointer;text-align:right" onclick="sortTourn('cost_max')">Cost</th>
+                <th style="cursor:pointer;text-align:center" onclick="sortTourn('rank_composite')">Rating</th>
+                <th style="cursor:pointer;text-align:center" onclick="sortTourn('rank_tier')">Tier</th>
+                <th style="width:90px;text-align:center">Action</th>
               </tr>
             </thead>
             <tbody id="tourn-tbody"></tbody>
           </table>
-          <div id="tourn-pagination" style="display:flex;gap:8px;justify-content:center;padding:16px;border-top:1px solid var(--border)"></div>
         </div>
       </div>
 
-      <!-- SCHEDULE SUB-TAB -->
+      <!-- SCHEDULE -->
       <div id="ttab-schedule" style="display:none">
         <div id="sched-content"></div>
       </div>
@@ -1055,7 +1050,7 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 
 <script type="module" src="src/lib/env-injector.js"></script>
 <script src="auth-supabase.js?v=20260330" defer></script>
-<script src="admin-os.js?v=20260331k" defer></script>
+<script src="admin-os.js?v=20260331m" defer></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
   function toggleMobileMenu() {

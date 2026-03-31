@@ -562,23 +562,24 @@ function renderFundraising() {
 async function resendVerification(email) {
   if(!osSupabase) { showToast('Not connected','error'); return; }
   try {
-    const {error}=await osSupabase.auth.resend({type:'signup',email});
+    showToast(`Sending verification to ${email}...`);
+    const { data, error } = await osSupabase.functions.invoke('resend-verification', {
+      body: { email }
+    });
     if(error) throw error;
-    showToast(`Verification email resent to ${email}`);
-  } catch(e) {
-    // If user already confirmed, Supabase returns an error — surface it clearly
-    const msg=e.message||String(e);
-    if(msg.includes('already confirmed')||msg.includes('Email link is invalid')) {
-      showToast(`${email} is already verified`,'info');
+    if(data?.status === 'already_confirmed') {
+      showToast(`${email} is already verified`, 'info');
     } else {
-      showToast(`Resend failed for ${email}: ${msg}`,'error');
+      showToast(`Verification email sent to ${email}`);
     }
+  } catch(e) {
+    const msg = e.message || String(e);
+    showToast(`Resend failed: ${msg}`, 'error');
   }
 }
 
 async function resendAllVerifications() {
   if(!osSupabase) { showToast('Not connected','error'); return; }
-  // Gather all parent emails from profiles
   const parents=allPlayers.filter(p=>p.role==='parent'&&p.email);
   if(!parents.length) { showToast('No parent profiles found','error'); return; }
   if(!confirm(`Resend verification emails to all ${parents.length} parent accounts?\n\nAlready-verified users will be skipped automatically.`)) return;
@@ -586,15 +587,13 @@ async function resendAllVerifications() {
   showToast(`Sending verification emails to ${parents.length} users...`);
   for(const p of parents) {
     try {
-      const {error}=await osSupabase.auth.resend({type:'signup',email:p.email});
-      if(error) {
-        const msg=error.message||'';
-        if(msg.includes('already confirmed')||msg.includes('Email link is invalid')) skipped++;
-        else { failed++; console.warn(`Resend failed for ${p.email}:`,msg); }
-      } else { sent++; }
+      const { data, error } = await osSupabase.functions.invoke('resend-verification', {
+        body: { email: p.email }
+      });
+      if(error) { failed++; console.warn(`Resend failed for ${p.email}:`, error); continue; }
+      if(data?.status === 'already_confirmed') skipped++;
+      else sent++;
     } catch(e) { failed++; console.warn(`Resend error for ${p.email}:`,e); }
-    // Small delay to respect rate limits
-    await new Promise(r=>setTimeout(r,200));
   }
   showToast(`Verification emails: ${sent} sent, ${skipped} already verified, ${failed} failed`);
 }
@@ -2405,7 +2404,19 @@ async function loadTournaments(){
   if(osSupabase){
     try{
       const {data,error}=await osSupabase.from('tournament_catalog').select('*').order('start_date');
-      if(!error&&data&&data.length>0){allTournaments=data;tournLive=true;}
+      if(!error&&data&&data.length>0){
+        // Supabase returns NUMERIC columns as strings -- coerce to numbers
+        allTournaments=data.map(t=>({...t,
+          cost_min:t.cost_min!=null?parseFloat(t.cost_min):null,
+          cost_max:t.cost_max!=null?parseFloat(t.cost_max):null,
+          rank_competition:t.rank_competition!=null?parseFloat(t.rank_competition):null,
+          rank_exposure:t.rank_exposure!=null?parseFloat(t.rank_exposure):null,
+          rank_circuit:t.rank_circuit!=null?parseFloat(t.rank_circuit):null,
+          rank_composite:t.rank_composite!=null?parseFloat(t.rank_composite):null,
+          game_guarantee:t.game_guarantee!=null?parseInt(t.game_guarantee,10):null
+        }));
+        tournLive=true;
+      }
     }catch(e){console.warn('tournament_catalog query failed, using mock:',e.message);}
   }
   if(!tournLive) allTournaments=TOURN_MOCK.slice();
@@ -2451,10 +2462,16 @@ function updateTournStats(){
   const t=allTournaments;
   document.getElementById('tm-total').textContent=t.length;
   document.getElementById('tm-co').textContent=t.filter(x=>x.state==='CO').length;
-  document.getElementById('tm-elite').textContent=t.filter(x=>x.rank_tier==='Elite').length;
-  const costs=t.filter(x=>x.cost_max).map(x=>x.cost_max);
+  const costs=t.filter(x=>x.cost_max!=null).map(x=>Number(x.cost_max));
   document.getElementById('tm-cost').textContent=costs.length?'$'+Math.round(costs.reduce((a,b)=>a+b,0)/costs.length):'--';
-  document.getElementById('tm-states').textContent=new Set(t.map(x=>x.state)).size;
+  // Tier breakdown badges
+  const tierCounts={Elite:0,Premier:0,Select:0,Open:0};
+  t.forEach(x=>{if(x.rank_tier&&tierCounts[x.rank_tier]!==undefined)tierCounts[x.rank_tier]++;});
+  const tiersEl=document.getElementById('tm-tiers');
+  if(tiersEl) tiersEl.innerHTML=Object.entries(tierCounts).map(([k,v])=>`<span class="tourn-tier ${k.toLowerCase()}" style="font-size:11px;padding:2px 8px">${k} ${v}</span>`).join('');
+  // Source indicator
+  const srcEl=document.getElementById('tm-source');
+  if(srcEl) srcEl.textContent=tournLive?'Live from Supabase':'Mock data';
 }
 
 function applyTournFilters(){
@@ -2468,10 +2485,15 @@ function applyTournFilters(){
     if(ty&&t.event_type!==ty) return false;
     if(ti&&t.rank_tier!==ti) return false;
     if(ge&&t.gender!==ge) return false;
-    if(se&&!t.name.toLowerCase().includes(se)&&!(t.organizer_name||'').toLowerCase().includes(se)) return false;
+    if(se&&!t.name.toLowerCase().includes(se)&&!(t.organizer_name||'').toLowerCase().includes(se)&&!(t.city||'').toLowerCase().includes(se)) return false;
     return true;
   });
   tournPage=1;
+  // Update count label
+  const cl=document.getElementById('tourn-count-label');
+  if(cl) cl.textContent=filteredTourn.length===allTournaments.length
+    ?`Showing all ${allTournaments.length} tournaments`
+    :`Showing ${filteredTourn.length} of ${allTournaments.length} tournaments`;
   renderTournTable();
 }
 window.applyTournFilters=applyTournFilters;
@@ -2501,9 +2523,12 @@ function tTierTag(tier){
   return `<span class="tourn-tier ${tier.toLowerCase()}">${tier}</span>`;
 }
 function tCost(min,max){
-  if(!min&&!max) return '--';
-  if(min===max||!max) return '$'+min;
-  return '$'+min+'-$'+max;
+  const a=min!=null?Math.round(Number(min)):null;
+  const b=max!=null?Math.round(Number(max)):null;
+  if(!a&&!b) return '--';
+  if(a===b||!b) return '$'+a;
+  if(!a) return '$'+b;
+  return '$'+a+'-$'+b;
 }
 function tDate(start,end){
   if(!start) return '--';
@@ -2521,26 +2546,27 @@ function renderTournTable(){
   if(!tbody) return;
   const start=(tournPage-1)*TOURN_PER_PAGE;
   const page=filteredTourn.slice(start,start+TOURN_PER_PAGE);
-  tbody.innerHTML=page.map((t)=>{
-    const idx=allTournaments.indexOf(t);
-    const onSched=isScheduled(t);
-    return `<tr style="cursor:pointer" onclick="openTournModal(${idx})">
-      <td style="font-weight:600;max-width:200px">${t.name}</td>
-      <td style="color:var(--muted);font-size:13px">${t.organizer_name||'--'}</td>
-      <td>${tDate(t.start_date,t.end_date)}</td>
-      <td>${t.city}, ${t.state}</td>
-      <td>${t.event_type}</td>
-      <td>${tCost(t.cost_min,t.cost_max)}</td>
-      <td>${t.rank_competition||'--'}</td>
-      <td>${t.rank_exposure||'--'}</td>
-      <td>${t.rank_circuit||'--'}</td>
-      <td>${tTierTag(t.rank_tier)}</td>
-      <td onclick="event.stopPropagation()">
-        ${onSched
-          ?'<button class="btn-xs btn-ghost" style="color:#ef4444" onclick="toggleSched('+idx+')">Remove</button>'
-          :'<button class="btn-xs btn-primary" onclick="toggleSched('+idx+')">+ Schedule</button>'}
-      </td></tr>`;
-  }).join('');
+  if(page.length===0){
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted)">No tournaments match your filters</td></tr>';
+  } else {
+    tbody.innerHTML=page.map((t)=>{
+      const idx=allTournaments.indexOf(t);
+      const onSched=isScheduled(t);
+      const composite=t.rank_composite!=null?Number(t.rank_composite).toFixed(1):'--';
+      return `<tr style="cursor:pointer" onclick="openTournModal(${idx})">
+        <td style="max-width:220px"><div style="font-weight:600;line-height:1.3">${t.name}</div><div style="color:var(--muted);font-size:12px">${t.organizer_name||''}</div></td>
+        <td style="white-space:nowrap">${tDate(t.start_date,t.end_date)}</td>
+        <td>${t.city}, ${t.state}</td>
+        <td style="text-align:right;white-space:nowrap">${tCost(t.cost_min,t.cost_max)}</td>
+        <td style="text-align:center;font-weight:600">${composite}</td>
+        <td style="text-align:center">${tTierTag(t.rank_tier)}</td>
+        <td style="text-align:center" onclick="event.stopPropagation()">
+          ${onSched
+            ?'<button class="btn-xs btn-ghost" style="color:#ef4444" onclick="toggleSched('+idx+')">Remove</button>'
+            :'<button class="btn-xs btn-primary" onclick="toggleSched('+idx+')">+ Add</button>'}
+        </td></tr>`;
+    }).join('');
+  }
   // Pagination
   const totalPages=Math.ceil(filteredTourn.length/TOURN_PER_PAGE);
   const pag=document.getElementById('tourn-pagination');
