@@ -1159,8 +1159,10 @@ function renderCalList() {
           if(!reg||!reg.done) regTag='<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,0.06);color:var(--muted);font-weight:600;border:1px solid var(--border)">NOT REG</span>';
         }
         const listTagLine = regTag ? `<div style="margin-top:3px">${regTag}</div>` : '';
-        rows+=`<tr style="cursor:pointer${isBackup?';opacity:0.6':''}" onclick="editCalEvent('${e.id}')">
-        <td>${dateLabel}</td><td style="color:var(--muted)">${fmt12(e.start_time)}</td><td style="font-weight:600">${e.title}${listTagLine}</td>
+        const visBadge = e.visibility==='admin_only' ? '<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(239,68,68,0.1);color:#ef4444;font-weight:600;border:1px solid rgba(239,68,68,0.2);margin-left:6px">ADMIN ONLY</span>' : '';
+        const pubBadge = e.published_at ? '<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(34,197,94,0.1);color:#22c55e;font-weight:600;border:1px solid rgba(34,197,94,0.2);margin-left:6px">SENT</span>' : '';
+        rows+=`<tr style="cursor:pointer${isBackup?';opacity:0.6':''}${e.visibility==='admin_only'?';opacity:0.5':''}" onclick="editCalEvent('${e.id}')">
+        <td>${dateLabel}</td><td style="color:var(--muted)">${fmt12(e.start_time)}</td><td style="font-weight:600">${e.title}${visBadge}${pubBadge}${listTagLine}</td>
         <td>${statusTag(e.event_type||'other')}${e.event_type==='tournament'?tournamentProgressBadge(e):''}</td><td style="color:var(--muted)">${e.location||'--'}</td>
         <td><button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();deleteCalEvent('${e.id}')">Delete</button></td>
       </tr>`;
@@ -1266,6 +1268,12 @@ function calEventForm(e={}) {
     <div class="field"><label>End Time</label><input type="time" id="ev-end" value="${e.end_time||''}"></div></div>
     <div class="field"><label>Location</label><input type="text" id="ev-location" value="${e.location||''}"></div>
     <div class="field"><label>Description</label><textarea id="ev-desc" style="min-height:80px;border:1px solid var(--border);border-radius:12px;background:rgba(0,0,0,0.3);color:#fff;padding:16px;width:100%;font-family:var(--font-sans);font-size:14px;resize:vertical">${e.description||''}</textarea></div>
+    <div class="field"><label>Visibility</label><select id="ev-visibility">
+      <option value="public" ${(e.visibility||'public')==='public'?'selected':''}>Public (visible to parents)</option>
+      <option value="team_only" ${e.visibility==='team_only'?'selected':''}>Team Only</option>
+      <option value="admin_only" ${e.visibility==='admin_only'?'selected':''}>Admin Only (hidden from parents)</option>
+    </select></div>
+    ${e.published_at?`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px 14px;border-radius:8px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2)"><span style="font-size:12px;color:#22c55e;font-weight:600">Published ${fmtShort(e.published_at.split('T')[0])}</span><button class="btn btn-ghost btn-xs" style="color:#ef4444;border-color:rgba(239,68,68,0.3)" onclick="depublishEvent('${e.id}')">De-publish</button></div>`:''}
     ${e.source_type?`<div style="font-size:12px;color:var(--muted);margin-bottom:12px">Auto-created from ${e.source_type}</div>`:''}
     <input type="hidden" id="ev-id" value="${e.id||''}">
     <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="saveCalEvent()">Save Event</button>
@@ -1284,7 +1292,8 @@ async function saveCalEvent() {
     p_end_time:document.getElementById('ev-end').value||null,
     p_location:document.getElementById('ev-location').value,
     p_description:document.getElementById('ev-desc').value||null,
-    p_grade_level:evType==='tournament'&&gradeEl?gradeEl.value||null:null
+    p_grade_level:evType==='tournament'&&gradeEl?gradeEl.value||null:null,
+    p_visibility:document.getElementById('ev-visibility').value
   };
   if(!payload.p_title||!payload.p_start_date) return showToast('Title and date required','error');
   try {
@@ -1296,6 +1305,15 @@ async function saveCalEvent() {
       if(error) throw error;
     }
     showToast(id?'Event updated':'Event created'); closeModal(); loadCalendar();
+  } catch(e){ showToast('Error: '+e.message,'error'); }
+}
+async function depublishEvent(id) {
+  if(!osSupabase||!id) return;
+  if(!confirm('De-publish this event? It will be eligible for re-publishing later.')) return;
+  try {
+    const {error}=await osSupabase.from('calendar_events').update({published_at:null}).eq('id',id);
+    if(error) throw error;
+    showToast('Event de-published','success'); closeModal(); loadCalendar();
   } catch(e){ showToast('Error: '+e.message,'error'); }
 }
 
