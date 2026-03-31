@@ -589,9 +589,13 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 
   <div class="sb-section">
     <div class="sb-label">People</div>
-    <button class="sb-link" onclick="switchPanel('players',this)"><i data-lucide="users" class="icon"></i>Players & Parents</button>
-    <button class="sb-link" id="req-tab" onclick="switchPanel('requests',this)"><i data-lucide="shield" class="icon"></i>Login Requests<span class="badge" id="pending-badge">0</span></button>
+    <button class="sb-link" onclick="switchPanel('players',this)"><i data-lucide="users" class="icon"></i>Players & Parents<span class="badge" id="pending-badge" style="background:#FF5722">0</span></button>
     <button class="sb-link" onclick="switchPanel('onboarding',this)"><i data-lucide="user-check" class="icon"></i>Onboarding<span class="badge" id="ob-badge" style="display:none">0</span></button>
+  </div>
+
+  <div class="sb-section">
+    <div class="sb-label">Competition</div>
+    <button class="sb-link" onclick="switchPanel('calendar',this)"><i data-lucide="trophy" class="icon"></i>Schedule & Tournaments<span class="badge" id="sched-badge" style="background:#1A3A8F">0</span></button>
   </div>
 
   <div class="sb-section">
@@ -605,12 +609,6 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
     <div class="sb-label">Operations</div>
     <button class="sb-link" onclick="switchPanel('comms',this)"><i data-lucide="send" class="icon"></i>Messaging</button>
     <button class="sb-link" onclick="switchPanel('dataEntry',this)"><i data-lucide="clipboard-list" class="icon"></i>Data Entry</button>
-    <button class="sb-link" onclick="switchPanel('calendar',this)"><i data-lucide="calendar" class="icon"></i>Calendar</button>
-  </div>
-
-  <div class="sb-section">
-    <div class="sb-label">Competition</div>
-    <button class="sb-link" onclick="switchPanel('tournaments',this)"><i data-lucide="trophy" class="icon"></i>Tournaments<span class="badge" id="sched-badge" style="display:none">0</span></button>
   </div>
 
   <div class="sb-section">
@@ -664,32 +662,41 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
       <div class="card"><div class="card-header"><h2>Recent Activity</h2></div><div class="card-body" id="dash-activity"><p style="color:var(--muted);font-size:13px">Loading...</p></div></div>
     </div>
 
-    <!-- PLAYERS & PARENTS -->
+    <!-- PEOPLE: Players & Parents + Login Requests + Onboarding -->
     <div class="panel" id="panel-players">
-      <div class="card">
-        <div class="card-header">
-          <div style="display:flex;align-items:center;gap:12px">
-            <h2>Roster</h2>
-            <div style="display:flex;gap:4px;background:var(--surface);border-radius:6px;padding:2px">
-              <button class="roster-tab active" data-view="players" onclick="switchRosterView('players')" style="padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:var(--primary);color:#fff">Players</button>
-              <button class="roster-tab" data-view="parents" onclick="switchRosterView('parents')" style="padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:transparent;color:var(--muted)">Parents</button>
-            </div>
-          </div>
-          <div style="display:flex;gap:8px"><input type="text" id="player-search" placeholder="Search..." style="width:200px" oninput="filterPlayers()"><button class="btn btn-primary btn-sm" onclick="openModal('add-player')">+ Add</button></div>
-        </div>
-        <table id="players-table"><thead><tr><th>Player</th><th>Parent(s)</th><th>Grade</th><th>Email</th><th>Phone</th><th>Status</th><th></th></tr></thead><tbody id="players-tbody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px">Loading roster...</td></tr></tbody></table>
+      <!-- People sub-tabs -->
+      <div style="display:flex;gap:4px;background:var(--surface);border-radius:8px;padding:3px;margin-bottom:20px;width:fit-content">
+        <button class="sub-tab active" id="people-tab-roster" onclick="switchPeopleTab('roster')" style="padding:6px 16px;border-radius:6px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--primary);color:#fff;transition:all 0.15s">Roster</button>
+        <button class="sub-tab" id="people-tab-requests" onclick="switchPeopleTab('requests')" style="padding:6px 16px;border-radius:6px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:transparent;color:var(--muted);transition:all 0.15s">Login Requests<span id="req-tab-badge" style="display:inline-block;min-width:16px;height:16px;line-height:16px;text-align:center;font-size:10px;font-weight:700;border-radius:8px;background:#FF5722;color:#fff;margin-left:6px;padding:0 4px">0</span></button>
       </div>
-    </div>
 
-    <!-- LOGIN REQUESTS -->
-    <div class="panel" id="panel-requests">
-      <div class="alert alert-warning">New requests are automatically created when a parent/coach signs up. Approve or Deny each one below.</div>
-      <div class="card">
-        <div class="card-header">
-          <div style="display:flex;align-items:center;gap:12px"><h2>Pending Access Requests</h2><span id="req-count-label" style="font-size:12px;color:var(--muted)"></span></div>
-          <button class="btn btn-ghost btn-sm" onclick="resendAllVerifications()" style="gap:6px"><i data-lucide="mail" style="width:14px;height:14px"></i>Resend All Verifications</button>
+      <!-- Sub-panel: Roster -->
+      <div id="people-roster" class="people-sub">
+        <div class="card">
+          <div class="card-header">
+            <div style="display:flex;align-items:center;gap:12px">
+              <h2>Roster</h2>
+              <div style="display:flex;gap:4px;background:var(--surface);border-radius:6px;padding:2px">
+                <button class="roster-tab active" data-view="players" onclick="switchRosterView('players')" style="padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:var(--primary);color:#fff">Players</button>
+                <button class="roster-tab" data-view="parents" onclick="switchRosterView('parents')" style="padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:transparent;color:var(--muted)">Parents</button>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px"><input type="text" id="player-search" placeholder="Search..." style="width:200px" oninput="filterPlayers()"><button class="btn btn-primary btn-sm" onclick="openModal('add-player')">+ Add</button></div>
+          </div>
+          <table id="players-table"><thead><tr><th>Player</th><th>Parent(s)</th><th>Grade</th><th>Email</th><th>Phone</th><th>Status</th><th></th></tr></thead><tbody id="players-tbody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px">Loading roster...</td></tr></tbody></table>
         </div>
-        <table id="req-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Grade/Player</th><th>Submitted</th><th>IP</th><th>Actions</th></tr></thead><tbody id="req-tbody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px">Loading...</td></tr></tbody></table>
+      </div>
+
+      <!-- Sub-panel: Login Requests -->
+      <div id="people-requests" class="people-sub" style="display:none">
+        <div class="alert alert-warning">New requests are automatically created when a parent/coach signs up. Approve or Deny each one below.</div>
+        <div class="card">
+          <div class="card-header">
+            <div style="display:flex;align-items:center;gap:12px"><h2>Pending Access Requests</h2><span id="req-count-label" style="font-size:12px;color:var(--muted)"></span></div>
+            <button class="btn btn-ghost btn-sm" onclick="resendAllVerifications()" style="gap:6px"><i data-lucide="mail" style="width:14px;height:14px"></i>Resend All Verifications</button>
+          </div>
+          <table id="req-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Grade/Player</th><th>Submitted</th><th>IP</th><th>Actions</th></tr></thead><tbody id="req-tbody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px">Loading...</td></tr></tbody></table>
+        </div>
       </div>
     </div>
 
@@ -868,24 +875,88 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
       </div>
     </div>
 
-    <!-- CALENDAR -->
+    <!-- COMPETITION: Schedule & Tournaments (unified) -->
     <div class="panel" id="panel-calendar">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px">
-        <div style="display:flex;align-items:center;gap:12px">
-          <button class="btn btn-ghost btn-xs" onclick="calNav(-1)" title="Previous">&larr;</button>
-          <h2 id="cal-month-label" style="font-size:18px;font-weight:800;letter-spacing:-0.02em;min-width:160px;text-align:center"></h2>
-          <button class="btn btn-ghost btn-xs" onclick="calNav(1)" title="Next">&rarr;</button>
-          <div style="display:flex;gap:2px;margin-left:8px;background:rgba(255,255,255,0.04);border-radius:9999px;padding:2px;border:1px solid var(--border)">
-            <button class="btn btn-ghost btn-xs" id="cal-view-month" onclick="setCalView('month')" style="opacity:1;border:none;border-radius:9999px">Month</button>
-            <button class="btn btn-ghost btn-xs" id="cal-view-list" onclick="setCalView('list')" style="opacity:0.5;border:none;border-radius:9999px">List</button>
+      <!-- Competition sub-tabs -->
+      <div style="display:flex;gap:4px;background:var(--surface);border-radius:8px;padding:3px;margin-bottom:20px;width:fit-content">
+        <button class="sub-tab active" id="comp-tab-schedule" onclick="switchCompTab('schedule')" style="padding:6px 16px;border-radius:6px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--primary);color:#fff;transition:all 0.15s">Schedule</button>
+        <button class="sub-tab" id="comp-tab-tournaments" onclick="switchCompTab('tournaments')" style="padding:6px 16px;border-radius:6px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:transparent;color:var(--muted);transition:all 0.15s">Tournaments</button>
+      </div>
+
+      <!-- Sub-panel: Schedule (calendar + list) -->
+      <div id="comp-schedule" class="comp-sub">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <button class="btn btn-ghost btn-xs" onclick="calNav(-1)" title="Previous">&larr;</button>
+            <h2 id="cal-month-label" style="font-size:18px;font-weight:800;letter-spacing:-0.02em;min-width:160px;text-align:center"></h2>
+            <button class="btn btn-ghost btn-xs" onclick="calNav(1)" title="Next">&rarr;</button>
+            <div style="display:flex;gap:2px;margin-left:8px;background:rgba(255,255,255,0.04);border-radius:9999px;padding:2px;border:1px solid var(--border)">
+              <button class="btn btn-ghost btn-xs" id="cal-view-month" onclick="setCalView('month')" style="opacity:1;border:none;border-radius:9999px">Month</button>
+              <button class="btn btn-ghost btn-xs" id="cal-view-list" onclick="setCalView('list')" style="opacity:0.5;border:none;border-radius:9999px">List</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="openBulkTournamentUpload()">+ Event</button>
+            <button class="btn btn-ghost btn-sm" id="btn-publish-calendar" onclick="publishCalendarToParents()">Publish to Parents</button>
           </div>
         </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-ghost btn-sm" onclick="openBulkTournamentUpload()">+ Event</button>
-          <button class="btn btn-ghost btn-sm" id="btn-publish-calendar" onclick="publishCalendarToParents()">Publish to Parents</button>
+        <div id="cal-container"></div>
+      </div>
+
+      <!-- Sub-panel: Tournaments (catalog) -->
+      <div id="comp-tournaments" class="comp-sub" style="display:none">
+        <!-- Sub-tabs -->
+        <div class="sub-tabs" id="tourn-tabs">
+          <button class="sub-tab active" data-ttab="catalog" onclick="switchTournTab('catalog',this)">Catalog</button>
+          <button class="sub-tab" data-ttab="schedule" onclick="switchTournTab('schedule',this)">Our Schedule<span id="sched-tab-count" style="margin-left:6px;font-size:10px;opacity:0.6"></span></button>
+        </div>
+
+        <!-- CATALOG -->
+        <div id="ttab-catalog">
+          <div class="metrics" style="grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+            <div class="metric-card" style="padding:20px"><div class="label">Tournaments</div><div class="val" style="font-size:26px;margin:6px 0 2px" id="tm-total">--</div><div class="sub" id="tm-source">Loading...</div></div>
+            <div class="metric-card" style="padding:20px"><div class="label">Colorado</div><div class="val" style="font-size:26px;margin:6px 0 2px" id="tm-co">--</div><div class="sub">Home state events</div></div>
+            <div class="metric-card" style="padding:20px"><div class="label">Avg Entry</div><div class="val" style="font-size:26px;margin:6px 0 2px" id="tm-cost">--</div><div class="sub">Per tournament</div></div>
+            <div class="metric-card" style="padding:20px"><div class="label">Tier Breakdown</div><div class="val" style="font-size:13px;margin:8px 0 2px;display:flex;gap:6px;flex-wrap:wrap" id="tm-tiers">--</div><div class="sub">By ranking</div></div>
+          </div>
+
+          <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+            <input id="tf-search" placeholder="Search tournaments..." oninput="applyTournFilters()" style="padding:10px 16px;flex:1;min-width:200px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:14px">
+            <select id="tf-state" onchange="applyTournFilters()" style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:13px"><option value="">All States</option></select>
+            <select id="tf-tier" onchange="applyTournFilters()" style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:13px"><option value="">All Tiers</option><option value="Elite">Elite</option><option value="Premier">Premier</option><option value="Select">Select</option><option value="Open">Open</option></select>
+            <select id="tf-type" onchange="applyTournFilters()" style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:13px"><option value="">All Types</option><option value="tournament">Tournament</option><option value="1-day">1-Day</option><option value="3v3">3v3</option><option value="showcase">Showcase</option></select>
+            <select id="tf-gender" onchange="applyTournFilters()" style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:13px;display:none"><option value="">All</option><option value="boys">Boys</option><option value="girls">Girls</option><option value="coed">Coed</option></select>
+            <button class="btn btn-ghost btn-sm" onclick="clearTournFilters()" style="padding:10px 16px;border-radius:12px;font-size:13px">Clear</button>
+          </div>
+
+          <div id="tourn-results-bar" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding:0 4px">
+            <span id="tourn-count-label" style="font-size:13px;color:var(--muted)">Loading tournaments...</span>
+            <div id="tourn-pagination" style="display:flex;gap:6px;align-items:center"></div>
+          </div>
+
+          <div class="card" style="margin-bottom:0;overflow-x:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th style="cursor:pointer;min-width:180px" onclick="sortTourn('name')">Tournament</th>
+                  <th style="cursor:pointer" onclick="sortTourn('start_date')">Dates</th>
+                  <th>Location</th>
+                  <th style="cursor:pointer;text-align:right" onclick="sortTourn('cost_max')">Cost</th>
+                  <th style="cursor:pointer;text-align:center" onclick="sortTourn('rank_composite')">Rating</th>
+                  <th style="cursor:pointer;text-align:center" onclick="sortTourn('rank_tier')">Tier</th>
+                  <th style="width:90px;text-align:center">Action</th>
+                </tr>
+              </thead>
+              <tbody id="tourn-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SCHEDULE -->
+        <div id="ttab-schedule" style="display:none">
+          <div id="sched-content"></div>
         </div>
       </div>
-      <div id="cal-container"></div>
     </div>
 
     <!-- BLOG -->
@@ -968,67 +1039,49 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
       </div>
     </div>
 
-    <!-- TOURNAMENTS -->
-    <div class="panel" id="panel-tournaments">
-      <!-- Sub-tabs -->
-      <div class="sub-tabs" id="tourn-tabs">
-        <button class="sub-tab active" data-ttab="catalog" onclick="switchTournTab('catalog',this)">Catalog</button>
-        <button class="sub-tab" data-ttab="schedule" onclick="switchTournTab('schedule',this)">Our Schedule<span id="sched-tab-count" style="margin-left:6px;font-size:10px;opacity:0.6"></span></button>
-      </div>
-
-      <!-- CATALOG -->
-      <div id="ttab-catalog">
-        <!-- Stats row -->
-        <div class="metrics" style="grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
-          <div class="metric-card" style="padding:20px"><div class="label">Tournaments</div><div class="val" style="font-size:26px;margin:6px 0 2px" id="tm-total">--</div><div class="sub" id="tm-source">Loading...</div></div>
-          <div class="metric-card" style="padding:20px"><div class="label">Colorado</div><div class="val" style="font-size:26px;margin:6px 0 2px" id="tm-co">--</div><div class="sub">Home state events</div></div>
-          <div class="metric-card" style="padding:20px"><div class="label">Avg Entry</div><div class="val" style="font-size:26px;margin:6px 0 2px" id="tm-cost">--</div><div class="sub">Per tournament</div></div>
-          <div class="metric-card" style="padding:20px"><div class="label">Tier Breakdown</div><div class="val" style="font-size:13px;margin:8px 0 2px;display:flex;gap:6px;flex-wrap:wrap" id="tm-tiers">--</div><div class="sub">By ranking</div></div>
-        </div>
-
-        <!-- Filters -->
-        <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
-          <input id="tf-search" placeholder="Search tournaments..." oninput="applyTournFilters()" style="padding:10px 16px;flex:1;min-width:200px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:14px">
-          <select id="tf-state" onchange="applyTournFilters()" style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:13px"><option value="">All States</option></select>
-          <select id="tf-tier" onchange="applyTournFilters()" style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:13px"><option value="">All Tiers</option><option value="Elite">Elite</option><option value="Premier">Premier</option><option value="Select">Select</option><option value="Open">Open</option></select>
-          <select id="tf-type" onchange="applyTournFilters()" style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:13px"><option value="">All Types</option><option value="tournament">Tournament</option><option value="1-day">1-Day</option><option value="3v3">3v3</option><option value="showcase">Showcase</option></select>
-          <select id="tf-gender" onchange="applyTournFilters()" style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:13px;display:none"><option value="">All</option><option value="boys">Boys</option><option value="girls">Girls</option><option value="coed">Coed</option></select>
-          <button class="btn btn-ghost btn-sm" onclick="clearTournFilters()" style="padding:10px 16px;border-radius:12px;font-size:13px">Clear</button>
-        </div>
-
-        <!-- Results count -->
-        <div id="tourn-results-bar" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding:0 4px">
-          <span id="tourn-count-label" style="font-size:13px;color:var(--muted)">Loading tournaments...</span>
-          <div id="tourn-pagination" style="display:flex;gap:6px;align-items:center"></div>
-        </div>
-
-        <!-- Table -->
-        <div class="card" style="margin-bottom:0;overflow-x:auto">
-          <table>
-            <thead>
-              <tr>
-                <th style="cursor:pointer;min-width:180px" onclick="sortTourn('name')">Tournament</th>
-                <th style="cursor:pointer" onclick="sortTourn('start_date')">Dates</th>
-                <th>Location</th>
-                <th style="cursor:pointer;text-align:right" onclick="sortTourn('cost_max')">Cost</th>
-                <th style="cursor:pointer;text-align:center" onclick="sortTourn('rank_composite')">Rating</th>
-                <th style="cursor:pointer;text-align:center" onclick="sortTourn('rank_tier')">Tier</th>
-                <th style="width:90px;text-align:center">Action</th>
-              </tr>
-            </thead>
-            <tbody id="tourn-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- SCHEDULE -->
-      <div id="ttab-schedule" style="display:none">
-        <div id="sched-content"></div>
-      </div>
-    </div>
+    <!-- panel-tournaments removed: content moved to comp-tournaments inside panel-calendar -->
 
     <!-- ONBOARDING ANALYTICS -->
     <div class="panel" id="panel-onboarding">
+      <!-- Send Invite bar -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary btn-sm" onclick="openOnboardingInvite()">Send Onboarding Invite</button>
+          <button class="btn btn-ghost btn-sm" onclick="sendBulkOnboardingInvites()" title="Send to all rostered parents who haven't started onboarding">Invite All Remaining</button>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="loadOnboarding()" title="Refresh"><i data-lucide="refresh-cw" style="width:14px;height:14px"></i></button>
+      </div>
+
+      <!-- Inline invite form (hidden by default) -->
+      <div id="ob-invite-form" style="display:none;margin-bottom:20px" class="card">
+        <div style="padding:24px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <h3 style="font-size:15px;font-weight:700;margin:0">Send Onboarding Invite</h3>
+            <button class="btn btn-ghost btn-xs" onclick="closeOnboardingInvite()">Close</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end">
+            <div class="field" style="margin:0">
+              <label>Parent Email</label>
+              <input id="ob-inv-email" type="email" placeholder="parent@email.com" style="padding:12px;font-size:14px">
+            </div>
+            <div class="field" style="margin:0">
+              <label>Parent Name (optional)</label>
+              <input id="ob-inv-name" type="text" placeholder="First Last" style="padding:12px;font-size:14px">
+            </div>
+            <div class="field" style="margin:0">
+              <label>Athlete Name (optional)</label>
+              <input id="ob-inv-athlete" type="text" placeholder="Athlete name" style="padding:12px;font-size:14px">
+            </div>
+            <button class="btn btn-primary btn-sm" id="ob-inv-btn" onclick="sendOnboardingInvite()" style="height:46px">Send</button>
+          </div>
+          <!-- Quick-pick from roster -->
+          <div style="margin-top:16px">
+            <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:8px;display:block">Or select from roster</label>
+            <div id="ob-inv-roster" style="display:flex;flex-wrap:wrap;gap:6px;max-height:140px;overflow-y:auto"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- Funnel metrics -->
       <div class="metrics" id="ob-metrics" style="grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
         <div class="metric-card" style="padding:20px"><div class="label">Total Started</div><div class="val" style="font-size:26px;margin:6px 0 2px" id="ob-m-total">--</div><div class="sub">All onboarding sessions</div></div>
@@ -1092,7 +1145,7 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 
 <script type="module" src="src/lib/env-injector.js"></script>
 <script src="auth-supabase.js?v=20260330" defer></script>
-<script src="admin-os.js?v=20260331q" defer></script>
+<script src="admin-os.js?v=20260331r" defer></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
   function toggleMobileMenu() {

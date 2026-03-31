@@ -134,7 +134,7 @@ window.handleAdminLogin = async function() {
 };
 
 // ─── PANEL ROUTING ──────────────────────────────────────────
-const PANEL_TITLES = {dashboard:'Dashboard',players:'Players & Parents',requests:'Login Requests',onboarding:'Onboarding',dues:'Season Dues',fundraising:'Fundraising',orders:'Pro Shop Orders',comms:'Messaging',dataEntry:'Data Entry',calendar:'Calendar',blog:'Blog Posts',memos:'Coach Memos',tournaments:'Tournaments'};
+const PANEL_TITLES = {dashboard:'Dashboard',players:'Players & Parents',onboarding:'Onboarding',calendar:'Schedule & Tournaments',dues:'Season Dues',fundraising:'Fundraising',orders:'Pro Shop Orders',comms:'Messaging',dataEntry:'Data Entry',blog:'Blog Posts',memos:'Coach Memos'};
 
 function switchPanel(id, btn) {
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
@@ -144,14 +144,39 @@ function switchPanel(id, btn) {
   if(btn) btn.classList.add('active');
   document.getElementById('panel-title').textContent = PANEL_TITLES[id]||id;
   currentPanel = id;
-  const loaders = {players:loadPlayers,requests:loadRequests,onboarding:loadOnboarding,dues:loadDues,fundraising:loadFundraising,orders:loadOrders,comms:loadComms,dataEntry:loadDataEntry,calendar:loadCalendar,blog:loadBlog,memos:loadMemos,tournaments:loadTournaments};
+  const loaders = {players:()=>{loadPlayers();loadRequests();},onboarding:loadOnboarding,dues:loadDues,fundraising:loadFundraising,orders:loadOrders,comms:loadComms,dataEntry:loadDataEntry,calendar:()=>{loadCalendar();loadTournaments();},blog:loadBlog,memos:loadMemos};
   if(loaders[id]) loaders[id]();
 }
 
 function refreshCurrent() {
-  const loaders = {dashboard:loadDashboard,players:loadPlayers,requests:loadRequests,onboarding:loadOnboarding,dues:loadDues,fundraising:loadFundraising,orders:loadOrders,comms:loadComms,calendar:loadCalendar,blog:loadBlog,memos:loadMemos,tournaments:loadTournaments};
+  const loaders = {dashboard:loadDashboard,players:()=>{loadPlayers();loadRequests();},onboarding:loadOnboarding,dues:loadDues,fundraising:loadFundraising,orders:loadOrders,comms:loadComms,calendar:()=>{loadCalendar();loadTournaments();},blog:loadBlog,memos:loadMemos};
   if(loaders[currentPanel]) loaders[currentPanel]();
 }
+
+// ─── SUB-TAB SWITCHING ──────────────────────────────────────
+function switchPeopleTab(tab) {
+  document.getElementById('people-tab-roster').style.cssText = tab === 'roster'
+    ? 'padding:6px 16px;border-radius:6px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--primary);color:#fff;transition:all 0.15s'
+    : 'padding:6px 16px;border-radius:6px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:transparent;color:var(--muted);transition:all 0.15s';
+  document.getElementById('people-tab-requests').style.cssText = tab === 'requests'
+    ? 'padding:6px 16px;border-radius:6px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--primary);color:#fff;transition:all 0.15s'
+    : 'padding:6px 16px;border-radius:6px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:transparent;color:var(--muted);transition:all 0.15s';
+  document.getElementById('people-roster').style.display = tab === 'roster' ? '' : 'none';
+  document.getElementById('people-requests').style.display = tab === 'requests' ? '' : 'none';
+}
+window.switchPeopleTab = switchPeopleTab;
+
+function switchCompTab(tab) {
+  document.getElementById('comp-tab-schedule').style.cssText = tab === 'schedule'
+    ? 'padding:6px 16px;border-radius:6px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--primary);color:#fff;transition:all 0.15s'
+    : 'padding:6px 16px;border-radius:6px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:transparent;color:var(--muted);transition:all 0.15s';
+  document.getElementById('comp-tab-tournaments').style.cssText = tab === 'tournaments'
+    ? 'padding:6px 16px;border-radius:6px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--primary);color:#fff;transition:all 0.15s'
+    : 'padding:6px 16px;border-radius:6px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:transparent;color:var(--muted);transition:all 0.15s';
+  document.getElementById('comp-schedule').style.display = tab === 'schedule' ? '' : 'none';
+  document.getElementById('comp-tournaments').style.display = tab === 'tournaments' ? '' : 'none';
+}
+window.switchCompTab = switchCompTab;
 
 // ─── TEAMS DROPDOWN LOADER ─────────────────────────────────
 async function loadTeamsDropdowns() {
@@ -181,6 +206,8 @@ async function loadDashboard() {
         osSupabase.from('parent_dues_enrollment').select('id,total_owed,total_paid,status'),
       ]);
       profiles=p.data||[]; requests=r.data||[]; dues=d.data||[];
+      // Seed allRequests so approve/deny from dashboard works optimistically
+      if(!allRequests.length && requests.length) allRequests=requests.map(r=>({...r}));
     }
   } catch(e){}
   const collected=dues.reduce((a,d)=>a+(+d.total_paid||0),0);
@@ -204,13 +231,16 @@ async function loadDashboard() {
 
 function renderDashboardPending(requests) {
   document.getElementById('dash-pending-list').innerHTML = requests.length ? requests.slice(0,4).map(r=>`
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+    <div data-req-id="${r.id}" style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
       <div><div style="font-weight:600;font-size:13px">${r.full_name||r.email}</div><div style="color:var(--muted);font-size:11px">${r.email}</div></div>
       <div style="display:flex;gap:6px">
         <button class="btn btn-ghost btn-xs" onclick="approveReq('${r.id}','${r.email}')">Approve</button>
         <button class="btn btn-ghost btn-xs" onclick="denyReq('${r.id}','${r.email}')">Deny</button>
       </div>
     </div>`).join('') : '<p style="color:var(--muted);font-size:13px">No pending requests.</p>';
+  // Update counters
+  document.getElementById('m-pending').textContent = requests.length;
+  document.getElementById('pending-badge').textContent = requests.length;
 }
 
 // ─── PLAYERS & PARENTS ──────────────────────────────────────
@@ -453,6 +483,7 @@ function renderRequests(arr) {
   const resolved=arr.filter(r=>r.status!=='pending');
   document.getElementById('req-count-label').textContent=`${pending.length} pending`;
   document.getElementById('pending-badge').textContent=pending.length;
+  const rtb=document.getElementById('req-tab-badge'); if(rtb) rtb.textContent=pending.length;
   let rows='';
   if(!pending.length) {
     rows='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">No pending requests.</td></tr>';
@@ -482,16 +513,19 @@ function syncDashboardPending() {
   const pending = allRequests.filter(r => r.status === 'pending');
   document.getElementById('m-pending').textContent = pending.length;
   document.getElementById('pending-badge').textContent = pending.length;
+  const reqTabBadge = document.getElementById('req-tab-badge');
+  if (reqTabBadge) reqTabBadge.textContent = pending.length;
   renderDashboardPending(pending);
 }
 
 async function approveReq(id, email) {
   if(!confirm(`Approve ${email}?`)) return;
-  // Optimistic UI: update local state + both render targets immediately
-  const req = allRequests.find(r => r.id === id);
-  if(req) req.status = 'approved';
+  // Optimistic UI: remove from allRequests + scrub from DOM immediately
+  allRequests = allRequests.filter(r => r.id !== id);
   renderRequests(allRequests);
   syncDashboardPending();
+  // Also remove from dashboard DOM directly (covers case where allRequests wasn't loaded)
+  document.querySelectorAll(`[data-req-id="${id}"]`).forEach(el => el.remove());
   showToast(`${email} approved`);
   // DB + welcome email in background
   try {
@@ -509,11 +543,11 @@ async function approveReq(id, email) {
 async function denyReq(id, email) {
   const reason=prompt(`Reason for denying ${email}? (optional)`);
   if(reason===null) return;
-  // Optimistic UI: update local state + both render targets immediately
-  const req = allRequests.find(r => r.id === id);
-  if(req) req.status = 'denied';
+  // Optimistic UI: remove from allRequests + scrub from DOM immediately
+  allRequests = allRequests.filter(r => r.id !== id);
   renderRequests(allRequests);
   syncDashboardPending();
+  document.querySelectorAll(`[data-req-id="${id}"]`).forEach(el => el.remove());
   showToast(`${email} denied`);
   // DB in background
   try { if(osSupabase) await osSupabase.rpc('deny_login_request',{request_id:id,reason}); }
@@ -2509,7 +2543,7 @@ async function loadTournaments(){
 }
 
 function switchTournTab(tab,btn){
-  document.querySelectorAll('#panel-tournaments .sub-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#comp-tournaments .sub-tab, #panel-tournaments .sub-tab').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
   document.getElementById('ttab-catalog').style.display=tab==='catalog'?'':'none';
   document.getElementById('ttab-schedule').style.display=tab==='schedule'?'':'none';
@@ -2999,6 +3033,7 @@ function obFilter(filter, btn) {
   renderObTable();
 }
 window.obFilter = obFilter;
+window.loadOnboarding = loadOnboarding;
 
 function updateObBadge() {
   const badge = document.getElementById('ob-badge');
@@ -3033,6 +3068,144 @@ async function sendObReminder(sessionId, email) {
   }
 }
 window.sendObReminder = sendObReminder;
+
+// ─── ONBOARDING INVITE ──────────────────────────────────────
+function openOnboardingInvite() {
+  const form = document.getElementById('ob-invite-form');
+  form.style.display = '';
+  loadInviteRoster();
+}
+window.openOnboardingInvite = openOnboardingInvite;
+
+function closeOnboardingInvite() {
+  document.getElementById('ob-invite-form').style.display = 'none';
+  document.getElementById('ob-inv-email').value = '';
+  document.getElementById('ob-inv-name').value = '';
+  document.getElementById('ob-inv-athlete').value = '';
+}
+window.closeOnboardingInvite = closeOnboardingInvite;
+
+async function loadInviteRoster() {
+  const container = document.getElementById('ob-inv-roster');
+  if (!container || !osSupabase) { container.innerHTML = '<span style="color:var(--muted);font-size:12px">Connect to load roster</span>'; return; }
+
+  try {
+    const { data: parents } = await osSupabase
+      .from('profiles')
+      .select('id, full_name, email, player_name')
+      .eq('role', 'parent')
+      .eq('approved', true)
+      .order('full_name');
+
+    // Get emails that already have onboarding sessions
+    const { data: sessions } = await osSupabase
+      .from('onboarding_sessions')
+      .select('email');
+    const onboardedEmails = new Set((sessions || []).map(s => s.email?.toLowerCase()));
+
+    const available = (parents || []).filter(p => !onboardedEmails.has(p.email?.toLowerCase()));
+
+    if (!available.length) {
+      container.innerHTML = '<span style="color:var(--muted);font-size:12px">All rostered parents have onboarding sessions</span>';
+      return;
+    }
+
+    container.innerHTML = available.map(p => {
+      const name = esc(p.full_name || p.email);
+      const email = esc(p.email);
+      const athlete = esc(p.player_name || '');
+      return `<button class="btn btn-ghost btn-xs" style="border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px" onclick="prefillInvite('${email}','${esc(p.full_name||'')}','${athlete}')" title="${email}">${name}</button>`;
+    }).join('');
+  } catch (e) {
+    container.innerHTML = '<span style="color:var(--muted);font-size:12px">Error loading roster</span>';
+  }
+}
+
+function prefillInvite(email, name, athlete) {
+  document.getElementById('ob-inv-email').value = email;
+  document.getElementById('ob-inv-name').value = name;
+  document.getElementById('ob-inv-athlete').value = athlete;
+}
+window.prefillInvite = prefillInvite;
+
+async function sendOnboardingInvite() {
+  if (!osSupabase) return;
+  const email = document.getElementById('ob-inv-email').value.trim();
+  const parentName = document.getElementById('ob-inv-name').value.trim();
+  const athleteName = document.getElementById('ob-inv-athlete').value.trim();
+  const btn = document.getElementById('ob-inv-btn');
+
+  if (!email) { showToast('Email is required', 'error'); return; }
+
+  btn.textContent = 'Sending...'; btn.disabled = true;
+  try {
+    const { data, error } = await osSupabase.functions.invoke('send-onboarding-invite', {
+      body: { email, parent_name: parentName || null, athlete_name: athleteName || null }
+    });
+    if (error) throw error;
+
+    const result = data?.results?.[0];
+    if (result?.status === 'sent') {
+      showToast('Onboarding invite sent to ' + email, 'success');
+      closeOnboardingInvite();
+      loadOnboarding();
+    } else if (result?.status === 'already_completed') {
+      showToast(email + ' has already completed onboarding', 'info');
+    } else {
+      showToast('Failed: ' + (result?.status || 'unknown error'), 'error');
+    }
+  } catch (e) {
+    showToast('Failed to send invite: ' + e.message, 'error');
+  } finally {
+    btn.textContent = 'Send'; btn.disabled = false;
+  }
+}
+window.sendOnboardingInvite = sendOnboardingInvite;
+
+async function sendBulkOnboardingInvites() {
+  if (!osSupabase) return;
+
+  try {
+    // Get approved parents
+    const { data: parents } = await osSupabase
+      .from('profiles')
+      .select('full_name, email, player_name')
+      .eq('role', 'parent')
+      .eq('approved', true);
+
+    // Get existing onboarding emails
+    const { data: sessions } = await osSupabase
+      .from('onboarding_sessions')
+      .select('email');
+    const onboardedEmails = new Set((sessions || []).map(s => s.email?.toLowerCase()));
+
+    const remaining = (parents || []).filter(p => p.email && !onboardedEmails.has(p.email.toLowerCase()));
+
+    if (!remaining.length) {
+      showToast('All rostered parents already have onboarding sessions', 'info');
+      return;
+    }
+
+    if (!confirm(`Send onboarding invites to ${remaining.length} parent(s) who haven't started yet?`)) return;
+
+    const invites = remaining.map(p => ({
+      email: p.email,
+      parent_name: p.full_name || null,
+      athlete_name: p.player_name || null,
+    }));
+
+    const { data, error } = await osSupabase.functions.invoke('send-onboarding-invite', {
+      body: { invites }
+    });
+    if (error) throw error;
+
+    showToast(`Sent ${data?.sent || 0} of ${invites.length} onboarding invites`, 'success');
+    loadOnboarding();
+  } catch (e) {
+    showToast('Bulk invite failed: ' + e.message, 'error');
+  }
+}
+window.sendBulkOnboardingInvites = sendBulkOnboardingInvites;
 
 function timeAgo(date) {
   const seconds = Math.floor((new Date() - date) / 1000);
