@@ -112,7 +112,7 @@ window.handleAdminLogin = async function() {
 };
 
 // ─── PANEL ROUTING ──────────────────────────────────────────
-const PANEL_TITLES = {dashboard:'Dashboard',players:'Players & Parents',requests:'Login Requests',dues:'Season Dues',fundraising:'Fundraising',orders:'Pro Shop Orders',comms:'Messaging',dataEntry:'Data Entry',calendar:'Calendar',blog:'Blog Posts',memos:'Coach Memos'};
+const PANEL_TITLES = {dashboard:'Dashboard',players:'Players & Parents',requests:'Login Requests',dues:'Season Dues',fundraising:'Fundraising',orders:'Pro Shop Orders',comms:'Messaging',dataEntry:'Data Entry',calendar:'Calendar',blog:'Blog Posts',memos:'Coach Memos',tournaments:'Tournaments'};
 
 function switchPanel(id, btn) {
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
@@ -122,12 +122,12 @@ function switchPanel(id, btn) {
   if(btn) btn.classList.add('active');
   document.getElementById('panel-title').textContent = PANEL_TITLES[id]||id;
   currentPanel = id;
-  const loaders = {players:loadPlayers,requests:loadRequests,dues:loadDues,fundraising:loadFundraising,orders:loadOrders,comms:loadComms,dataEntry:loadDataEntry,calendar:loadCalendar,blog:loadBlog,memos:loadMemos};
+  const loaders = {players:loadPlayers,requests:loadRequests,dues:loadDues,fundraising:loadFundraising,orders:loadOrders,comms:loadComms,dataEntry:loadDataEntry,calendar:loadCalendar,blog:loadBlog,memos:loadMemos,tournaments:loadTournaments};
   if(loaders[id]) loaders[id]();
 }
 
 function refreshCurrent() {
-  const loaders = {dashboard:loadDashboard,players:loadPlayers,requests:loadRequests,dues:loadDues,fundraising:loadFundraising,orders:loadOrders,comms:loadComms,calendar:loadCalendar,blog:loadBlog,memos:loadMemos};
+  const loaders = {dashboard:loadDashboard,players:loadPlayers,requests:loadRequests,dues:loadDues,fundraising:loadFundraising,orders:loadOrders,comms:loadComms,calendar:loadCalendar,blog:loadBlog,memos:loadMemos,tournaments:loadTournaments};
   if(loaders[currentPanel]) loaders[currentPanel]();
 }
 
@@ -1054,7 +1054,8 @@ const RECURRING_PRACTICES = {
   2: { title: 'TEAM PRACTICE', time: '6:00 PM', loc: 'B.F. Elementary' },
   4: { title: 'TEAM PRACTICE', time: '6:00 PM', loc: 'B.F. Elementary' }
 };
-let practiceCancellations = new Set(); // Set of date strings with cancelled practices
+let practiceCancellations = new Set(); // Set of "date|dow" keys from DB
+let pendingPracticeChanges = new Map(); // key -> { action: 'cancel'|'restore', dateStr, dow, title, loc }
 
 function getPracticesForDate(dateStr) {
   const d = new Date(dateStr + 'T12:00:00');
@@ -1062,46 +1063,121 @@ function getPracticesForDate(dateStr) {
   const p = RECURRING_PRACTICES[dow];
   if (!p) return null;
   if (p.startDate && dateStr < p.startDate) return null;
-  return { ...p, date: dateStr, cancelled: practiceCancellations.has(dateStr + '|' + dow) };
+  const key = dateStr + '|' + dow;
+  // Pending changes override DB state
+  const pending = pendingPracticeChanges.get(key);
+  let cancelled = practiceCancellations.has(key);
+  if (pending) cancelled = pending.action === 'cancel';
+  return { ...p, date: dateStr, cancelled };
 }
 
-async function togglePractice(dateStr, dow) {
-  if (!osSupabase) return;
+function togglePractice(dateStr, dow) {
   const key = dateStr + '|' + dow;
   const p = RECURRING_PRACTICES[dow];
   if (!p) return;
-  try {
-    if (practiceCancellations.has(key)) {
-      // Re-enable: delete the cancellation record
-      const { error } = await osSupabase.from('calendar_events')
-        .delete()
-        .eq('start_date', dateStr)
-        .eq('event_type', 'practice')
-        .eq('is_cancelled', true)
-        .ilike('title', p.title);
-      if (error) throw error;
-      practiceCancellations.delete(key);
+  const dbCancelled = practiceCancellations.has(key);
+  const pending = pendingPracticeChanges.get(key);
+  const currentlyCancelled = pending ? pending.action === 'cancel' : dbCancelled;
+
+  if (currentlyCancelled) {
+    // Toggling to restore
+    if (dbCancelled) {
+      pendingPracticeChanges.set(key, { action: 'restore', dateStr, dow, title: p.title, loc: p.loc });
     } else {
-      // Cancel: insert a cancellation record
-      const session = await osSupabase.auth.getSession();
-      const userId = session.data.session?.user?.id;
-      const { error } = await osSupabase.rpc('upsert_calendar_event', {
-        p_title: p.title, p_event_type: 'practice', p_start_date: dateStr,
-        p_location: p.loc, p_visibility: 'public', p_created_by: userId,
-        p_cost: null, p_registration_deadline: null, p_registration_url: null,
-        p_notes: 'Cancelled by admin', p_admin_checklist: null
-      });
-      if (error) throw error;
-      // Mark as cancelled
-      await osSupabase.from('calendar_events')
-        .update({ is_cancelled: true })
-        .eq('start_date', dateStr)
-        .eq('event_type', 'practice')
-        .ilike('title', p.title);
-      practiceCancellations.add(key);
+      pendingPracticeChanges.delete(key); // revert to DB state (not cancelled)
     }
+  } else {
+    // Toggling to cancel
+    if (!dbCancelled) {
+      pendingPracticeChanges.set(key, { action: 'cancel', dateStr, dow, title: p.title, loc: p.loc });
+    } else {
+      pendingPracticeChanges.delete(key); // revert to DB state (cancelled)
+    }
+  }
+  updatePracticeSaveBar();
+  renderCalendar();
+}
+
+function updatePracticeSaveBar() {
+  const bar = document.getElementById('practice-save-bar');
+  const count = pendingPracticeChanges.size;
+  document.getElementById('practice-change-count').textContent = count;
+  bar.classList.toggle('visible', count > 0);
+}
+
+async function savePracticeChanges() {
+  if (!osSupabase || pendingPracticeChanges.size === 0) return;
+  const bar = document.getElementById('practice-save-bar');
+  const btn = bar.querySelector('.save-btn');
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
+  const session = await osSupabase.auth.getSession();
+  const userId = session.data.session?.user?.id;
+  const cancellations = [];
+  const restorations = [];
+
+  try {
+    for (const [key, change] of pendingPracticeChanges) {
+      if (change.action === 'cancel') {
+        // Insert cancellation record
+        const { error } = await osSupabase.rpc('upsert_calendar_event', {
+          p_title: change.title, p_event_type: 'practice', p_start_date: change.dateStr,
+          p_location: change.loc, p_visibility: 'public', p_created_by: userId,
+          p_cost: null, p_registration_deadline: null, p_registration_url: null,
+          p_notes: 'Cancelled by admin', p_admin_checklist: null
+        });
+        if (error) throw error;
+        await osSupabase.from('calendar_events')
+          .update({ is_cancelled: true })
+          .eq('start_date', change.dateStr)
+          .eq('event_type', 'practice')
+          .ilike('title', change.title);
+        practiceCancellations.add(key);
+        cancellations.push(change);
+      } else {
+        // Delete cancellation record
+        const { error } = await osSupabase.from('calendar_events')
+          .delete()
+          .eq('start_date', change.dateStr)
+          .eq('event_type', 'practice')
+          .eq('is_cancelled', true)
+          .ilike('title', change.title);
+        if (error) throw error;
+        practiceCancellations.delete(key);
+        restorations.push(change);
+      }
+    }
+
+    // Send parent notification via edge function
+    if (cancellations.length > 0 || restorations.length > 0) {
+      try {
+        const { data: fnData, error: fnErr } = await osSupabase.functions.invoke('send-practice-update', {
+          body: { cancellations, restorations }
+        });
+        if (fnErr) console.error('Notification send error:', fnErr);
+        else showToast(`Saved. ${fnData?.sent || 0} parents notified.`, 'success');
+      } catch (notifErr) {
+        console.error('Notification error:', notifErr);
+        showToast('Saved to calendar. Email notification failed.', 'warning');
+      }
+    }
+
+    pendingPracticeChanges.clear();
+    updatePracticeSaveBar();
     renderCalendar();
-  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+  } catch (e) {
+    showToast('Error saving: ' + e.message, 'error');
+  } finally {
+    btn.textContent = 'Save & Notify Parents';
+    btn.disabled = false;
+  }
+}
+
+function discardPracticeChanges() {
+  pendingPracticeChanges.clear();
+  updatePracticeSaveBar();
+  renderCalendar();
 }
 
 // ─── CALENDAR ───────────────────────────────────────────────

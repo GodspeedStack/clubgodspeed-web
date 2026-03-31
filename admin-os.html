@@ -263,7 +263,7 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
   min-height: 100px; padding: 8px; background: var(--card); cursor: pointer; transition: background 0.15s ease;
   display: flex; flex-direction: column; gap: 4px;
 }
-.cal-day:hover { background: rgba(255,255,255,0.04); }
+.cal-day:hover { background: transparent; }
 .cal-day.other-month { opacity: 0.3; }
 .cal-day.today { box-shadow: inset 0 0 0 1px rgba(37,99,235,0.25); }
 .cal-day .day-num { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
@@ -283,9 +283,8 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 .row-input:focus { border-color: var(--primary); background: rgba(37,99,235,0.08); outline: none; }
 .row-input.saved { border-color: #22c55e; background: rgba(34,197,94,0.08); }
 .row-input-sm { font-size: 12px; font-weight: 400; color: var(--muted); padding: 2px 6px; }
-.cal-add-btn { display: none; width: 18px; height: 18px; border-radius: 50%; background: rgba(37,99,235,0.25); color: #60a5fa; font-size: 14px; font-weight: 700; line-height: 18px; text-align: center; cursor: pointer; transition: background 0.15s; }
-.cal-add-btn:hover { background: rgba(37,99,235,0.5); color: #fff; }
-.cal-day:hover .cal-add-btn { display: inline-flex; align-items: center; justify-content: center; }
+.cal-add-btn { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: rgba(37,99,235,0.25); color: #60a5fa; font-size: 14px; font-weight: 700; line-height: 18px; text-align: center; cursor: pointer; transition: background 0.15s; opacity: 0.5; }
+.cal-add-btn:hover { background: rgba(37,99,235,0.5); color: #fff; opacity: 1; }
 .cal-event { font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
 .cal-event.practice { background: rgba(255,255,255,0.06); color: var(--text); }
 .cal-event.game { background: rgba(255,255,255,0.1); color: var(--text); font-weight: 700; }
@@ -496,6 +495,70 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
   .topbar { padding: 12px 16px; }
   .topbar h1 { font-size: 18px; }
 }
+
+/* TOURNAMENTS */
+.tourn-tier { display: inline-flex; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+.tourn-tier.elite { background: rgba(52,199,89,0.12); color: #34c759; border: 1px solid rgba(52,199,89,0.25); }
+.tourn-tier.premier { background: rgba(0,113,227,0.12); color: #0071e3; border: 1px solid rgba(0,113,227,0.25); }
+.tourn-tier.select { background: rgba(255,204,0,0.12); color: #ffcc00; border: 1px solid rgba(255,204,0,0.25); }
+.tourn-tier.open { background: rgba(255,255,255,0.06); color: var(--muted); border: 1px solid rgba(255,255,255,0.1); }
+.tourn-act { background: none; border: none; cursor: pointer; font-size: 15px; padding: 4px; transition: transform 0.15s, opacity 0.15s; opacity: 0.6; }
+.tourn-act:hover { opacity: 1; transform: scale(1.15); }
+
+/* Schedule cards (dark theme) */
+.ds-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px 24px; margin-bottom: 12px; display: grid; grid-template-columns: 70px 1fr auto; gap: 20px; align-items: center; transition: border-color 0.2s, box-shadow 0.2s; cursor: pointer; }
+.ds-card:hover { border-color: var(--border-light); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+.ds-card-date { text-align: center; }
+.ds-card-mon { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--primary); }
+.ds-card-day { font-size: 28px; font-weight: 900; color: var(--text); line-height: 1; }
+.ds-card-range { font-size: 10px; color: var(--muted); font-weight: 500; }
+.ds-card-info h4 { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 4px; letter-spacing: -0.01em; }
+.ds-card-meta { font-size: 12px; color: var(--muted); font-weight: 500; display: flex; gap: 16px; flex-wrap: wrap; }
+.ds-card-right { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+
+.ds-empty { text-align: center; padding: 60px 24px; color: var(--muted); }
+.ds-empty h3 { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 8px; text-transform: uppercase; letter-spacing: -0.02em; }
+.ds-empty p { font-size: 13px; margin-bottom: 24px; }
+
+.ds-month-label { font-size: 13px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; padding: 8px 0; margin-bottom: 8px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
+.ds-month-count { font-weight: 600; font-size: 11px; color: rgba(255,255,255,0.3); }
+
+/* Schedule timeline (dark theme) */
+.ds-tl-month { margin-bottom: 24px; }
+.ds-tl-month-label { font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text); margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.ds-tl-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border); border-radius: 8px; overflow: hidden; }
+.ds-tl-hdr { padding: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); text-align: center; background: rgba(0,0,0,0.4); }
+.ds-tl-day { min-height: 54px; padding: 4px; background: var(--card); font-size: 10px; position: relative; }
+.ds-tl-day.today { box-shadow: inset 0 0 0 1px rgba(37,99,235,0.3); }
+.ds-tl-day.outside { opacity: 0.25; }
+.ds-tl-day-num { font-weight: 700; color: var(--muted); margin-bottom: 2px; }
+.ds-tl-evt { padding: 1px 4px; border-radius: 3px; font-size: 9px; font-weight: 700; margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.ds-tl-evt.planned { background: rgba(37,99,235,0.15); color: #60a5fa; border-left: 2px solid var(--primary); }
+.ds-tl-evt.registered { background: rgba(52,199,89,0.12); color: #34c759; border-left: 2px solid #34c759; }
+.ds-tl-evt.paid { background: rgba(52,199,89,0.2); color: #22c55e; border-left: 2px solid #22c55e; }
+.ds-tl-evt.completed { background: rgba(255,255,255,0.04); color: var(--muted); border-left: 2px solid var(--muted); }
+
+/* Floating practice save bar */
+.practice-save-bar {
+  position: fixed; bottom: -60px; left: 50%; transform: translateX(-50%);
+  background: #111827; border: 1px solid rgba(37,99,235,0.4); border-radius: 12px;
+  padding: 10px 20px; display: flex; align-items: center; gap: 16px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6); z-index: 999; transition: bottom 0.3s ease;
+  font-size: 13px; color: var(--text);
+}
+.practice-save-bar.visible { bottom: 24px; }
+.practice-save-bar .save-count { font-weight: 700; color: #60a5fa; }
+.practice-save-bar .save-btn {
+  background: #2563eb; color: #fff; border: none; padding: 8px 18px; border-radius: 8px;
+  font-size: 12px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em;
+  transition: background 0.15s;
+}
+.practice-save-bar .save-btn:hover { background: #1d4ed8; }
+.practice-save-bar .discard-btn {
+  background: transparent; color: var(--muted); border: 1px solid var(--border); padding: 8px 14px;
+  border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: color 0.15s;
+}
+.practice-save-bar .discard-btn:hover { color: var(--text); }
 </style>
 </head>
 <body>
@@ -550,6 +613,11 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
     <button class="sb-link" onclick="switchPanel('comms',this)"><i data-lucide="send" class="icon"></i>Messaging</button>
     <button class="sb-link" onclick="switchPanel('dataEntry',this)"><i data-lucide="clipboard-list" class="icon"></i>Data Entry</button>
     <button class="sb-link" onclick="switchPanel('calendar',this)"><i data-lucide="calendar" class="icon"></i>Calendar</button>
+  </div>
+
+  <div class="sb-section">
+    <div class="sb-label">Competition</div>
+    <button class="sb-link" onclick="switchPanel('tournaments',this)"><i data-lucide="trophy" class="icon"></i>Tournaments<span class="badge" id="sched-badge" style="display:none">0</span></button>
   </div>
 
   <div class="sb-section">
@@ -907,6 +975,70 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
       </div>
     </div>
 
+    <!-- TOURNAMENTS -->
+    <div class="panel" id="panel-tournaments">
+      <!-- Sub-tabs: Catalog | Our Schedule -->
+      <div class="sub-tabs" id="tourn-tabs">
+        <button class="sub-tab active" data-ttab="catalog" onclick="switchTournTab('catalog',this)">Catalog</button>
+        <button class="sub-tab" data-ttab="schedule" onclick="switchTournTab('schedule',this)">Our Schedule<span id="sched-tab-count" style="margin-left:6px;font-size:10px;opacity:0.6"></span></button>
+      </div>
+
+      <!-- CATALOG SUB-TAB -->
+      <div id="ttab-catalog">
+        <!-- Stat cards -->
+        <div class="metrics" style="grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:24px;" id="tourn-metrics">
+          <div class="metric-card" style="padding:24px"><div class="label">Total Tournaments</div><div class="val" style="font-size:28px;margin:8px 0 4px" id="tm-total">--</div><div class="sub">In catalog</div></div>
+          <div class="metric-card" style="padding:24px"><div class="label">Colorado</div><div class="val" style="font-size:28px;margin:8px 0 4px" id="tm-co">--</div><div class="sub">Home state</div></div>
+          <div class="metric-card" style="padding:24px"><div class="label">Elite Tier</div><div class="val" style="font-size:28px;margin:8px 0 4px" id="tm-elite">--</div><div class="sub">Top ranked</div></div>
+          <div class="metric-card" style="padding:24px"><div class="label">Avg Cost</div><div class="val" style="font-size:28px;margin:8px 0 4px" id="tm-cost">--</div><div class="sub">Entry fee</div></div>
+          <div class="metric-card" style="padding:24px"><div class="label">States</div><div class="val" style="font-size:28px;margin:8px 0 4px" id="tm-states">--</div><div class="sub">Covered</div></div>
+        </div>
+
+        <!-- Filters -->
+        <div class="card" style="margin-bottom:16px">
+          <div style="padding:16px 24px;display:grid;grid-template-columns:repeat(5,1fr) auto;gap:12px;align-items:end">
+            <div class="field" style="margin:0"><label>State</label><select id="tf-state" onchange="applyTournFilters()" style="padding:10px 14px"><option value="">All States</option></select></div>
+            <div class="field" style="margin:0"><label>Type</label><select id="tf-type" onchange="applyTournFilters()" style="padding:10px 14px"><option value="">All Types</option><option value="tournament">Tournament</option><option value="1-day">1-Day</option><option value="3v3">3v3</option><option value="showcase">Showcase</option></select></div>
+            <div class="field" style="margin:0"><label>Tier</label><select id="tf-tier" onchange="applyTournFilters()" style="padding:10px 14px"><option value="">All Tiers</option><option value="Elite">Elite</option><option value="Premier">Premier</option><option value="Select">Select</option><option value="Open">Open</option></select></div>
+            <div class="field" style="margin:0"><label>Gender</label><select id="tf-gender" onchange="applyTournFilters()" style="padding:10px 14px"><option value="">All</option><option value="boys">Boys</option><option value="girls">Girls</option><option value="coed">Coed</option></select></div>
+            <div class="field" style="margin:0"><label>Search</label><input id="tf-search" placeholder="Name or organizer..." oninput="applyTournFilters()" style="padding:10px 14px"></div>
+            <div style="display:flex;gap:8px;padding-bottom:2px">
+              <button class="btn btn-ghost btn-sm" onclick="clearTournFilters()">Clear</button>
+              <button class="btn btn-primary btn-sm" onclick="openTournModal()">+ Add</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card" style="margin-bottom:0">
+          <table>
+            <thead>
+              <tr>
+                <th style="cursor:pointer" onclick="sortTourn('name')">Name</th>
+                <th style="cursor:pointer" onclick="sortTourn('organizer')">Organizer</th>
+                <th style="cursor:pointer" onclick="sortTourn('start_date')">Dates</th>
+                <th>Location</th>
+                <th style="cursor:pointer" onclick="sortTourn('event_type')">Type</th>
+                <th style="cursor:pointer" onclick="sortTourn('cost_max')">Cost</th>
+                <th style="cursor:pointer" onclick="sortTourn('rank_competition')">Comp</th>
+                <th style="cursor:pointer" onclick="sortTourn('rank_exposure')">Exp</th>
+                <th style="cursor:pointer" onclick="sortTourn('rank_circuit')">Circ</th>
+                <th style="cursor:pointer" onclick="sortTourn('rank_tier')">Tier</th>
+                <th style="width:80px">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tourn-tbody"></tbody>
+          </table>
+          <div id="tourn-pagination" style="display:flex;gap:8px;justify-content:center;padding:16px;border-top:1px solid var(--border)"></div>
+        </div>
+      </div>
+
+      <!-- SCHEDULE SUB-TAB -->
+      <div id="ttab-schedule" style="display:none">
+        <div id="sched-content"></div>
+      </div>
+    </div>
+
   </div><!-- /content -->
 </div><!-- /main -->
 
@@ -918,9 +1050,16 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
   </div>
 </div>
 
+<!-- Floating practice save bar -->
+<div id="practice-save-bar" class="practice-save-bar">
+  <span><span class="save-count" id="practice-change-count">0</span> practice change(s)</span>
+  <button class="save-btn" onclick="savePracticeChanges()">Save & Notify Parents</button>
+  <button class="discard-btn" onclick="discardPracticeChanges()">Discard</button>
+</div>
+
 <script type="module" src="src/lib/env-injector.js"></script>
 <script src="auth-supabase.js?v=20260330" defer></script>
-<script src="admin-os.js?v=20260331h" defer></script>
+<script src="admin-os.js?v=20260331i" defer></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
   function toggleMobileMenu() {
