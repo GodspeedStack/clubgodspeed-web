@@ -14,8 +14,8 @@ let calYear, calMonth, calView = 'month';
 let teamRosterCache = {};
 
 // ─── SHARED UTILITIES ───────────────────────────────────────
-const fmt = (iso) => iso ? new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '--';
-const fmtShort = (iso) => iso ? new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '--';
+const fmt = (iso) => iso ? new Date(iso + (iso.length === 10 ? 'T12:00:00' : '')).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '--';
+const fmtShort = (iso) => iso ? new Date(iso + (iso.length === 10 ? 'T12:00:00' : '')).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '--';
 function fmt12(t) {
   if(!t) return '--';
   const m=t.match(/^(\d{1,2}):(\d{2})/);
@@ -1071,7 +1071,7 @@ async function loadCalendar() {
           const cursor=new Date(start);
           cursor.setDate(cursor.getDate()+1);
           while(cursor<=end) {
-            allCalEvents.push({...e, event_date: cursor.toISOString().split('T')[0], _isSpan: true});
+            allCalEvents.push({...e, event_date: `${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,'0')}-${String(cursor.getDate()).padStart(2,'0')}`, _isSpan: true});
             cursor.setDate(cursor.getDate()+1);
           }
         }
