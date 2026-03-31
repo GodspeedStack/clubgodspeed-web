@@ -1164,7 +1164,7 @@ function renderCalList() {
         rows+=`<tr style="cursor:pointer${isBackup?';opacity:0.6':''}${e.visibility==='admin_only'?';opacity:0.5':''}" onclick="editCalEvent('${e.id}')">
         <td>${dateLabel}</td><td style="color:var(--muted)">${fmt12(e.start_time)}</td><td style="font-weight:600">${e.title}${visBadge}${pubBadge}${listTagLine}</td>
         <td>${statusTag(e.event_type||'other')}${e.event_type==='tournament'?tournamentProgressBadge(e):''}</td><td style="color:var(--muted)">${e.location||'--'}</td>
-        <td><button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();deleteCalEvent('${e.id}')">Delete</button></td>
+        <td>${e.published_at?`<button class="btn btn-ghost btn-xs" style="color:#f59e0b" onclick="event.stopPropagation();depublishEvent('${e.id}')">Recall</button>`:`<button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();deleteCalEvent('${e.id}')">Delete</button>`}</td>
       </tr>`;
       });
     });
