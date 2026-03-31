@@ -437,28 +437,37 @@ function renderRequests(arr) {
 }
 async function approveReq(id, email) {
   if(!confirm(`Approve ${email}?`)) return;
+  // Optimistic UI: update local state immediately
+  const req = allRequests.find(r => r.id === id);
+  if(req) req.status = 'approved';
+  renderRequests(allRequests);
+  loadDashboard();
+  showToast(`${email} approved`);
+  // DB + welcome email in background
   try {
     if(!osSupabase) return;
     await osSupabase.rpc('approve_login_request',{request_id:id});
-    // Fetch name so the welcome email can be personalised
     const { data: prof } = await osSupabase.from('profiles').select('full_name').eq('email', email).maybeSingle();
-    // Send welcome email directly (no queue dependency)
     try {
       await osSupabase.functions.invoke('send-welcome-email', {
         body: { email, full_name: prof?.full_name || '' }
       });
+      showToast(`Welcome email sent to ${email}`);
     } catch(e){ console.warn('Welcome email invoke failed:',e); }
-  } catch(e){ console.error(e); }
-  // Reload from DB so the approved row no longer shows pending
-  await loadRequests();
-  await loadDashboard();
-  showToast(`${email} approved — welcome email sent!`);
+  } catch(e){ console.error(e); showToast('Approve failed: '+e.message,'error'); }
 }
 async function denyReq(id, email) {
   const reason=prompt(`Reason for denying ${email}? (optional)`);
   if(reason===null) return;
-  try { if(osSupabase) await osSupabase.rpc('deny_login_request',{request_id:id,reason}); } catch(e){ console.error(e); }
+  // Optimistic UI: update local state immediately
+  const req = allRequests.find(r => r.id === id);
+  if(req) req.status = 'denied';
   renderRequests(allRequests);
+  loadDashboard();
+  showToast(`${email} denied`);
+  // DB in background
+  try { if(osSupabase) await osSupabase.rpc('deny_login_request',{request_id:id,reason}); }
+  catch(e){ console.error(e); showToast('Deny failed: '+e.message,'error'); }
 }
 
 // ─── FUNDRAISING ────────────────────────────────────────────
