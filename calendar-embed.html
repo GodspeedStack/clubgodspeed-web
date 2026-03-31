@@ -716,7 +716,9 @@
             if (SPECIFIC_EVENTS[dateStr] === 'SKIP') return [];
 
             if (SPECIFIC_EVENTS[dateStr] && Array.isArray(SPECIFIC_EVENTS[dateStr])) {
+                const skipRecurring = SPECIFIC_EVENTS[dateStr].some(e => e.skipRecurring);
                 SPECIFIC_EVENTS[dateStr].forEach(ev => {
+                    if (ev.skipRecurring) return; // Skip the marker itself
                     if (ev.recurring) {
                         // Include recurring
                         const recurring = RECURRING_EVENTS[dayOfWeek];
@@ -730,7 +732,7 @@
                     }
                 });
                 // Logic above allows mixing specific + recurring if specific array has {recurring:true}
-                if (!SPECIFIC_EVENTS[dateStr].some(e => e.recurring) && events.length > 0) {
+                if (skipRecurring || (!SPECIFIC_EVENTS[dateStr].some(e => e.recurring) && events.length > 0)) {
                     return filterEventsByEnrollment(events);
                 }
             }
@@ -1164,9 +1166,35 @@
             }
         }
 
-        // Init: load dynamic events, then render
+        // ── Load practice cancellations from Supabase ──
+        async function loadPracticeCancellations() {
+            try {
+                const SUPA_URL = 'https://nnqokhqennuxalamnvps.supabase.co';
+                const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis';
+                const url = `${SUPA_URL}/rest/v1/calendar_events?select=start_date,title&event_type=eq.practice&is_cancelled=eq.true&start_date=gte.2025-12-01&order=start_date.asc`;
+                const res = await fetch(url, {
+                    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
+                });
+                if (!res.ok) return;
+                const cancels = await res.json();
+                cancels.forEach(c => {
+                    // Mark the date as SKIP so the recurring practice is suppressed
+                    // But preserve any existing specific events on that date
+                    if (!SPECIFIC_EVENTS[c.start_date]) {
+                        SPECIFIC_EVENTS[c.start_date] = 'SKIP';
+                    } else if (Array.isArray(SPECIFIC_EVENTS[c.start_date])) {
+                        // Has other events; add a skipRecurring flag instead
+                        SPECIFIC_EVENTS[c.start_date].push({ skipRecurring: true });
+                    }
+                });
+            } catch (err) {
+                console.error('Failed to load practice cancellations:', err);
+            }
+        }
+
+        // Init: load dynamic events + cancellations, then render
         document.addEventListener('DOMContentLoaded', async () => {
-            await loadPublishedEvents();
+            await Promise.all([loadPublishedEvents(), loadPracticeCancellations()]);
             renderCalendar();
         });
     </script>

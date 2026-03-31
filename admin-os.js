@@ -1048,6 +1048,62 @@ async function submitGame() {
   } catch (e) { showToast('Error: ' + e.message, 'error'); }
 }
 
+// ─── RECURRING PRACTICE CONFIG (mirrors parent calendar-embed) ──
+const RECURRING_PRACTICES = {
+  1: { title: 'Mandatory Skills', time: '6:00 PM', loc: 'NEC', startDate: '2025-12-08' },
+  2: { title: 'TEAM PRACTICE', time: '6:00 PM', loc: 'B.F. Elementary' },
+  4: { title: 'TEAM PRACTICE', time: '6:00 PM', loc: 'B.F. Elementary' }
+};
+let practiceCancellations = new Set(); // Set of date strings with cancelled practices
+
+function getPracticesForDate(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  const dow = d.getDay();
+  const p = RECURRING_PRACTICES[dow];
+  if (!p) return null;
+  if (p.startDate && dateStr < p.startDate) return null;
+  return { ...p, date: dateStr, cancelled: practiceCancellations.has(dateStr + '|' + dow) };
+}
+
+async function togglePractice(dateStr, dow) {
+  if (!osSupabase) return;
+  const key = dateStr + '|' + dow;
+  const p = RECURRING_PRACTICES[dow];
+  if (!p) return;
+  try {
+    if (practiceCancellations.has(key)) {
+      // Re-enable: delete the cancellation record
+      const { error } = await osSupabase.from('calendar_events')
+        .delete()
+        .eq('start_date', dateStr)
+        .eq('event_type', 'practice')
+        .eq('is_cancelled', true)
+        .ilike('title', p.title);
+      if (error) throw error;
+      practiceCancellations.delete(key);
+    } else {
+      // Cancel: insert a cancellation record
+      const session = await osSupabase.auth.getSession();
+      const userId = session.data.session?.user?.id;
+      const { error } = await osSupabase.rpc('upsert_calendar_event', {
+        p_title: p.title, p_event_type: 'practice', p_start_date: dateStr,
+        p_location: p.loc, p_visibility: 'public', p_created_by: userId,
+        p_cost: null, p_registration_deadline: null, p_registration_url: null,
+        p_notes: 'Cancelled by admin', p_admin_checklist: null
+      });
+      if (error) throw error;
+      // Mark as cancelled
+      await osSupabase.from('calendar_events')
+        .update({ is_cancelled: true })
+        .eq('start_date', dateStr)
+        .eq('event_type', 'practice')
+        .ilike('title', p.title);
+      practiceCancellations.add(key);
+    }
+    renderCalendar();
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
 // ─── CALENDAR ───────────────────────────────────────────────
 async function loadCalendar() {
   try {
@@ -1061,9 +1117,23 @@ async function loadCalendar() {
         query=query.gte('start_date',start.toISOString().split('T')[0]).lte('start_date',end.toISOString().split('T')[0]);
       }
       const {data}=await query;
+      // Load practice cancellations for current view range
+      practiceCancellations = new Set();
+      const viewStart = calView==='list' ? `${calYear}-01-01` : new Date(calYear,calMonth,1).toISOString().split('T')[0];
+      const viewEnd = calView==='list' ? `${calYear}-12-31` : new Date(calYear,calMonth+1,0).toISOString().split('T')[0];
+      const {data:cancels} = await osSupabase.from('calendar_events')
+        .select('start_date,title')
+        .eq('event_type','practice').eq('is_cancelled',true)
+        .gte('start_date',viewStart).lte('start_date',viewEnd);
+      (cancels||[]).forEach(c => {
+        const d = new Date(c.start_date+'T12:00:00');
+        practiceCancellations.add(c.start_date + '|' + d.getDay());
+      });
       // Expand multi-day events so they appear on every date in the range
+      // Filter out practice cancellation records from main list
       allCalEvents=[];
       for(const e of (data||[])) {
+        if(e.event_type==='practice' && e.is_cancelled) continue;
         allCalEvents.push({...e, event_date: e.start_date});
         if(e.end_date && e.end_date !== e.start_date) {
           const start=new Date(e.start_date+'T00:00:00');
@@ -1102,7 +1172,14 @@ function renderCalendar() {
     const dateStr=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const isToday=dateStr===todayStr;
     const dayEvents=allCalEvents.filter(e=>e.event_date===dateStr);
+    const dow=new Date(calYear,calMonth,d).getDay();
+    const practice=getPracticesForDate(dateStr);
     html+=`<div class="cal-day${isToday?' today':''}" onclick="showDayEvents('${dateStr}')"><div class="day-num">${d}</div>`;
+    // Practice pill (tap to toggle)
+    if(practice) {
+      const off=practice.cancelled;
+      html+=`<div style="font-size:10px;padding:3px 6px;border-radius:4px;margin-bottom:2px;cursor:pointer;transition:all 0.15s;${off?'opacity:0.3;background:rgba(255,255,255,0.04);color:var(--muted);text-decoration:line-through;border:1px solid transparent':'background:rgba(37,99,235,0.1);color:#60a5fa;border:1px solid rgba(37,99,235,0.25)'}" onclick="event.stopPropagation();togglePractice('${dateStr}',${dow})" title="${off?'Click to restore':'Click to cancel'}">${practice.title}</div>`;
+    }
     dayEvents.slice(0,3).forEach(e=>{
       let regTag='';
       const eTags=Array.isArray(e.tags)?e.tags:[];
@@ -1554,65 +1631,23 @@ async function depublishEvent(id) {
 // ─── BULK TOURNAMENT UPLOAD ──────────────────────────────────
 function openBulkTournamentUpload() {
   openModal('add-event');
-  document.getElementById('modal-title').textContent='Add Event';
-  const types=['practice','game','tournament','season','meeting','camp','tryout','fundraiser','deadline','other'];
-  const typeOpts=types.map(t=>`<option value="${t}">${t.charAt(0).toUpperCase()+t.slice(1)}</option>`).join('');
+  document.getElementById('modal-title').textContent='+ Event';
   document.getElementById('modal-body').innerHTML=`
-    <div id="quick-add-form">
-      <div class="field"><label>Title</label><input id="qa-title" type="text" placeholder="e.g. No Practice Today"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="field"><label>Date</label><input id="qa-date" type="date"></div>
-        <div class="field"><label>End Date <span style="color:var(--muted);font-size:11px">(optional)</span></label><input id="qa-end-date" type="date"></div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="field"><label>Type</label><select id="qa-type">${typeOpts}</select></div>
-        <div class="field"><label>Location <span style="color:var(--muted);font-size:11px">(optional)</span></label><input id="qa-loc" type="text" placeholder="e.g. Northeast Early College"></div>
-      </div>
-      <div id="qa-hint" style="min-height:20px;margin-top:4px;font-size:12px"></div>
-      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="quickAddEvent()" id="qa-add-btn">Add Event</button>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:12px">Paste event info from a website, email, or flyer. Dates, locations, grades, and costs are picked up automatically.</p>
+    <div class="field">
+      <textarea id="bulk-raw" style="min-height:200px;border:1px solid var(--border);border-radius:12px;background:rgba(0,0,0,0.3);color:#fff;padding:16px;width:100%;font-family:var(--font-mono,monospace);font-size:13px;resize:vertical;transition:border-color 0.2s" placeholder="Example:
+
+iHoop Spring Classic - April 12-13, 2026
+Location: Allen Fieldhouse, Allen TX
+4th Grade Division -- $425
+
+BigFoot Battle - May 3, 2026
+Location: Southlake Rec Center
+5th Grade -- $380"></textarea>
+      <div id="bulk-hint" style="min-height:20px;margin-top:6px;font-size:12px;transition:opacity 0.2s"></div>
     </div>
-    <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px">
-      <button class="btn btn-ghost btn-sm" style="width:100%;font-size:12px" onclick="toggleBulkPaste()">Paste Multiple Tournaments</button>
-      <div id="bulk-paste-area" style="display:none;margin-top:12px">
-        <textarea id="bulk-raw" style="min-height:160px;border:1px solid var(--border);border-radius:12px;background:rgba(0,0,0,0.3);color:#fff;padding:16px;width:100%;font-family:var(--font-mono,monospace);font-size:13px;resize:vertical" placeholder="Paste tournament info from a website, email, or flyer..."></textarea>
-        <div id="bulk-hint" style="min-height:20px;margin-top:6px;font-size:12px"></div>
-        <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="addTournaments()" id="bulk-add-btn">Add Tournaments</button>
-        <div id="bulk-result" style="margin-top:12px"></div>
-      </div>
-    </div>`;
-}
-function toggleBulkPaste() {
-  const area=document.getElementById('bulk-paste-area');
-  area.style.display=area.style.display==='none'?'block':'none';
-}
-async function quickAddEvent() {
-  const title=document.getElementById('qa-title').value.trim();
-  const date=document.getElementById('qa-date').value;
-  const endDate=document.getElementById('qa-end-date').value||null;
-  const type=document.getElementById('qa-type').value;
-  const loc=document.getElementById('qa-loc').value.trim();
-  const hint=document.getElementById('qa-hint');
-  const btn=document.getElementById('qa-add-btn');
-  hint.innerHTML='';
-  if(!title||!date) { hint.innerHTML='<span style="color:#ff3b30">Title and date are required.</span>'; return; }
-  btn.textContent='Adding...'; btn.disabled=true;
-  try {
-    if(!osSupabase) throw new Error('Not connected');
-    const session=await osSupabase.auth.getSession();
-    const userId=session.data.session.user.id;
-    const {error}=await osSupabase.rpc('upsert_calendar_event',{
-      p_title:title, p_event_type:type, p_start_date:date,
-      p_end_date:endDate, p_location:loc||null,
-      p_grade_level:'both', p_created_by:userId, p_visibility:'public',
-      p_cost:null, p_registration_deadline:null, p_registration_url:null,
-      p_notes:null, p_admin_checklist:null
-    });
-    if(error) throw error;
-    hint.innerHTML=`<span style="color:#34c759">Added "${title}" to the calendar.</span>`;
-    btn.textContent='Add Event'; btn.disabled=false;
-    loadCalendar();
-    setTimeout(()=>{ if(document.querySelector('.modal.active')) closeModal(); },1500);
-  } catch(e) { hint.innerHTML=`<span style="color:#ff3b30">Error: ${e.message}</span>`; btn.textContent='Add Event'; btn.disabled=false; }
+    <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="addTournaments()" id="bulk-add-btn">Add Events</button>
+    <div id="bulk-result" style="margin-top:12px"></div>`;
 }
 
 async function addTournaments() {
