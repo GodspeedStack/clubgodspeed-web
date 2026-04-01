@@ -203,11 +203,25 @@
     return null;
   }
 
-  async function resolveAthleteName(client, athleteId) {
+  async function resolveAthleteProfile(client, athleteId) {
     try {
-      var r = await client.from('athletes').select('display_name').eq('id', athleteId).limit(1).single();
-      return r.data ? r.data.display_name : null;
-    } catch (_) { return null; }
+      var r = await client.from('athletes').select('display_name, first_name, last_name, jersey_number, position, team_name, season').eq('id', athleteId).limit(1).single();
+      if (!r.data) return { name: null };
+      return {
+        name: r.data.display_name || r.data.first_name || null,
+        firstName: r.data.first_name || null,
+        jersey: r.data.jersey_number,
+        position: r.data.position,
+        team: r.data.team_name,
+        season: r.data.season,
+      };
+    } catch (_) { return { name: null }; }
+  }
+
+  // Backward compat
+  async function resolveAthleteName(client, athleteId) {
+    var p = await resolveAthleteProfile(client, athleteId);
+    return p.name;
   }
 
   /* ── Data Fetching ─────────────────────────────────────────── */
@@ -301,18 +315,122 @@
 
   /* ── Rendering ─────────────────────────────────────────────── */
 
-  function renderAll(athleteName, grades, teamAvgs, games, evals) {
+  function renderAll(athleteName, grades, teamAvgs, games, evals, profile) {
     var container = document.getElementById('perf-root');
     if (!container) return;
     var html = '';
+    var prof = profile || {};
+
+    /* ── SHIMMER KEYFRAMES (injected once) ─────────────────── */
+
+    if (!document.getElementById('gs-perf-shimmer-style')) {
+      var styleEl = document.createElement('style');
+      styleEl.id = 'gs-perf-shimmer-style';
+      styleEl.textContent =
+        '@keyframes gs-shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}' +
+        '@keyframes gs-pulse-ring{0%{opacity:0.3;transform:scale(0.95)}50%{opacity:0.6;transform:scale(1)}100%{opacity:0.3;transform:scale(0.95)}}' +
+        '@keyframes gs-fade-in{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}';
+      document.head.appendChild(styleEl);
+    }
 
     /* ── 1. HERO CARD ────────────────────────────────────────── */
 
     if (grades.length === 0 && games.length === 0 && evals.length === 0) {
-      html += '<div class="bg-white rounded-xl p-6 shadow-md text-center">' +
-        '<div style="font-size:1rem;font-weight:700;color:#111;margin-bottom:4px;">No Performance Data Yet</div>' +
-        '<div style="font-size:0.85rem;color:#9ca3af;">Practice grades, game stats, and skill evaluations will appear here as they are recorded by coaching staff.</div>' +
+      var pName = prof.firstName || athleteName || 'Athlete';
+      var pJersey = prof.jersey != null ? '#' + prof.jersey : '';
+      var pPos = prof.position || '';
+      var pTeam = prof.team || '';
+
+      // ── Metallic Steel Card (no-data state) ──
+      html += '<div style="' +
+        'position:relative;overflow:hidden;border-radius:20px;padding:32px 28px 28px;color:#fff;' +
+        'background:linear-gradient(135deg,#3a3f47 0%,#5a6270 30%,#8b95a5 55%,#5a6270 75%,#3a3f47 100%);' +
+        'box-shadow:0 12px 40px rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.15);' +
+        'animation:gs-fade-in 0.5s ease-out;margin-bottom:20px;">' +
+
+        // Shimmer overlay
+        '<div style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;' +
+          'background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.06) 40%,rgba(255,255,255,0.15) 50%,rgba(255,255,255,0.06) 60%,transparent 100%);' +
+          'background-size:800px 100%;animation:gs-shimmer 3s ease-in-out infinite;"></div>' +
+
+        // Subtle brushed-metal texture
+        '<div style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;opacity:0.04;' +
+          'background:repeating-linear-gradient(90deg,#fff 0px,transparent 1px,transparent 3px);"></div>' +
+
+        '<div style="position:relative;z-index:1;">' +
+
+          // Top row: name + jersey/position
+          '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">' +
+            '<div>' +
+              '<div style="font-size:1.4rem;font-weight:800;letter-spacing:-0.02em;line-height:1.2;">' + pName + '</div>' +
+              (pTeam ? '<div style="font-size:0.75rem;font-weight:600;color:rgba(255,255,255,0.6);margin-top:4px;text-transform:uppercase;letter-spacing:0.06em;">' + pTeam + '</div>' : '') +
+            '</div>' +
+            '<div style="display:flex;align-items:baseline;gap:8px;">' +
+              (pJersey ? '<div style="font-size:2.2rem;font-weight:900;color:rgba(255,255,255,0.2);line-height:1;letter-spacing:-0.02em;">' + pJersey + '</div>' : '') +
+              (pPos ? '<div style="padding:4px 10px;border-radius:6px;font-size:0.65rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);backdrop-filter:blur(4px);">' + pPos + '</div>' : '') +
+            '</div>' +
+          '</div>' +
+
+          // Stat placeholders row (dashed boxes)
+          '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:28px 0 24px;">' +
+            ['PPG','APG','RPG','SPG'].map(function(label) {
+              return '<div style="text-align:center;padding:14px 8px;border:1px dashed rgba(255,255,255,0.2);border-radius:12px;background:rgba(255,255,255,0.04);">' +
+                '<div style="font-size:1.6rem;font-weight:800;color:rgba(255,255,255,0.2);line-height:1;">--</div>' +
+                '<div style="font-size:0.6rem;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.06em;margin-top:4px;">'+label+'</div>' +
+              '</div>';
+            }).join('') +
+          '</div>' +
+
+          // Ring placeholder
+          '<div style="display:flex;align-items:center;gap:20px;">' +
+            '<div style="width:80px;height:80px;border-radius:50%;border:4px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;animation:gs-pulse-ring 3s ease-in-out infinite;">' +
+              '<span style="font-size:0.75rem;font-weight:700;color:rgba(255,255,255,0.3);text-transform:uppercase;">Awaiting</span>' +
+            '</div>' +
+            '<div style="flex:1;">' +
+              '<div style="font-size:0.85rem;font-weight:700;color:rgba(255,255,255,0.7);margin-bottom:4px;">Performance data is on the way</div>' +
+              '<div style="font-size:0.75rem;color:rgba(255,255,255,0.45);line-height:1.5;">Practice grades, game box scores, and coach evaluations will populate this card as they are recorded throughout the season.</div>' +
+            '</div>' +
+          '</div>' +
+
+        '</div>' + // z-index wrapper
+      '</div>'; // card
+
+      // ── Parent Stat Contribution CTA ──
+      html += '<div style="' +
+        'background:#fff;border-radius:16px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,0.06);' +
+        'border:1px solid #e5e7eb;animation:gs-fade-in 0.5s ease-out 0.15s both;margin-bottom:20px;">' +
+
+        '<div style="display:flex;align-items:flex-start;gap:16px;">' +
+
+          // Clipboard icon (SVG)
+          '<div style="flex-shrink:0;width:44px;height:44px;border-radius:12px;background:#f0f4ff;display:flex;align-items:center;justify-content:center;">' +
+            '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+              '<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>' +
+              '<rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>' +
+              '<line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>' +
+            '</svg>' +
+          '</div>' +
+
+          '<div style="flex:1;">' +
+            '<div style="font-size:0.95rem;font-weight:700;color:#111;margin-bottom:6px;">Help Build Your Player\'s Stats</div>' +
+            '<div style="font-size:0.82rem;color:#6b7280;line-height:1.6;">' +
+              'You can help by keeping track of your player\'s stats during games. ' +
+              'Write down points, rebounds, assists, steals, and turnovers, then share them with Coach Scott or Coach Gene after the game. ' +
+              'The coaching staff will enter them into the system and they\'ll show up right here on your player\'s card.' +
+            '</div>' +
+            '<div style="margin-top:14px;padding:14px 16px;background:#f8fafc;border-radius:10px;border:1px solid #f0f0f5;">' +
+              '<div style="font-size:0.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px;">What to Track</div>' +
+              '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:6px;">' +
+                ['Points','Rebounds','Assists','Steals','Blocks','Turnovers'].map(function(s) {
+                  return '<div style="font-size:0.78rem;font-weight:600;color:#374151;padding:6px 10px;background:#fff;border-radius:8px;border:1px solid #e5e7eb;text-align:center;">'+s+'</div>';
+                }).join('') +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+
+        '</div>' +
       '</div>';
+
       container.innerHTML = html;
       return;
     }
@@ -322,19 +440,34 @@
       var t = tier(avg);
       var tr = trendOf(grades);
       var name = athleteName || 'Athlete';
+      var hJersey = prof.jersey != null ? '#' + prof.jersey : '';
+      var hPos = prof.position || '';
 
-      html += '<div style="background:linear-gradient(135deg, #2563eb 0%, #1e40af 100%);border-radius:16px;padding:28px 28px 24px;color:white;box-shadow:0 8px 24px rgba(37,99,235,0.3);margin-bottom:20px;">' +
-        '<div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">' +
+      html += '<div style="' +
+        'position:relative;overflow:hidden;border-radius:20px;padding:28px 28px 24px;color:white;' +
+        'background:linear-gradient(135deg, #1e3a5f 0%, #2563eb 50%, #1e40af 100%);' +
+        'box-shadow:0 12px 40px rgba(37,99,235,0.3);margin-bottom:20px;animation:gs-fade-in 0.5s ease-out;">' +
+
+        // Subtle shimmer
+        '<div style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;' +
+          'background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.04) 40%,rgba(255,255,255,0.1) 50%,rgba(255,255,255,0.04) 60%,transparent 100%);' +
+          'background-size:800px 100%;animation:gs-shimmer 4s ease-in-out infinite;"></div>' +
+
+        '<div style="position:relative;z-index:1;display:flex;align-items:center;gap:24px;flex-wrap:wrap;">' +
           '<div style="flex-shrink:0;">' + ring(avg, t, 120) + '</div>' +
           '<div style="flex:1;min-width:200px;">' +
-            '<div style="font-size:1.3rem;font-weight:800;margin-bottom:6px;">'+name+'</div>' +
+            '<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;">' +
+              '<span style="font-size:1.4rem;font-weight:800;letter-spacing:-0.02em;">'+name+'</span>' +
+              (hJersey ? '<span style="font-size:1.1rem;font-weight:800;color:rgba(255,255,255,0.3);">'+hJersey+'</span>' : '') +
+              (hPos ? '<span style="padding:3px 8px;border-radius:5px;font-size:0.6rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);">'+hPos+'</span>' : '') +
+            '</div>' +
             '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">' +
               '<span style="display:inline-block;padding:4px 12px;border-radius:6px;font-size:0.7rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;background:rgba(255,255,255,0.2);color:white;">'+t.label+'</span>' +
               '<span style="font-size:0.75rem;font-weight:700;color:rgba(255,255,255,0.85);">'+tr.label+'</span>' +
             '</div>' +
             '<div style="font-size:0.75rem;color:rgba(255,255,255,0.7);line-height:1.5;max-width:400px;">'+TIER_DESCRIPTIONS[t.label]+'</div>' +
           '</div>' +
-          '<div style="text-right;display:flex;flex-direction:column;gap:4px;align-items:flex-end;">' +
+          '<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">' +
             '<div style="text-align:right;">' +
               '<div style="font-size:0.65rem;font-weight:600;opacity:0.7;text-transform:uppercase;letter-spacing:0.06em;">Practices Graded</div>' +
               '<div style="font-size:1.5rem;font-weight:800;">'+grades.length+'</div>' +
@@ -678,6 +811,29 @@
       '</div>';
     }
 
+    /* ── PARENT STAT CONTRIBUTION CTA (always shown) ─────────── */
+
+    html += '<div style="' +
+      'background:#fff;border-radius:16px;padding:20px 24px;box-shadow:0 2px 12px rgba(0,0,0,0.06);' +
+      'border:1px solid #e5e7eb;margin-top:20px;display:flex;align-items:center;gap:14px;">' +
+
+      '<div style="flex-shrink:0;width:40px;height:40px;border-radius:10px;background:#f0f4ff;display:flex;align-items:center;justify-content:center;">' +
+        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+          '<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>' +
+          '<rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>' +
+          '<line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>' +
+        '</svg>' +
+      '</div>' +
+
+      '<div style="flex:1;">' +
+        '<div style="font-size:0.82rem;font-weight:700;color:#111;margin-bottom:2px;">Parents Can Help</div>' +
+        '<div style="font-size:0.75rem;color:#6b7280;line-height:1.5;">' +
+          'Track your player\'s game stats (points, rebounds, assists, steals) and share them with Coach Scott or Coach Gene. We\'ll add them to the system.' +
+        '</div>' +
+      '</div>' +
+
+    '</div>';
+
     container.innerHTML = html;
   }
 
@@ -695,14 +851,15 @@
         fetchPracticeGrades(client, athleteId),
         fetchGameData(client, athleteId),
         fetchEvaluations(client, athleteId),
-        resolveAthleteName(client, athleteId),
+        resolveAthleteProfile(client, athleteId),
       ]);
       var grades = results[0];
       var games = results[1];
       var evals = results[2];
-      var athleteName = results[3];
+      var profile = results[3];
+      var athleteName = profile.name;
       var teamAvgs = await fetchTeamAverages(client, grades);
-      renderAll(athleteName, grades, teamAvgs, games, evals);
+      renderAll(athleteName, grades, teamAvgs, games, evals, profile);
       console.log('[Perf] Rendered ' + grades.length + ' grades, ' + games.length + ' games, ' + evals.length + ' evaluations.');
     } catch (err) {
       console.error('[Perf] Error:', err);
