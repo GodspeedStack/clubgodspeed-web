@@ -3250,8 +3250,34 @@ function prefillInvite(email, name, athlete) {
 }
 window.prefillInvite = prefillInvite;
 
+/** Validate active Supabase session; force re-login if expired. */
+async function requireSession() {
+  if (!osSupabase) { showToast('Not connected. Please refresh and log in.', 'error'); return false; }
+  try {
+    const { data: { session }, error } = await osSupabase.auth.getSession();
+    if (error || !session) {
+      showToast('Session expired. Redirecting to login...', 'error');
+      await osSupabase.auth.signOut().catch(() => {});
+      setTimeout(() => window.location.reload(), 1200);
+      return false;
+    }
+    return true;
+  } catch (_) {
+    showToast('Session check failed. Please refresh.', 'error');
+    return false;
+  }
+}
+
+/** Wrap a promise with a timeout to prevent indefinite hangs. */
+function withTimeout(promise, ms = 15000) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out after ' + (ms / 1000) + 's')), ms))
+  ]);
+}
+
 async function sendOnboardingInvite() {
-  if (!osSupabase) return;
+  if (!(await requireSession())) return;
   const email = document.getElementById('ob-inv-email').value.trim();
   const parentName = document.getElementById('ob-inv-name').value.trim();
   const athleteName = document.getElementById('ob-inv-athlete').value.trim();
@@ -3261,9 +3287,11 @@ async function sendOnboardingInvite() {
 
   btn.textContent = 'Sending...'; btn.disabled = true;
   try {
-    const { data, error } = await osSupabase.functions.invoke('send-onboarding-invite', {
-      body: { email, parent_name: parentName || null, athlete_name: athleteName || null }
-    });
+    const { data, error } = await withTimeout(
+      osSupabase.functions.invoke('send-onboarding-invite', {
+        body: { email, parent_name: parentName || null, athlete_name: athleteName || null }
+      })
+    );
 
     // Extract real error body from FunctionsHttpError
     if (error) {
@@ -3297,7 +3325,7 @@ async function sendOnboardingInvite() {
 window.sendOnboardingInvite = sendOnboardingInvite;
 
 async function sendBulkOnboardingInvites() {
-  if (!osSupabase) return;
+  if (!(await requireSession())) return;
 
   try {
     // Get approved parents
@@ -3328,9 +3356,12 @@ async function sendBulkOnboardingInvites() {
       athlete_name: p.player_name || null,
     }));
 
-    const { data, error } = await osSupabase.functions.invoke('send-onboarding-invite', {
-      body: { invites }
-    });
+    const { data, error } = await withTimeout(
+      osSupabase.functions.invoke('send-onboarding-invite', {
+        body: { invites }
+      }),
+      30000 // 30s for bulk
+    );
 
     if (error) {
       let detail = error.message;
