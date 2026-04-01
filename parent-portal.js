@@ -4105,6 +4105,10 @@ window.handleUpdatePassword = async function () {
 
 // --- Live Performance Evaluation Fetch ---
 async function fetchAthletePerformance() {
+    // Delegate to V2 renderer if available (practice_grades system)
+    if (typeof window.loadPerformanceV2 === 'function') {
+        return window.loadPerformanceV2();
+    }
     try {
         if (!window.supabaseClient) {
             console.warn('[Performance] Supabase client not initialized.');
