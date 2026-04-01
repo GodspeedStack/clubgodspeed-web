@@ -153,19 +153,23 @@ function buildInviteEmail(firstName: string, athleteName: string): string {
       <h1 style="font-size:22px;font-weight:800;color:#1d1d1f;margin:0 0 8px">Welcome, ${firstName}!</h1>
       <p style="font-size:15px;color:#424245;line-height:1.6;margin:0 0 16px">We're excited to have <strong>${athleteName}</strong> join the Godspeed family. To get started, we need you to complete a quick onboarding process that covers:</p>
       <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:8px 0 20px">
-        <tr><td style="padding:6px 0;font-size:14px;color:#424245">&#10003; &nbsp;Season guide and program overview</td></tr>
-        <tr><td style="padding:6px 0;font-size:14px;color:#424245">&#10003; &nbsp;Required waivers and medical consent</td></tr>
-        <tr><td style="padding:6px 0;font-size:14px;color:#424245">&#10003; &nbsp;Code of conduct acknowledgment</td></tr>
-        <tr><td style="padding:6px 0;font-size:14px;color:#424245">&#10003; &nbsp;Payment setup information</td></tr>
+        <tr><td style="padding:6px 0;font-size:14px;color:#424245"><span style="color:#2563eb;font-weight:700">&#10003;</span> &nbsp;Season guide and program overview</td></tr>
+        <tr><td style="padding:6px 0;font-size:14px;color:#424245"><span style="color:#2563eb;font-weight:700">&#10003;</span> &nbsp;Required waivers and medical consent</td></tr>
+        <tr><td style="padding:6px 0;font-size:14px;color:#424245"><span style="color:#2563eb;font-weight:700">&#10003;</span> &nbsp;Practice commitment and accountability policy</td></tr>
+        <tr><td style="padding:6px 0;font-size:14px;color:#424245"><span style="color:#2563eb;font-weight:700">&#10003;</span> &nbsp;Code of conduct acknowledgment</td></tr>
+        <tr><td style="padding:6px 0;font-size:14px;color:#424245"><span style="color:#2563eb;font-weight:700">&#10003;</span> &nbsp;Payment setup information</td></tr>
       </table>
+      <div style="background:#eff6ff;border-left:4px solid #2563eb;padding:14px 16px;border-radius:6px;margin:0 0 20px">
+        <p style="font-size:14px;color:#1e40af;line-height:1.5;margin:0"><strong>Accountability matters here.</strong> Godspeed tracks attendance at every session. If your son will miss practice, we expect a text to the coaching staff at least 2 hours before. Unexcused absences affect playing time. Details are covered during onboarding.</p>
+      </div>
       <p style="font-size:15px;color:#424245;line-height:1.6;margin:0 0 24px">The entire process takes about 10 minutes. Everything is handled online -- no printing or scanning needed.</p>
       <div style="text-align:center;margin:24px 0">
-        <a href="${WELCOME_URL}" style="display:inline-block;background:#1d1d1f;color:white;padding:14px 32px;border-radius:9999px;font-size:15px;font-weight:700;text-decoration:none">Start Onboarding</a>
+        <a href="${WELCOME_URL}" style="display:inline-block;background:#2563eb;color:white;padding:14px 32px;border-radius:9999px;font-size:15px;font-weight:700;text-decoration:none">Start Onboarding</a>
       </div>
       <p style="font-size:13px;color:#86868b;line-height:1.5;margin:24px 0 0;text-align:center">Questions? Reply to this email or reach out to Coach Scott directly.</p>
     </div>
     <div style="text-align:center;padding:20px;font-size:12px;color:#86868b">
-      <p style="margin:0">BROTHERHOOD. HABITS. SUCCESS.</p>
+      <p style="margin:0;color:#2563eb;font-weight:600">BROTHERHOOD. HABITS. SUCCESS.</p>
       <p style="margin:4px 0 0">Godspeed Basketball | Denver, CO</p>
     </div>
   </div>
