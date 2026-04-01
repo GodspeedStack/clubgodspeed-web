@@ -329,12 +329,21 @@
                         <span class="icon">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                            </svg>
+                        </span>
+                        <span class="label">Performance</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="switchPortalView('player-cards', this)">
+                        <span class="icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="3" y="3" width="18" height="18" rx="3" ry="3"/>
                                 <circle cx="12" cy="10" r="3"/>
                                 <path d="M7 20v-1a5 5 0 0 1 10 0v1"/>
                             </svg>
                         </span>
-                        <span class="label">Player Card</span>
+                        <span class="label">Player Cards</span>
                     </a>
 
                     <a href="#" class="nav-item" onclick="switchPortalView('training', this)">
@@ -876,10 +885,38 @@
                     <!-- VIEW: PERFORMANCE -->
                     <div id="view-performance" class="portal-view" style="display: none; background-color: #F2F2F7; min-height: 100%; padding: 20px;">
                         <div class="section-header" style="margin-bottom: 1.5rem;">
-                            <h2 style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 1.35rem; color: #111; letter-spacing: -0.02em; text-transform: uppercase; margin: 0;">Player Card</h2>
+                            <h2 style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 1.35rem; color: #111; letter-spacing: -0.02em; text-transform: uppercase; margin: 0;">Performance</h2>
                         </div>
                         <div id="perf-root">
                             <div style="text-align:center;padding:40px 0;color:#9ca3af;font-size:0.85rem;">Loading performance data...</div>
+                        </div>
+                    </div>
+
+                    <!-- VIEW: PLAYER CARDS -->
+                    <div id="view-player-cards" class="portal-view" style="display: none; background-color: #050505; min-height: 100%; padding: 20px;">
+                        <div style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between;">
+                            <h2 style="font-family: 'Inter', sans-serif; font-weight: 900; font-size: 1.35rem; color: #fff; letter-spacing: -0.02em; text-transform: uppercase; margin: 0;">
+                                GODSPEED <span style="color: #2563eb;">VAULT</span>
+                            </h2>
+                            <span style="font-size: 0.7rem; font-weight: 600; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.06em;">Tap to flip</span>
+                        </div>
+                        <div id="player-cards-root" style="display:flex;flex-wrap:wrap;gap:20px;justify-content:center;">
+                            <div style="text-align:center;padding:40px 0;color:rgba(255,255,255,0.3);font-size:0.85rem;width:100%;">Loading player cards...</div>
+                        </div>
+                        <div id="player-cards-cta" style="display:none;margin-top:24px;background:rgba(255,255,255,0.05);border-radius:14px;padding:20px 24px;border:1px solid rgba(255,255,255,0.08);">
+                            <div style="display:flex;align-items:center;gap:14px;">
+                                <div style="flex-shrink:0;width:40px;height:40px;border-radius:10px;background:rgba(37,99,235,0.15);display:flex;align-items:center;justify-content:center;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                                        <line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>
+                                    </svg>
+                                </div>
+                                <div style="flex:1;">
+                                    <div style="font-size:0.85rem;font-weight:700;color:rgba(255,255,255,0.85);margin-bottom:2px;">Help Build Player Cards</div>
+                                    <div style="font-size:0.75rem;color:rgba(255,255,255,0.4);line-height:1.5;">Track your player's game stats (points, rebounds, assists, steals) and share them with Coach Scott or Coach Gene. We'll add them to the backend and the cards will update.</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -1356,6 +1393,7 @@
     <script src="receipt-view.js" defer></script>
     <script src="parent-portal.js?v=16" defer></script>
     <script src="performance-renderer.js?v=5" defer></script>
+    <script src="player-cards-renderer.js?v=1" defer></script>
     <!-- Non-critical scripts (async for independent loading) -->
     <script src="branded-modal.js"></script>
     <script src="documents-view.js" defer></script>
