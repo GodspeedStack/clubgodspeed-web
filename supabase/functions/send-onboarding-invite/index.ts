@@ -79,14 +79,17 @@ Deno.serve(async (req) => {
     }
 
     // Create or resume onboarding session
-    const { data: session, error: rpcError } = await sb.rpc('get_or_create_onboarding', {
+    const { data: sessionRaw, error: rpcError } = await sb.rpc('get_or_create_onboarding', {
       p_email: email,
       p_parent_name: invite.parent_name || null,
       p_athlete_name: invite.athlete_name || null,
     })
 
-    if (rpcError || !session) {
-      results.push({ email, status: `session_error: ${rpcError?.message || 'unknown'}` })
+    // RPC via PostgREST may return array or object depending on function signature
+    const session = Array.isArray(sessionRaw) ? sessionRaw[0] : sessionRaw
+
+    if (rpcError || !session?.id) {
+      results.push({ email, status: `session_error: ${rpcError?.message || 'no session returned'}` })
       continue
     }
 

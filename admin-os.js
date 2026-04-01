@@ -3209,7 +3209,19 @@ async function sendOnboardingInvite() {
     const { data, error } = await osSupabase.functions.invoke('send-onboarding-invite', {
       body: { email, parent_name: parentName || null, athlete_name: athleteName || null }
     });
-    if (error) throw error;
+
+    // Extract real error body from FunctionsHttpError
+    if (error) {
+      let detail = error.message;
+      try {
+        if (error.context) {
+          const body = typeof error.context.json === 'function' ? await error.context.json() : null;
+          detail = body?.error || body?.message || JSON.stringify(body) || detail;
+        }
+      } catch (_) {}
+      showToast('Invite failed: ' + detail, 'error');
+      return;
+    }
 
     const result = data?.results?.[0];
     if (result?.status === 'sent') {
@@ -3264,7 +3276,18 @@ async function sendBulkOnboardingInvites() {
     const { data, error } = await osSupabase.functions.invoke('send-onboarding-invite', {
       body: { invites }
     });
-    if (error) throw error;
+
+    if (error) {
+      let detail = error.message;
+      try {
+        if (error.context) {
+          const body = typeof error.context.json === 'function' ? await error.context.json() : null;
+          detail = body?.error || body?.message || JSON.stringify(body) || detail;
+        }
+      } catch (_) {}
+      showToast('Bulk invite failed: ' + detail, 'error');
+      return;
+    }
 
     showToast(`Sent ${data?.sent || 0} of ${invites.length} onboarding invites`, 'success');
     loadOnboarding();
