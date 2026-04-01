@@ -3557,7 +3557,27 @@ function renderPaymentsTimeline(container, payments, plan, supabase) {
         document.head.appendChild(s);
     }
 
+    // Compute remaining balance for "Pay in Full" option
+    const unpaidPayments = payments.filter(p => p.status !== 'confirmed');
+    const remainingBalance = unpaidPayments.reduce((s, p) => s + parseFloat(p.amount), 0);
+    const unpaidIds = unpaidPayments.map(p => p.id);
+
     let html = `<div style="display: flex; flex-direction: column; gap: 12px;">`;
+
+    // Show "Pay Full Balance" button when there are 2+ unpaid installments
+    if (!isFullPay && unpaidPayments.length > 1 && remainingBalance > 0) {
+        html += `
+            <div style="background:#f0f9ff;border-radius:10px;padding:14px 16px;border:2px solid #0071e3;display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <div style="font-size:0.9rem;font-weight:700;color:#111;">Pay Full Balance</div>
+                    <div style="font-size:0.8rem;color:#888;">Clear all remaining installments at once</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:14px;">
+                    <div style="font-size:1.1rem;font-weight:800;color:#111;">$${remainingBalance.toFixed(2)}</div>
+                    <button class="btn-primary" style="padding:8px 18px;font-size:0.85rem;background:#0a0a0a;color:#fff;font-weight:700;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;min-width:100px;justify-content:center;" data-amount="${remainingBalance}" data-label="Full Balance" data-payment-ids="${unpaidIds.join(',')}" onclick="window._directCheckout(this)">Pay Now</button>
+                </div>
+            </div>`;
+    }
 
     payments.forEach(payment => {
         const isPaid    = payment.status === 'confirmed';
@@ -3618,12 +3638,14 @@ window._directCheckout = function(btn) {
     const amount      = parseFloat(btn.dataset.amount);
     const installment = parseInt(btn.dataset.installment, 10);
     const label       = btn.dataset.label || 'Payment';
+    // Multi-payment (Pay Full Balance) passes comma-separated IDs
+    const paymentIds  = btn.dataset.paymentIds || btn.dataset.paymentId;
     openPaymentModal({
         type: 'installment',
         label,
         amount,
-        paymentId: btn.dataset.paymentId,
-        installmentNumber: installment
+        paymentId: paymentIds,
+        installmentNumber: installment || 0
     });
 }
 
