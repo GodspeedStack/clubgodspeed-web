@@ -35,22 +35,24 @@ function showToast(message, type='success') {
 
 function confirmModal(title,body,onConfirm){
   const overlay=document.createElement('div');
-  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)';
   const card=document.createElement('div');
-  card.style.cssText='background:var(--card,#1e1e2e);border:1px solid var(--border,#333);border-radius:12px;padding:28px 32px;max-width:420px;width:90%;color:var(--fg,#e0e0e0);font-family:inherit';
+  card.style.cssText='background:var(--card,#1e1e2e);border:1px solid var(--border,#333);border-radius:16px;padding:28px 28px 20px;max-width:340px;width:90%;color:var(--fg,#e0e0e0);font-family:inherit;text-align:center';
   const h=document.createElement('div');
-  h.style.cssText='font-size:16px;font-weight:700;margin-bottom:12px';h.textContent=title;
+  h.style.cssText='font-size:17px;font-weight:600;margin-bottom:8px;letter-spacing:-0.01em';h.textContent=title;
   const p=document.createElement('div');
-  p.style.cssText='font-size:14px;line-height:1.5;white-space:pre-line;color:var(--muted,#aaa);margin-bottom:24px';p.textContent=body;
+  p.style.cssText='font-size:13px;line-height:1.5;white-space:pre-line;color:var(--muted,#aaa);margin-bottom:20px';p.textContent=body;
   const row=document.createElement('div');
-  row.style.cssText='display:flex;gap:10px;justify-content:flex-end';
+  row.style.cssText='display:flex;gap:8px;border-top:1px solid var(--border,#333);margin:0 -28px;padding:0';
   const cancel=document.createElement('button');
-  cancel.textContent='Cancel';cancel.className='btn-xs btn-ghost';
+  cancel.textContent='Cancel';
+  cancel.style.cssText='flex:1;padding:14px 0;border:none;background:transparent;color:var(--primary,#3b82f6);font-size:15px;font-weight:400;cursor:pointer;font-family:inherit;border-right:1px solid var(--border,#333)';
   cancel.onclick=()=>overlay.remove();
-  const confirm=document.createElement('button');
-  confirm.textContent='Add Anyway';confirm.style.cssText='padding:8px 18px;border-radius:8px;border:none;background:#3b82f6;color:#fff;font-weight:600;cursor:pointer;font-size:13px';
-  confirm.onclick=()=>{overlay.remove();onConfirm();};
-  row.append(cancel,confirm);card.append(h,p,row);overlay.append(card);
+  const cfm=document.createElement('button');
+  cfm.textContent='Add Anyway';
+  cfm.style.cssText='flex:1;padding:14px 0;border:none;background:transparent;color:var(--primary,#3b82f6);font-size:15px;font-weight:600;cursor:pointer;font-family:inherit';
+  cfm.onclick=()=>{overlay.remove();onConfirm();};
+  row.append(cancel,cfm);card.append(h,p,row);overlay.append(card);
   overlay.onclick=e=>{if(e.target===overlay)overlay.remove();};
   document.body.appendChild(overlay);
 }
@@ -2882,7 +2884,7 @@ function renderSchedView(){
     const si=tournSchedule.indexOf(s);
     const cost=((parseFloat(s.registration_cost)||0)+(parseFloat(s.hotel_cost)||0));
     const statusCls=s.status==='paid'||s.status==='registered'?'color:#4ade80':'color:#60a5fa';
-    html+=`<div class="ds-card" onclick="openSchedDetail(${si})">
+    html+=`<div class="ds-card" >
       <div style="text-align:center;min-width:48px">
         <div class="ds-card-mon">${MONTH_NAMES_T[d.getMonth()]}</div>
         <div class="ds-card-day">${d.getDate()}</div>
