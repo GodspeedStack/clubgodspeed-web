@@ -3159,44 +3159,45 @@ async function loadFundraisingCredit(supabase, userId, totalDue) {
     // 4. Show card
     card.style.display = 'block';
 
-    // 5. Micro-animation: countup for new balance
+    // 5. Micro-animation sequence with confetti
     const newBalanceEl = document.getElementById('fc-new-balance');
     newBalanceEl.textContent = '$' + originalDues.toFixed(2);
+    const badge = document.getElementById('fc-badge');
 
-    // Trigger animated reveals after card is visible
     requestAnimationFrame(() => {
+      // Badge pop-in
       setTimeout(() => {
-        // Reveal credit row
+        if (badge) { badge.style.opacity = '1'; badge.style.transform = 'scale(1)'; }
+      }, 200);
+
+      // Reveal credit row
+      setTimeout(() => {
         const creditRow = document.getElementById('fc-credit-row');
         creditRow.style.opacity = '1';
         creditRow.style.transform = 'translateY(0)';
-      }, 100);
+      }, 400);
 
+      // Reveal balance row + countdown
       setTimeout(() => {
-        // Reveal balance row
         const balanceRow = document.getElementById('fc-balance-row');
         balanceRow.style.opacity = '1';
         balanceRow.style.transform = 'translateY(0)';
+        animateCountdown(newBalanceEl, originalDues, newBalance, 900);
+      }, 800);
 
-        // Countup animation for the new balance
-        animateCountdown(newBalanceEl, originalDues, newBalance, 800);
-      }, 500);
-
+      // Progress bar + confetti burst
       setTimeout(() => {
-        // Animate progress bar
         document.getElementById('fc-progress-bar').style.width = progressPct + '%';
-        // Show labels
         document.getElementById('fc-progress-label').style.opacity = '1';
         document.getElementById('fc-remaining-label').style.opacity = '1';
-      }, 700);
+        // Fire confetti
+        launchFundraisingConfetti();
+      }, 1200);
 
+      // Update main status card
       setTimeout(() => {
-        // Update the main status card total to reflect deduction
         const totalDueEl = document.getElementById('billing-total-due');
-        if (totalDueEl) {
-          animateCountdown(totalDueEl, originalDues, newBalance, 600);
-        }
-        // Update status card color if partially offset
+        if (totalDueEl) animateCountdown(totalDueEl, originalDues, newBalance, 600);
         const statusCard = document.getElementById('billing-status-card');
         const statusText = document.getElementById('billing-status-text');
         if (newBalance <= 0 && statusCard && statusText) {
@@ -3204,7 +3205,7 @@ async function loadFundraisingCredit(supabase, userId, totalDue) {
           statusText.style.color = '#10b981';
           statusCard.style.borderLeftColor = '#10b981';
         }
-      }, 1600);
+      }, 2200);
     });
   } catch (e) { console.error('Fundraising credit load:', e); }
 }
@@ -3223,6 +3224,67 @@ function animateCountdown(el, from, to, duration) {
     if (t < 1) requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
+}
+
+// ─── CONFETTI for fundraising celebration ────────────────────
+function launchFundraisingConfetti() {
+  const canvas = document.getElementById('fc-confetti-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const ratio = window.devicePixelRatio || 1;
+  canvas.width = canvas.offsetWidth * ratio;
+  canvas.height = canvas.offsetHeight * ratio;
+  ctx.scale(ratio, ratio);
+  const W = canvas.offsetWidth, H = canvas.offsetHeight;
+
+  const COLORS = ['#10b981','#059669','#34d399','#6ee7b7','#2563eb','#3b82f6','#fbbf24','#f59e0b','#f472b6','#a78bfa'];
+  const COUNT = 80;
+  const particles = [];
+
+  for (let i = 0; i < COUNT; i++) {
+    particles.push({
+      x: W * 0.5 + (Math.random() - 0.5) * W * 0.4,
+      y: H * 0.5,
+      vx: (Math.random() - 0.5) * 12,
+      vy: -Math.random() * 10 - 4,
+      w: Math.random() * 6 + 3,
+      h: Math.random() * 4 + 2,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      rotation: Math.random() * 360,
+      rotSpeed: (Math.random() - 0.5) * 15,
+      gravity: 0.18 + Math.random() * 0.08,
+      opacity: 1,
+      decay: 0.008 + Math.random() * 0.006,
+    });
+  }
+
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    let alive = false;
+    particles.forEach(p => {
+      if (p.opacity <= 0) return;
+      alive = true;
+      p.x += p.vx;
+      p.vy += p.gravity;
+      p.y += p.vy;
+      p.vx *= 0.99;
+      p.rotation += p.rotSpeed;
+      p.opacity -= p.decay;
+      if (p.opacity <= 0) return;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation * Math.PI / 180);
+      ctx.globalAlpha = Math.max(0, p.opacity);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    });
+    frame++;
+    if (alive && frame < 180) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, W, H);
+  }
+  requestAnimationFrame(draw);
 }
 
 // ─── TRAINING SCHEDULE (parent billing view) ───────────────
