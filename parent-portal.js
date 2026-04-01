@@ -3050,7 +3050,7 @@ window.renderBilling = async function (email) {
             if (totalDueEl) totalDueEl.textContent = '$745.00';
             if (sectionHeaderEl) sectionHeaderEl.textContent = 'Payment Plan';
             renderPlanSelectionUI(container, user.id, supabase, email);
-            loadFundraisingCredit(supabase, user.id, 724);
+            loadFundraisingCredit(supabase, user.id, 745);
             return;
         }
 
@@ -3143,7 +3143,7 @@ async function loadFundraisingCredit(supabase, userId, totalDue) {
     const raised = parseFloat(frRows[0].total_raised);
     if (raised <= 0) return;
 
-    const originalDues = totalDue || 724;
+    const originalDues = totalDue || 745;
     const newBalance = Math.max(originalDues - raised, 0);
     const progressPct = Math.min((raised / originalDues) * 100, 100);
 
