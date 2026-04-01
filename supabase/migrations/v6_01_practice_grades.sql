@@ -92,16 +92,38 @@ CREATE POLICY "Coaches full access to practice_grades" ON public.practice_grades
     )
   );
 
--- Parent: read-only access to their own athletes
+-- SECURITY DEFINER function to resolve athlete IDs for a parent.
+-- Bypasses RLS on inner tables (athletes, parent_accounts) to avoid
+-- recursive RLS cascade that silently returns empty results.
+CREATE OR REPLACE FUNCTION public.get_my_athlete_ids()
+RETURNS SETOF uuid
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT a.id
+  FROM athletes a
+  JOIN parent_accounts pa ON pa.id = a.parent_account_id
+  WHERE pa.user_id = auth.uid();
+$$;
+
+GRANT EXECUTE ON FUNCTION public.get_my_athlete_ids() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_my_athlete_ids() TO anon;
+
+-- Parent: read-only access to their own athletes (uses SECURITY DEFINER function)
 CREATE POLICY "Parents read own athlete practice_grades" ON public.practice_grades
   FOR SELECT
   USING (
-    athlete_id IN (
-      SELECT a.id FROM public.athletes a
-      JOIN public.parent_accounts pa ON pa.id = a.parent_account_id
-      WHERE pa.user_id = auth.uid()
-    )
+    athlete_id IN (SELECT public.get_my_athlete_ids())
   );
+
+-- Parents need to read training_sessions metadata (date, title) for the
+-- practice_grades join. Session metadata is not sensitive.
+CREATE POLICY "Authenticated users read training_sessions"
+  ON public.training_sessions
+  FOR SELECT
+  USING (auth.role() = 'authenticated');
 
 -- ============================================================
 -- VIEW: PRACTICE_GRADE_TEAM_AVERAGES
