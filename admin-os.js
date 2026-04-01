@@ -227,6 +227,7 @@ async function loadDashboard() {
     </div>`).join('') : '<p style="color:var(--muted);font-size:13px">All dues current!</p>';
 
   document.getElementById('dash-activity').innerHTML='<p style="color:var(--muted);font-size:13px">No recent activity.</p>';
+  loadTrainingSchedule('dash-training-schedule');
 }
 
 function renderDashboardPending(requests) {
@@ -241,6 +242,57 @@ function renderDashboardPending(requests) {
   // Update counters
   document.getElementById('m-pending').textContent = requests.length;
   document.getElementById('pending-badge').textContent = requests.length;
+}
+
+// ─── TRAINING SCHEDULE ──────────────────────────────────────
+let cachedTrainingSchedule = null;
+
+async function loadTrainingSchedule(targetId) {
+  const el = document.getElementById(targetId);
+  if (!el) return;
+  try {
+    if (!cachedTrainingSchedule && osSupabase) {
+      const { data, error } = await osSupabase.rpc('get_training_schedule', { p_season: 'Spring/Summer 2026' });
+      if (!error && data) cachedTrainingSchedule = data;
+    }
+    renderTrainingSchedule(el, targetId);
+  } catch (e) { console.error('Training schedule load:', e); }
+}
+
+function renderTrainingSchedule(el, targetId) {
+  const rows = cachedTrainingSchedule || [];
+  if (!rows.length) { el.innerHTML = '<p style="color:var(--muted);font-size:13px">No schedule data.</p>'; return; }
+  const totalSessions = rows.reduce((a, r) => a + (+r.total_sessions || 0), 0);
+  const totalCost = rows.reduce((a, r) => a + (+r.cost || 0), 0);
+  const isDashboard = targetId === 'dash-training-schedule';
+
+  if (isDashboard) {
+    // Compact card layout for dashboard
+    el.innerHTML = rows.map(r => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+        <div><div style="font-weight:600;font-size:13px">${r.month_label}</div><div style="color:var(--muted);font-size:11px">${r.season_segment} &middot; ${r.sessions_per_week}x/wk &middot; ${r.total_sessions} sessions</div></div>
+        <div style="font-weight:700;font-size:13px">$${(+r.cost).toFixed(0)}</div>
+      </div>`).join('') + `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0 0">
+        <div style="font-weight:800;font-size:13px;color:var(--primary)">Total</div>
+        <div><span style="color:var(--muted);font-size:12px;margin-right:8px">${totalSessions} sessions</span><span style="font-weight:800;font-size:14px;color:var(--primary)">$${totalCost.toLocaleString()}</span></div>
+      </div>`;
+  } else {
+    // Full table for dues panel
+    const tbody = el;
+    tbody.innerHTML = rows.map(r => `<tr>
+      <td style="font-weight:600">${r.month_label}</td>
+      <td>${statusTag(r.season_segment)}</td>
+      <td style="text-align:center">${r.sessions_per_week}x</td>
+      <td style="text-align:center">${r.weeks}</td>
+      <td style="text-align:center;font-weight:600">${r.total_sessions}</td>
+      <td style="text-align:right;font-weight:600">$${(+r.cost).toFixed(0)}</td>
+    </tr>`).join('') + `<tr style="border-top:2px solid var(--border);font-weight:800">
+      <td colspan="4" style="text-align:right;color:var(--primary)">Total</td>
+      <td style="text-align:center;color:var(--primary)">${totalSessions}</td>
+      <td style="text-align:right;color:var(--primary)">$${totalCost.toLocaleString()}</td>
+    </tr>`;
+  }
 }
 
 // ─── PLAYERS & PARENTS ──────────────────────────────────────
@@ -764,6 +816,7 @@ async function loadDues() {
     }
   } catch(e){ console.error('Dues load:',e); }
   renderDues();
+  loadTrainingSchedule('dues-training-tbody');
 
   // Realtime: push toast when a parent submits a new payment
   if(osSupabase && !window._duesPaymentsChannel) {

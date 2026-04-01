@@ -1139,7 +1139,22 @@
                                 </div>
                             </div>
 
-                            <!-- Purchase Training Removed -> Moved to Training View -->
+                            <!-- Training Cost Breakdown -->
+                            <div id="billing-training-schedule" style="background:white;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,0.05);overflow:hidden;">
+                              <div style="padding:16px 20px;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center">
+                                <div>
+                                  <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#999;margin-bottom:2px">Training Schedule</div>
+                                  <div style="font-weight:800;font-size:0.95rem;color:#111">Spring/Summer 2026</div>
+                                </div>
+                                <div id="billing-training-total" style="text-align:right">
+                                  <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:#999">Total</div>
+                                  <div style="font-size:1.1rem;font-weight:800;color:#111">--</div>
+                                </div>
+                              </div>
+                              <div id="billing-training-rows" style="padding:0 20px 16px">
+                                <div style="text-align:center;padding:16px;color:#888;font-size:0.85rem">Loading schedule...</div>
+                              </div>
+                            </div>
 
                             <!-- Invoices List -->
                             <div>
@@ -1377,7 +1392,7 @@
     <script src="supabase-data-bridge.js" defer></script>
     <script src="export-functions.js" defer></script>
     <script src="receipt-view.js" defer></script>
-    <script src="parent-portal.js?v=13" defer></script>
+    <script src="parent-portal.js?v=14" defer></script>
     <!-- Non-critical scripts (async for independent loading) -->
     <script src="branded-modal.js"></script>
     <script src="documents-view.js" defer></script>

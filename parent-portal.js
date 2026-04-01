@@ -3010,6 +3010,7 @@ window.renderBilling = async function (email) {
 
     if (!container) return;
     container.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">Loading your billing details...</div>';
+    loadBillingTrainingSchedule();
 
     try {
         if (!window.auth || !window.auth.isSupabaseAvailable()) {
@@ -3107,6 +3108,36 @@ function handleDemoBilling(container, totalDueEl, statusTextEl, statusCard) {
         statusTextEl.style.color = '#ef4444';
         statusCard.style.borderLeftColor = '#ef4444';
     }
+}
+
+// ─── TRAINING SCHEDULE (parent billing view) ───────────────
+async function loadBillingTrainingSchedule() {
+  const rowsEl = document.getElementById('billing-training-rows');
+  const totalEl = document.getElementById('billing-training-total');
+  if (!rowsEl) return;
+  try {
+    let rows = [];
+    if (window.auth && window.auth.isSupabaseAvailable()) {
+      const sb = window.auth.getSupabaseClient();
+      const { data, error } = await sb.rpc('get_training_schedule', { p_season: 'Spring/Summer 2026' });
+      if (!error && data) rows = data;
+    }
+    if (!rows.length) { rowsEl.innerHTML = '<div style="text-align:center;padding:16px;color:#888;font-size:0.85rem">No schedule data available.</div>'; return; }
+    const totalSessions = rows.reduce((a, r) => a + (+r.total_sessions || 0), 0);
+    const totalCost = rows.reduce((a, r) => a + (+r.cost || 0), 0);
+    if (totalEl) totalEl.innerHTML = `<div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:#999">${totalSessions} Sessions</div><div style="font-size:1.1rem;font-weight:800;color:#111">$${totalCost.toLocaleString()}</div>`;
+    rowsEl.innerHTML = rows.map((r, i) => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;${i < rows.length - 1 ? 'border-bottom:1px solid #f0f0f0;' : ''}">
+        <div>
+          <div style="font-weight:700;font-size:0.9rem;color:#111">${r.month_label}</div>
+          <div style="font-size:0.75rem;color:#999;margin-top:2px">${r.season_segment} &middot; ${r.sessions_per_week}x/wk &middot; ${r.weeks} weeks</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-weight:800;font-size:0.95rem;color:#111">$${(+r.cost).toFixed(0)}</div>
+          <div style="font-size:0.7rem;color:#999">${r.total_sessions} sessions</div>
+        </div>
+      </div>`).join('');
+  } catch (e) { console.error('Training schedule load:', e); }
 }
 
 function renderPlanSelectionUI(container, parentId, supabase, email) {
@@ -3552,8 +3583,7 @@ window._submitVenmoModal = async function(opts) {
             amount: enteredAmount,
             note: 'Venmo - ' + (opts.label || 'Payment') + ' (pending confirmation)',
             receipt_id: receiptId,
-            status: 'pending_venmo',
-            stripe_pi_id: null
+            status: 'pending_venmo'
         });
         if (error) throw error;
 
@@ -3618,8 +3648,7 @@ window.submitVenmoConfirmation = async function() {
             amount: enteredAmount,
             note: ((noteInput?.value || '').trim() || 'Venmo payment') + ' (pending confirmation)',
             receipt_id: receiptId,
-            status: 'pending_venmo',
-            stripe_pi_id: null
+            status: 'pending_venmo'
         });
         if (error) throw error;
 
