@@ -353,16 +353,16 @@
     });
 
     // -- Transform: reports (derived from roster + training_attendance) ----
-    // Group attendance records by athlete
-    const attendanceByAthlete = {};
+    // Group attendance records by athlete (for reports)
+    const attendanceByAthleteReport = {};
     for (const a of attendance) {
-      if (!attendanceByAthlete[a.athlete_id]) attendanceByAthlete[a.athlete_id] = [];
-      attendanceByAthlete[a.athlete_id].push(a);
+      if (!attendanceByAthleteReport[a.athlete_id]) attendanceByAthleteReport[a.athlete_id] = [];
+      attendanceByAthleteReport[a.athlete_id].push(a);
     }
 
     const reports = {};
     for (const r of rosterData) {
-      const athleteAtt = attendanceByAthlete[r.athleteId] || [];
+      const athleteAtt = attendanceByAthleteReport[r.athleteId] || [];
       const sessions = athleteAtt.filter(a => a.status === 'present');
       const latestSession = sessions.sort((a, b) =>
         new Date(b.created_at) - new Date(a.created_at)
