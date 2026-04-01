@@ -178,28 +178,44 @@
   async function resolveAthleteId(client) {
     var stored = localStorage.getItem('gba_current_athlete');
     if (stored) return stored;
+
+    // 1. Try parent_player_links via auth.uid() (primary path)
+    if (client) {
+      try {
+        var sess = await client.auth.getSession();
+        var uid = sess?.data?.session?.user?.id;
+        if (uid) {
+          var ppl = await client
+            .from('parent_player_links')
+            .select('athlete_id')
+            .eq('profile_id', uid)
+            .order('is_primary', { ascending: false })
+            .limit(1)
+            .single();
+          if (ppl.data && ppl.data.athlete_id) {
+            console.log('[Perf] Resolved athlete via parent_player_links:', ppl.data.athlete_id);
+            return ppl.data.athlete_id;
+          }
+        }
+      } catch (_) {}
+    }
+
+    // 2. Fallback: local data bridge
     var email = localStorage.getItem('gba_user_email');
     var db = (typeof getDB === 'function' ? getDB() : null) || window.GODSPEED_DATA || null;
     if (db && db.roster && email) {
       var m = db.roster.find(function(a){ return a.parentId === email; });
       if (m && m.athleteId) return m.athleteId;
     }
+
+    // 3. Fallback: parent_accounts (legacy)
     if (client && email) {
       try {
         var r1 = await client.from('parent_accounts').select('id, athletes(id)').eq('email', email).limit(1).single();
         if (r1.data && r1.data.athletes && r1.data.athletes.length > 0) return r1.data.athletes[0].id;
       } catch (_) {}
     }
-    if (client) {
-      try {
-        var sess = await client.auth.getSession();
-        var uid = sess?.data?.session?.user?.id;
-        if (uid) {
-          var r2 = await client.from('parent_accounts').select('id, athletes:athletes(id)').eq('user_id', uid).limit(1).single();
-          if (r2.data && r2.data.athletes && r2.data.athletes.length > 0) return r2.data.athletes[0].id;
-        }
-      } catch (_) {}
-    }
+
     return null;
   }
 
