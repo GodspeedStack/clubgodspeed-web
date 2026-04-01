@@ -3047,10 +3047,11 @@ window.renderBilling = async function (email) {
             statusTextEl.textContent = 'Action Required';
             statusTextEl.style.color = '#ef4444';
             statusCard.style.borderLeftColor = '#ef4444';
-            if (totalDueEl) totalDueEl.textContent = '$745.00';
             if (sectionHeaderEl) sectionHeaderEl.textContent = 'Payment Plan';
-            renderPlanSelectionUI(container, user.id, supabase, email);
-            loadFundraisingCredit(supabase, user.id, 745);
+            await renderPlanSelectionUI(container, user.id, supabase, email);
+            const adjTotal = window._gsAdjustedDues || 745;
+            if (totalDueEl) totalDueEl.textContent = '$' + adjTotal.toFixed(2);
+            loadFundraisingCredit(supabase, user.id, adjTotal);
             return;
         }
 
@@ -3079,7 +3080,7 @@ window.renderBilling = async function (email) {
         let displayTotal = 0;
         if (pendingPayments.length > 0) {
             const nextPayment = pendingPayments[0];
-            const isOverdue = new Date(nextPayment.due_date) < now;
+            const isOverdue = new Date(nextPayment.due_date + 'T00:00:00') < now;
             displayTotal = pendingPayments.reduce((s, p) => s + parseFloat(p.amount), 0);
             statusTextEl.textContent = isOverdue ? 'Payment Overdue' : 'Payment Due ' + (now < aprilFirst ? 'Apr 1' : 'Soon');
             statusTextEl.style.color = isOverdue ? '#ef4444' : '#f59e0b';
@@ -3254,21 +3255,58 @@ async function loadBillingTrainingSchedule() {
   } catch (e) { console.error('Training schedule load:', e); }
 }
 
-function renderPlanSelectionUI(container, parentId, supabase, email) {
+async function renderPlanSelectionUI(container, parentId, supabase, email) {
+    // Resolve fundraising credit to calculate adjusted total
+    const BASE_DUES = 745;
+    let fundraisingCredit = 0;
+    let athleteName = '';
+    try {
+        const { data: links } = await supabase
+            .from('parent_player_links')
+            .select('athlete_id, athletes(display_name, first_name)')
+            .eq('profile_id', parentId);
+        if (links && links.length) {
+            const firstName = (links[0].athletes?.first_name || links[0].athletes?.display_name || '').split(' ')[0];
+            athleteName = links[0].athletes?.display_name || firstName;
+            if (firstName) {
+                const { data: ft } = await supabase
+                    .from('fundraising_totals')
+                    .select('total_raised')
+                    .ilike('athlete_name', firstName + '%')
+                    .limit(1)
+                    .single();
+                if (ft) fundraisingCredit = parseFloat(ft.total_raised) || 0;
+            }
+        }
+    } catch (e) { console.warn('Fundraising lookup in plan selection:', e); }
+
+    const adjustedTotal = Math.max(BASE_DUES - fundraisingCredit, 0);
+    const inst2 = Math.round(adjustedTotal / 2 * 100) / 100;
+    const inst3First = Math.round(adjustedTotal / 3 * 100) / 100;
+    const inst3Last = Math.round((adjustedTotal - inst3First * 2) * 100) / 100;
+    const creditNote = fundraisingCredit > 0
+        ? `<div style="background:#d1fae5;border:1px solid #a7f3d0;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:0.85rem;color:#065f46;font-weight:500;">Fundraising credit of $${fundraisingCredit.toFixed(2)} applied -- your adjusted total is $${adjustedTotal.toFixed(2)}</div>`
+        : '';
+
+    // Store adjusted total on window for selectPaymentPlan to use
+    window._gsAdjustedDues = adjustedTotal;
+    window._gsAthleteName = athleteName;
+
     container.innerHTML = `
         <div style="background: white; border-radius: 12px; padding: 20px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
             <h4 style="margin: 0 0 16px 0; font-size: 1.1rem; color: #111;">Select your Spring/Summer 2026 Payment Plan</h4>
             <p style="font-size: 0.9rem; color: #666; margin-bottom: 24px;">Godspeed Basketball offers multiple ways to handle your player's AAU tuition. Select the plan that works best for your family.</p>
-            
+            ${creditNote}
+
             <div style="display: grid; gap: 16px;">
                 <!-- Full Pay -->
                 <div class="plan-option" style="border: 2px solid #e5e7eb; border-radius: 12px; padding: 16px; cursor: pointer; transition: all 0.2s;" onclick="selectPaymentPlan(this, 'full', '${parentId}', '${email}')">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <div style="font-weight: 800; font-size: 1.05rem; color: #111;">Pay in Full</div>
-                            <div style="font-size: 0.85rem; color: #666; margin-top: 4px;">One-time payment of $745.00</div>
+                            <div style="font-size: 0.85rem; color: #666; margin-top: 4px;">One-time payment of $${adjustedTotal.toFixed(2)}</div>
                         </div>
-                        <div style="font-size: 1.25rem; font-weight: 800; color: #0071e3;">$745</div>
+                        <div style="font-size: 1.25rem; font-weight: 800; color: #0071e3;">$${adjustedTotal.toFixed(0)}</div>
                     </div>
                 </div>
 
@@ -3277,9 +3315,9 @@ function renderPlanSelectionUI(container, parentId, supabase, email) {
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <div style="font-weight: 800; font-size: 1.05rem; color: #111;">2 Installments</div>
-                            <div style="font-size: 0.85rem; color: #666; margin-top: 4px;">Two payments of $362.00 (April 1st, June 1st)</div>
+                            <div style="font-size: 0.85rem; color: #666; margin-top: 4px;">Two payments of $${inst2.toFixed(2)} (April 15th, May 15th)</div>
                         </div>
-                        <div style="font-size: 1.25rem; font-weight: 800; color: #0071e3;">$362</div>
+                        <div style="font-size: 1.25rem; font-weight: 800; color: #0071e3;">$${inst2.toFixed(0)}</div>
                     </div>
                 </div>
 
@@ -3288,9 +3326,9 @@ function renderPlanSelectionUI(container, parentId, supabase, email) {
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <div style="font-weight: 800; font-size: 1.05rem; color: #111;">3 Installments</div>
-                            <div style="font-size: 0.85rem; color: #666; margin-top: 4px;">$242.00 (Apr 1st), $242.00 (May 1st), $240.00 (Jun 1st)</div>
+                            <div style="font-size: 0.85rem; color: #666; margin-top: 4px;">$${inst3First.toFixed(2)} (Apr 15th), $${inst3First.toFixed(2)} (May 15th), $${inst3Last.toFixed(2)} (Jun 15th)</div>
                         </div>
-                        <div style="font-size: 1.25rem; font-weight: 800; color: #0071e3;">$242</div>
+                        <div style="font-size: 1.25rem; font-weight: 800; color: #0071e3;">$${inst3First.toFixed(0)}</div>
                     </div>
                 </div>
             </div>
@@ -3375,28 +3413,26 @@ function renderPlanSelectionUI(container, parentId, supabase, email) {
             setStep(3, 'idle');
 
             try {
-                // Resolve athlete name
-                let athleteName = 'Your Athlete';
-                const db = typeof getDB === 'function' ? getDB() : JSON.parse(localStorage.getItem('gba_db'));
-                if (db && db.roster) {
-                    const athlete = db.roster.find(p => p.parentId === email);
-                    if (athlete) athleteName = athlete.name;
-                }
+                // Use fundraising-adjusted total from renderPlanSelectionUI
+                const adjustedTotal = window._gsAdjustedDues || 745;
+                const athleteName = window._gsAthleteName || 'Your Athlete';
 
-                // Installment amounts must exactly match the UI plan cards
+                // Calculate installments from adjusted total
                 let installmentsArray = [];
                 if (planType === 'full') {
-                    installmentsArray = [{ number: 1, amount: 745.00, dueDate: '2026-04-01' }];
+                    installmentsArray = [{ number: 1, amount: adjustedTotal, dueDate: '2026-04-15' }];
                 } else if (planType === '2-installment') {
+                    const half = Math.round(adjustedTotal / 2 * 100) / 100;
                     installmentsArray = [
-                        { number: 1, amount: 362.00, dueDate: '2026-04-01' },
-                        { number: 2, amount: 362.00, dueDate: '2026-06-01' }
+                        { number: 1, amount: half, dueDate: '2026-04-15' },
+                        { number: 2, amount: Math.round((adjustedTotal - half) * 100) / 100, dueDate: '2026-05-15' }
                     ];
                 } else if (planType === '3-installment') {
+                    const third = Math.round(adjustedTotal / 3 * 100) / 100;
                     installmentsArray = [
-                        { number: 1, amount: 242.00, dueDate: '2026-04-01' },
-                        { number: 2, amount: 242.00, dueDate: '2026-05-01' },
-                        { number: 3, amount: 240.00, dueDate: '2026-06-01' }
+                        { number: 1, amount: third, dueDate: '2026-04-15' },
+                        { number: 2, amount: third, dueDate: '2026-05-15' },
+                        { number: 3, amount: Math.round((adjustedTotal - third * 2) * 100) / 100, dueDate: '2026-06-15' }
                     ];
                 }
 
@@ -3464,7 +3500,7 @@ function renderPaymentsTimeline(container, payments, plan, supabase) {
 
     payments.forEach(payment => {
         const isPaid    = payment.status === 'confirmed';
-        const dueDate   = new Date(payment.due_date);
+        const dueDate   = new Date(payment.due_date + 'T00:00:00');
         const isOverdue = !isPaid && dueDate < new Date();
         const rowLabel  = isFullPay ? 'Full Payment' : `Installment ${payment.installment_number}`;
         const btnId     = `gs-pay-btn-${payment.id}`;
