@@ -1,0 +1,13 @@
+[project]
+id = "nnqokhqennuxalamnvps"
+
+# ── Edge Function Configuration ──────────────────────────────
+# Functions that use service_role internally and are called from
+# the client SDK with a user session JWT should have verify_jwt = false
+# to avoid the legacy secret gateway check rejecting session tokens.
+
+[functions.send-onboarding-invite]
+verify_jwt = false
+
+[functions.send-onboarding-reminder]
+verify_jwt = false
