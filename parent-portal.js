@@ -961,6 +961,16 @@ window.switchPortalView = function (viewName, linkElement) {
         if (link) link.classList.add('active');
     }
 
+    // Vault mode: cinematic dark shell for player-cards view
+    const dashboard = document.getElementById('portal-dashboard');
+    if (dashboard) {
+        if (viewName === 'player-cards') {
+            dashboard.classList.add('vault-mode');
+        } else {
+            dashboard.classList.remove('vault-mode');
+        }
+    }
+
     if (viewName === 'performance') {
         fetchAthletePerformance();
     }
