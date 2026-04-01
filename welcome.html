@@ -739,8 +739,66 @@
         </div>
     </div>
 
-    <!-- ═══ STEP 3: ATHLETIC WAIVER ═══ -->
+    <!-- ═══ STEP 3: PRACTICE COMMITMENT (first signed form) ═══ -->
     <div class="ob-step" data-step="3">
+        <div class="ob-card">
+            <div class="ob-doc-header">
+                <h2>Practice Commitment</h2>
+                <span class="ob-doc-badge required" id="badge-practice">Signature Required</span>
+            </div>
+            <div class="ob-doc-scroll" id="doc-practice">
+                <h4>Practice Commitment</h4>
+                <p>Godspeed Basketball practices are designed to be high-intensity, competitive training sessions. By signing this agreement, I acknowledge and agree to the following:</p>
+                <h4>Practice Schedule</h4>
+                <ul>
+                    <li>Monday: Skills Training at NEC (6:00 PM - 8:00 PM)</li>
+                    <li>Tuesday: Team Practice at NEC (6:00 PM - 8:00 PM)</li>
+                    <li>Thursday: Team Practice at NEC (6:00 PM - 8:00 PM)</li>
+                </ul>
+                <h4>Attendance Policy</h4>
+                <p>Regular attendance at all scheduled practices is expected. With 3 sessions per week across a 14-week season, your son has 42 total practice opportunities. That is 42 chances to get better. Every missed session is a missed rep that his teammates got and he did not.</p>
+                <h4>Accountability Structure</h4>
+                <p>We track attendance for every session. Here is how we handle absences:</p>
+                <ul>
+                    <li><strong>Excused absence:</strong> You text Coach Scott or Coach Gene at least 2 hours before practice with a specific reason (illness, school event, family obligation, travel). One sentence is fine.</li>
+                    <li><strong>Unexcused absence:</strong> No communication before practice, or a no-show with no follow-up. This is what we take seriously.</li>
+                    <li><strong>1-2 unexcused absences:</strong> Coach will reach out directly to check in and reset expectations.</li>
+                    <li><strong>3+ unexcused absences:</strong> A parent meeting with the coaching staff is required before the player returns to full participation. Playing time in the next game or tournament will be affected.</li>
+                    <li><strong>Extended absence (1+ weeks):</strong> If your son will miss multiple sessions due to injury, vacation, or a family situation, let us know as early as possible so we can adjust practice plans and keep your son connected to the team.</li>
+                </ul>
+                <p>This is not about punishment. It is about building the habit of showing up and respecting the 11 other players who did. When a player misses practice without notice, the coach has to adjust drills, re-pair groups, and change plans on the fly. That affects everyone.</p>
+                <h4>Physical Demands</h4>
+                <p>Training sessions include sprinting, agility drills, strength conditioning, and full-court gameplay. I acknowledge that these activities are physically demanding and confirm that my child is physically able to participate. I will notify coaches immediately if my child has any physical limitation that could affect participation.</p>
+                <h4>Equipment</h4>
+                <p>Players must bring their black-and-white jerseys and blue shorts to every practice. Players are also expected to arrive with proper basketball shoes and a water bottle. Jerseys and shorts are team property and must be returned clean at the end of the season. This is about learning to take care of the things that are given to you and treating team gear with the same respect you bring to the court.</p>
+            </div>
+            <div class="ob-sig-section" id="sig-section-practice">
+                <div class="ob-sig-row">
+                    <div class="ob-input-group" style="margin-bottom: 0;">
+                        <label>Child's Name</label>
+                        <input type="text" class="ob-input ob-child-name" placeholder="Child's full name">
+                    </div>
+                    <div class="ob-input-group" style="margin-bottom: 0;">
+                        <label>Parent Name</label>
+                        <input type="text" class="ob-input ob-parent-name-field" readonly>
+                    </div>
+                </div>
+                <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--gs-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Signature</label>
+                <div class="ob-sig-canvas-wrap" id="sig-wrap-practice">
+                    <canvas id="sig-canvas-practice"></canvas>
+                    <div class="ob-sig-overlay">Sign Here</div>
+                </div>
+                <button class="ob-sig-clear" onclick="OB.clearSig('practice')">Clear Signature</button>
+                <div class="ob-agree-row">
+                    <input type="checkbox" id="agree-practice">
+                    <label for="agree-practice">I have read and agree to the Practice Commitment. <span style="color: var(--gs-gray-500); font-size: 0.85em;">(Date: <span class="ob-date"></span>)</span></label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ STEP 4: ATHLETIC WAIVER ═══ -->
+    <div class="ob-step" data-step="4">
         <div class="ob-card">
             <div class="ob-doc-header">
                 <h2>Athletic Liability Waiver</h2>
@@ -752,7 +810,7 @@
                 <h4>Assumption of Risk</h4>
                 <p>The risk of injury from the activities involved in this program is significant, including the potential for permanent paralysis and death. While particular rules, equipment, and personal discipline may reduce this risk, the risk of serious injury does exist. I knowingly and freely assume all such risks, both known and unknown, even if arising from the negligence of the releasees named below, and assume full responsibility for my child's participation.</p>
                 <h4>Waiver and Release</h4>
-                <p>I, for myself, my child, and on behalf of my heirs, assigns, personal representatives and next of kin, hereby release and hold harmless Godspeed Basketball, its coaches, instructors, agents, and other participants, with respect to any and all injury, disability, death, or loss or damage to person or property, whether caused by the negligence of the releasees or otherwise.</p>
+                <p>I, for myself, my child, and on behalf of my heirs, assigns, personal representatives and next of kin, hereby release and hold harmless Godspeed Basketball, its coaches, instructors, and other participants, with respect to any and all injury, disability, death, or loss or damage to person or property, whether caused by the negligence of the releasees or otherwise.</p>
                 <h4>Medical Authorization</h4>
                 <p>I authorize Godspeed Basketball coaching staff to seek emergency medical treatment for my child in the event I cannot be reached.</p>
                 <p>I have read this release of liability and assumption of risk agreement, fully understand its terms, and understand that I am giving up substantial rights, including my right to sue. I acknowledge that I am signing the agreement freely and voluntarily.</p>
@@ -761,7 +819,7 @@
                 <div class="ob-sig-row">
                     <div class="ob-input-group" style="margin-bottom: 0;">
                         <label>Child's Name</label>
-                        <input type="text" class="ob-input ob-child-name" readonly>
+                        <input type="text" class="ob-input ob-child-name" placeholder="Child's full name">
                     </div>
                     <div class="ob-input-group" style="margin-bottom: 0;">
                         <label>Parent Name</label>
@@ -782,8 +840,8 @@
         </div>
     </div>
 
-    <!-- ═══ STEP 4: MEDICAL CONSENT ═══ -->
-    <div class="ob-step" data-step="4">
+    <!-- ═══ STEP 5: MEDICAL CONSENT ═══ -->
+    <div class="ob-step" data-step="5">
         <div class="ob-card">
             <div class="ob-doc-header">
                 <h2>Medical Consent</h2>
@@ -803,7 +861,7 @@
                 <div class="ob-sig-row">
                     <div class="ob-input-group" style="margin-bottom: 0;">
                         <label>Child's Name</label>
-                        <input type="text" class="ob-input ob-child-name" readonly>
+                        <input type="text" class="ob-input ob-child-name" placeholder="Child's full name">
                     </div>
                     <div class="ob-input-group" style="margin-bottom: 0;">
                         <label>Parent Name</label>
@@ -819,49 +877,6 @@
                 <div class="ob-agree-row">
                     <input type="checkbox" id="agree-medical">
                     <label for="agree-medical">I have read and agree to the Medical Consent form. <span style="color: var(--gs-gray-500); font-size: 0.85em;">(Date: <span class="ob-date"></span>)</span></label>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ═══ STEP 5: PRACTICE CONSENT ═══ -->
-    <div class="ob-step" data-step="5">
-        <div class="ob-card">
-            <div class="ob-doc-header">
-                <h2>Practice Commitment</h2>
-                <span class="ob-doc-badge required" id="badge-practice">Signature Required</span>
-            </div>
-            <div class="ob-doc-scroll" id="doc-practice">
-                <h4>Practice Commitment</h4>
-                <p>Godspeed Basketball practices are designed to be high-intensity, competitive training sessions. By signing this agreement, I acknowledge and agree to the following:</p>
-                <h4>Attendance Expectations</h4>
-                <p>Regular attendance at practices is expected. Every session matters because when one player is absent, the entire team has to adjust drills, re-pair groups, and change plans on the fly. Showing up consistently is how we build trust, chemistry, and habits as a team.</p>
-                <p>If your son will miss practice for any reason, please text Coach Scott or Coach Gene before practice so we can plan accordingly. A quick message is all we need. We work with families and understand things come up. The only thing we ask is that you communicate.</p>
-                <h4>Physical Demands</h4>
-                <p>Training sessions include sprinting, agility drills, strength conditioning, and full-court gameplay. I acknowledge that these activities are physically demanding and confirm that my child is physically able to participate. I will notify coaches immediately if my child has any physical limitation that could affect participation.</p>
-                <h4>Equipment</h4>
-                <p>Players are expected to arrive with proper basketball shoes, a water bottle, and appropriate athletic clothing. Godspeed Basketball is not responsible for lost or damaged personal property.</p>
-            </div>
-            <div class="ob-sig-section" id="sig-section-practice">
-                <div class="ob-sig-row">
-                    <div class="ob-input-group" style="margin-bottom: 0;">
-                        <label>Child's Name</label>
-                        <input type="text" class="ob-input ob-child-name" readonly>
-                    </div>
-                    <div class="ob-input-group" style="margin-bottom: 0;">
-                        <label>Parent Name</label>
-                        <input type="text" class="ob-input ob-parent-name-field" readonly>
-                    </div>
-                </div>
-                <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--gs-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Signature</label>
-                <div class="ob-sig-canvas-wrap" id="sig-wrap-practice">
-                    <canvas id="sig-canvas-practice"></canvas>
-                    <div class="ob-sig-overlay">Sign Here</div>
-                </div>
-                <button class="ob-sig-clear" onclick="OB.clearSig('practice')">Clear Signature</button>
-                <div class="ob-agree-row">
-                    <input type="checkbox" id="agree-practice">
-                    <label for="agree-practice">I have read and agree to the Practice Commitment. <span style="color: var(--gs-gray-500); font-size: 0.85em;">(Date: <span class="ob-date"></span>)</span></label>
                 </div>
             </div>
         </div>
@@ -902,7 +917,7 @@
                 <div class="ob-sig-row">
                     <div class="ob-input-group" style="margin-bottom: 0;">
                         <label>Child's Name</label>
-                        <input type="text" class="ob-input ob-child-name" readonly>
+                        <input type="text" class="ob-input ob-child-name" placeholder="Child's full name">
                     </div>
                     <div class="ob-input-group" style="margin-bottom: 0;">
                         <label>Parent Name</label>
@@ -950,7 +965,7 @@
                 <div class="ob-sig-row">
                     <div class="ob-input-group" style="margin-bottom: 0;">
                         <label>Child's Name</label>
-                        <input type="text" class="ob-input ob-child-name" readonly>
+                        <input type="text" class="ob-input ob-child-name" placeholder="Child's full name">
                     </div>
                     <div class="ob-input-group" style="margin-bottom: 0;">
                         <label>Parent Name</label>
@@ -983,18 +998,6 @@
             <div class="ob-doc-scroll">
                 <h4>Season Dues</h4>
                 <p>Detailed dues amounts, payment plan options, and deadlines are available in your parent portal under the Payments tab. Payment plans may include monthly installments with specific due dates.</p>
-
-                <h4>Pay with Venmo</h4>
-                <p>Tap the button below to send your payment via Venmo. Please include your athlete's name in the payment note so we can match it to your account.</p>
-                <a id="venmo-pay-btn" href="https://venmo.com/Coachsco" target="_blank" rel="noopener"
-                   style="display: flex; align-items: center; justify-content: center; gap: 10px;
-                          background: #008CFF; color: #fff; font-weight: 700; font-size: 1.05rem;
-                          padding: 16px 24px; border-radius: 12px; text-decoration: none;
-                          margin: 16px 0 24px; transition: background 0.15s;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M19.27 2C19.83 3.02 20.1 4.07 20.1 5.43c0 4.26-3.64 9.8-6.6 13.57H7.84L5.73 3.56l5.02-.48 1.2 9.62c1.12-1.82 2.5-4.7 2.5-6.67 0-1.3-.22-2.18-.58-2.88L19.27 2z" fill="#fff"/></svg>
-                    Pay with Venmo
-                </a>
-                <p style="font-size: 0.85rem; color: #888;">Venmo handle: <strong>@Coachsco</strong></p>
 
                 <h4>Late Payment Policy</h4>
                 <p>Payments are expected on time per your selected payment plan. If you anticipate difficulty meeting a payment deadline, please contact the program director in advance. Communication goes a long way. Unresponsive accounts with outstanding balances may result in your child being held from tournament participation until the balance is resolved.</p>

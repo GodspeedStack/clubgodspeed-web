@@ -17,9 +17,9 @@ const OB = (() => {
         'account_created',   // 0 - sign in / create account (first)
         'welcome',           // 1 - program overview
         'parent_guide',      // 2
-        'athletic_waiver',   // 3
-        'medical_consent',   // 4
-        'practice_consent',  // 5
+        'practice_consent',  // 3 - practice commitment (first signed form)
+        'athletic_waiver',   // 4
+        'medical_consent',   // 5
         'code_of_conduct',   // 6
         'media_release',     // 7
         'payment_setup',     // 8
@@ -27,9 +27,9 @@ const OB = (() => {
     ];
 
     const DOC_STEPS = {
-        3: 'athletic',
-        4: 'medical',
-        5: 'practice',
+        3: 'practice',
+        4: 'athletic',
+        5: 'medical',
         6: 'conduct',
         7: 'media'
     };
@@ -56,6 +56,7 @@ const OB = (() => {
         restoreSession();
         bindSignatureCanvases();
         bindCheckboxes();
+        bindNameFieldSync();
         updateUI();
 
         // Handle OAuth redirect
@@ -252,7 +253,7 @@ const OB = (() => {
         // Step label
         const stepLabels = [
             'Create Account', 'Welcome', 'Season Guide',
-            'Athletic Waiver', 'Medical Consent', 'Practice Commitment',
+            'Practice Commitment', 'Athletic Waiver', 'Medical Consent',
             'Code of Conduct', 'Media Release', 'Payment Info', 'Complete'
         ];
         const nameEl = document.getElementById('ob-step-name');
@@ -303,14 +304,6 @@ const OB = (() => {
             setTimeout(() => initSigCanvas(DOC_STEPS[currentStep]), 100);
         }
 
-        // Personalize Venmo button with athlete name in note
-        const venmoBtn = document.getElementById('venmo-pay-btn');
-        if (venmoBtn) {
-            const note = athleteName
-                ? encodeURIComponent('Godspeed Basketball - ' + athleteName)
-                : encodeURIComponent('Godspeed Basketball');
-            venmoBtn.href = 'https://venmo.com/Coachsco?txn=pay&note=' + note;
-        }
     }
 
     // ── Authentication ──
@@ -477,8 +470,23 @@ const OB = (() => {
     }
 
     function populateNameFields() {
-        document.querySelectorAll('.ob-child-name').forEach(el => el.value = athleteName || '');
+        document.querySelectorAll('.ob-child-name').forEach(el => {
+            if (athleteName) el.value = athleteName;
+        });
         document.querySelectorAll('.ob-parent-name-field').forEach(el => el.value = parentName || '');
+    }
+
+    function bindNameFieldSync() {
+        // When parent types child name in any doc step, sync to all fields + state
+        document.querySelectorAll('.ob-child-name').forEach(el => {
+            el.addEventListener('input', (e) => {
+                athleteName = e.target.value.trim();
+                document.querySelectorAll('.ob-child-name').forEach(other => {
+                    if (other !== e.target) other.value = athleteName;
+                });
+                saveSession();
+            });
+        });
     }
 
     function showFieldError(inputId, errorId, msg) {
