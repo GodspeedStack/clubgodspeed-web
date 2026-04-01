@@ -199,24 +199,26 @@ async function loadTeamsDropdowns() {
 
 // ─── DASHBOARD ──────────────────────────────────────────────
 async function loadDashboard() {
-  let profiles=[], requests=[], dues=[];
+  let profiles=[], requests=[], dues=[], fundraising=[];
   try {
     if(osSupabase) {
-      const [p,r,d] = await Promise.all([
+      const [p,r,d,f] = await Promise.all([
         osSupabase.from('profiles').select('id,approved').eq('approved',true),
         osSupabase.from('login_requests').select('id,full_name,email,status,created_at').eq('status','pending').order('created_at',{ascending:false}).limit(10),
         osSupabase.from('parent_dues_enrollment').select('id,total_owed,total_paid,status'),
+        osSupabase.from('fundraising_totals').select('total_raised'),
       ]);
-      profiles=p.data||[]; requests=r.data||[]; dues=d.data||[];
+      profiles=p.data||[]; requests=r.data||[]; dues=d.data||[]; fundraising=f.data||[];
       // Seed allRequests so approve/deny from dashboard works optimistically
       if(!allRequests.length && requests.length) allRequests=requests.map(r=>({...r}));
     }
   } catch(e){}
   const collected=dues.reduce((a,d)=>a+(+d.total_paid||0),0);
-  const outstanding=dues.reduce((a,d)=>a+((+d.total_owed||0)-(+d.total_paid||0)),0);
+  const totalRaised=fundraising.reduce((a,f)=>a+(+f.total_raised||0),0);
+  const outstanding=Math.max(dues.reduce((a,d)=>a+((+d.total_owed||0)-(+d.total_paid||0)),0) - totalRaised, 0);
   document.getElementById('m-members').textContent=profiles.filter(p=>p.approved).length;
   document.getElementById('m-pending').textContent=requests.length;
-  document.getElementById('m-collected').textContent='$'+collected.toFixed(0);
+  document.getElementById('m-collected').textContent='$'+(collected+totalRaised).toFixed(0);
   document.getElementById('m-outstanding').textContent='$'+outstanding.toFixed(0);
   document.getElementById('pending-badge').textContent=requests.length;
   renderDashboardPending(requests);

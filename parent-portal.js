@@ -3050,6 +3050,7 @@ window.renderBilling = async function (email) {
             if (totalDueEl) totalDueEl.textContent = '$745.00';
             if (sectionHeaderEl) sectionHeaderEl.textContent = 'Payment Plan';
             renderPlanSelectionUI(container, user.id, supabase, email);
+            loadFundraisingCredit(supabase, user.id, 724);
             return;
         }
 
@@ -3075,20 +3076,25 @@ window.renderBilling = async function (email) {
 
         // Update status card
         const pendingPayments = payments.filter(p => p.status !== 'confirmed');
+        let displayTotal = 0;
         if (pendingPayments.length > 0) {
             const nextPayment = pendingPayments[0];
             const isOverdue = new Date(nextPayment.due_date) < now;
-            const totalRemaining = pendingPayments.reduce((s, p) => s + parseFloat(p.amount), 0);
+            displayTotal = pendingPayments.reduce((s, p) => s + parseFloat(p.amount), 0);
             statusTextEl.textContent = isOverdue ? 'Payment Overdue' : 'Payment Due ' + (now < aprilFirst ? 'Apr 1' : 'Soon');
             statusTextEl.style.color = isOverdue ? '#ef4444' : '#f59e0b';
             statusCard.style.borderLeftColor = isOverdue ? '#ef4444' : '#f59e0b';
-            if (totalDueEl) totalDueEl.textContent = '$' + totalRemaining.toFixed(2);
+            if (totalDueEl) totalDueEl.textContent = '$' + displayTotal.toFixed(2);
         } else {
             statusTextEl.textContent = 'Paid in Full';
             statusTextEl.style.color = '#10b981';
             statusCard.style.borderLeftColor = '#10b981';
             if (totalDueEl) totalDueEl.textContent = '$0.00';
         }
+
+        // Load fundraising credit (deducts from displayed total with animation)
+        const planTotal = parseFloat(currentPlan.total_amount) || displayTotal || 724;
+        loadFundraisingCredit(supabase, user.id, planTotal);
 
     } catch (e) {
         console.error("Billing Error:", e);
@@ -3108,6 +3114,114 @@ function handleDemoBilling(container, totalDueEl, statusTextEl, statusCard) {
         statusTextEl.style.color = '#ef4444';
         statusCard.style.borderLeftColor = '#ef4444';
     }
+}
+
+// ─── FUNDRAISING CREDIT (parent billing view) ──────────────
+async function loadFundraisingCredit(supabase, userId, totalDue) {
+  const card = document.getElementById('billing-fundraising-card');
+  if (!card) return;
+  try {
+    // 1. Get athlete name(s) linked to this parent
+    const { data: links } = await supabase
+      .from('parent_player_links')
+      .select('athlete_id, athletes(display_name, first_name)')
+      .eq('profile_id', userId);
+    if (!links || !links.length) return;
+
+    const athleteFirstName = (links[0].athletes?.first_name || links[0].athletes?.display_name || '').split(' ')[0];
+    const athleteDisplay = links[0].athletes?.display_name || athleteFirstName;
+    if (!athleteFirstName) return;
+
+    // 2. Find matching fundraising record
+    const { data: frRows } = await supabase
+      .from('fundraising_totals')
+      .select('total_raised, athlete_name')
+      .ilike('athlete_name', athleteFirstName + '%')
+      .limit(1);
+    if (!frRows || !frRows.length || !frRows[0].total_raised) return;
+
+    const raised = parseFloat(frRows[0].total_raised);
+    if (raised <= 0) return;
+
+    const originalDues = totalDue || 724;
+    const newBalance = Math.max(originalDues - raised, 0);
+    const progressPct = Math.min((raised / originalDues) * 100, 100);
+
+    // 3. Populate static values
+    document.getElementById('fc-athlete-name').textContent = athleteDisplay;
+    document.getElementById('fc-original').textContent = '$' + originalDues.toFixed(2);
+    document.getElementById('fc-raised').textContent = '-$' + raised.toFixed(2);
+    document.getElementById('fc-original-strike').textContent = '$' + originalDues.toFixed(2);
+    document.getElementById('fc-progress-label').textContent = Math.round(progressPct) + '% offset by fundraising';
+    document.getElementById('fc-remaining-label').textContent = newBalance > 0 ? '$' + newBalance.toFixed(2) + ' remaining' : 'Fully covered!';
+
+    // 4. Show card
+    card.style.display = 'block';
+
+    // 5. Micro-animation: countup for new balance
+    const newBalanceEl = document.getElementById('fc-new-balance');
+    newBalanceEl.textContent = '$' + originalDues.toFixed(2);
+
+    // Trigger animated reveals after card is visible
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        // Reveal credit row
+        const creditRow = document.getElementById('fc-credit-row');
+        creditRow.style.opacity = '1';
+        creditRow.style.transform = 'translateY(0)';
+      }, 100);
+
+      setTimeout(() => {
+        // Reveal balance row
+        const balanceRow = document.getElementById('fc-balance-row');
+        balanceRow.style.opacity = '1';
+        balanceRow.style.transform = 'translateY(0)';
+
+        // Countup animation for the new balance
+        animateCountdown(newBalanceEl, originalDues, newBalance, 800);
+      }, 500);
+
+      setTimeout(() => {
+        // Animate progress bar
+        document.getElementById('fc-progress-bar').style.width = progressPct + '%';
+        // Show labels
+        document.getElementById('fc-progress-label').style.opacity = '1';
+        document.getElementById('fc-remaining-label').style.opacity = '1';
+      }, 700);
+
+      setTimeout(() => {
+        // Update the main status card total to reflect deduction
+        const totalDueEl = document.getElementById('billing-total-due');
+        if (totalDueEl) {
+          animateCountdown(totalDueEl, originalDues, newBalance, 600);
+        }
+        // Update status card color if partially offset
+        const statusCard = document.getElementById('billing-status-card');
+        const statusText = document.getElementById('billing-status-text');
+        if (newBalance <= 0 && statusCard && statusText) {
+          statusText.textContent = 'Covered by Fundraising';
+          statusText.style.color = '#10b981';
+          statusCard.style.borderLeftColor = '#10b981';
+        }
+      }, 1600);
+    });
+  } catch (e) { console.error('Fundraising credit load:', e); }
+}
+
+function animateCountdown(el, from, to, duration) {
+  const start = performance.now();
+  const format = (v) => '$' + v.toFixed(2);
+  el.textContent = format(from);
+  function tick(now) {
+    const elapsed = now - start;
+    const t = Math.min(elapsed / duration, 1);
+    // Ease-out cubic
+    const eased = 1 - Math.pow(1 - t, 3);
+    const current = from + (to - from) * eased;
+    el.textContent = format(current);
+    if (t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
 }
 
 // ─── TRAINING SCHEDULE (parent billing view) ───────────────

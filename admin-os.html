@@ -655,8 +655,8 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
       <div class="metrics">
         <div class="metric-card"><div class="label">Total Members</div><div class="val" id="m-members">--</div><div class="sub">Active profiles</div></div>
         <div class="metric-card"><div class="label">Pending Requests</div><div class="val" id="m-pending">--</div><div class="sub">Awaiting approval</div></div>
-        <div class="metric-card"><div class="label">Dues Collected</div><div class="val" id="m-collected">$--</div><div class="sub">Confirmed payments</div></div>
-        <div class="metric-card"><div class="label">Outstanding</div><div class="val" id="m-outstanding">$--</div><div class="sub">Remaining balance</div></div>
+        <div class="metric-card"><div class="label">Paid + Raised</div><div class="val" id="m-collected">$--</div><div class="sub">Payments &amp; fundraising</div></div>
+        <div class="metric-card"><div class="label">Outstanding</div><div class="val" id="m-outstanding">$--</div><div class="sub">After fundraising credits</div></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
         <div class="card"><div class="card-header"><h2>Pending Approvals</h2></div><div class="card-body" id="dash-pending-list"><p style="color:var(--muted);font-size:13px">Loading...</p></div></div>
@@ -1155,7 +1155,7 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 
 <script type="module" src="src/lib/env-injector.js"></script>
 <script src="auth-supabase.js?v=20260330" defer></script>
-<script src="admin-os.js?v=20260331u" defer></script>
+<script src="admin-os.js?v=20260331v" defer></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
   function toggleMobileMenu() {
