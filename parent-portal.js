@@ -3049,9 +3049,8 @@ window.renderBilling = async function (email) {
             statusCard.style.borderLeftColor = '#ef4444';
             if (sectionHeaderEl) sectionHeaderEl.textContent = 'Payment Plan';
             await renderPlanSelectionUI(container, user.id, supabase, email);
-            const adjTotal = window._gsAdjustedDues || 745;
-            if (totalDueEl) totalDueEl.textContent = '$' + adjTotal.toFixed(2);
-            loadFundraisingCredit(supabase, user.id, adjTotal);
+            if (totalDueEl) totalDueEl.textContent = '$745.00';
+            loadFundraisingCredit(supabase, user.id, 745);
             return;
         }
 
@@ -3085,7 +3084,7 @@ window.renderBilling = async function (email) {
             statusTextEl.textContent = isOverdue ? 'Payment Overdue' : 'Payment Due ' + (now < aprilFirst ? 'Apr 1' : 'Soon');
             statusTextEl.style.color = isOverdue ? '#ef4444' : '#f59e0b';
             statusCard.style.borderLeftColor = isOverdue ? '#ef4444' : '#f59e0b';
-            if (totalDueEl) totalDueEl.textContent = '$' + displayTotal.toFixed(2);
+            if (totalDueEl) totalDueEl.textContent = '$745.00';
         } else {
             statusTextEl.textContent = 'Paid in Full';
             statusTextEl.style.color = '#10b981';
@@ -3093,9 +3092,9 @@ window.renderBilling = async function (email) {
             if (totalDueEl) totalDueEl.textContent = '$0.00';
         }
 
-        // Load fundraising credit (deducts from displayed total with animation)
-        const planTotal = parseFloat(currentPlan.total_amount) || displayTotal || 724;
-        loadFundraisingCredit(supabase, user.id, planTotal);
+        // Load fundraising credit — always pass base dues ($745) so the
+        // breakdown shows the full amount before credits are applied.
+        loadFundraisingCredit(supabase, user.id, 745);
 
     } catch (e) {
         console.error("Billing Error:", e);
