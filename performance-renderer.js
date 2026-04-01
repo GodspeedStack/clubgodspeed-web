@@ -43,8 +43,60 @@
     }
   }
 
-  function getAthleteId() {
-    return localStorage.getItem('gba_current_athlete') || null;
+  /**
+   * Resolve the athlete ID for the logged-in parent.
+   * Priority: localStorage > GODSPEED_DATA roster > Supabase query
+   */
+  async function resolveAthleteId(client) {
+    // 1. Check localStorage (may be set by other modules)
+    const stored = localStorage.getItem('gba_current_athlete');
+    if (stored) return stored;
+
+    // 2. Check data bridge roster
+    const email = localStorage.getItem('gba_user_email');
+    const db = (typeof getDB === 'function' ? getDB() : null) || window.GODSPEED_DATA || null;
+    if (db && db.roster && email) {
+      const match = db.roster.find(function (a) { return a.parentId === email; });
+      if (match && match.athleteId) return match.athleteId;
+    }
+
+    // 3. Query Supabase: profiles -> parent_accounts -> athletes
+    if (client && email) {
+      try {
+        var _a = await client
+          .from('parent_accounts')
+          .select('id, athletes(id)')
+          .eq('email', email)
+          .limit(1)
+          .single();
+        var pa = _a.data;
+        if (pa && pa.athletes && pa.athletes.length > 0) {
+          return pa.athletes[0].id;
+        }
+      } catch (_) { /* fall through */ }
+    }
+
+    // 4. Query via user_id from auth session
+    if (client) {
+      try {
+        var session = await client.auth.getSession();
+        var userId = session?.data?.session?.user?.id;
+        if (userId) {
+          var _b = await client
+            .from('parent_accounts')
+            .select('id, athletes:athletes(id)')
+            .eq('user_id', userId)
+            .limit(1)
+            .single();
+          var pa2 = _b.data;
+          if (pa2 && pa2.athletes && pa2.athletes.length > 0) {
+            return pa2.athletes[0].id;
+          }
+        }
+      } catch (_) { /* fall through */ }
+    }
+
+    return null;
   }
 
   function tierFromAvg(avg) {
@@ -346,12 +398,17 @@
 
   async function loadPerformanceV2() {
     const client = getClient();
-    const athleteId = getAthleteId();
-
-    if (!client || !athleteId) {
-      console.log('[PerfRenderer] No client or athlete ID. Waiting for auth.');
+    if (!client) {
+      console.log('[PerfRenderer] No Supabase client. Waiting for auth.');
       return;
     }
+
+    const athleteId = await resolveAthleteId(client);
+    if (!athleteId) {
+      console.log('[PerfRenderer] Could not resolve athlete ID for logged-in parent.');
+      return;
+    }
+    console.log('[PerfRenderer] Resolved athlete:', athleteId);
 
     try {
       // Parallel fetches
