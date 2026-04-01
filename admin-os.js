@@ -276,7 +276,7 @@ function renderRosterByPlayer(arr) {
   tbody.innerHTML=filtered.map(a=>{
     const parentPhones=(a.parents||[]).map(p=>p.phone).filter(Boolean).join(', ')||'--';
     const dobStr=a.date_of_birth?new Date(a.date_of_birth+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'--';
-    const posLabel=a.position?POS_LABELS[a.position]||a.position:'--';
+    const posLabel=a.player_position?POS_LABELS[a.player_position]||a.player_position:'--';
     const enrolled=a.enrollment_status==='active';
     // Parent link: show linked parent name or "Link" button
     const parentLink=(a.parents||[]).length

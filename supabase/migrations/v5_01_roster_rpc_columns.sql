@@ -1,8 +1,10 @@
 -- ============================================================
 -- v5_01: Expand get_roster_with_parents to return jersey_number,
---        date_of_birth, position for admin roster view
+--        date_of_birth, player_position for admin roster view
 -- ============================================================
-BEGIN;
+-- NOTE: Must DROP first because return type changed (new columns added)
+
+DROP FUNCTION IF EXISTS get_roster_with_parents();
 
 CREATE OR REPLACE FUNCTION get_roster_with_parents()
 RETURNS TABLE (
@@ -13,7 +15,7 @@ RETURNS TABLE (
     grade text,
     jersey_number smallint,
     date_of_birth date,
-    position text,
+    player_position text,
     enrollment_status text,
     parents jsonb
 ) LANGUAGE sql SECURITY DEFINER AS $$
@@ -25,7 +27,7 @@ RETURNS TABLE (
         a.grade,
         a.jersey_number,
         a.date_of_birth,
-        a.position,
+        a.position AS player_position,
         a.enrollment_status,
         COALESCE(
             jsonb_agg(
@@ -49,5 +51,3 @@ RETURNS TABLE (
              a.jersey_number, a.date_of_birth, a.position, a.enrollment_status
     ORDER BY a.last_name, a.first_name;
 $$;
-
-COMMIT;
