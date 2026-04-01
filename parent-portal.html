@@ -872,58 +872,13 @@
                     </div>
 
                     <!-- VIEW: PERFORMANCE -->
-                    <div id="view-performance" class="portal-view" style="display: none; background-color: #F2F2F7; min-height: 100%; padding: 20px; max-width: 640px; margin: 0 auto;">
-
-                        <!-- Hero: Ring Gauge + Tier + Trend -->
-                        <div id="perf-hero" style="background: white; border-radius: 20px; padding: 8px 20px 20px; margin-bottom: 16px; border: 1px solid #f0f1f3;">
-                            <div style="text-align:center;padding:40px 0;color:#9ca3af;font-size:0.85rem;">Loading...</div>
+                    <div id="view-performance" class="portal-view" style="display: none; background-color: #F2F2F7; min-height: 100%; padding: 20px;">
+                        <div class="section-header" style="margin-bottom: 1.5rem;">
+                            <h2 style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 1.35rem; color: #111; letter-spacing: -0.02em; text-transform: uppercase; margin: 0;">Performance</h2>
                         </div>
-
-                        <!-- Skill Breakdown -->
-                        <div style="background: white; border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 1px solid #f0f1f3;">
-                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-                                <span style="font-size:16px;">📊</span>
-                                <h3 style="font-weight:800;font-size:0.95rem;color:#111;margin:0;">Skill Breakdown</h3>
-                            </div>
-                            <div id="perf-skills" style="display:flex;flex-direction:column;">
-                                <div style="font-size:0.85rem;color:#9ca3af;text-align:center;padding:12px 0;">Loading...</div>
-                            </div>
+                        <div id="perf-root">
+                            <div style="text-align:center;padding:40px 0;color:#9ca3af;font-size:0.85rem;">Loading performance data...</div>
                         </div>
-
-                        <!-- Practice Sessions -->
-                        <div style="background: white; border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 1px solid #f0f1f3;">
-                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-                                <span style="font-size:16px;">📋</span>
-                                <h3 style="font-weight:800;font-size:0.95rem;color:#111;margin:0;">Practice Sessions</h3>
-                                <span style="font-size:0.65rem;font-weight:600;color:#9ca3af;margin-left:auto;">Tap to expand</span>
-                            </div>
-                            <div id="perf-practices" style="display:flex;flex-direction:column;gap:8px;">
-                                <div style="font-size:0.85rem;color:#9ca3af;text-align:center;padding:12px 0;">Loading...</div>
-                            </div>
-                        </div>
-
-                        <!-- Game Results -->
-                        <div style="background: white; border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 1px solid #f0f1f3;">
-                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-                                <span style="font-size:16px;">🏀</span>
-                                <h3 style="font-weight:800;font-size:0.95rem;color:#111;margin:0;">Game Results</h3>
-                            </div>
-                            <div id="perf-games" style="display:flex;flex-direction:column;gap:8px;">
-                                <div style="font-size:0.85rem;color:#9ca3af;text-align:center;padding:12px 0;">Loading...</div>
-                            </div>
-                        </div>
-
-                        <!-- Coach Notes -->
-                        <div style="background: white; border-radius: 20px; padding: 20px; border: 1px solid #f0f1f3;">
-                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-                                <span style="font-size:16px;">💬</span>
-                                <h3 style="font-weight:800;font-size:0.95rem;color:#111;margin:0;">Coach Notes</h3>
-                            </div>
-                            <div id="perf-notes" style="display:flex;flex-direction:column;gap:8px;">
-                                <div style="font-size:0.85rem;color:#9ca3af;text-align:center;padding:12px 0;">Loading...</div>
-                            </div>
-                        </div>
-
                     </div>
 
                     <!-- VIEW: GEAR & UNIFORMS -->
@@ -1398,7 +1353,7 @@
     <script src="export-functions.js" defer></script>
     <script src="receipt-view.js" defer></script>
     <script src="parent-portal.js?v=16" defer></script>
-    <script src="performance-renderer.js?v=3" defer></script>
+    <script src="performance-renderer.js?v=4" defer></script>
     <!-- Non-critical scripts (async for independent loading) -->
     <script src="branded-modal.js"></script>
     <script src="documents-view.js" defer></script>
