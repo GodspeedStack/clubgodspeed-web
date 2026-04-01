@@ -612,8 +612,57 @@
 <!-- ── Main Content ── -->
 <main class="ob-main">
 
-    <!-- ═══ STEP 0: WELCOME ═══ -->
+    <!-- ═══ STEP 0: CREATE ACCOUNT / SIGN IN ═══ -->
     <div class="ob-step active" data-step="0">
+        <div class="ob-card">
+            <div class="ob-hero-tagline" style="text-align:center;margin-bottom:8px">Brotherhood. Habits. Success.</div>
+            <h2>Welcome to Godspeed Basketball</h2>
+            <p style="margin-bottom: 24px;">Create your parent portal account to get started. You will review our program expectations, sign required documents, and set up payment.</p>
+
+            <div class="ob-auth-section">
+                <button class="ob-btn ob-btn-google" id="btn-google-auth" onclick="OB.authGoogle()">
+                    <svg width="20" height="20" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                    Continue with Google
+                </button>
+
+                <div class="ob-divider">or</div>
+
+                <div id="email-auth-form">
+                    <div class="ob-input-group">
+                        <label for="ob-email">Email Address</label>
+                        <input type="email" id="ob-email" class="ob-input" placeholder="name@example.com" autocomplete="email">
+                        <div class="ob-error-text" id="ob-email-error"></div>
+                    </div>
+                    <div class="ob-input-group">
+                        <label for="ob-password">Password</label>
+                        <input type="password" id="ob-password" class="ob-input" placeholder="Minimum 6 characters" minlength="6" autocomplete="new-password">
+                        <div class="ob-error-text" id="ob-password-error"></div>
+                    </div>
+                    <div class="ob-input-group" id="ob-name-group">
+                        <label for="ob-parent-name">Parent / Guardian Name</label>
+                        <input type="text" id="ob-parent-name" class="ob-input" placeholder="Your full name" autocomplete="name">
+                    </div>
+                    <div class="ob-input-group" id="ob-athlete-group">
+                        <label for="ob-athlete-name">Athlete Name</label>
+                        <input type="text" id="ob-athlete-name" class="ob-input" placeholder="Your child's full name">
+                    </div>
+                    <button class="ob-btn ob-btn-primary" id="btn-email-auth" onclick="OB.authEmail()">Create Account</button>
+                    <button class="ob-btn ob-btn-secondary" id="btn-toggle-login" onclick="OB.toggleLoginMode()">Already have an account? Sign in</button>
+                </div>
+            </div>
+
+            <div id="ob-auth-status" hidden>
+                <div style="text-align: center; padding: 24px;">
+                    <div class="ob-complete-icon" style="width: 56px; height: 56px; font-size: 1.4rem;">&#10003;</div>
+                    <p style="font-weight: 600; margin-top: 12px;" id="ob-auth-name"></p>
+                    <p style="color: var(--gs-gray-500); font-size: 0.9rem;" id="ob-auth-email"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ STEP 1: WELCOME / PROGRAM OVERVIEW ═══ -->
+    <div class="ob-step" data-step="1">
         <div class="ob-card ob-hero">
             <div class="ob-hero-tagline">Brotherhood. Habits. Success.</div>
             <h1>Welcome to the Godspeed Family</h1>
@@ -669,54 +718,6 @@
         <div class="ob-card">
             <h3>Help Us Build This</h3>
             <p>Godspeed is not a drop-off program. We need parents who want to be part of something special. Volunteer to help at tournaments. Share ideas that strengthen our community. The best programs are built by families who invest more than money.</p>
-        </div>
-    </div>
-
-    <!-- ═══ STEP 1: CREATE ACCOUNT / SIGN IN ═══ -->
-    <div class="ob-step" data-step="1">
-        <div class="ob-card">
-            <h2>Create Your Account</h2>
-            <p style="margin-bottom: 24px;">Set up your parent portal account to track your son's progress, view schedules, and manage documents.</p>
-
-            <div class="ob-auth-section">
-                <button class="ob-btn ob-btn-google" id="btn-google-auth" onclick="OB.authGoogle()">
-                    <svg width="20" height="20" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-                    Continue with Google
-                </button>
-
-                <div class="ob-divider">or</div>
-
-                <div id="email-auth-form">
-                    <div class="ob-input-group">
-                        <label for="ob-email">Email Address</label>
-                        <input type="email" id="ob-email" class="ob-input" placeholder="name@example.com" autocomplete="email">
-                        <div class="ob-error-text" id="ob-email-error"></div>
-                    </div>
-                    <div class="ob-input-group">
-                        <label for="ob-password">Password</label>
-                        <input type="password" id="ob-password" class="ob-input" placeholder="Minimum 6 characters" minlength="6" autocomplete="new-password">
-                        <div class="ob-error-text" id="ob-password-error"></div>
-                    </div>
-                    <div class="ob-input-group" id="ob-name-group">
-                        <label for="ob-parent-name">Parent / Guardian Name</label>
-                        <input type="text" id="ob-parent-name" class="ob-input" placeholder="Your full name" autocomplete="name">
-                    </div>
-                    <div class="ob-input-group" id="ob-athlete-group">
-                        <label for="ob-athlete-name">Athlete Name</label>
-                        <input type="text" id="ob-athlete-name" class="ob-input" placeholder="Your child's full name">
-                    </div>
-                    <button class="ob-btn ob-btn-primary" id="btn-email-auth" onclick="OB.authEmail()">Create Account</button>
-                    <button class="ob-btn ob-btn-secondary" id="btn-toggle-login" onclick="OB.toggleLoginMode()">Already have an account? Sign in</button>
-                </div>
-            </div>
-
-            <div id="ob-auth-status" hidden>
-                <div style="text-align: center; padding: 24px;">
-                    <div class="ob-complete-icon" style="width: 56px; height: 56px; font-size: 1.4rem;">&#10003;</div>
-                    <p style="font-weight: 600; margin-top: 12px;" id="ob-auth-name"></p>
-                    <p style="color: var(--gs-gray-500); font-size: 0.9rem;" id="ob-auth-email"></p>
-                </div>
-            </div>
         </div>
     </div>
 

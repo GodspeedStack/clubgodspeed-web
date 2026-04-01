@@ -14,8 +14,8 @@ const OB = (() => {
 
     // ── Config ──
     const STEP_MAP = [
-        'welcome',           // 0
-        'account_created',   // 1
+        'account_created',   // 0 - sign in / create account (first)
+        'welcome',           // 1 - program overview
         'parent_guide',      // 2
         'athletic_waiver',   // 3
         'medical_consent',   // 4
@@ -109,7 +109,7 @@ const OB = (() => {
                 signatures = data.signatures || {};
 
                 if (parentName) populateNameFields();
-                if (userEmail && currentStep >= 2) showAuthDone();
+                if (userEmail && currentStep >= 1) showAuthDone();
             } catch (_) {
                 currentStep = 0;
             }
@@ -189,7 +189,7 @@ const OB = (() => {
     function prev() {
         if (currentStep <= 0) return;
         // Don't go back past auth if already authenticated
-        if (currentStep === 2 && userEmail) return;
+        if (currentStep === 1 && userEmail) return;
         currentStep--;
         updateUI();
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -204,11 +204,11 @@ const OB = (() => {
     }
 
     function canAdvance() {
-        // Step 0 (welcome): always
-        if (currentStep === 0) return true;
+        // Step 0 (auth): must be authenticated
+        if (currentStep === 0) return !!userEmail;
 
-        // Step 1 (auth): must be authenticated
-        if (currentStep === 1) return !!userEmail;
+        // Step 1 (welcome/overview): always
+        if (currentStep === 1) return true;
 
         // Step 2 (guide): always (we trust they scrolled)
         if (currentStep === 2) return true;
@@ -251,7 +251,7 @@ const OB = (() => {
 
         // Step label
         const stepLabels = [
-            'Welcome', 'Create Account', 'Season Guide',
+            'Create Account', 'Welcome', 'Season Guide',
             'Athletic Waiver', 'Medical Consent', 'Practice Commitment',
             'Code of Conduct', 'Media Release', 'Payment Info', 'Complete'
         ];
@@ -275,11 +275,11 @@ const OB = (() => {
         const nextBtn = document.getElementById('ob-btn-next');
         if (nextBtn) {
             if (currentStep === 0) {
-                nextBtn.textContent = 'Get Started';
-                nextBtn.disabled = false;
-            } else if (currentStep === 1) {
                 nextBtn.textContent = 'Continue';
                 nextBtn.disabled = !userEmail;
+            } else if (currentStep === 1) {
+                nextBtn.textContent = 'Get Started';
+                nextBtn.disabled = false;
             } else if (currentStep >= 3 && currentStep <= 7) {
                 nextBtn.textContent = 'Sign & Continue';
                 nextBtn.disabled = !canAdvance();
@@ -343,10 +343,10 @@ const OB = (() => {
             populateNameFields();
             await ensureOnboardingSession();
 
-            // Auto-advance to guide if still on auth step
-            if (currentStep <= 1) {
-                currentStep = 2;
-                recordStepAdvance('parent_guide');
+            // Auto-advance to welcome/overview if still on auth step
+            if (currentStep === 0) {
+                currentStep = 1;
+                recordStepAdvance('welcome');
                 saveSession();
                 updateUI();
             }
@@ -425,9 +425,9 @@ const OB = (() => {
             localStorage.setItem('gba_parent_name', parentName);
             if (athleteName) localStorage.setItem('gba_child_name', athleteName);
 
-            // Auto-advance
-            currentStep = 2;
-            recordStepAdvance('parent_guide');
+            // Auto-advance to welcome/overview
+            currentStep = 1;
+            recordStepAdvance('welcome');
             saveSession();
             updateUI();
 
