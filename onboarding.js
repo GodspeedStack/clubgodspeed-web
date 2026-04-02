@@ -132,36 +132,46 @@ const OB = (() => {
     async function ensureOnboardingSession() {
         if (!supabase || sessionId) return;
         try {
-            const { data, error } = await supabase.rpc('get_or_create_onboarding', {
+            const { data: raw, error } = await supabase.rpc('get_or_create_onboarding', {
                 p_email: userEmail,
                 p_user_id: (await supabase.auth.getUser())?.data?.user?.id || null,
                 p_parent_name: parentName,
                 p_athlete_name: athleteName
             });
-            if (data && !error) {
-                sessionId = data.id;
+            if (error) {
+                console.error('[onboarding] session RPC error:', error.message);
+                return;
+            }
+            // PostgREST may return array or object for composite-return functions
+            const session = Array.isArray(raw) ? raw[0] : raw;
+            if (session?.id) {
+                sessionId = session.id;
                 // If returning user, resume from their last step
-                const savedIdx = STEP_MAP.indexOf(data.current_step);
+                const savedIdx = STEP_MAP.indexOf(session.current_step);
                 if (savedIdx > currentStep) {
                     currentStep = savedIdx;
                 }
                 saveSession();
+            } else {
+                console.error('[onboarding] session RPC returned no id:', raw);
             }
         } catch (e) {
-            console.warn('Onboarding session init failed:', e);
+            console.error('[onboarding] session init failed:', e);
         }
     }
 
     async function recordStepAdvance(stepName) {
-        if (!supabase || !sessionId) return;
+        if (!supabase) { console.warn('[onboarding] no supabase client, skipping step advance'); return; }
+        if (!sessionId) { console.warn('[onboarding] no sessionId, skipping step advance for:', stepName); return; }
         try {
-            await supabase.rpc('advance_onboarding_step', {
+            const { error } = await supabase.rpc('advance_onboarding_step', {
                 p_session_id: sessionId,
                 p_step: stepName,
                 p_user_agent: navigator.userAgent
             });
+            if (error) console.error('[onboarding] step advance RPC error:', stepName, error.message);
         } catch (e) {
-            console.warn('Step advance failed:', e);
+            console.error('[onboarding] step advance failed:', stepName, e);
         }
     }
 
@@ -623,16 +633,31 @@ const OB = (() => {
         };
         localStorage.setItem(docsKey, JSON.stringify(signedDocs));
 
-        // Also persist to Supabase signatures table if available
-        if (supabase) {
-            supabase.from('signatures').insert([{
-                parent_email: email,
-                parent_name: parentName,
-                child_name: athleteName,
-                document_type: type,
-                signature_data: dataUrl,
-                signed_at: new Date().toISOString()
-            }]).then(() => {}).catch(() => {});
+        // Persist signature metadata to onboarding_sessions.metadata JSONB
+        if (supabase && sessionId) {
+            supabase
+                .from('onboarding_sessions')
+                .select('metadata')
+                .eq('id', sessionId)
+                .single()
+                .then(({ data: row }) => {
+                    const meta = row?.metadata || {};
+                    if (!meta.signatures) meta.signatures = {};
+                    meta.signatures[type] = {
+                        signed_at: new Date().toISOString(),
+                        parent_name: parentName,
+                        child_name: athleteName,
+                        has_image: true
+                    };
+                    return supabase
+                        .from('onboarding_sessions')
+                        .update({ metadata: meta })
+                        .eq('id', sessionId);
+                })
+                .then(({ error }) => {
+                    if (error) console.error('[onboarding] signature metadata save failed:', type, error.message);
+                })
+                .catch(e => console.error('[onboarding] signature persist error:', type, e));
         }
 
         saveSession();
