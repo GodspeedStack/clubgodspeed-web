@@ -407,9 +407,9 @@ const ScheduleView = (() => {
       if (priority) rows.push(['Attendance', '<span style="font-weight:600;color:#111">Full roster required.</span> This is a priority event for our program. We need every player present and ready to compete. Please plan accordingly and communicate early if there is a conflict.']);
 
       const detailRows = rows.map(([k, v]) =>
-        `<div style="display:flex;gap:12px;padding:8px 0;border-bottom:1px solid #f3f4f6">
-          <div style="width:72px;flex-shrink:0;font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">${k}</div>
-          <div style="font-size:12px;color:#374151;line-height:1.5">${v}</div>
+        `<div class="sv-detail-row" style="display:flex;gap:12px;padding:8px 0;border-bottom:1px solid #f3f4f6">
+          <div class="sv-detail-label" style="width:72px;flex-shrink:0;font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">${k}</div>
+          <div style="font-size:12px;color:#374151;line-height:1.5;min-width:0">${v}</div>
         </div>`
       ).join('');
 
@@ -424,22 +424,22 @@ const ScheduleView = (() => {
     }
 
     return `
-      <div style="border:1px solid ${isExpanded ? '#111' : '#e5e7eb'};border-radius:8px;margin-bottom:8px;overflow:hidden;transition:border-color 0.15s;cursor:pointer" onclick="ScheduleView._toggle('${ev.id}')">
-        <div style="padding:12px 14px;display:flex;align-items:center;gap:10px">
+      <div class="sv-card" style="border:1px solid ${isExpanded ? '#111' : '#e5e7eb'};border-radius:8px;margin-bottom:8px;overflow:hidden;transition:border-color 0.15s;cursor:pointer" onclick="ScheduleView._toggle('${ev.id}')">
+        <div class="sv-card-row">
           <div style="color:#9ca3af;flex-shrink:0">${chevron}</div>
           <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-              <span style="font-size:13px;font-weight:600;color:#111">${ev.title}</span>
-              <span style="font-size:10px;font-weight:600;border-radius:4px;padding:2px 7px;background:${gc.bg};color:${gc.color};border:1px solid ${gc.border}">${gradeLabel(ev.grade_level)}</span>
+            <div class="sv-card-title-row">
+              <span class="sv-card-title">${ev.title}</span>
+              <span style="font-size:10px;font-weight:600;border-radius:4px;padding:2px 7px;background:${gc.bg};color:${gc.color};border:1px solid ${gc.border};white-space:nowrap">${gradeLabel(ev.grade_level)}</span>
               ${statusBadge}
             </div>
-            <div style="display:flex;align-items:center;gap:8px;margin-top:3px;font-size:11px;color:#6b7280">
+            <div class="sv-card-meta">
               <span>${dateLabel}</span>
               ${ev.location ? '<span style="color:#d1d5db">|</span><span>' + ev.location.split(',')[0] + '</span>' : ''}
               ${availDot ? '<span style="color:#d1d5db">|</span><span style="display:inline-flex;align-items:center;gap:4px">' + availDot + '</span>' : ''}
             </div>
           </div>
-          ${availToggle}
+          <div class="sv-card-toggle">${availToggle}</div>
         </div>
         ${detail}
       </div>`;
@@ -485,12 +485,12 @@ const ScheduleView = (() => {
       const dateStr = fmtShort(ev.start_date);
       const timeStr = ev.start_time ? fmtTime(ev.start_time) + (ev.end_time ? ' - ' + fmtTime(ev.end_time) : '') : '';
       html += `
-        <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f3f4f6">
-          <div style="width:80px;flex-shrink:0">
+        <div class="sv-practice-row">
+          <div class="sv-practice-date">
             <div style="font-size:12px;font-weight:600;color:#111">${dateStr}</div>
             <div style="font-size:10px;color:#9ca3af">${timeStr}</div>
           </div>
-          <div style="flex:1">
+          <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:600;color:#111">${ev.title}</div>
             ${ev.location ? `<div style="font-size:11px;color:#6b7280">${ev.location}</div>` : ''}
           </div>
@@ -534,7 +534,7 @@ const ScheduleView = (() => {
 
     let cells = '';
     for (let i = 0; i < startDay; i++) {
-      cells += '<div style="min-height:72px;border:1px solid #f3f4f6;border-radius:4px"></div>';
+      cells += '<div class="sv-cal-cell" style="border:1px solid #f3f4f6"></div>';
     }
     for (let d = 1; d <= daysInMonth; d++) {
       const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
@@ -545,17 +545,18 @@ const ScheduleView = (() => {
         return `<div style="font-size:9px;padding:1px 4px;border-radius:3px;background:${c};color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;font-weight:500">${e.title}</div>`;
       }).join('');
       const more = evts.length > 2 ? `<div style="font-size:9px;color:#9ca3af;font-weight:500">+${evts.length - 2} more</div>` : '';
+      const dotIndicator = evts.length > 0 ? `<div class="sv-cal-dot" style="width:5px;height:5px;border-radius:50%;background:#111;margin:1px auto 0;display:none"></div>` : '';
 
       cells += `
-        <div style="min-height:72px;border:1px solid ${isToday ? '#111' : '#f3f4f6'};border-radius:4px;padding:4px;display:flex;flex-direction:column;gap:2px">
+        <div class="sv-cal-cell" style="border:1px solid ${isToday ? '#111' : '#f3f4f6'}">
           <div style="font-size:10px;font-weight:${isToday ? '700' : '500'};color:${isToday ? '#111' : '#6b7280'};margin-bottom:1px">${d}</div>
-          ${pills}${more}
+          ${pills}${more}${dotIndicator}
         </div>`;
     }
 
     return `
-      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px">${headerCells}</div>
-      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px">${cells}</div>`;
+      <div class="sv-cal-header">${headerCells}</div>
+      <div class="sv-cal-grid">${cells}</div>`;
   }
 
   // ─── Grade Filter Tabs ──────────────────────────────────────
@@ -605,36 +606,90 @@ const ScheduleView = (() => {
     else if (activeTab === 2) tabContent = renderFullCalendar();
 
     container.innerHTML = `
-      <div style="display:flex;gap:0;min-height:480px;background:#fff;border-radius:12px;border:1px solid #e5e7eb;overflow:hidden">
+      <style>
+        .sv-root { display:flex;gap:0;min-height:480px;background:#fff;border-radius:12px;border:1px solid #e5e7eb;overflow:hidden }
+        .sv-sidebar { width:220px;flex-shrink:0;padding:16px;border-right:1px solid #e5e7eb;overflow-y:auto }
+        .sv-main { flex:1;display:flex;flex-direction:column;overflow:hidden }
+        .sv-header { padding:14px 20px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px }
+        .sv-tabs { display:flex;padding:0 20px;border-bottom:1px solid #e5e7eb;overflow-x:auto;-webkit-overflow-scrolling:touch }
+        .sv-actions { display:flex;gap:8px;padding:12px 20px 0;justify-content:flex-end;flex-wrap:wrap }
+        .sv-content { flex:1;padding:${activeTab === 2 ? '12px 12px' : '16px 20px'};overflow-y:auto }
+        .sv-card-row { padding:12px 14px;display:flex;align-items:center;gap:10px }
+        .sv-card-title-row { display:flex;align-items:center;gap:8px;flex-wrap:wrap }
+        .sv-card-title { font-size:13px;font-weight:600;color:#111 }
+        .sv-card-meta { display:flex;align-items:center;gap:8px;margin-top:3px;font-size:11px;color:#6b7280 }
+        .sv-card-toggle { display:flex;align-items:center;gap:6px;flex-shrink:0 }
+        .sv-cal-grid { display:grid;grid-template-columns:repeat(7,1fr);gap:2px }
+        .sv-cal-header { display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px }
+        .sv-cal-cell { min-height:72px;padding:4px;display:flex;flex-direction:column;gap:2px;border-radius:4px }
+        .sv-practice-row { display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f3f4f6 }
+        .sv-practice-date { width:80px;flex-shrink:0 }
+        @media (max-width: 768px) {
+          .sv-root { flex-direction:column;min-height:auto;border-radius:8px }
+          .sv-sidebar { width:100%;border-right:none;border-bottom:1px solid #e5e7eb;padding:12px 16px;display:flex;gap:16px;overflow-x:auto;-webkit-overflow-scrolling:touch }
+          .sv-sidebar > div:first-child { flex-shrink:0;min-width:200px }
+          .sv-sidebar > div:last-child { flex-shrink:0;min-width:160px }
+          .sv-header { padding:12px 16px }
+          .sv-header h3 { font-size:14px !important }
+          .sv-tabs { padding:0 16px;gap:0 }
+          .sv-actions { padding:10px 16px 0 }
+          .sv-content { padding:12px 16px }
+          .sv-card-row { flex-wrap:wrap;padding:10px 12px;gap:8px }
+          .sv-card-toggle { width:100%;justify-content:flex-end;padding-top:4px;border-top:1px solid #f3f4f6 }
+          .sv-cal-cell { min-height:52px;padding:3px }
+          .sv-cal-cell div[style*="font-size:9px"] { font-size:8px !important;padding:1px 2px !important }
+          .sv-practice-row { gap:8px }
+          .sv-practice-date { width:64px }
+        }
+        @media (max-width: 480px) {
+          .sv-sidebar { flex-direction:column;gap:12px }
+          .sv-sidebar > div:first-child { min-width:auto }
+          .sv-sidebar > div:last-child { min-width:auto }
+          .sv-header { flex-direction:column;align-items:flex-start;gap:8px }
+          .sv-content { padding:10px 12px }
+          .sv-card-row { padding:10px }
+          .sv-card-title { font-size:12px }
+          .sv-card-meta { flex-wrap:wrap;gap:4px }
+          .sv-cal-cell { min-height:40px;padding:2px }
+          .sv-cal-cell div[style*="font-size:9px"] { display:none }
+          .sv-cal-dot { display:block !important }
+          .sv-cal-cell div[style*="font-size:10px"] { font-size:9px !important }
+          .sv-practice-row { flex-wrap:wrap;gap:4px }
+          .sv-practice-date { width:auto }
+          .sv-detail-row { flex-direction:column;gap:2px }
+          .sv-detail-label { width:auto !important }
+        }
+      </style>
+      <div class="sv-root">
         <!-- Left: Mini Calendar + Upcoming -->
-        <div style="width:220px;flex-shrink:0;padding:16px;border-right:1px solid #e5e7eb;overflow-y:auto">
-          ${renderMiniCalendar()}
-          ${renderUpcoming()}
+        <div class="sv-sidebar">
+          <div>${renderMiniCalendar()}</div>
+          <div>${renderUpcoming()}</div>
         </div>
 
         <!-- Right: Main content -->
-        <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+        <div class="sv-main">
           <!-- Header -->
-          <div style="padding:14px 20px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <div class="sv-header">
             <div style="display:flex;align-items:center">
               <h3 style="margin:0;font-size:15px;font-weight:700;color:#111">Schedule & Tournaments</h3>
               ${countBadge}
             </div>
-            <div style="display:flex;gap:6px">${renderGradeFilter()}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">${renderGradeFilter()}</div>
           </div>
 
           <!-- Tabs -->
-          <div style="display:flex;padding:0 20px;border-bottom:1px solid #e5e7eb">${renderTabs()}</div>
+          <div class="sv-tabs">${renderTabs()}</div>
 
           <!-- Tab Actions -->
           ${activeTab === 0 ? `
-          <div style="display:flex;gap:8px;padding:12px 20px 0;justify-content:flex-end">
+          <div class="sv-actions">
             <button onclick="ScheduleView._downloadPDF()" style="padding:6px 14px;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#374151;font-size:11px;cursor:pointer;font-weight:600">Download PDF</button>
             <button onclick="ScheduleView._downloadICS()" style="padding:6px 14px;border-radius:6px;border:none;background:#111;color:#fff;font-size:11px;cursor:pointer;font-weight:600">Add All to Calendar</button>
           </div>` : ''}
 
           <!-- Content -->
-          <div style="flex:1;padding:${activeTab === 2 ? '12px 16px' : '16px 20px'};overflow-y:auto">${tabContent}</div>
+          <div class="sv-content">${tabContent}</div>
         </div>
       </div>`;
   }
