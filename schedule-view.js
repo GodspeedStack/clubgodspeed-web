@@ -298,7 +298,7 @@ const ScheduleView = (() => {
     const priority = isPriorityEvent(ev.title);
     const status = statusFromTags(ev.tags);
     const statusBadge = (priority
-      ? '<span style="font-size:9px;font-weight:700;letter-spacing:0.06em;border-radius:4px;padding:2px 7px;background:#111;color:#fff">ALL HANDS ON DECK</span>'
+      ? '<span style="font-size:9px;font-weight:700;letter-spacing:0.06em;border-radius:4px;padding:2px 7px;background:#111;color:#fff">HIGH PRIORITY</span>'
       : '')
       + (status
       ? `<span style="font-size:10px;font-weight:600;border-radius:10px;padding:2px 8px;background:${status.bg};color:${status.color}">${status.label}</span>`
