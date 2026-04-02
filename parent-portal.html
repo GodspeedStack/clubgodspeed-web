@@ -1455,7 +1455,8 @@
 
     <!-- Tournament Schedule Initialization -->
     <script>
-    (function() {
+    // Schedule view init — must wait for deferred scripts to load
+    document.addEventListener('DOMContentLoaded', function() {
         let scheduleLoaded = false;
 
         function initScheduleView() {
@@ -1470,8 +1471,8 @@
             });
         }
 
-        // Hook into view switching
-        const origSwitch = window.switchPortalView;
+        // Hook into view switching (origSwitch is now guaranteed to exist)
+        var origSwitch = window.switchPortalView;
         if (origSwitch) {
             window.switchPortalView = function(viewName, linkElement) {
                 origSwitch.call(this, viewName, linkElement);
@@ -1479,12 +1480,11 @@
             };
         }
 
+        // Direct hash navigation
         if (window.location.hash === '#calendar' || window.location.hash === '#tournaments') {
-            document.addEventListener('DOMContentLoaded', function() {
-                setTimeout(initScheduleView, 500);
-            });
+            setTimeout(initScheduleView, 500);
         }
-    })();
+    });
     </script>
 </body>
 
