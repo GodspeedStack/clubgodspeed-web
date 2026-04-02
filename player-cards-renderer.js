@@ -19,6 +19,7 @@
   var CARD_ART = {
     'Quest':  { image: 'src/assets/athletes/quest_scott_monster.png', lastname: 'Scott' },
     'Ashton': { image: 'src/assets/athletes/ashton_comic.jpg',        lastname: 'Bowman' },
+    'A.D.':   { image: 'src/assets/athletes/ad_tuiono_99.png',        lastname: 'Tuiono' },
   };
 
   /* ── Full Roster ─────────────────────────────────────────── */
@@ -28,7 +29,7 @@
     { name: 'Ashton',  jersey: 2,  pos: 'SG', stats: { PPG: '3.0', STL: '1.0', REB: '1.0', GRD: '7.6' }, games: [{ opp: 'vs. Weeks', stat: '3 PTS, 100% FT' }, { opp: '@ Practice 5', stat: 'Defensive Anchor' }, { opp: 'Trend', stat: 'Steady Growth' }] },
     { name: 'Aiden',   jersey: 1,  pos: 'G'  },
     { name: 'Cassius', jersey: 3,  pos: 'G'  },
-    { name: 'A.D.',    jersey: 4,  pos: 'PF' },
+    { name: 'A.D.',    jersey: 99, pos: 'PF', stats: { PPG: '—', APG: '—', REB: '—', GRD: '—' }, games: [{ opp: 'vs. TBD', stat: '— PTS' }, { opp: '@ TBD', stat: '— PTS' }, { opp: 'Trend', stat: 'Rising' }] },
     { name: 'Howard',  jersey: 5,  pos: 'C'  },
     { name: 'Anton',   jersey: 12, pos: 'PG' },
     { name: 'Emory',   jersey: 7,  pos: 'SF' },
