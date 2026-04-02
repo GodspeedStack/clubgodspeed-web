@@ -32,7 +32,7 @@
             padding: 8rem 5% 5rem 5%;
             min-height: 100vh;
             background: #fbfbfd;
-            /* Apple-esque standard background */
+            font-family: 'Inter', sans-serif;
             animation: fadeIn 0.8s ease-out;
         }
 
@@ -90,6 +90,7 @@
         /* Re-adding pattern as a separate class if needed, but removing for "exactly like cards" request base */
 
         .month-title {
+            font-family: 'Inter', sans-serif;
             font-size: 2.5rem;
             font-weight: 800;
             color: #1d1d1f;
@@ -98,7 +99,8 @@
         }
 
         .year-subtitle {
-            font-size: 1.2rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 1.25rem;
             color: #86868b;
             font-weight: 500;
             margin-top: 0.2rem;
@@ -118,9 +120,10 @@
             background: transparent;
             padding: 1.25rem 1rem;
             text-align: center;
+            font-family: 'Inter', sans-serif;
             font-weight: 600;
             color: #86868b;
-            font-size: 0.9375rem;
+            font-size: 1rem;
             text-transform: uppercase;
             letter-spacing: 0.06em;
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
@@ -206,14 +209,14 @@
         }
 
         .list-item-day {
-            font-size: 1.5rem;
+            font-size: 1.75rem;
             font-weight: 700;
             color: #1d1d1f;
             line-height: 1;
         }
 
         .list-item-weekday {
-            font-size: 0.75rem;
+            font-size: 0.85rem;
             color: #86868b;
             text-transform: uppercase;
             letter-spacing: 0.05em;
@@ -225,14 +228,14 @@
         }
 
         .list-item-title {
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: 600;
             color: #1d1d1f;
             margin-bottom: 0.25rem;
         }
 
         .list-item-meta {
-            font-size: 0.875rem;
+            font-size: 0.95rem;
             color: #86868b;
         }
 
@@ -247,7 +250,7 @@
             text-align: center;
             padding: 3rem 1rem;
             color: #86868b;
-            font-size: 1rem;
+            font-size: 1.05rem;
         }
 
         @media (max-width: 767px) {
@@ -267,14 +270,16 @@
         }
 
         .day-number {
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
             font-weight: 600;
             color: #333;
             margin-bottom: 0.5rem;
             display: inline-block;
-            width: 28px;
-            height: 28px;
+            width: 30px;
+            height: 30px;
             text-align: center;
-            line-height: 28px;
+            line-height: 30px;
             border-radius: 50%;
         }
 
@@ -291,14 +296,13 @@
             display: block;
             padding: 8px 12px;
             border-radius: 8px;
-            /* Softer, more modern radius */
-            font-size: 0.9375rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
             font-weight: 600;
             margin-bottom: 8px;
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            /* Subtle lift */
             line-height: 1.4;
             letter-spacing: -0.01em;
             position: relative;
@@ -484,13 +488,13 @@
                     <div class="month-title" id="monthTitle">DECEMBER</div>
                     <div class="year-subtitle" id="yearSubtitle">2025 Schedule</div>
                     <div id="calculated-hours"
-                        style="margin-top: 10px; display: inline-flex; gap: 8px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+                        style="margin-top: 10px; display: inline-flex; gap: 8px; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
                         <!-- Stats injected by JS -->
                     </div>
                 </div>
                 <div class="calendar-controls">
                     <button class="btn-secondary" onclick="openSyncModal()"
-                        style="padding: 0.5rem 1rem; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
+                        style="padding: 0.5rem 1rem; font-size: 0.95rem; display: flex; align-items: center; gap: 6px;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -500,11 +504,11 @@
                         Sync
                     </button>
                     <button class="btn-secondary" onclick="prevMonth()"
-                        style="padding: 0.5rem 1rem; font-size: 0.9rem;">&lt;</button>
+                        style="padding: 0.5rem 1rem; font-size: 0.95rem;">&lt;</button>
                     <button class="btn-secondary" onclick="gotoToday()"
-                        style="padding: 0.5rem 1rem; font-size: 0.9rem;">Today</button>
+                        style="padding: 0.5rem 1rem; font-size: 0.95rem;">Today</button>
                     <button class="btn-secondary" onclick="nextMonth()"
-                        style="padding: 0.5rem 1rem; font-size: 0.9rem;">&gt;</button>
+                        style="padding: 0.5rem 1rem; font-size: 0.95rem;">&gt;</button>
                 </div>
             </div>
 
@@ -530,13 +534,13 @@
                     <div class="month-title" id="monthTitle">DECEMBER</div>
                     <div class="year-subtitle" id="yearSubtitle">2025 Schedule</div>
                     <div id="calculated-hours"
-                        style="margin-top: 10px; display: inline-flex; gap: 8px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+                        style="margin-top: 10px; display: inline-flex; gap: 8px; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
                         <!-- Stats injected by JS -->
                     </div>
                 </div>
                 <div class="calendar-controls">
                     <button class="btn-secondary" onclick="openSyncModal()"
-                        style="padding: 0.5rem 1rem; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
+                        style="padding: 0.5rem 1rem; font-size: 0.95rem; display: flex; align-items: center; gap: 6px;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -546,11 +550,11 @@
                         Sync
                     </button>
                     <button class="btn-secondary" onclick="prevMonth()"
-                        style="padding: 0.5rem 1rem; font-size: 0.9rem;">&lt;</button>
+                        style="padding: 0.5rem 1rem; font-size: 0.95rem;">&lt;</button>
                     <button class="btn-secondary" onclick="gotoToday()"
-                        style="padding: 0.5rem 1rem; font-size: 0.9rem;">Today</button>
+                        style="padding: 0.5rem 1rem; font-size: 0.95rem;">Today</button>
                     <button class="btn-secondary" onclick="nextMonth()"
-                        style="padding: 0.5rem 1rem; font-size: 0.9rem;">&gt;</button>
+                        style="padding: 0.5rem 1rem; font-size: 0.95rem;">&gt;</button>
                 </div>
             </div>
             <div id="calendarListBody" class="calendar-list-container">
