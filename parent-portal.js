@@ -1167,7 +1167,17 @@ window.switchPortalView = function (viewName, linkElement) {
     }
 
     if (viewName === 'calendar') {
-        // Schedule view now handled by schedule-view.js (no iframe injection needed)
+        // Initialize schedule-view.js on first visit
+        if (typeof ScheduleView !== 'undefined' && !window._scheduleViewLoaded) {
+            var client = window.auth && window.auth.getSupabaseClient ? window.auth.getSupabaseClient() : null;
+            if (client) {
+                ScheduleView.init(client);
+                ScheduleView.load().then(function() {
+                    ScheduleView.render('schedule-view-root');
+                    window._scheduleViewLoaded = true;
+                });
+            }
+        }
     }
 }
 
