@@ -1224,7 +1224,7 @@
             try {
                 const SUPA_URL = 'https://nnqokhqennuxalamnvps.supabase.co';
                 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis';
-                const url = `${SUPA_URL}/rest/v1/team_schedule_view?select=schedule_id,tournament_id,tournament_name,start_date,end_date,city,state,event_type,rank_tier,game_guarantee,status,registration_cost,payment_status&order=start_date.asc`;
+                const url = `${SUPA_URL}/rest/v1/team_schedule_view?select=schedule_id,tournament_id,tournament_name,start_date,end_date,city,state,event_type,rank_tier,game_guarantee,status&order=start_date.asc`;
                 const res = await fetch(url, {
                     headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
                 });
@@ -1237,6 +1237,14 @@
                 const duration = performance.now() - startTime;
                 CalendarSyncConfig.logQuery('loadScheduledTournaments', Math.round(duration), tournaments.length);
 
+                // Helper: normalize tournament name for fuzzy dedup
+                function normalizeName(name) {
+                    return (name || '').toLowerCase()
+                        .replace(/ day \d+$/i, '')
+                        .replace(/^ihoop\s+/i, '')
+                        .replace(/[^a-z0-9]/g, '');
+                }
+
                 tournaments.forEach(t => {
                     const start = new Date(t.start_date + 'T12:00:00');
                     const end = t.end_date ? new Date(t.end_date + 'T12:00:00') : start;
@@ -1247,18 +1255,25 @@
                     const gamesLabel = t.game_guarantee ? `${t.game_guarantee} games` : '';
                     const eventLabel = t.event_type === '3v3' ? '3v3' : 'Tournament';
                     const dateRange = totalDays > 1 ? ` (${t.start_date} - ${t.end_date})` : '';
+                    const scheduleNameNorm = normalizeName(t.tournament_name);
 
                     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
                         dayNum++;
                         const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                         const dayLabel = totalDays > 1 && dayNum > 1 ? ` Day ${dayNum}` : '';
 
-                        // Skip if this tournament is already in calendar_events (avoid duplicates)
+                        // team_schedule_view is the master source.
+                        // Remove any calendar_events duplicates that fuzzy-match this tournament name.
                         if (SPECIFIC_EVENTS[ds] && Array.isArray(SPECIFIC_EVENTS[ds])) {
-                            const alreadyExists = SPECIFIC_EVENTS[ds].some(ev =>
-                                ev.type === 'tournament' && ev.title.replace(/ Day \d+$/, '') === t.tournament_name
-                            );
-                            if (alreadyExists) return;
+                            SPECIFIC_EVENTS[ds] = SPECIFIC_EVENTS[ds].filter(ev => {
+                                if (ev._source === 'team_schedule') return true;
+                                if (ev.type !== 'tournament') return true;
+                                const evNorm = normalizeName(ev.title);
+                                // Check if the existing event name is contained in or contains the schedule name
+                                return !(evNorm === scheduleNameNorm
+                                    || scheduleNameNorm.includes(evNorm)
+                                    || evNorm.includes(scheduleNameNorm));
+                            });
                         }
 
                         const evObj = {
