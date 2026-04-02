@@ -358,6 +358,29 @@ const ScheduleView = (() => {
       ? '<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="transform:rotate(90deg);transition:transform 0.15s"><path d="M6 3l5 5-5 5"/></svg>'
       : '<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="transition:transform 0.15s"><path d="M6 3l5 5-5 5"/></svg>';
 
+    // Availability toggle -- always visible on the card face
+    const avail = availability[ev.id];
+    const isAvail = avail === 'available';
+    const isUnavail = avail === 'unavailable';
+    const noResponse = !isAvail && !isUnavail;
+    const saving = availSaving[ev.id];
+    const eid = ev.id.replace(/'/g, "\\'");
+    const ename = (ev.title || '').replace(/'/g, "\\'");
+
+    const availBtnAvail = `<button onclick="event.stopPropagation();ScheduleView._setAvail('${eid}','${ename}','available')"
+      style="padding:4px 10px;border:none;font-size:10px;font-weight:600;cursor:pointer;transition:all 0.15s;border-radius:4px 0 0 4px;${isAvail
+        ? 'background:#15803d;color:#fff'
+        : 'background:#fff;color:#6b7280'}"${saving ? ' disabled' : ''}>Available</button>`;
+    const availBtnUnavail = `<button onclick="event.stopPropagation();ScheduleView._setAvail('${eid}','${ename}','unavailable')"
+      style="padding:4px 10px;border:none;border-left:1px solid #d1d5db;font-size:10px;font-weight:600;cursor:pointer;transition:all 0.15s;border-radius:0 4px 4px 0;${isUnavail
+        ? 'background:#dc2626;color:#fff'
+        : 'background:#fff;color:#6b7280'}"${saving ? ' disabled' : ''}>Unavailable</button>`;
+
+    const availToggleInline = `
+      <div style="display:flex;align-items:center;gap:0;border-radius:4px;overflow:hidden;border:1px solid ${noResponse ? '#f59e0b' : '#d1d5db'};flex-shrink:0${noResponse ? ';box-shadow:0 0 0 1px #f59e0b' : ''}" onclick="event.stopPropagation()">
+        ${availBtnAvail}${availBtnUnavail}
+      </div>`;
+
     let detail = '';
     if (isExpanded) {
       const rows = [];
@@ -382,36 +405,9 @@ const ScheduleView = (() => {
         </div>`
       ).join('');
 
-      // Availability toggle
-      const avail = availability[ev.id];
-      const isAvail = avail === 'available';
-      const isUnavail = avail === 'unavailable';
-      const saving = availSaving[ev.id];
-      const eid = ev.id.replace(/'/g, "\\'");
-      const ename = (ev.title || '').replace(/'/g, "\\'");
-
-      const availToggle = `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f3f4f6">
-          <div>
-            <div style="font-size:11px;font-weight:600;color:#111;text-transform:uppercase;letter-spacing:0.04em">Availability</div>
-            <div style="font-size:11px;color:#6b7280;margin-top:2px">${isAvail ? 'You\'re marked as available' : isUnavail ? 'You\'re marked as unavailable' : 'Let us know if your player can attend'}</div>
-          </div>
-          <div style="display:flex;gap:0;border-radius:6px;overflow:hidden;border:1px solid #d1d5db" onclick="event.stopPropagation()">
-            <button onclick="event.stopPropagation();ScheduleView._setAvail('${eid}','${ename}','available')"
-              style="padding:5px 12px;border:none;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.15s;${isAvail
-                ? 'background:#111;color:#fff'
-                : 'background:#fff;color:#6b7280'}"${saving ? ' disabled' : ''}>Available</button>
-            <button onclick="event.stopPropagation();ScheduleView._setAvail('${eid}','${ename}','unavailable')"
-              style="padding:5px 12px;border:none;border-left:1px solid #d1d5db;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.15s;${isUnavail
-                ? 'background:#111;color:#fff'
-                : 'background:#fff;color:#6b7280'}"${saving ? ' disabled' : ''}>Unavailable</button>
-          </div>
-        </div>`;
-
       detail = `
         <div style="padding:12px 14px 14px;border-top:1px solid #e5e7eb;background:#fafafa;border-radius:0 0 8px 8px">
           ${detailRows}
-          ${availToggle}
           <div style="display:flex;gap:8px;margin-top:12px">
             <button onclick="ScheduleView._addToCalendar('${ev.id}')" style="padding:6px 12px;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#374151;font-size:11px;cursor:pointer;font-weight:600">Add to Calendar</button>
             ${ev.location_url ? `<a href="${ev.location_url}" target="_blank" rel="noopener" style="padding:6px 12px;border-radius:6px;border:none;background:#111;color:#fff;font-size:11px;cursor:pointer;font-weight:600;text-decoration:none;display:inline-flex;align-items:center">Get Directions</a>` : ''}
@@ -419,8 +415,13 @@ const ScheduleView = (() => {
         </div>`;
     }
 
+    // Prompt text when no response yet
+    const respondPrompt = noResponse
+      ? '<span style="font-size:9px;color:#f59e0b;font-weight:600;white-space:nowrap">Respond</span>'
+      : '';
+
     return `
-      <div style="border:1px solid ${isExpanded ? '#111' : '#e5e7eb'};border-radius:8px;margin-bottom:8px;overflow:hidden;transition:border-color 0.15s;cursor:pointer" onclick="ScheduleView._toggle('${ev.id}')">
+      <div style="border:1px solid ${isExpanded ? '#111' : noResponse ? '#f59e0b' : '#e5e7eb'};border-radius:8px;margin-bottom:8px;overflow:hidden;transition:border-color 0.15s;cursor:pointer" onclick="ScheduleView._toggle('${ev.id}')">
         <div style="padding:12px 14px;display:flex;align-items:center;gap:10px">
           <div style="color:#9ca3af;flex-shrink:0">${chevron}</div>
           <div style="flex:1;min-width:0">
@@ -432,9 +433,11 @@ const ScheduleView = (() => {
             <div style="display:flex;align-items:center;gap:10px;margin-top:3px;font-size:11px;color:#6b7280">
               <span>${dateLabel}</span>
               ${ev.location ? '<span style="color:#d1d5db">|</span><span>' + ev.location.split(',')[0] + '</span>' : ''}
-              ${availability[ev.id] === 'available' ? '<span style="color:#d1d5db">|</span><span style="color:#15803d;font-weight:600">Available</span>' : ''}
-              ${availability[ev.id] === 'unavailable' ? '<span style="color:#d1d5db">|</span><span style="color:#dc2626;font-weight:600">Unavailable</span>' : ''}
             </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+            ${respondPrompt}
+            ${availToggleInline}
           </div>
         </div>
         ${detail}
