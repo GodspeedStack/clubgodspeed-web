@@ -1377,12 +1377,13 @@
                 });
 
                 // Reload from all sources with timing
+                // Published events + cancellations first, then schedule dedup
                 const loadStart = performance.now();
                 await Promise.all([
                     loadPublishedEvents(),
-                    loadScheduledTournaments(),
                     loadPracticeCancellations()
                 ]);
+                await loadScheduledTournaments();
                 const loadDuration = performance.now() - loadStart;
 
                 CalendarSyncConfig.logQuery('refreshData', Math.round(loadDuration));
@@ -1405,12 +1406,12 @@
         document.addEventListener('DOMContentLoaded', async () => {
             const startTime = performance.now();
 
-            // Load initial data from all sources (calendar_events + team_schedule_view)
+            // Load published events + cancellations first, then schedule (dedup depends on order)
             await Promise.all([
                 loadPublishedEvents(),
-                loadScheduledTournaments(),
                 loadPracticeCancellations()
             ]);
+            await loadScheduledTournaments();
             renderCalendar();
 
             const initialLoadDuration = performance.now() - startTime;
