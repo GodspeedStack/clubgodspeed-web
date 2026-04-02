@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         /* Embedded Button Visibility Override */
@@ -115,13 +116,13 @@
 
         .calendar-day-header {
             background: transparent;
-            padding: 1rem;
+            padding: 1.25rem 1rem;
             text-align: center;
             font-weight: 600;
             color: #86868b;
-            font-size: 0.75rem;
+            font-size: 0.9375rem;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.06em;
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
             border-right: 1px solid rgba(0, 0, 0, 0.05);
         }
@@ -288,17 +289,17 @@
 
         .event-pill {
             display: block;
-            padding: 6px 10px;
+            padding: 8px 12px;
             border-radius: 8px;
             /* Softer, more modern radius */
-            font-size: 0.75rem;
+            font-size: 0.9375rem;
             font-weight: 600;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
             /* Subtle lift */
-            line-height: 1.3;
+            line-height: 1.4;
             letter-spacing: -0.01em;
             position: relative;
             overflow: hidden;
@@ -1192,10 +1193,79 @@
             }
         }
 
+        // ── Real-time Subscription to Calendar Events ──
+        let realtimeUnsubscribe = null;
+
+        async function setupRealtimeSync() {
+            try {
+                const { createClient } = window.supabase;
+                const supabase = createClient(
+                    'https://nnqokhqennuxalamnvps.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis'
+                );
+
+                // Subscribe to all calendar_events changes
+                const subscription = supabase
+                    .channel('calendar_events_realtime')
+                    .on(
+                        'postgres_changes',
+                        {
+                            event: '*', // Listen to insert, update, delete
+                            schema: 'public',
+                            table: 'calendar_events',
+                            filter: 'visibility=in.(public,team_only)'
+                        },
+                        async (payload) => {
+                            console.log('Calendar event changed:', payload);
+                            // Refresh events and re-render
+                            await refreshCalendarData();
+                        }
+                    )
+                    .subscribe();
+
+                realtimeUnsubscribe = () => {
+                    supabase.removeChannel(subscription);
+                };
+            } catch (err) {
+                console.error('Failed to setup realtime sync:', err);
+                // Fallback: implement polling every 30 seconds
+                setInterval(async () => {
+                    await refreshCalendarData();
+                }, 30000);
+            }
+        }
+
+        async function refreshCalendarData() {
+            try {
+                // Clear tournament/event data
+                const dateKeys = Object.keys(SPECIFIC_EVENTS);
+                dateKeys.forEach(key => {
+                    // Remove tournament events only, keep hardcoded events
+                    if (Array.isArray(SPECIFIC_EVENTS[key])) {
+                        SPECIFIC_EVENTS[key] = SPECIFIC_EVENTS[key].filter(ev => ev.type !== 'tournament');
+                    }
+                });
+
+                // Reload from database
+                await Promise.all([loadPublishedEvents(), loadPracticeCancellations()]);
+
+                // Re-render calendar
+                renderCalendar();
+                console.log('Calendar refreshed from realtime event');
+            } catch (err) {
+                console.error('Failed to refresh calendar data:', err);
+            }
+        }
+
         // Init: load dynamic events + cancellations, then render
         document.addEventListener('DOMContentLoaded', async () => {
             await Promise.all([loadPublishedEvents(), loadPracticeCancellations()]);
             renderCalendar();
+
+            // Setup real-time sync after initial load
+            setTimeout(() => {
+                setupRealtimeSync();
+            }, 500);
         });
     </script>
     <script src="branded-modal.js"></script>
