@@ -155,21 +155,12 @@
                 } catch (error) {
                     console.error('Supabase login failed:', error);
                     if (error.message === 'Failed to fetch' || (error.message && error.message.includes('fetch'))) {
-                        console.warn('Network unreachable. Auto-falling back to local mock login.');
-                        localStorage.setItem(AUTH_KEY, 'valid_token_' + Date.now());
-                        localStorage.setItem('gba_user_email', email);
-                        updateUI(true);
-                        return { success: true };
+                        throw new Error('Cannot connect to the server. Please check your internet connection or disable your adblocker and try again.');
                     }
                     throw error;
                 }
             } else {
-                // Fallback to localStorage mock
-                console.warn('Using localStorage fallback for login');
-                localStorage.setItem(AUTH_KEY, 'valid_token_' + Date.now());
-                localStorage.setItem('gba_user_email', email);
-                updateUI(true);
-                return { success: true };
+                throw new Error('Our login system is temporarily unavailable. Please try again in a few minutes.');
             }
         },
 
@@ -376,17 +367,12 @@
                 } catch (error) {
                     console.error('Signup failed:', error);
                     if (error.message === 'Failed to fetch' || (error.message && error.message.includes('fetch'))) {
-                        console.warn('Network unreachable. Auto-falling back to local mock signup.');
-                        return {
-                            success: true,
-                            requiresVerification: false,
-                            userId: 'mock-user-' + Date.now()
-                        };
+                        throw new Error('Cannot connect to the server. Please check your internet connection or disable your adblocker and try again.');
                     }
                     throw error;
                 }
             }
-            throw new Error('Supabase not available');
+            throw new Error('Our signup system is temporarily unavailable. Please try again in a few minutes.');
         },
 
         signInWithOAuth: async function (options) {
@@ -394,6 +380,53 @@
                 return await supabaseClient.auth.signInWithOAuth(options);
             }
             return { error: { message: 'Supabase not available' } };
+        },
+
+        /**
+         * Server-side approval verification. Queries profiles table directly
+         * and syncs localStorage. Returns { approved, denied, role } or null on error.
+         * Call on every dashboard load and after OAuth redirect.
+         */
+        verifyApproval: async function () {
+            if (!isSupabaseAvailable || !supabaseClient) return null;
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) return null;
+
+                const profile = await this.getProfile(user.id);
+                if (!profile) {
+                    // Profile missing — treat as unapproved
+                    localStorage.setItem('gba_user_approved', 'false');
+                    return { approved: false, denied: false, role: 'parent' };
+                }
+
+                localStorage.setItem('gba_user_approved', String(profile.approved ?? false));
+                localStorage.setItem('gba_user_role', profile.role || 'parent');
+
+                // Check denial status in login_requests
+                let denied = false;
+                try {
+                    const { data: reqData } = await supabaseClient
+                        .from('login_requests')
+                        .select('status')
+                        .eq('user_id', user.id)
+                        .order('created_at', { ascending: false })
+                        .limit(1)
+                        .single();
+                    if (reqData?.status === 'denied') denied = true;
+                } catch (e) {
+                    // login_requests check is non-critical
+                }
+
+                return {
+                    approved: profile.approved === true,
+                    denied: denied,
+                    role: profile.role || 'parent'
+                };
+            } catch (err) {
+                console.error('verifyApproval error:', err);
+                return null;
+            }
         }
     };
 

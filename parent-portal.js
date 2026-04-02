@@ -184,31 +184,62 @@ document.addEventListener('DOMContentLoaded', () => {
  * Extracted so both the sync DOMContentLoaded check and the async
  * gba:authStateChanged listener can share the same logic.
  */
-function routeAuthenticatedUser() {
+async function routeAuthenticatedUser() {
     const savedEmail = localStorage.getItem('gba_user_email');
-    const approved = localStorage.getItem('gba_user_approved');
 
     // Sync RBAC immediately so the 100ms security check doesn't bounce them back to login
     if (window.Security && window.Security.RBAC) {
         window.Security.RBAC.setRole(window.Security.RBAC.roles.PARENT);
     }
 
-    if (savedEmail) {
-        const loginView = document.getElementById('portal-login');
-        const dashboardView = document.getElementById('portal-dashboard');
-        const waitingRoom = document.getElementById('portal-waiting-room');
+    if (!savedEmail) return;
 
-        // Default-deny: only explicit 'true' grants dashboard access.
-        // null (profile not yet loaded), 'false', or any other value → waiting room.
-        if (approved === 'true') {
-            if (loginView) loginView.style.display = 'none';
-            showDashboard();
-            updateDashboardProfile(savedEmail);
-            // Calendar badge check removed (iframe calendar)
-        } else {
-            if (loginView) loginView.style.display = 'none';
-            if (waitingRoom) waitingRoom.style.display = 'flex';
+    const loginView = document.getElementById('portal-login');
+    const waitingRoom = document.getElementById('portal-waiting-room');
+    const deniedView = document.getElementById('portal-denied');
+
+    // Always verify approval against the server — never trust localStorage alone
+    let approved = localStorage.getItem('gba_user_approved') === 'true';
+    let denied = false;
+
+    if (window.auth && typeof window.auth.verifyApproval === 'function') {
+        try {
+            const result = await window.auth.verifyApproval();
+            if (result) {
+                approved = result.approved;
+                denied = result.denied;
+            }
+        } catch (e) {
+            console.warn('Server approval check failed, using cached status:', e);
+            // Fall through to cached localStorage value
         }
+    }
+
+    if (denied) {
+        // Account explicitly denied by admin
+        if (loginView) loginView.style.display = 'none';
+        if (waitingRoom) waitingRoom.style.display = 'none';
+        if (deniedView) {
+            deniedView.style.display = 'flex';
+        } else if (waitingRoom) {
+            // Fallback: repurpose waiting room with denied message
+            waitingRoom.style.display = 'flex';
+            const waitMsg = waitingRoom.querySelector('h2, .waiting-title');
+            if (waitMsg) waitMsg.textContent = 'Account Access Denied';
+            const waitSub = waitingRoom.querySelector('p, .waiting-subtitle');
+            if (waitSub) waitSub.textContent = 'Your account request has been denied by administration. Please contact Coach Scott if you believe this is an error.';
+        }
+        return;
+    }
+
+    if (approved) {
+        if (loginView) loginView.style.display = 'none';
+        showDashboard();
+        updateDashboardProfile(savedEmail);
+    } else {
+        // Not yet approved — show waiting room
+        if (loginView) loginView.style.display = 'none';
+        if (waitingRoom) waitingRoom.style.display = 'flex';
     }
 }
 
@@ -408,51 +439,23 @@ async function handleLogin() {
             }
         }
 
-        // Enforce strict authentication - No fallbacks allowed in production
-
-        // Handle successful login
+        // Handle successful login — server-side approval verification
         if (loginSuccess) {
-            // --- STRICT IP ENFORCEMENT ---
             try {
-                btn.innerHTML = 'Verifying Security...';
-                
-                // 1. Fetch User's current IP
-                const ipRes = await fetch('https://api.ipify.org?format=json');
-                const ipData = await ipRes.json();
-                const currentIp = ipData.ip;
-                
-                if (window.auth && window.auth.isSupabaseAvailable()) {
-                    // 2. Check approval status from the profiles table (v2 schema)
-                    const approved = localStorage.getItem('gba_user_approved');
-                    if (approved !== 'true') {
-                        // Check if there's a denied login_request
-                        const supabaseClient = window.auth.getSupabaseClient();
-                        if (supabaseClient) {
-                            const userId = localStorage.getItem('gba_user_id');
-                            try {
-                                const fetchPromise = supabaseClient
-                                    .from('login_requests')
-                                    .select('status')
-                                    .eq('user_id', userId)
-                                    .order('created_at', { ascending: false })
-                                    .limit(1)
-                                    .single();
-                                
-                                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 500));
-                                
-                                const { data: reqData } = await Promise.race([fetchPromise, timeoutPromise]);
+                btn.innerHTML = 'Verifying...';
 
-                                if (reqData?.status === 'denied') {
-                                    if (window.auth && typeof window.auth.logout === 'function') {
-                                        await window.auth.logout();
-                                    }
-                                    throw new Error('Your account access has been denied by administration.');
-                                }
-                            } catch(e) {
-                                console.warn('login_requests check skipped or timed out due to DB latency');
-                            }
+                // Server-side approval check — no timeouts, no fallbacks
+                if (window.auth && typeof window.auth.verifyApproval === 'function') {
+                    const approval = await window.auth.verifyApproval();
+
+                    if (approval && approval.denied) {
+                        if (typeof window.auth.logout === 'function') {
+                            await window.auth.logout();
                         }
+                        throw new Error('Your account access has been denied by administration.');
+                    }
 
+                    if (approval && !approval.approved) {
                         // Not yet approved — show waiting room
                         document.getElementById('portal-login').style.display = 'none';
                         document.getElementById('portal-waiting-room').style.display = 'flex';
@@ -461,47 +464,39 @@ async function handleLogin() {
                         return;
                     }
                 }
-            } catch (securityError) {
-                console.error("Security Verification failed:", securityError);
-                if (securityError.message === 'Failed to fetch' || securityError.name === 'TypeError') {
-                    console.warn("Adblocker prevented security check. Allowing login to proceed gracefully.");
+            } catch (verifyError) {
+                if (verifyError.message.includes('denied by administration')) {
+                    throw verifyError;
+                }
+                console.warn('Approval verification error, using cached status:', verifyError);
+                // Fall through to cached localStorage check
+                const cachedApproval = localStorage.getItem('gba_user_approved');
+                if (cachedApproval !== 'true') {
+                    document.getElementById('portal-login').style.display = 'none';
+                    document.getElementById('portal-waiting-room').style.display = 'flex';
+                    btn.innerHTML = 'Sign In';
+                    btn.disabled = false;
+                    return;
                 }
             }
 
-            // LOCAL DEMO ENFORCEMENT
-            let localReqs = JSON.parse(localStorage.getItem('pending_access_requests') || '[]');
-            let matchedLocal = localReqs.find(x => x.email === email);
-            if (matchedLocal && matchedLocal.status === 'pending') {
-                document.getElementById('portal-login').style.display = 'none';
-                document.getElementById('portal-waiting-room').style.display = 'flex';
-                btn.innerHTML = 'Sign In';
-                btn.disabled = false;
-                return;
-            } else if (matchedLocal && matchedLocal.status === 'rejected') {
-                throw new Error('Your account access has been denied by administration.');
+            // Approved — show dashboard
+            document.getElementById('portal-login').style.display = 'none';
+            showDashboard();
+            updateDashboardProfile(email);
+
+            // Cohort designation
+            if (email.toLowerCase() === 'training@clubgodspeed.com') {
+                localStorage.setItem('gba_user_cohort', 'training');
+            } else {
+                localStorage.setItem('gba_user_cohort', 'aau');
             }
+            updateUIForCohort();
+            loadSignedDocuments(email);
 
-            if (loginSuccess) {
-                document.getElementById('portal-login').style.display = 'none';
-                showDashboard();
-                updateDashboardProfile(email);
-
-                // Cohort Designation Mock Setup
-                if (email.toLowerCase() === 'training@clubgodspeed.com') {
-                    localStorage.setItem('gba_user_cohort', 'training');
-                } else {
-                    // Default to AAU for all other users (including demo@clubgodspeed.com)
-                    localStorage.setItem('gba_user_cohort', 'aau');
-                }
-                updateUIForCohort();
-
-                loadSignedDocuments(email); // Load signed documents on successful login
-    
-                // Clear any error messages
-                if (errorMsg) {
-                    errorMsg.style.display = 'none';
-                    errorMsg.textContent = '';
-                }
+            if (errorMsg) {
+                errorMsg.style.display = 'none';
+                errorMsg.textContent = '';
             }
         } 
         
@@ -530,13 +525,23 @@ async function handleLogin() {
                 if (error.message.includes('Invalid login credentials') || error.message.includes('password')) {
                     userFriendlyMessage = "The email or password you typed doesn't match our records. Please try again.";
                 } else if (error.message.includes('Email not confirmed') || error.message.includes('verify')) {
-                    userFriendlyMessage = "Please check your email and click the confirmation link before logging in!";
+                    const loginEmail = document.getElementById('email')?.value?.trim() || '';
+                    errorMsg.innerHTML = 'Check your inbox for a verification email from noreply@clubgodspeed.com.<br><a href="#" onclick="resendVerificationEmail(\'' + loginEmail.replace(/'/g, "\\'") + '\'); return false;" style="color:#111;font-weight:700;text-decoration:underline;">Didn\'t get it? Resend verification email</a>';
+                    errorMsg.style.display = 'block';
+                    const form = document.querySelector('.login-form');
+                    if (form) { form.classList.add('shake'); setTimeout(() => form.classList.remove('shake'), 500); }
+                    btn.innerHTML = 'Sign In'; btn.disabled = false;
+                    return;
+                } else if (error.message.includes('denied by administration')) {
+                    userFriendlyMessage = error.message;
+                } else if (error.message.includes('Cannot connect') || error.message.includes('fetch')) {
+                    userFriendlyMessage = "Cannot connect to the server. Please check your internet connection or disable your adblocker and try again.";
                 } else if (error.message.includes('rate limit') || error.message.includes('Too many')) {
-                    userFriendlyMessage = "You've tried to log in too many times. Please wait a few minutes and try again!";
-                } else if (error.message.includes('not a function') || error.message.includes('supabase')) {
-                    userFriendlyMessage = "Our system hit a small bump. Please reload the page and try again.";
+                    userFriendlyMessage = "You've tried to log in too many times. Please wait a few minutes and try again.";
+                } else if (error.message.includes('unavailable')) {
+                    userFriendlyMessage = error.message;
                 } else {
-                    userFriendlyMessage = "Something went wrong. Please try again!";
+                    userFriendlyMessage = "Something went wrong. Please try again.";
                 }
             }
 
@@ -670,21 +675,8 @@ window.handleSignup = async function() {
                 signupSuccess = true;
             }
         } else {
-            console.warn('Auth module not available. Mocking signup locally.');
-            signupSuccess = true;
+            throw new Error('Our signup system is temporarily unavailable. Please try again in a few minutes.');
         }
-
-        // Store in LocalStorage Demo Array so Admin Dashboard can see the signup
-        let localReqs = JSON.parse(localStorage.getItem('pending_access_requests') || '[]');
-        localReqs.push({
-            id: 'mock-' + Date.now().toString(),
-            email: email,
-            parentName: parentName,
-            playerName: playerName,
-            created_at: new Date().toISOString(),
-            status: 'pending'
-        });
-        localStorage.setItem('pending_access_requests', JSON.stringify(localReqs));
 
         if (signupSuccess) {
             // Notify admin of new registration (fire-and-forget)
@@ -728,13 +720,18 @@ window.handleSignup = async function() {
         if (errorMsg) {
             let userFriendlyMessage = "Something went wrong on our end. Please try again!";
             if (error.message) {
-                if (error.message.includes('already exists') || error.message.includes('already registered')) {
-                    userFriendlyMessage = "Looks like someone with that email is already signed up! Try logging in.";
-                } else if (error.message.includes('not connected') || error.message.includes('fetch')) {
-                    userFriendlyMessage = "We couldn't reach the database right now. Your adblocker or firewall might be blocking the connection.";
-                } else {
-                    // Bubble up specific readable auth errors
+                if (error.message.includes('already exists') || error.message.includes('already registered') || error.message.includes('already been registered')) {
+                    errorMsg.innerHTML = 'An account with this email already exists. <a href="#" onclick="showLoginForm(); return false;" style="color:#111;font-weight:700;text-decoration:underline;">Log in here</a> or <a href="#" onclick="resendVerificationEmail(\'' + email.replace(/'/g, "\\'") + '\'); return false;" style="color:#111;font-weight:700;text-decoration:underline;">resend verification email</a>.';
+                    errorMsg.style.display = 'block';
+                    const form = document.querySelector('.signup-form');
+                    if (form) { form.classList.add('shake'); setTimeout(() => form.classList.remove('shake'), 500); }
+                    return; // skip textContent assignment below
+                } else if (error.message.includes('not connected') || error.message.includes('fetch') || error.message.includes('Cannot connect')) {
+                    userFriendlyMessage = "We couldn't reach the server right now. Please check your internet connection or disable your adblocker and try again.";
+                } else if (error.message.includes('unavailable')) {
                     userFriendlyMessage = error.message;
+                } else {
+                    userFriendlyMessage = "Something went wrong creating your account. Please try again.";
                 }
             }
             errorMsg.textContent = userFriendlyMessage;
@@ -752,15 +749,6 @@ window.handleSignup = async function() {
             btn.disabled = false;
         }
     }
-}
-
-function loginNewUser(email) {
-    localStorage.setItem('gba_parent_auth_token', 'valid_token_' + Date.now());
-    localStorage.setItem('gba_user_email', email);
-    document.getElementById('portal-signup').style.display = 'none';
-    showDashboard();
-    updateDashboardProfile(email);
-    loadSignedDocuments(email); // Load signed documents for the new user
 }
 
 // Resend verification email
