@@ -1,0 +1,2908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournaments - Godspeed Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --gs-black: #0a0a0a;
+            --gs-blue: #2563eb;
+            --gs-red: #dc2626;
+            --gs-green: #16a34a;
+            --gs-orange: #ea580c;
+            --gs-gray-50: #f9fafb;
+            --gs-gray-100: #f3f4f6;
+            --gs-gray-200: #e5e7eb;
+            --gs-gray-400: #9ca3af;
+            --gs-gray-500: #6b7280;
+            --gs-gray-600: #4b5563;
+            --gs-gray-700: #374151;
+            --gs-gray-900: #111827;
+        }
+
+        html, body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: var(--gs-gray-900);
+            background-color: var(--gs-gray-50);
+            height: 100%;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .admin-header {
+            background: var(--gs-black);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        .logo span {
+            color: var(--gs-blue);
+        }
+
+        .admin-header nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .admin-header nav a {
+            color: var(--gs-gray-400);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: color 0.2s;
+            padding: 0.5rem 0;
+            border-bottom: 2px solid transparent;
+        }
+
+        .admin-header nav a:hover {
+            color: white;
+        }
+
+        .admin-header nav a.active {
+            color: white;
+            border-bottom-color: var(--gs-blue);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        /* Page Header */
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gs-black);
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: var(--gs-gray-600);
+            font-size: 0.875rem;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid var(--gs-gray-200);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-card-label {
+            color: var(--gs-gray-600);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--gs-black);
+        }
+
+        /* Tabs */
+        .tabs-container {
+            display: flex;
+            gap: 1rem;
+            border-bottom: 2px solid var(--gs-gray-200);
+            margin-bottom: 2rem;
+            background: white;
+            padding: 0 1rem;
+            border-radius: 0.5rem 0.5rem 0 0;
+        }
+
+        .tab {
+            padding: 1rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--gs-gray-600);
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: color 0.2s, border-color 0.2s;
+        }
+
+        .tab:hover {
+            color: var(--gs-gray-900);
+        }
+
+        .tab.active {
+            color: var(--gs-blue);
+            border-bottom-color: var(--gs-blue);
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            background: white;
+            border: 1px solid var(--gs-gray-200);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-group label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--gs-gray-600);
+            letter-spacing: 0.05em;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--gs-gray-300);
+            border-radius: 0.375rem;
+            font-family: inherit;
+            font-size: 0.875rem;
+            background-color: white;
+            color: var(--gs-gray-900);
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: var(--gs-blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: auto;
+            grid-column: 1 / -1;
+        }
+
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--gs-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn-secondary {
+            background-color: var(--gs-gray-200);
+            color: var(--gs-gray-900);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--gs-gray-300);
+        }
+
+        .btn-danger {
+            background-color: var(--gs-red);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #b91c1c;
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        .btn-success {
+            background-color: var(--gs-green);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #15803d;
+        }
+
+        .publish-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 0.8rem;
+        }
+
+        .publish-banner.draft {
+            background: #FEF9C3;
+            border: 1px solid #FDE68A;
+            color: #854D0E;
+        }
+
+        .publish-banner.published {
+            background: #F0FDF4;
+            border: 1px solid #BBF7D0;
+            color: #166534;
+        }
+
+        .publish-banner.error {
+            background: #FEF2F2;
+            border: 1px solid #FECACA;
+            color: #991B1B;
+        }
+
+        /* Table */
+        .table-container {
+            background: white;
+            border: 1px solid var(--gs-gray-200);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        thead {
+            background-color: var(--gs-gray-50);
+            border-bottom: 2px solid var(--gs-gray-200);
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--gs-gray-700);
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        th:hover {
+            background-color: var(--gs-gray-100);
+        }
+
+        .sort-indicator {
+            display: inline-block;
+            margin-left: 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--gs-gray-200);
+            transition: background-color 0.2s;
+        }
+
+        tbody tr:hover {
+            background-color: var(--gs-gray-50);
+            cursor: pointer;
+        }
+
+        td {
+            padding: 1rem;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge-elite {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--gs-blue);
+        }
+
+        .badge-premier {
+            background-color: rgba(22, 163, 74, 0.1);
+            color: var(--gs-green);
+        }
+
+        .badge-select {
+            background-color: rgba(234, 88, 12, 0.1);
+            color: var(--gs-orange);
+        }
+
+        .badge-open {
+            background-color: rgba(107, 114, 128, 0.1);
+            color: var(--gs-gray-700);
+        }
+
+        /* Actions */
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.25rem;
+            font-size: 1rem;
+            transition: color 0.2s;
+        }
+
+        .action-btn.edit {
+            color: var(--gs-blue);
+        }
+
+        .action-btn.edit:hover {
+            color: #1d4ed8;
+        }
+
+        .action-btn.delete {
+            color: var(--gs-red);
+        }
+
+        .action-btn.delete:hover {
+            color: #b91c1c;
+        }
+
+        .action-btn.schedule {
+            color: var(--gs-green);
+        }
+
+        .action-btn.schedule:hover {
+            color: #15803d;
+        }
+
+        .action-btn.schedule.on-schedule {
+            color: var(--gs-orange);
+        }
+
+        .action-btn.schedule.on-schedule:hover {
+            color: #c2410c;
+        }
+
+        /* Schedule Tab Styles */
+        .schedule-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .schedule-stats {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .schedule-stat {
+            text-align: center;
+        }
+
+        .schedule-stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--gs-black);
+        }
+
+        .schedule-stat-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--gs-gray-500);
+            letter-spacing: 0.05em;
+        }
+
+        .schedule-timeline {
+            position: relative;
+            margin: 2rem 0;
+        }
+
+        .timeline-month {
+            margin-bottom: 2rem;
+        }
+
+        .timeline-month-label {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--gs-black);
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--gs-gray-200);
+        }
+
+        .timeline-week-grid {
+            display: grid;
+            grid-template-columns: 60px repeat(7, 1fr);
+            gap: 2px;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-day-header {
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--gs-gray-500);
+            text-align: center;
+            padding: 0.25rem;
+        }
+
+        .timeline-week-label {
+            font-size: 0.7rem;
+            color: var(--gs-gray-500);
+            display: flex;
+            align-items: center;
+            padding-right: 0.5rem;
+        }
+
+        .timeline-day {
+            min-height: 60px;
+            border: 1px solid var(--gs-gray-100);
+            border-radius: 0.25rem;
+            padding: 0.25rem;
+            font-size: 0.65rem;
+            position: relative;
+            background: white;
+        }
+
+        .timeline-day.today {
+            border-color: var(--gs-blue);
+            background: rgba(37, 99, 235, 0.03);
+        }
+
+        .timeline-day.outside {
+            background: var(--gs-gray-50);
+            opacity: 0.5;
+        }
+
+        .timeline-day-num {
+            font-weight: 600;
+            color: var(--gs-gray-600);
+            margin-bottom: 0.15rem;
+        }
+
+        .timeline-event {
+            padding: 0.15rem 0.3rem;
+            border-radius: 0.2rem;
+            font-size: 0.6rem;
+            font-weight: 600;
+            margin-bottom: 0.15rem;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: transform 0.1s;
+        }
+
+        .timeline-event:hover {
+            transform: scale(1.02);
+            z-index: 10;
+            position: relative;
+        }
+
+        .timeline-event.status-planned {
+            background: rgba(37, 99, 235, 0.12);
+            color: var(--gs-blue);
+            border-left: 3px solid var(--gs-blue);
+        }
+
+        .timeline-event.status-registered {
+            background: rgba(22, 163, 74, 0.12);
+            color: var(--gs-green);
+            border-left: 3px solid var(--gs-green);
+        }
+
+        .timeline-event.status-paid {
+            background: rgba(22, 163, 74, 0.2);
+            color: #15803d;
+            border-left: 3px solid #15803d;
+        }
+
+        .timeline-event.status-completed {
+            background: rgba(107, 114, 128, 0.12);
+            color: var(--gs-gray-600);
+            border-left: 3px solid var(--gs-gray-400);
+        }
+
+        .schedule-list {
+            margin-top: 1.5rem;
+        }
+
+        .schedule-card {
+            background: white;
+            border: 1px solid var(--gs-gray-200);
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            margin-bottom: 0.75rem;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 1.25rem;
+            align-items: center;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .schedule-card:hover {
+            border-color: var(--gs-blue);
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+        }
+
+        .schedule-card.conflict {
+            border-color: var(--gs-red);
+            background: rgba(220, 38, 38, 0.02);
+        }
+
+        .schedule-card-date {
+            text-align: center;
+            min-width: 65px;
+        }
+
+        .schedule-card-month {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--gs-blue);
+        }
+
+        .schedule-card-day {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gs-black);
+            line-height: 1;
+        }
+
+        .schedule-card-dayrange {
+            font-size: 0.65rem;
+            color: var(--gs-gray-500);
+        }
+
+        .schedule-card-info h4 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--gs-black);
+            margin-bottom: 0.25rem;
+        }
+
+        .schedule-card-info .meta {
+            font-size: 0.75rem;
+            color: var(--gs-gray-600);
+        }
+
+        .schedule-card-info .meta span {
+            margin-right: 1rem;
+        }
+
+        .schedule-card-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: flex-end;
+        }
+
+        .schedule-status-badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 0.25rem 0.625rem;
+            border-radius: 9999px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .schedule-status-badge.planned {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--gs-blue);
+        }
+
+        .schedule-status-badge.registered {
+            background: rgba(22, 163, 74, 0.1);
+            color: var(--gs-green);
+        }
+
+        .schedule-status-badge.paid {
+            background: rgba(22, 163, 74, 0.2);
+            color: #15803d;
+        }
+
+        .schedule-status-badge.completed {
+            background: rgba(107, 114, 128, 0.1);
+            color: var(--gs-gray-600);
+        }
+
+        .conflict-warning {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: rgba(220, 38, 38, 0.06);
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+            font-size: 0.8rem;
+            color: var(--gs-red);
+            font-weight: 600;
+        }
+
+        .empty-schedule {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--gs-gray-500);
+        }
+
+        .empty-schedule h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gs-gray-700);
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-schedule p {
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .schedule-month-section {
+            margin-bottom: 2rem;
+        }
+
+        .schedule-month-header {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--gs-gray-700);
+            padding: 0.5rem 0;
+            margin-bottom: 0.5rem;
+            border-bottom: 2px solid var(--gs-gray-200);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .schedule-month-count {
+            font-weight: 500;
+            color: var(--gs-gray-500);
+            font-size: 0.75rem;
+        }
+
+        /* Schedule detail modal */
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .detail-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .detail-field label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--gs-gray-500);
+            letter-spacing: 0.05em;
+        }
+
+        .detail-field .value {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--gs-gray-900);
+        }
+
+        .schedule-actions-row {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-success {
+            background-color: var(--gs-green);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #15803d;
+        }
+
+        .btn-warning {
+            background-color: var(--gs-orange);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #c2410c;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            background: white;
+            border: 1px solid var(--gs-gray-200);
+            border-top: none;
+            border-radius: 0 0 0.5rem 0.5rem;
+        }
+
+        .pagination button {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--gs-gray-300);
+            background: white;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background-color: var(--gs-gray-100);
+            border-color: var(--gs-gray-400);
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination button.active {
+            background-color: var(--gs-blue);
+            color: white;
+            border-color: var(--gs-blue);
+        }
+
+        .pagination-info {
+            font-size: 0.75rem;
+            color: var(--gs-gray-600);
+            margin: 0 1rem;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 0.5rem;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+        }
+
+        .modal-header {
+            padding: 2rem;
+            border-bottom: 1px solid var(--gs-gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gs-gray-500);
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: var(--gs-gray-900);
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-grid.full {
+            grid-column: 1 / -1;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--gs-gray-700);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 0.75rem;
+            border: 1px solid var(--gs-gray-300);
+            border-radius: 0.375rem;
+            font-family: inherit;
+            font-size: 0.875rem;
+            color: var(--gs-gray-900);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--gs-blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--gs-gray-200);
+        }
+
+        .form-section-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--gs-gray-900);
+            margin-bottom: 1rem;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 1rem;
+            height: 1rem;
+            cursor: pointer;
+        }
+
+        .checkbox-item label {
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .slider-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .slider-group input[type="range"] {
+            flex: 1;
+        }
+
+        .slider-value {
+            font-weight: 700;
+            min-width: 2rem;
+            text-align: center;
+        }
+
+        .rank-display {
+            background-color: var(--gs-gray-50);
+            border: 1px solid var(--gs-gray-200);
+            border-radius: 0.375rem;
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .rank-item {
+            text-align: center;
+        }
+
+        .rank-item-label {
+            font-size: 0.75rem;
+            color: var(--gs-gray-600);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .rank-item-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gs-gray-900);
+        }
+
+        .modal-footer {
+            padding: 2rem;
+            border-top: 1px solid var(--gs-gray-200);
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        /* Accordion */
+        .accordion-item {
+            border: 1px solid var(--gs-gray-200);
+            border-radius: 0.375rem;
+            margin-bottom: 0.5rem;
+            overflow: hidden;
+        }
+
+        .accordion-header {
+            background-color: var(--gs-gray-50);
+            padding: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: none;
+            width: 100%;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .accordion-header:hover {
+            background-color: var(--gs-gray-100);
+        }
+
+        .accordion-toggle {
+            font-size: 1.25rem;
+            transition: transform 0.2s;
+        }
+
+        .accordion-toggle.open {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            display: none;
+            padding: 1rem;
+            background: white;
+            border-top: 1px solid var(--gs-gray-200);
+        }
+
+        .accordion-content.open {
+            display: block;
+        }
+
+        .accordion-list {
+            list-style: none;
+        }
+
+        .accordion-list li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--gs-gray-100);
+            font-size: 0.875rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .accordion-list li:last-child {
+            border-bottom: none;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Rankings View */
+        .ranking-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .ranking-segment {
+            height: 1.5rem;
+            border-radius: 0.25rem;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: white;
+            overflow: hidden;
+        }
+
+        .ranking-segment-comp {
+            background-color: var(--gs-blue);
+        }
+
+        .ranking-segment-exp {
+            background-color: var(--gs-green);
+        }
+
+        .ranking-segment-circ {
+            background-color: var(--gs-orange);
+        }
+
+        /* Organizer Summary */
+        .organizer-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .organizer-card {
+            background: white;
+            border: 1px solid var(--gs-gray-200);
+            border-radius: 0.375rem;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .organizer-card:hover {
+            border-color: var(--gs-blue);
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.1);
+        }
+
+        .organizer-name {
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: var(--gs-blue);
+        }
+
+        .organizer-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            font-size: 0.875rem;
+            border-bottom: 1px solid var(--gs-gray-100);
+        }
+
+        .organizer-stat:last-child {
+            border-bottom: none;
+        }
+
+        .organizer-stat-label {
+            color: var(--gs-gray-600);
+        }
+
+        .organizer-stat-value {
+            font-weight: 600;
+            color: var(--gs-gray-900);
+        }
+
+        @media (max-width: 1024px) {
+            .filter-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            table {
+                font-size: 0.75rem;
+            }
+
+            th, td {
+                padding: 0.75rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .admin-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .admin-header nav {
+                gap: 1rem;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .filter-bar {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-actions {
+                grid-column: 1;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gs-gray-600);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gs-gray-900);
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="admin-header">
+        <div class="logo">GODSPEED <span>ADMIN</span></div>
+        <nav>
+            <a href="admin-os.html">Dashboard</a>
+            <a href="#">Roster</a>
+            <a href="admin-documents.html">Documents</a>
+            <a href="#">Dues</a>
+            <a href="#">Training</a>
+            <a href="admin-tournaments.html" class="active">Tournaments</a>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">Tournament Catalog</h1>
+            <p class="page-subtitle">National youth basketball tournament directory with competition rankings</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-card-label">Total Tournaments</div>
+                <div class="stat-card-value" id="stat-total">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-label">Colorado Events</div>
+                <div class="stat-card-value" id="stat-colorado">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-label">Elite Tier</div>
+                <div class="stat-card-value" id="stat-elite">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-label">Avg Cost</div>
+                <div class="stat-card-value" id="stat-cost">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-label">States Covered</div>
+                <div class="stat-card-value" id="stat-states">0</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs-container">
+            <button class="tab active" data-tab="all-tournaments">All Tournaments</button>
+            <button class="tab" data-tab="by-state">By State</button>
+            <button class="tab" data-tab="rankings">Rankings</button>
+            <button class="tab" data-tab="organizers">Organizers</button>
+            <button class="tab" data-tab="our-schedule" style="margin-left:auto; color: var(--gs-green); font-weight:700;">Our Schedule</button>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label>State</label>
+                <select id="filter-state">
+                    <option value="">All States</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Event Type</label>
+                <select id="filter-type">
+                    <option value="">All Types</option>
+                    <option value="tournament">Tournament</option>
+                    <option value="1-day">1-Day</option>
+                    <option value="3v3">3v3</option>
+                    <option value="showcase">Showcase</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Tier</label>
+                <select id="filter-tier">
+                    <option value="">All Tiers</option>
+                    <option value="Elite">Elite</option>
+                    <option value="Premier">Premier</option>
+                    <option value="Select">Select</option>
+                    <option value="Open">Open</option>
+                    <option value="Unranked">Unranked</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Gender</label>
+                <select id="filter-gender">
+                    <option value="">All</option>
+                    <option value="boys">Boys</option>
+                    <option value="girls">Girls</option>
+                    <option value="coed">Coed</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Search</label>
+                <input type="text" id="filter-search" placeholder="Name or organizer...">
+            </div>
+            <div class="filter-actions">
+                <button class="btn btn-secondary btn-sm" id="btn-clear-filters">Clear Filters</button>
+                <button class="btn btn-secondary btn-sm" id="btn-export-csv">Export CSV</button>
+                <button class="btn btn-primary btn-sm" id="btn-add-tournament">+ Add Tournament</button>
+            </div>
+        </div>
+
+        <!-- All Tournaments Tab -->
+        <div id="all-tournaments" class="tab-content active">
+            <div class="table-container">
+                <table id="tournaments-table">
+                    <thead>
+                        <tr>
+                            <th data-sort="name">Name <span class="sort-indicator"></span></th>
+                            <th data-sort="organizer">Organizer <span class="sort-indicator"></span></th>
+                            <th data-sort="start_date">Dates <span class="sort-indicator"></span></th>
+                            <th>City / State</th>
+                            <th data-sort="event_type">Type <span class="sort-indicator"></span></th>
+                            <th data-sort="cost_min">Cost</th>
+                            <th data-sort="rank_competition">Comp</th>
+                            <th data-sort="rank_exposure">Exp</th>
+                            <th data-sort="rank_circuit">Circuit</th>
+                            <th data-sort="rank_tier">Tier <span class="sort-indicator"></span></th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tournaments-body">
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination" id="pagination"></div>
+        </div>
+
+        <!-- By State Tab -->
+        <div id="by-state" class="tab-content">
+            <div id="by-state-content" style="background: white; border: 1px solid var(--gs-gray-200); border-radius: 0.5rem; padding: 1rem;">
+            </div>
+        </div>
+
+        <!-- Rankings Tab -->
+        <div id="rankings" class="tab-content">
+            <div class="table-container">
+                <table id="rankings-table">
+                    <thead>
+                        <tr>
+                            <th data-sort="rank_composite">Rank <span class="sort-indicator"></span></th>
+                            <th data-sort="name">Name <span class="sort-indicator"></span></th>
+                            <th data-sort="rank_tier">Tier</th>
+                            <th>Comp</th>
+                            <th>Exp</th>
+                            <th>Circuit</th>
+                            <th data-sort="organizer">Organizer <span class="sort-indicator"></span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="rankings-body">
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination" id="rankings-pagination"></div>
+        </div>
+
+        <!-- Organizers Tab -->
+        <div id="organizers" class="tab-content">
+            <div id="organizers-content" style="background: white; border: 1px solid var(--gs-gray-200); border-radius: 0.5rem; padding: 1rem;">
+            </div>
+        </div>
+        <!-- Our Schedule Tab -->
+        <div id="our-schedule" class="tab-content">
+            <div id="schedule-content">
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Detail Modal -->
+    <div class="modal-overlay" id="schedule-modal">
+        <div class="modal" style="max-width:600px;">
+            <div class="modal-header">
+                <h2 class="modal-title" id="schedule-modal-title">Tournament Details</h2>
+                <button class="modal-close" id="schedule-modal-close">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:2rem;">
+                <div id="schedule-modal-body"></div>
+            </div>
+            <div class="modal-footer" id="schedule-modal-footer">
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal-overlay" id="tournament-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-title">Add Tournament</h2>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Tournament Name *</label>
+                        <input type="text" id="form-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Organizer *</label>
+                        <input type="text" id="form-organizer" list="organizer-list" required>
+                        <datalist id="organizer-list"></datalist>
+                    </div>
+                    <div class="form-group">
+                        <label>Start Date *</label>
+                        <input type="date" id="form-start-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>End Date *</label>
+                        <input type="date" id="form-end-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>City *</label>
+                        <input type="text" id="form-city" required>
+                    </div>
+                    <div class="form-group">
+                        <label>State *</label>
+                        <select id="form-state" required>
+                            <option value="">Select State</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Event Type</label>
+                        <select id="form-event-type">
+                            <option value="tournament">Tournament</option>
+                            <option value="1-day">1-Day</option>
+                            <option value="3v3">3v3</option>
+                            <option value="showcase">Showcase</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <select id="form-gender">
+                            <option value="coed">Coed</option>
+                            <option value="boys">Boys</option>
+                            <option value="girls">Girls</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Age Groups</label>
+                        <input type="text" id="form-age-groups" placeholder="e.g., 12th-3rd">
+                    </div>
+                    <div class="form-group">
+                        <label>Venue</label>
+                        <input type="text" id="form-venue">
+                    </div>
+                    <div class="form-group">
+                        <label>Cost Min</label>
+                        <input type="number" id="form-cost-min" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Cost Max</label>
+                        <input type="number" id="form-cost-max" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Game Guarantee</label>
+                        <input type="number" id="form-game-guarantee" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Ability Level</label>
+                        <input type="text" id="form-ability-level" placeholder="e.g., Elite/Competitive/Developmental">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-section-title">Certifications</div>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="form-certified" name="certified">
+                            <label for="form-certified">Certified</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="form-ncaa" name="ncaa">
+                            <label for="form-ncaa">NCAA Certified</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="form-jr-nba" name="jr-nba">
+                            <label for="form-jr-nba">Jr NBA Member</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-section-title">Rankings</div>
+                    <div class="form-group">
+                        <label>Competition Ranking (1-10)</label>
+                        <div class="slider-group">
+                            <input type="range" id="form-rank-comp" min="1" max="10" value="5">
+                            <span class="slider-value" id="rank-comp-value">5</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Exposure Ranking (1-10)</label>
+                        <div class="slider-group">
+                            <input type="range" id="form-rank-exp" min="1" max="10" value="5">
+                            <span class="slider-value" id="rank-exp-value">5</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Circuit Ranking (1-10)</label>
+                        <div class="slider-group">
+                            <input type="range" id="form-rank-circ" min="1" max="10" value="5">
+                            <span class="slider-value" id="rank-circ-value">5</span>
+                        </div>
+                    </div>
+                    <div class="rank-display">
+                        <div class="rank-item">
+                            <div class="rank-item-label">Composite Score</div>
+                            <div class="rank-item-value" id="form-composite-score">5.0</div>
+                        </div>
+                        <div class="rank-item">
+                            <div class="rank-item-label">Tier</div>
+                            <div class="rank-item-value" id="form-tier-preview">Select</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group form-grid full">
+                    <div>
+                        <label>Notes</label>
+                        <textarea id="form-notes"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="modal-cancel">Cancel</button>
+                <button class="btn btn-primary" id="modal-save">Save Tournament</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock Data
+        const MOCK_TOURNAMENTS = [
+            { name: "Spring Kick Off", organizer: "Prep Hoops Tournaments", start_date: "2026-04-03", end_date: "2026-04-04", city: "Lakewood", state: "CO", event_type: "tournament", gender: "boys", age_groups: "17U-10U", cost_min: null, cost_max: null, game_guarantee: null, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 6, rank_exposure: 5, rank_circuit: 8, rank_tier: "Premier" },
+            { name: "Easter Shootout - Mountain West", organizer: "Game Time Events USA", start_date: "2026-04-04", end_date: "2026-04-04", city: "Northglenn", state: "CO", event_type: "tournament", gender: "coed", age_groups: "12th-3rd", cost_min: 150, cost_max: 175, game_guarantee: 2, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 4, rank_exposure: 4, rank_circuit: 7, rank_tier: "Select" },
+            { name: "Denver Chase for the Chain", organizer: "Bigfoot Hoops", start_date: "2026-04-11", end_date: "2026-04-12", city: "Denver", state: "CO", event_type: "tournament", gender: "coed", age_groups: null, cost_min: 395, cost_max: 495, game_guarantee: null, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 7, rank_exposure: 6, rank_circuit: 7, rank_tier: "Premier" },
+            { name: "Denver Chase for Chain w/ Big Foot", organizer: "Attitude of Gratitude Events", start_date: "2026-04-11", end_date: "2026-04-12", city: "Denver", state: "CO", event_type: "tournament", gender: "coed", age_groups: "17U-15U/8th-3rd", cost_min: null, cost_max: null, game_guarantee: 3, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 5, rank_exposure: 5, rank_circuit: 5, rank_tier: "Select" },
+            { name: "Spring Kick Off - Mountain West", organizer: "Game Time Events USA", start_date: "2026-04-11", end_date: "2026-04-12", city: "Thornton", state: "CO", event_type: "tournament", gender: "coed", age_groups: "12th-3rd", cost_min: 350, cost_max: 375, game_guarantee: 4, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 6, rank_exposure: 5, rank_circuit: 7, rank_tier: "Premier" },
+            { name: "Rocky Mountain Mayhem", organizer: "Prep Hoops Tournaments", start_date: "2026-04-17", end_date: "2026-04-19", city: "Lakewood", state: "CO", event_type: "tournament", gender: "boys", age_groups: "17U-10U", cost_min: null, cost_max: null, game_guarantee: null, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 7, rank_exposure: 6, rank_circuit: 8, rank_tier: "Premier" },
+            { name: "Spring Preview - Mountain West", organizer: "Game Time Events USA", start_date: "2026-04-18", end_date: "2026-04-19", city: "Northglenn", state: "CO", event_type: "tournament", gender: "coed", age_groups: "12th-3rd", cost_min: 350, cost_max: 375, game_guarantee: 4, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 6, rank_exposure: 5, rank_circuit: 7, rank_tier: "Premier" },
+            { name: "JPS Mile High Invitational", organizer: "Just Play Sports", start_date: "2026-04-23", end_date: "2026-04-25", city: "Lakewood", state: "CO", event_type: "tournament", gender: "coed", age_groups: null, cost_min: 400, cost_max: 425, game_guarantee: 4, ability_level: "Elite/Competitive/Developmental", is_certified: false, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 7, rank_exposure: 5, rank_circuit: 5, rank_tier: "Premier" },
+            { name: "Rumble in Rockies", organizer: "Attitude of Gratitude Events", start_date: "2026-04-25", end_date: "2026-04-26", city: "Denver", state: "CO", event_type: "tournament", gender: "coed", age_groups: "17U-15U/8th-3rd", cost_min: null, cost_max: null, game_guarantee: 3, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 5, rank_exposure: 5, rank_circuit: 5, rank_tier: "Select" },
+            { name: "Spring Classic - Denver - Mountain West", organizer: "Game Time Events USA", start_date: "2026-04-25", end_date: "2026-04-26", city: "Northglenn", state: "CO", event_type: "tournament", gender: "coed", age_groups: "12th-3rd", cost_min: 350, cost_max: 375, game_guarantee: 4, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 6, rank_exposure: 5, rank_circuit: 7, rank_tier: "Premier" },
+            { name: "Spring Classic - Colorado Springs - Mountain West", organizer: "Game Time Events USA", start_date: "2026-04-25", end_date: "2026-04-26", city: "Colorado Springs", state: "CO", event_type: "tournament", gender: "coed", age_groups: "12th-3rd", cost_min: 350, cost_max: 375, game_guarantee: 4, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 6, rank_exposure: 5, rank_circuit: 7, rank_tier: "Premier" },
+            { name: "REEBOK BIG MARC'S DENVER SALSA SLAM", organizer: "Reebok Basketball Tournament Series", start_date: "2026-04-25", end_date: "2026-04-26", city: "Aurora", state: "CO", event_type: "tournament", gender: "coed", age_groups: "12th-1st", cost_min: 350, cost_max: 350, game_guarantee: 3, ability_level: "Elite/Competitive/Developmental", is_certified: false, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 7, rank_exposure: 6, rank_circuit: 7, rank_tier: "Premier" },
+            { name: "Centennial State Cup", organizer: "Prep Hoops Tournaments", start_date: "2026-05-01", end_date: "2026-05-03", city: "Denver", state: "CO", event_type: "tournament", gender: "boys", age_groups: "17U-10U", cost_min: null, cost_max: null, game_guarantee: null, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 7, rank_exposure: 7, rank_circuit: 8, rank_tier: "Premier" },
+            { name: "Battle in the Rockies", organizer: "Bigfoot Hoops", start_date: "2026-05-02", end_date: "2026-05-03", city: "Denver", state: "CO", event_type: "tournament", gender: "coed", age_groups: null, cost_min: 395, cost_max: 495, game_guarantee: null, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 7, rank_exposure: 6, rank_circuit: 7, rank_tier: "Premier" },
+            { name: "Spring Extravaganza - Mountain West", organizer: "Game Time Events USA", start_date: "2026-05-02", end_date: "2026-05-03", city: "Northglenn", state: "CO", event_type: "tournament", gender: "coed", age_groups: "12th-3rd", cost_min: 350, cost_max: 375, game_guarantee: 4, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 6, rank_exposure: 5, rank_circuit: 7, rank_tier: "Premier" },
+            { name: "GTE Live: Colorado Classic - Mountain West", organizer: "Game Time Events USA", start_date: "2026-05-15", end_date: "2026-05-17", city: "Aurora", state: "CO", event_type: "tournament", gender: "coed", age_groups: "12th-9th", cost_min: 575, cost_max: 595, game_guarantee: 4, ability_level: null, is_certified: true, is_ncaa_certified: true, is_jr_nba_member: false, rank_competition: 9, rank_exposure: 9, rank_circuit: 7, rank_tier: "Elite" },
+            { name: "Colorado Classic (14U-9U) - Mountain West", organizer: "Game Time Events USA", start_date: "2026-05-16", end_date: "2026-05-17", city: "Northglenn", state: "CO", event_type: "tournament", gender: "coed", age_groups: "8th-3rd", cost_min: 350, cost_max: 375, game_guarantee: 4, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 6, rank_exposure: 5, rank_circuit: 7, rank_tier: "Premier" },
+            { name: "Memorial Day Classic - Mountain West", organizer: "Game Time Events USA", start_date: "2026-05-23", end_date: "2026-05-24", city: "Aurora", state: "CO", event_type: "tournament", gender: "coed", age_groups: "12th-3rd", cost_min: 350, cost_max: 375, game_guarantee: 4, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 6, rank_exposure: 5, rank_circuit: 7, rank_tier: "Premier" },
+            { name: "Summer Preview - Mountain West", organizer: "Game Time Events USA", start_date: "2026-05-30", end_date: "2026-05-31", city: "Northglenn", state: "CO", event_type: "tournament", gender: "coed", age_groups: "12th-3rd", cost_min: 350, cost_max: 375, game_guarantee: 4, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 6, rank_exposure: 5, rank_circuit: 7, rank_tier: "Premier" },
+            { name: "Summer Kick Off - Mountain West", organizer: "Game Time Events USA", start_date: "2026-06-06", end_date: "2026-06-07", city: "Northglenn", state: "CO", event_type: "tournament", gender: "coed", age_groups: "17U-9U", cost_min: 350, cost_max: 375, game_guarantee: 4, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 6, rank_exposure: 5, rank_circuit: 7, rank_tier: "Premier" },
+            { name: "Summer Slam - Mountain West", organizer: "Game Time Events USA", start_date: "2026-06-13", end_date: "2026-06-14", city: "Lakewood", state: "CO", event_type: "tournament", gender: "coed", age_groups: "17U-9U", cost_min: 350, cost_max: 375, game_guarantee: 4, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 6, rank_exposure: 5, rank_circuit: 7, rank_tier: "Premier" },
+            { name: "Father's Day Classic - Mountain West", organizer: "Game Time Events USA", start_date: "2026-06-20", end_date: "2026-06-21", city: "Northglenn", state: "CO", event_type: "tournament", gender: "coed", age_groups: "17U-9U", cost_min: 350, cost_max: 375, game_guarantee: 4, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 6, rank_exposure: 5, rank_circuit: 7, rank_tier: "Premier" },
+            { name: "JPS Freedom Classic", organizer: "Just Play Sports", start_date: "2026-06-25", end_date: "2026-06-27", city: "Lakewood", state: "CO", event_type: "tournament", gender: "coed", age_groups: null, cost_min: 400, cost_max: 425, game_guarantee: 4, ability_level: "Elite/Competitive/Developmental", is_certified: false, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 7, rank_exposure: 5, rank_circuit: 5, rank_tier: "Premier" },
+            { name: "Mountain Mayhem - Mountain West", organizer: "Game Time Events USA", start_date: "2026-06-27", end_date: "2026-06-28", city: "Northglenn", state: "CO", event_type: "tournament", gender: "coed", age_groups: "12th-3rd", cost_min: 350, cost_max: 375, game_guarantee: 4, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 6, rank_exposure: 5, rank_circuit: 7, rank_tier: "Premier" },
+            { name: "The Tune Up: Colorado", organizer: "Prep Hoops Tournaments", start_date: "2026-07-02", end_date: "2026-07-03", city: "Lakewood", state: "CO", event_type: "tournament", gender: "boys", age_groups: "17U-10U", cost_min: null, cost_max: null, game_guarantee: null, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 6, rank_exposure: 5, rank_circuit: 8, rank_tier: "Premier" },
+            { name: "Summer Classic - Mountain West (14U-9U)", organizer: "Game Time Events USA", start_date: "2026-07-10", end_date: "2026-07-12", city: "Northglenn", state: "CO", event_type: "tournament", gender: "coed", age_groups: "8th-3rd", cost_min: 350, cost_max: 375, game_guarantee: 4, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 6, rank_exposure: 5, rank_circuit: 7, rank_tier: "Premier" },
+            { name: "GTE Live - Summer Classic - Mountain West", organizer: "Game Time Events USA", start_date: "2026-07-10", end_date: "2026-07-12", city: "Lakewood", state: "CO", event_type: "tournament", gender: "boys", age_groups: "12th-9th", cost_min: 575, cost_max: 595, game_guarantee: 4, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 9, rank_exposure: 8, rank_circuit: 7, rank_tier: "Elite" },
+            { name: "JPS Invitational", organizer: "Just Play Sports", start_date: "2026-07-16", end_date: "2026-07-18", city: "Lakewood", state: "CO", event_type: "tournament", gender: "coed", age_groups: null, cost_min: 400, cost_max: 425, game_guarantee: 4, ability_level: "Elite/Competitive/Developmental", is_certified: false, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 7, rank_exposure: 5, rank_circuit: 5, rank_tier: "Premier" },
+            { name: "Finals - Mountain West", organizer: "Game Time Events USA", start_date: "2026-07-18", end_date: "2026-07-19", city: "Aurora", state: "CO", event_type: "tournament", gender: "coed", age_groups: "12th-3rd", cost_min: 350, cost_max: 375, game_guarantee: null, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 6, rank_exposure: 5, rank_circuit: 7, rank_tier: "Premier" },
+            { name: "Mile High Madness", organizer: "Prep Hoops Tournaments", start_date: "2026-07-24", end_date: "2026-07-26", city: "Aurora", state: "CO", event_type: "tournament", gender: "boys", age_groups: "17U-10U", cost_min: null, cost_max: null, game_guarantee: null, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 8, rank_exposure: 7, rank_circuit: 8, rank_tier: "Elite" },
+            { name: "The Encore - Mountain West", organizer: "Game Time Events USA", start_date: "2026-07-25", end_date: "2026-07-26", city: "Northglenn", state: "CO", event_type: "tournament", gender: "coed", age_groups: "12th-3rd", cost_min: 350, cost_max: 375, game_guarantee: 4, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 6, rank_exposure: 5, rank_circuit: 7, rank_tier: "Premier" },
+            { name: "Last Dance - Mountain West", organizer: "Game Time Events USA", start_date: "2026-08-01", end_date: "2026-08-02", city: "Northglenn", state: "CO", event_type: "tournament", gender: "coed", age_groups: "12th-3rd", cost_min: 350, cost_max: 375, game_guarantee: 4, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 6, rank_exposure: 5, rank_circuit: 7, rank_tier: "Premier" },
+            { name: "JPS 3on3 Championships", organizer: "Just Play Sports", start_date: "2026-08-14", end_date: "2026-08-15", city: "Lakewood", state: "CO", event_type: "3v3", gender: "coed", age_groups: null, cost_min: 190, cost_max: 190, game_guarantee: 3, ability_level: null, is_certified: false, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 4, rank_exposure: 3, rank_circuit: 5, rank_tier: "Select" },
+            { name: "Rocky Mountain High School Invitational Session 1", organizer: "Attitude of Gratitude Events", start_date: "2026-10-09", end_date: "2026-10-11", city: "Denver", state: "CO", event_type: "tournament", gender: "coed", age_groups: "17U-15U Boys", cost_min: null, cost_max: null, game_guarantee: 3, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 6, rank_exposure: 6, rank_circuit: 5, rank_tier: "Premier" },
+            { name: "Rocky Mountain High School Invitational Session 2", organizer: "Attitude of Gratitude Events", start_date: "2026-10-17", end_date: "2026-10-18", city: "Denver", state: "CO", event_type: "tournament", gender: "coed", age_groups: "17U-15U Boys", cost_min: null, cost_max: null, game_guarantee: 3, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 6, rank_exposure: 6, rank_circuit: 5, rank_tier: "Premier" },
+            { name: "Rumble in the Rockies", organizer: "Bigfoot Hoops", start_date: "2026-11-14", end_date: "2026-11-15", city: "Denver", state: "CO", event_type: "tournament", gender: "coed", age_groups: "12th-3rd", cost_min: 395, cost_max: 395, game_guarantee: null, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 7, rank_exposure: 6, rank_circuit: 7, rank_tier: "Premier" },
+            { name: "SUPER24 (Stage #1) - High Academic Circuit", organizer: "HoopSource Grassroots Basketball", start_date: "2026-04-17", end_date: "2026-04-19", city: "Beaverton", state: "OR", event_type: "tournament", gender: "boys", age_groups: "18U-14U/12th-9th", cost_min: 1500, cost_max: 1500, game_guarantee: 4, ability_level: "Elite/Competitive", is_certified: true, is_ncaa_certified: false, is_jr_nba_member: true, rank_competition: 9, rank_exposure: 9, rank_circuit: 8, rank_tier: "Elite" },
+            { name: "Las Vegas Easter Showdown", organizer: "Bigfoot Hoops", start_date: "2026-04-03", end_date: "2026-04-04", city: "Las Vegas", state: "NV", event_type: "tournament", gender: "coed", age_groups: null, cost_min: 375, cost_max: 425, game_guarantee: null, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 7, rank_exposure: 7, rank_circuit: 7, rank_tier: "Premier" },
+            { name: "THE BATTLEGROUNDS", organizer: "ELITE YOUTH EVENTS", start_date: "2026-04-11", end_date: "2026-04-12", city: "Phoenix", state: "AZ", event_type: "tournament", gender: "coed", age_groups: "18U-7U", cost_min: 275, cost_max: 325, game_guarantee: 3, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: true, rank_competition: 7, rank_exposure: 7, rank_circuit: 6, rank_tier: "Premier" },
+            { name: "Las Vegas Main Event", organizer: "Bigfoot Hoops", start_date: "2026-07-16", end_date: "2026-07-19", city: "Las Vegas", state: "NV", event_type: "tournament", gender: "coed", age_groups: null, cost_min: 525, cost_max: 595, game_guarantee: null, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 8, rank_exposure: 8, rank_circuit: 7, rank_tier: "Elite" },
+            { name: "REEBOK WORLD CHAMPIONSHIPS", organizer: "Reebok Basketball Tournament Series", start_date: "2026-07-17", end_date: "2026-07-19", city: "Chesterfield", state: "MO", event_type: "tournament", gender: "coed", age_groups: "12th-1st", cost_min: null, cost_max: null, game_guarantee: null, ability_level: null, is_certified: false, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 8, rank_exposure: 8, rank_circuit: 7, rank_tier: "Elite" },
+            { name: "2026 National Summer Classic", organizer: "National Summer Classic", start_date: "2026-07-24", end_date: "2026-07-26", city: "Chicago", state: "IL", event_type: "tournament", gender: "coed", age_groups: null, cost_min: null, cost_max: null, game_guarantee: null, ability_level: null, is_certified: false, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 8, rank_exposure: 8, rank_circuit: 6, rank_tier: "Elite" },
+            { name: "ONE DAY BALLOUT", organizer: "Court Time Events", start_date: "2026-04-04", end_date: "2026-04-04", city: "Tulsa", state: "OK", event_type: "1-day", gender: "coed", age_groups: "11th-2nd", cost_min: 175, cost_max: 175, game_guarantee: 3, ability_level: "Competitive/Developmental", is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 3, rank_exposure: 2, rank_circuit: 4, rank_tier: "Open" },
+            { name: "San Antonio National Tournament 19th Annual", organizer: "Road to Nationals", start_date: "2026-06-18", end_date: "2026-06-21", city: "San Antonio", state: "TX", event_type: "tournament", gender: "coed", age_groups: null, cost_min: 595, cost_max: 595, game_guarantee: 4, ability_level: "Elite/Competitive/Developmental", is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 9, rank_exposure: 8, rank_circuit: 7, rank_tier: "Elite" },
+            { name: "End of Summer Slam 2026", organizer: "Elite Sports Events", start_date: "2026-07-24", end_date: "2026-07-26", city: "Orlando", state: "FL", event_type: "tournament", gender: "coed", age_groups: null, cost_min: null, cost_max: null, game_guarantee: null, ability_level: null, is_certified: false, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 7, rank_exposure: 7, rank_circuit: 5, rank_tier: "Premier" },
+            { name: "Hoop Connect Springs Connect", organizer: "Hoop Connect", start_date: "2026-05-09", end_date: "2026-05-10", city: "Lakewood", state: "CO", event_type: "tournament", gender: "coed", age_groups: null, cost_min: null, cost_max: null, game_guarantee: null, ability_level: null, is_certified: false, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 5, rank_exposure: 4, rank_circuit: 4, rank_tier: "Select" },
+            { name: "GTE Live Finals - OC - SoCal", organizer: "Game Time Events USA", start_date: "2026-07-17", end_date: "2026-07-19", city: "Lake Forest", state: "CA", event_type: "tournament", gender: "boys", age_groups: "12th-9th", cost_min: 575, cost_max: 595, game_guarantee: 4, ability_level: null, is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 9, rank_exposure: 9, rank_circuit: 7, rank_tier: "Elite" },
+            { name: "Easter Eve Classic", organizer: "OK Fadeaway Hoops", start_date: "2026-04-03", end_date: "2026-04-04", city: "Norman", state: "OK", event_type: "tournament", gender: "coed", age_groups: "10th-K", cost_min: 150, cost_max: 275, game_guarantee: 3, ability_level: "Competitive/Developmental", is_certified: true, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 5, rank_exposure: 4, rank_circuit: 4, rank_tier: "Select" },
+            { name: "Memorial Day Championships - 2026", organizer: "HoopSource Grassroots Basketball", start_date: "2026-05-23", end_date: "2026-05-25", city: "Portland", state: "OR", event_type: "tournament", gender: "coed", age_groups: "18U-7U/12th-1st", cost_min: 500, cost_max: 500, game_guarantee: 4, ability_level: "Elite/Competitive/Developmental", is_certified: true, is_ncaa_certified: false, is_jr_nba_member: true, rank_competition: 8, rank_exposure: 8, rank_circuit: 8, rank_tier: "Elite" },
+            { name: "THE HUB SALT LAKE CITY MEMORIAL DAY", organizer: "THE HUB", start_date: "2026-05-22", end_date: "2026-05-25", city: "South Salt Lake", state: "UT", event_type: "tournament", gender: "coed", age_groups: null, cost_min: 500, cost_max: 550, game_guarantee: 4, ability_level: "Elite/Competitive/Developmental", is_certified: false, is_ncaa_certified: false, is_jr_nba_member: false, rank_competition: 8, rank_exposure: 7, rank_circuit: 6, rank_tier: "Premier" },
+        ];
+
+        // Application State
+        let tournaments = [...MOCK_TOURNAMENTS];
+        let filteredTournaments = [...tournaments];
+        let currentPage = 1;
+        const pageSize = 25;
+        let sortColumn = '';
+        let sortDirection = 'asc';
+        let editingIndex = null;
+
+        // US States
+        const US_STATES = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'];
+
+        // Initialize
+        function init() {
+            populateStateSelects();
+            populateOrganizerList();
+            updateStats();
+            renderTable();
+            attachEventListeners();
+        }
+
+        function populateStateSelects() {
+            const stateSelect = document.getElementById('filter-state');
+            const formStateSelect = document.getElementById('form-state');
+
+            US_STATES.forEach(state => {
+                const option = document.createElement('option');
+                option.value = state;
+                option.textContent = state;
+                formStateSelect.appendChild(option.cloneNode(true));
+            });
+        }
+
+        function populateOrganizerList() {
+            const organizers = [...new Set(tournaments.map(t => t.organizer))].sort();
+            const datalist = document.getElementById('organizer-list');
+            datalist.innerHTML = '';
+            organizers.forEach(org => {
+                const option = document.createElement('option');
+                option.value = org;
+                datalist.appendChild(option);
+            });
+        }
+
+        function updateStats() {
+            const total = tournaments.length;
+            const colorado = tournaments.filter(t => t.state === 'CO').length;
+            const elite = tournaments.filter(t => t.rank_tier === 'Elite').length;
+            const withCost = tournaments.filter(t => t.cost_min !== null).map(t => t.cost_min);
+            const avgCost = withCost.length > 0 ? Math.round(withCost.reduce((a, b) => a + b) / withCost.length) : 0;
+            const states = new Set(tournaments.map(t => t.state)).size;
+
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-colorado').textContent = colorado;
+            document.getElementById('stat-elite').textContent = elite;
+            document.getElementById('stat-cost').textContent = avgCost > 0 ? `$${avgCost}` : '-';
+            document.getElementById('stat-states').textContent = states;
+        }
+
+        function getTierBadgeClass(tier) {
+            if (!tier) return '';
+            const tierMap = {
+                'Elite': 'badge-elite',
+                'Premier': 'badge-premier',
+                'Select': 'badge-select',
+                'Open': 'badge-open'
+            };
+            return tierMap[tier] || '';
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            const month = date.toLocaleDateString('en-US', { month: 'short' });
+            const day = date.getDate();
+            return `${month} ${day}`;
+        }
+
+        function formatDates(startDate, endDate) {
+            if (!startDate) return '';
+            if (startDate === endDate) return formatDate(startDate);
+            return `${formatDate(startDate)}-${formatDate(endDate)}`;
+        }
+
+        function formatCost(costMin, costMax) {
+            if (costMin === null && costMax === null) return 'TBD';
+            if (costMin === costMax) return `$${costMin}`;
+            if (costMin && costMax) return `$${costMin}-$${costMax}`;
+            if (costMin) return `$${costMin}`;
+            if (costMax) return `$${costMax}`;
+            return 'TBD';
+        }
+
+        function calculateCompositeScore(comp, exp, circ) {
+            return ((comp + exp + circ) / 3).toFixed(1);
+        }
+
+        function getTier(compositeScore) {
+            if (compositeScore >= 8) return 'Elite';
+            if (compositeScore >= 6.5) return 'Premier';
+            if (compositeScore >= 5) return 'Select';
+            if (compositeScore >= 3) return 'Open';
+            return 'Unranked';
+        }
+
+        function applyFilters() {
+            const stateFilter = document.getElementById('filter-state').value;
+            const typeFilter = document.getElementById('filter-type').value;
+            const tierFilter = document.getElementById('filter-tier').value;
+            const genderFilter = document.getElementById('filter-gender').value;
+            const searchFilter = document.getElementById('filter-search').value.toLowerCase();
+
+            filteredTournaments = tournaments.filter(t => {
+                if (stateFilter && t.state !== stateFilter) return false;
+                if (typeFilter && t.event_type !== typeFilter) return false;
+                if (tierFilter && t.rank_tier !== tierFilter) return false;
+                if (genderFilter && t.gender !== genderFilter) return false;
+                if (searchFilter && !t.name.toLowerCase().includes(searchFilter) && !t.organizer.toLowerCase().includes(searchFilter)) return false;
+                return true;
+            });
+
+            currentPage = 1;
+            renderTable();
+        }
+
+        function sortTable(column) {
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'asc';
+            }
+
+            filteredTournaments.sort((a, b) => {
+                let aVal = a[column];
+                let bVal = b[column];
+
+                if (typeof aVal === 'string') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                }
+
+                if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+                if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            currentPage = 1;
+            updateSortIndicators();
+            renderTable();
+        }
+
+        function sortTableByComposite() {
+            sortColumn = 'rank_composite';
+            sortDirection = 'desc';
+
+            filteredTournaments.sort((a, b) => {
+                const aVal = calculateCompositeScore(a.rank_competition, a.rank_exposure, a.rank_circuit);
+                const bVal = calculateCompositeScore(b.rank_competition, b.rank_exposure, b.rank_circuit);
+                return bVal - aVal;
+            });
+
+            currentPage = 1;
+            renderRankingsTable();
+        }
+
+        function updateSortIndicators() {
+            document.querySelectorAll('th[data-sort]').forEach(th => {
+                const indicator = th.querySelector('.sort-indicator');
+                if (th.dataset.sort === sortColumn) {
+                    indicator.textContent = sortDirection === 'asc' ? '▲' : '▼';
+                } else {
+                    indicator.textContent = '';
+                }
+            });
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tournaments-body');
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const pageData = filteredTournaments.slice(start, end);
+
+            tbody.innerHTML = pageData.map((t, idx) => `
+                <tr onclick="editTournament(${tournaments.indexOf(t)})">
+                    <td>${t.name}</td>
+                    <td>${t.organizer}</td>
+                    <td>${formatDates(t.start_date, t.end_date)}</td>
+                    <td>${t.city}, ${t.state}</td>
+                    <td>${t.event_type}</td>
+                    <td>${formatCost(t.cost_min, t.cost_max)}</td>
+                    <td>${t.rank_competition}</td>
+                    <td>${t.rank_exposure}</td>
+                    <td>${t.rank_circuit}</td>
+                    <td><span class="badge ${getTierBadgeClass(t.rank_tier)}">${t.rank_tier}</span></td>
+                    <td class="actions">
+                        <button class="action-btn schedule ${isOnSchedule(t) ? 'on-schedule' : ''}" onclick="event.stopPropagation(); toggleSchedule(${tournaments.indexOf(t)})" title="${isOnSchedule(t) ? 'Remove from schedule' : 'Add to schedule'}">
+                            ${isOnSchedule(t) ? '📅' : '➕'}
+                        </button>
+                        <button class="action-btn edit" onclick="event.stopPropagation(); editTournament(${tournaments.indexOf(t)})">✏</button>
+                        <button class="action-btn delete" onclick="event.stopPropagation(); deleteTournament(${tournaments.indexOf(t)})">🗑</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            renderPagination();
+        }
+
+        function renderRankingsTable() {
+            const tbody = document.getElementById('rankings-body');
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const pageData = filteredTournaments.slice(start, end);
+
+            tbody.innerHTML = pageData.map((t, idx) => {
+                const composite = calculateCompositeScore(t.rank_competition, t.rank_exposure, t.rank_circuit);
+                return `
+                    <tr onclick="editTournament(${tournaments.indexOf(t)})">
+                        <td>#${start + idx + 1}</td>
+                        <td>${t.name}</td>
+                        <td><span class="badge ${getTierBadgeClass(t.rank_tier)}">${t.rank_tier}</span></td>
+                        <td>${t.rank_competition}</td>
+                        <td>${t.rank_exposure}</td>
+                        <td>${t.rank_circuit}</td>
+                        <td>${t.organizer}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            renderRankingsPagination();
+        }
+
+        function renderPagination() {
+            const paginationDiv = document.getElementById('pagination');
+            const totalPages = Math.ceil(filteredTournaments.length / pageSize);
+            let html = `<span class="pagination-info">Page ${currentPage} of ${totalPages}</span>`;
+
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    html += `<button ${i === currentPage ? 'class="active"' : ''} onclick="goToPage(${i})">${i}</button>`;
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    html += `<span>...</span>`;
+                }
+            }
+
+            paginationDiv.innerHTML = html;
+        }
+
+        function renderRankingsPagination() {
+            const paginationDiv = document.getElementById('rankings-pagination');
+            const totalPages = Math.ceil(filteredTournaments.length / pageSize);
+            let html = `<span class="pagination-info">Page ${currentPage} of ${totalPages}</span>`;
+
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    html += `<button ${i === currentPage ? 'class="active"' : ''} onclick="goToPage(${i})">${i}</button>`;
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    html += `<span>...</span>`;
+                }
+            }
+
+            paginationDiv.innerHTML = html;
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            const activeTab = document.querySelector('.tab.active').dataset.tab;
+            if (activeTab === 'rankings') {
+                renderRankingsTable();
+            } else {
+                renderTable();
+            }
+        }
+
+        function editTournament(index) {
+            editingIndex = index;
+            const t = tournaments[index];
+
+            document.getElementById('modal-title').textContent = 'Edit Tournament';
+            document.getElementById('form-name').value = t.name;
+            document.getElementById('form-organizer').value = t.organizer;
+            document.getElementById('form-start-date').value = t.start_date;
+            document.getElementById('form-end-date').value = t.end_date;
+            document.getElementById('form-city').value = t.city;
+            document.getElementById('form-state').value = t.state;
+            document.getElementById('form-event-type').value = t.event_type;
+            document.getElementById('form-gender').value = t.gender;
+            document.getElementById('form-age-groups').value = t.age_groups || '';
+            document.getElementById('form-cost-min').value = t.cost_min || '';
+            document.getElementById('form-cost-max').value = t.cost_max || '';
+            document.getElementById('form-game-guarantee').value = t.game_guarantee || '';
+            document.getElementById('form-ability-level').value = t.ability_level || '';
+            document.getElementById('form-certified').checked = t.is_certified;
+            document.getElementById('form-ncaa').checked = t.is_ncaa_certified;
+            document.getElementById('form-jr-nba').checked = t.is_jr_nba_member;
+            document.getElementById('form-rank-comp').value = t.rank_competition;
+            document.getElementById('form-rank-exp').value = t.rank_exposure;
+            document.getElementById('form-rank-circ').value = t.rank_circuit;
+
+            updateRankingPreview();
+            document.getElementById('tournament-modal').classList.add('active');
+        }
+
+        function openAddModal() {
+            editingIndex = null;
+            document.getElementById('modal-title').textContent = 'Add Tournament';
+            document.getElementById('form-name').value = '';
+            document.getElementById('form-organizer').value = '';
+            document.getElementById('form-start-date').value = '';
+            document.getElementById('form-end-date').value = '';
+            document.getElementById('form-city').value = '';
+            document.getElementById('form-state').value = '';
+            document.getElementById('form-event-type').value = 'tournament';
+            document.getElementById('form-gender').value = 'coed';
+            document.getElementById('form-age-groups').value = '';
+            document.getElementById('form-cost-min').value = '';
+            document.getElementById('form-cost-max').value = '';
+            document.getElementById('form-game-guarantee').value = '';
+            document.getElementById('form-ability-level').value = '';
+            document.getElementById('form-certified').checked = false;
+            document.getElementById('form-ncaa').checked = false;
+            document.getElementById('form-jr-nba').checked = false;
+            document.getElementById('form-rank-comp').value = 5;
+            document.getElementById('form-rank-exp').value = 5;
+            document.getElementById('form-rank-circ').value = 5;
+            document.getElementById('form-notes').value = '';
+
+            updateRankingPreview();
+            document.getElementById('tournament-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('tournament-modal').classList.remove('active');
+        }
+
+        function saveTournament() {
+            const tournament = {
+                name: document.getElementById('form-name').value,
+                organizer: document.getElementById('form-organizer').value,
+                start_date: document.getElementById('form-start-date').value,
+                end_date: document.getElementById('form-end-date').value,
+                city: document.getElementById('form-city').value,
+                state: document.getElementById('form-state').value,
+                event_type: document.getElementById('form-event-type').value,
+                gender: document.getElementById('form-gender').value,
+                age_groups: document.getElementById('form-age-groups').value || null,
+                cost_min: document.getElementById('form-cost-min').value ? parseFloat(document.getElementById('form-cost-min').value) : null,
+                cost_max: document.getElementById('form-cost-max').value ? parseFloat(document.getElementById('form-cost-max').value) : null,
+                game_guarantee: document.getElementById('form-game-guarantee').value ? parseInt(document.getElementById('form-game-guarantee').value) : null,
+                ability_level: document.getElementById('form-ability-level').value || null,
+                is_certified: document.getElementById('form-certified').checked,
+                is_ncaa_certified: document.getElementById('form-ncaa').checked,
+                is_jr_nba_member: document.getElementById('form-jr-nba').checked,
+                rank_competition: parseInt(document.getElementById('form-rank-comp').value),
+                rank_exposure: parseInt(document.getElementById('form-rank-exp').value),
+                rank_circuit: parseInt(document.getElementById('form-rank-circ').value),
+                rank_tier: getTier(calculateCompositeScore(
+                    parseInt(document.getElementById('form-rank-comp').value),
+                    parseInt(document.getElementById('form-rank-exp').value),
+                    parseInt(document.getElementById('form-rank-circ').value)
+                ))
+            };
+
+            if (editingIndex !== null) {
+                tournaments[editingIndex] = tournament;
+            } else {
+                tournaments.push(tournament);
+            }
+
+            populateOrganizerList();
+            applyFilters();
+            updateStats();
+            closeModal();
+        }
+
+        function deleteTournament(index) {
+            if (confirm('Are you sure you want to delete this tournament?')) {
+                tournaments.splice(index, 1);
+                populateOrganizerList();
+                applyFilters();
+                updateStats();
+            }
+        }
+
+        function updateRankingPreview() {
+            const comp = parseInt(document.getElementById('form-rank-comp').value);
+            const exp = parseInt(document.getElementById('form-rank-exp').value);
+            const circ = parseInt(document.getElementById('form-rank-circ').value);
+
+            document.getElementById('rank-comp-value').textContent = comp;
+            document.getElementById('rank-exp-value').textContent = exp;
+            document.getElementById('rank-circ-value').textContent = circ;
+
+            const composite = calculateCompositeScore(comp, exp, circ);
+            const tier = getTier(composite);
+
+            document.getElementById('form-composite-score').textContent = composite;
+            document.getElementById('form-tier-preview').textContent = tier;
+        }
+
+        function renderByState() {
+            const stateGroups = {};
+            filteredTournaments.forEach(t => {
+                if (!stateGroups[t.state]) stateGroups[t.state] = [];
+                stateGroups[t.state].push(t);
+            });
+
+            const container = document.getElementById('by-state-content');
+            container.innerHTML = Object.keys(stateGroups).sort().map(state => `
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="this.parentElement.querySelector('.accordion-content').classList.toggle('open'); this.querySelector('.accordion-toggle').classList.toggle('open')">
+                        <span>${state} <span style="color: var(--gs-gray-500);">(${stateGroups[state].length})</span></span>
+                        <span class="accordion-toggle ${state === 'CO' ? 'open' : ''}">▼</span>
+                    </button>
+                    <div class="accordion-content ${state === 'CO' ? 'open' : ''}">
+                        <ul class="accordion-list">
+                            ${stateGroups[state].map(t => `
+                                <li onclick="editTournament(${tournaments.indexOf(t)})">
+                                    <span>${t.name}</span>
+                                    <span style="color: var(--gs-gray-600);">${formatDates(t.start_date, t.end_date)}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderOrganizers() {
+            const orgMap = {};
+            tournaments.forEach(t => {
+                if (!orgMap[t.organizer]) {
+                    orgMap[t.organizer] = {
+                        name: t.organizer,
+                        count: 0,
+                        states: new Set(),
+                        costs: []
+                    };
+                }
+                orgMap[t.organizer].count++;
+                orgMap[t.organizer].states.add(t.state);
+                if (t.cost_min) orgMap[t.organizer].costs.push(t.cost_min);
+            });
+
+            const organizers = Object.values(orgMap).sort((a, b) => b.count - a.count);
+            const container = document.getElementById('organizers-content');
+
+            container.innerHTML = '<div class="organizer-summary">' + organizers.map(org => `
+                <div class="organizer-card" onclick="filterByOrganizer('${org.name}')">
+                    <div class="organizer-name">${org.name}</div>
+                    <div class="organizer-stat">
+                        <span class="organizer-stat-label">Tournaments</span>
+                        <span class="organizer-stat-value">${org.count}</span>
+                    </div>
+                    <div class="organizer-stat">
+                        <span class="organizer-stat-label">States</span>
+                        <span class="organizer-stat-value">${org.states.size}</span>
+                    </div>
+                    <div class="organizer-stat">
+                        <span class="organizer-stat-label">Avg Cost</span>
+                        <span class="organizer-stat-value">${org.costs.length > 0 ? '$' + Math.round(org.costs.reduce((a, b) => a + b) / org.costs.length) : 'N/A'}</span>
+                    </div>
+                </div>
+            `).join('') + '</div>';
+        }
+
+        function filterByOrganizer(organizer) {
+            document.getElementById('filter-search').value = organizer;
+            applyFilters();
+            document.querySelector('[data-tab="all-tournaments"]').click();
+        }
+
+        function exportCSV() {
+            const headers = ['Name', 'Organizer', 'Start Date', 'End Date', 'City', 'State', 'Type', 'Gender', 'Cost Min', 'Cost Max', 'Tier', 'Comp', 'Exp', 'Circuit'];
+            const rows = filteredTournaments.map(t => [
+                t.name,
+                t.organizer,
+                t.start_date,
+                t.end_date,
+                t.city,
+                t.state,
+                t.event_type,
+                t.gender,
+                t.cost_min || '',
+                t.cost_max || '',
+                t.rank_tier,
+                t.rank_competition,
+                t.rank_exposure,
+                t.rank_circuit
+            ]);
+
+            const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `tournaments_${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+        }
+
+        // =====================================================
+        // SCHEDULE BUILDER
+        // =====================================================
+        // Mock schedule data (swap for Supabase team_tournament_schedule)
+        let schedule = [];
+
+        function isOnSchedule(tournament) {
+            return schedule.some(s =>
+                s.name === tournament.name &&
+                s.start_date === tournament.start_date &&
+                s.status !== 'cancelled'
+            );
+        }
+
+        function getScheduleEntry(tournament) {
+            return schedule.find(s =>
+                s.name === tournament.name &&
+                s.start_date === tournament.start_date &&
+                s.status !== 'cancelled'
+            );
+        }
+
+        function datesOverlap(s1, e1, s2, e2) {
+            return s1 <= e2 && s2 <= e1;
+        }
+
+        function findConflicts(startDate, endDate, excludeName) {
+            return schedule.filter(s =>
+                s.status !== 'cancelled' &&
+                s.name !== excludeName &&
+                datesOverlap(s.start_date, s.end_date, startDate, endDate)
+            );
+        }
+
+        function toggleSchedule(index) {
+            const t = tournaments[index];
+            if (isOnSchedule(t)) {
+                removeFromSchedule(t);
+            } else {
+                addToSchedule(t);
+            }
+        }
+
+        function addToSchedule(tournament) {
+            const conflicts = findConflicts(tournament.start_date, tournament.end_date, tournament.name);
+
+            if (conflicts.length > 0) {
+                const conflictNames = conflicts.map(c => c.name).join(', ');
+                const proceed = confirm(
+                    `Date conflict detected!\n\n` +
+                    `"${tournament.name}" (${formatDates(tournament.start_date, tournament.end_date)}) ` +
+                    `overlaps with:\n${conflictNames}\n\n` +
+                    `You cannot add overlapping tournaments to the schedule.`
+                );
+                return;
+            }
+
+            schedule.push({
+                name: tournament.name,
+                organizer: tournament.organizer,
+                start_date: tournament.start_date,
+                end_date: tournament.end_date,
+                city: tournament.city,
+                state: tournament.state,
+                event_type: tournament.event_type,
+                gender: tournament.gender,
+                age_groups: tournament.age_groups,
+                cost_min: tournament.cost_min,
+                cost_max: tournament.cost_max,
+                game_guarantee: tournament.game_guarantee,
+                rank_competition: tournament.rank_competition,
+                rank_exposure: tournament.rank_exposure,
+                rank_circuit: tournament.rank_circuit,
+                rank_composite: calculateCompositeScore(tournament.rank_competition, tournament.rank_exposure, tournament.rank_circuit),
+                rank_tier: tournament.rank_tier,
+                status: 'planned',
+                payment_status: 'unpaid',
+                division: '',
+                travel_required: tournament.state !== 'CO',
+                hotel_name: '',
+                hotel_cost: null,
+                registration_cost: tournament.cost_max || tournament.cost_min || null,
+                notes: ''
+            });
+
+            schedule.sort((a, b) => a.start_date.localeCompare(b.start_date));
+            renderTable();
+            updateScheduleStats();
+        }
+
+        function removeFromSchedule(tournament) {
+            if (!confirm(`Remove "${tournament.name}" from the schedule?`)) return;
+            const idx = schedule.findIndex(s =>
+                s.name === tournament.name &&
+                s.start_date === tournament.start_date &&
+                s.status !== 'cancelled'
+            );
+            if (idx !== -1) schedule.splice(idx, 1);
+            renderTable();
+            const activeTab = document.querySelector('.tab.active').dataset.tab;
+            if (activeTab === 'our-schedule') renderSchedule();
+            updateScheduleStats();
+        }
+
+        function updateScheduleStats() {
+            // Update the tab badge
+            const tab = document.querySelector('[data-tab="our-schedule"]');
+            const active = schedule.filter(s => s.status !== 'cancelled');
+            if (active.length > 0) {
+                tab.textContent = `Our Schedule (${active.length})`;
+            } else {
+                tab.textContent = 'Our Schedule';
+            }
+        }
+
+        function renderSchedule() {
+            const container = document.getElementById('schedule-content');
+            const active = schedule.filter(s => s.status !== 'cancelled');
+
+            if (active.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-schedule">
+                        <h3>No tournaments scheduled yet</h3>
+                        <p>Browse the catalog and click the ➕ button to add tournaments to your spring/summer schedule.</p>
+                        <button class="btn btn-primary" onclick="document.querySelector('[data-tab=\\'all-tournaments\\']').click()">Browse Catalog</button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Stats
+            const totalCost = active.reduce((sum, s) => sum + (s.registration_cost || 0) + (s.hotel_cost || 0), 0);
+            const totalDays = active.reduce((sum, s) => {
+                const d1 = new Date(s.start_date);
+                const d2 = new Date(s.end_date);
+                return sum + Math.round((d2 - d1) / 86400000) + 1;
+            }, 0);
+            const travelCount = active.filter(s => s.travel_required).length;
+            const paidCount = active.filter(s => s.payment_status === 'paid').length;
+
+            // Group by month
+            const months = {};
+            active.forEach(s => {
+                const monthKey = s.start_date.substring(0, 7);
+                if (!months[monthKey]) months[monthKey] = [];
+                months[monthKey].push(s);
+            });
+
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+            let html = `
+                <div class="schedule-header">
+                    <div>
+                        <h2 style="font-size:1.25rem; font-weight:700; color:var(--gs-black);">10U Development Black -- Spring/Summer 2026</h2>
+                        <p style="font-size:0.8rem; color:var(--gs-gray-500); margin-top:0.25rem;">Select tournaments from the catalog to build the season schedule</p>
+                        <button id="btn-publish-parents" class="btn btn-success" style="margin-top:0.75rem; font-size:0.8rem;" onclick="publishScheduleToParents()">Publish to Parent Portal</button>
+                    </div>
+                    <div class="schedule-stats">
+                        <div class="schedule-stat">
+                            <div class="schedule-stat-value">${active.length}</div>
+                            <div class="schedule-stat-label">Events</div>
+                        </div>
+                        <div class="schedule-stat">
+                            <div class="schedule-stat-value">${totalDays}</div>
+                            <div class="schedule-stat-label">Competition Days</div>
+                        </div>
+                        <div class="schedule-stat">
+                            <div class="schedule-stat-value">$${totalCost.toLocaleString()}</div>
+                            <div class="schedule-stat-label">Est. Cost</div>
+                        </div>
+                        <div class="schedule-stat">
+                            <div class="schedule-stat-value">${travelCount}</div>
+                            <div class="schedule-stat-label">Travel Events</div>
+                        </div>
+                        <div class="schedule-stat">
+                            <div class="schedule-stat-value">${paidCount}/${active.length}</div>
+                            <div class="schedule-stat-label">Paid</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Timeline calendar
+            html += renderScheduleTimeline(active);
+
+            // Card list by month
+            html += '<div class="schedule-list">';
+            Object.keys(months).sort().forEach(monthKey => {
+                const [year, monthNum] = monthKey.split('-');
+                const monthName = monthNames[parseInt(monthNum) - 1];
+                const events = months[monthKey];
+
+                html += `
+                    <div class="schedule-month-section">
+                        <div class="schedule-month-header">
+                            <span>${monthName} ${year}</span>
+                            <span class="schedule-month-count">${events.length} event${events.length !== 1 ? 's' : ''}</span>
+                        </div>
+                `;
+
+                events.forEach((s, i) => {
+                    const startD = new Date(s.start_date + 'T00:00:00');
+                    const endD = new Date(s.end_date + 'T00:00:00');
+                    const dayStart = startD.getDate();
+                    const dayEnd = endD.getDate();
+                    const mon = monthNames[startD.getMonth()].substring(0, 3).toUpperCase();
+                    const duration = Math.round((endD - startD) / 86400000) + 1;
+                    const composite = calculateCompositeScore(s.rank_competition, s.rank_exposure, s.rank_circuit);
+                    const schedIdx = schedule.indexOf(s);
+
+                    html += `
+                        <div class="schedule-card" onclick="openScheduleDetail(${schedIdx})">
+                            <div class="schedule-card-date">
+                                <div class="schedule-card-month">${mon}</div>
+                                <div class="schedule-card-day">${dayStart}</div>
+                                <div class="schedule-card-dayrange">${dayStart === dayEnd ? '1 day' : `${dayStart}-${dayEnd}`}</div>
+                            </div>
+                            <div class="schedule-card-info">
+                                <h4>${s.name}</h4>
+                                <div class="meta">
+                                    <span>${s.organizer}</span>
+                                    <span>${s.city}, ${s.state}</span>
+                                    <span>${duration} day${duration > 1 ? 's' : ''}</span>
+                                    ${s.registration_cost ? `<span>$${s.registration_cost}</span>` : ''}
+                                    ${s.rank_tier ? `<span class="badge ${getTierBadgeClass(s.rank_tier)}" style="font-size:0.65rem;">${s.rank_tier}</span>` : ''}
+                                </div>
+                            </div>
+                            <div class="schedule-card-actions">
+                                <span class="schedule-status-badge ${s.status}">${s.status}</span>
+                                ${s.travel_required ? '<span style="font-size:0.7rem; color:var(--gs-orange);">Travel</span>' : '<span style="font-size:0.7rem; color:var(--gs-gray-400);">Local</span>'}
+                                ${findPublishedMatch(s)?.published_at ? '<span style="font-size:0.65rem; font-weight:600; color:#16a34a; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:1px 8px;">Published</span>' : '<span style="font-size:0.65rem; font-weight:500; color:var(--gs-gray-400); background:var(--gs-gray-100); border:1px solid var(--gs-gray-200); border-radius:10px; padding:1px 8px;">Draft</span>'}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+            });
+            html += '</div>';
+
+            container.innerHTML = html;
+        }
+
+        function renderScheduleTimeline(events) {
+            if (events.length === 0) return '';
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const todayStr = today.toISOString().slice(0, 10);
+
+            // Find date range
+            const allDates = events.flatMap(e => [e.start_date, e.end_date]);
+            const minDate = new Date(allDates.sort()[0] + 'T00:00:00');
+            const maxDate = new Date(allDates.sort().pop() + 'T00:00:00');
+
+            // Expand to full months
+            const startMonth = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+            const endMonth = new Date(maxDate.getFullYear(), maxDate.getMonth() + 1, 0);
+
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+            let html = '<div class="schedule-timeline">';
+
+            let current = new Date(startMonth);
+            while (current <= endMonth) {
+                const year = current.getFullYear();
+                const month = current.getMonth();
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const startDow = firstDay.getDay();
+
+                html += `<div class="timeline-month">`;
+                html += `<div class="timeline-month-label">${monthNames[month]} ${year}</div>`;
+
+                // Day headers
+                html += '<div class="timeline-week-grid">';
+                html += '<div></div>';
+                dayNames.forEach(d => {
+                    html += `<div class="timeline-day-header">${d}</div>`;
+                });
+
+                // Weeks
+                let dayNum = 1;
+                let weekStart = new Date(year, month, 1 - startDow);
+
+                for (let week = 0; week < 6 && dayNum <= lastDay.getDate(); week++) {
+                    const ws = new Date(weekStart);
+                    ws.setDate(ws.getDate() + week * 7);
+                    html += `<div class="timeline-week-label">${ws.getMonth() === month ? 'Wk ' + (week + 1) : ''}</div>`;
+
+                    for (let dow = 0; dow < 7; dow++) {
+                        const cellDate = new Date(year, month, 1 - startDow + week * 7 + dow);
+                        const cellStr = cellDate.toISOString().slice(0, 10);
+                        const isThisMonth = cellDate.getMonth() === month;
+                        const isToday = cellStr === todayStr;
+
+                        // Find events on this day
+                        const dayEvents = events.filter(e => cellStr >= e.start_date && cellStr <= e.end_date);
+
+                        html += `<div class="timeline-day ${isToday ? 'today' : ''} ${!isThisMonth ? 'outside' : ''}">`;
+                        if (isThisMonth) {
+                            html += `<div class="timeline-day-num">${cellDate.getDate()}</div>`;
+                            dayEvents.forEach(e => {
+                                const isStart = cellStr === e.start_date;
+                                html += `<div class="timeline-event status-${e.status}" title="${e.name} (${e.status})">${isStart ? e.name.substring(0, 12) : ''}</div>`;
+                            });
+                        }
+                        html += '</div>';
+                    }
+                }
+
+                html += '</div></div>';
+
+                current.setMonth(current.getMonth() + 1);
+            }
+
+            html += '</div>';
+            return html;
+        }
+
+        function openScheduleDetail(schedIdx) {
+            const s = schedule[schedIdx];
+            if (!s) return;
+
+            const composite = calculateCompositeScore(s.rank_competition, s.rank_exposure, s.rank_circuit);
+            const startD = new Date(s.start_date + 'T00:00:00');
+            const endD = new Date(s.end_date + 'T00:00:00');
+            const duration = Math.round((endD - startD) / 86400000) + 1;
+
+            document.getElementById('schedule-modal-title').textContent = s.name;
+
+            document.getElementById('schedule-modal-body').innerHTML = `
+                <div class="detail-grid">
+                    <div class="detail-field">
+                        <label>Dates</label>
+                        <div class="value">${formatDates(s.start_date, s.end_date)} (${duration} day${duration > 1 ? 's' : ''})</div>
+                    </div>
+                    <div class="detail-field">
+                        <label>Location</label>
+                        <div class="value">${s.city}, ${s.state}</div>
+                    </div>
+                    <div class="detail-field">
+                        <label>Organizer</label>
+                        <div class="value">${s.organizer}</div>
+                    </div>
+                    <div class="detail-field">
+                        <label>Tier</label>
+                        <div class="value"><span class="badge ${getTierBadgeClass(s.rank_tier)}">${s.rank_tier}</span> (${composite})</div>
+                    </div>
+                    <div class="detail-field">
+                        <label>Registration Cost</label>
+                        <div class="value">${s.registration_cost ? '$' + s.registration_cost : 'TBD'}</div>
+                    </div>
+                    <div class="detail-field">
+                        <label>Game Guarantee</label>
+                        <div class="value">${s.game_guarantee || 'TBD'}</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:1.25rem;">
+                    <label style="font-size:0.7rem; font-weight:600; text-transform:uppercase; color:var(--gs-gray-500); letter-spacing:0.05em; display:block; margin-bottom:0.5rem;">Status</label>
+                    <div class="schedule-actions-row">
+                        <button class="btn btn-sm ${s.status === 'planned' ? 'btn-primary' : 'btn-secondary'}" onclick="setScheduleStatus(${schedIdx}, 'planned')">Planned</button>
+                        <button class="btn btn-sm ${s.status === 'registered' ? 'btn-success' : 'btn-secondary'}" onclick="setScheduleStatus(${schedIdx}, 'registered')">Registered</button>
+                        <button class="btn btn-sm ${s.status === 'paid' ? 'btn-success' : 'btn-secondary'}" onclick="setScheduleStatus(${schedIdx}, 'paid')">Paid</button>
+                        <button class="btn btn-sm ${s.status === 'completed' ? 'btn-secondary' : 'btn-secondary'}" onclick="setScheduleStatus(${schedIdx}, 'completed')" style="${s.status === 'completed' ? 'opacity:0.7;' : ''}">Completed</button>
+                    </div>
+                </div>
+
+                <div class="detail-grid">
+                    <div class="detail-field">
+                        <label>Division</label>
+                        <input type="text" id="sched-division" value="${s.division || ''}" placeholder="e.g. 10U" style="padding:0.4rem 0.6rem; border:1px solid var(--gs-gray-200); border-radius:0.375rem; font-size:0.8rem;">
+                    </div>
+                    <div class="detail-field">
+                        <label>Confirmation Code</label>
+                        <input type="text" id="sched-confirm" value="${s.confirmation_code || ''}" placeholder="Confirmation #" style="padding:0.4rem 0.6rem; border:1px solid var(--gs-gray-200); border-radius:0.375rem; font-size:0.8rem;">
+                    </div>
+                    <div class="detail-field">
+                        <label>Hotel</label>
+                        <input type="text" id="sched-hotel" value="${s.hotel_name || ''}" placeholder="Hotel name" style="padding:0.4rem 0.6rem; border:1px solid var(--gs-gray-200); border-radius:0.375rem; font-size:0.8rem;">
+                    </div>
+                    <div class="detail-field">
+                        <label>Hotel Cost</label>
+                        <input type="number" id="sched-hotel-cost" value="${s.hotel_cost || ''}" placeholder="0" style="padding:0.4rem 0.6rem; border:1px solid var(--gs-gray-200); border-radius:0.375rem; font-size:0.8rem;">
+                    </div>
+                </div>
+
+                <div class="detail-field" style="margin-top:0.5rem;">
+                    <label style="font-size:0.7rem; font-weight:600; text-transform:uppercase; color:var(--gs-gray-500); letter-spacing:0.05em; display:block; margin-bottom:0.25rem;">Notes</label>
+                    <textarea id="sched-notes" rows="2" style="width:100%; padding:0.4rem 0.6rem; border:1px solid var(--gs-gray-200); border-radius:0.375rem; font-size:0.8rem; font-family:inherit; resize:vertical;">${s.notes || ''}</textarea>
+                </div>
+            `;
+
+            document.getElementById('schedule-modal-footer').innerHTML = `
+                <button class="btn btn-danger btn-sm" onclick="removeScheduleEntry(${schedIdx})">Remove from Schedule</button>
+                <button class="btn btn-primary btn-sm" onclick="saveScheduleDetail(${schedIdx})">Save Changes</button>
+            `;
+
+            document.getElementById('schedule-modal').classList.add('active');
+        }
+
+        function setScheduleStatus(schedIdx, status) {
+            schedule[schedIdx].status = status;
+            openScheduleDetail(schedIdx);
+        }
+
+        function saveScheduleDetail(schedIdx) {
+            const s = schedule[schedIdx];
+            s.division = document.getElementById('sched-division').value;
+            s.confirmation_code = document.getElementById('sched-confirm').value;
+            s.hotel_name = document.getElementById('sched-hotel').value;
+            s.hotel_cost = parseFloat(document.getElementById('sched-hotel-cost').value) || null;
+            s.notes = document.getElementById('sched-notes').value;
+
+            document.getElementById('schedule-modal').classList.remove('active');
+            renderSchedule();
+            updateScheduleStats();
+        }
+
+        function removeScheduleEntry(schedIdx) {
+            if (!confirm(`Remove "${schedule[schedIdx].name}" from the schedule?`)) return;
+            schedule.splice(schedIdx, 1);
+            document.getElementById('schedule-modal').classList.remove('active');
+            renderSchedule();
+            renderTable();
+            updateScheduleStats();
+        }
+
+        function closeScheduleModal() {
+            document.getElementById('schedule-modal').classList.remove('active');
+        }
+
+        function attachEventListeners() {
+            // Tab switching
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+                    tab.classList.add('active');
+                    const tabId = tab.dataset.tab;
+                    document.getElementById(tabId).classList.add('active');
+
+                    if (tabId === 'by-state') {
+                        renderByState();
+                    } else if (tabId === 'rankings') {
+                        sortTableByComposite();
+                    } else if (tabId === 'organizers') {
+                        renderOrganizers();
+                    } else if (tabId === 'our-schedule') {
+                        renderSchedule();
+                    } else {
+                        currentPage = 1;
+                        renderTable();
+                    }
+                });
+            });
+
+            // Filters
+            document.getElementById('filter-state').addEventListener('change', applyFilters);
+            document.getElementById('filter-type').addEventListener('change', applyFilters);
+            document.getElementById('filter-tier').addEventListener('change', applyFilters);
+            document.getElementById('filter-gender').addEventListener('change', applyFilters);
+            document.getElementById('filter-search').addEventListener('input', applyFilters);
+
+            // Filter actions
+            document.getElementById('btn-clear-filters').addEventListener('click', () => {
+                document.getElementById('filter-state').value = '';
+                document.getElementById('filter-type').value = '';
+                document.getElementById('filter-tier').value = '';
+                document.getElementById('filter-gender').value = '';
+                document.getElementById('filter-search').value = '';
+                applyFilters();
+            });
+
+            document.getElementById('btn-export-csv').addEventListener('click', exportCSV);
+            document.getElementById('btn-add-tournament').addEventListener('click', openAddModal);
+
+            // Table sorting
+            document.querySelectorAll('th[data-sort]').forEach(th => {
+                th.addEventListener('click', () => sortTable(th.dataset.sort));
+            });
+
+            // Modal
+            document.getElementById('modal-close').addEventListener('click', closeModal);
+            document.getElementById('modal-cancel').addEventListener('click', closeModal);
+            document.getElementById('modal-save').addEventListener('click', saveTournament);
+
+            // Ranking sliders
+            ['form-rank-comp', 'form-rank-exp', 'form-rank-circ'].forEach(id => {
+                document.getElementById(id).addEventListener('input', updateRankingPreview);
+            });
+
+            // Close modal on overlay click
+            document.getElementById('tournament-modal').addEventListener('click', (e) => {
+                if (e.target.id === 'tournament-modal') closeModal();
+            });
+
+            // Schedule modal
+            document.getElementById('schedule-modal-close').addEventListener('click', closeScheduleModal);
+            document.getElementById('schedule-modal').addEventListener('click', (e) => {
+                if (e.target.id === 'schedule-modal') closeScheduleModal();
+            });
+        }
+
+        // Initialize on load
+        window.addEventListener('load', init);
+
+        // =====================================================
+        // SUPABASE CLIENT + PUBLISH TO PARENT PORTAL
+        // =====================================================
+        let trnSupabase = null;
+
+        async function initSupabase() {
+            // Wait for env-injector to populate SUPABASE_CONFIG
+            const cfg = window.SUPABASE_CONFIG;
+            if (!cfg?.url || !cfg?.anonKey || !window.supabase?.createClient) return null;
+            const client = window.supabase.createClient(cfg.url, cfg.anonKey, {
+                auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
+            });
+            const { data: { session } } = await client.auth.getSession();
+            if (!session) return null;
+            // Verify director role
+            const { data: profile } = await client.from('profiles')
+                .select('role,approved')
+                .eq('id', session.user.id)
+                .single();
+            if (profile?.role !== 'director' || !profile?.approved) return null;
+            trnSupabase = client;
+            return client;
+        }
+
+        // Called after Supabase is ready -- loads existing published events
+        // and marks schedule items that already exist in calendar_events
+        async function loadPublishedState() {
+            if (!trnSupabase) return;
+            const { data, error } = await trnSupabase
+                .from('calendar_events')
+                .select('id,title,start_date,end_date,published_at,event_type')
+                .in('event_type', ['tournament', '3v3', 'season', 'camp', 'game'])
+                .order('start_date', { ascending: true });
+            if (error) { console.error('loadPublishedState:', error); return; }
+            window._publishedEvents = data || [];
+        }
+
+        function findPublishedMatch(schedEntry) {
+            if (!window._publishedEvents) return null;
+            return window._publishedEvents.find(pe =>
+                pe.title === schedEntry.name &&
+                pe.start_date === schedEntry.start_date
+            );
+        }
+
+        async function publishScheduleToParents() {
+            const active = schedule.filter(s => s.status !== 'cancelled');
+            if (active.length === 0) {
+                showPublishBanner('No events in the schedule to publish.', 'error');
+                return;
+            }
+
+            if (!trnSupabase) {
+                try {
+                    await initSupabase();
+                } catch (e) {}
+                if (!trnSupabase) {
+                    showPublishBanner('Not connected to Supabase. Make sure you are logged in as a director.', 'error');
+                    return;
+                }
+            }
+
+            const btn = document.getElementById('btn-publish-parents');
+            if (btn) { btn.disabled = true; btn.textContent = 'Publishing...'; }
+
+            const session = await trnSupabase.auth.getSession();
+            const userId = session.data.session?.user?.id;
+            let created = 0, updated = 0, errors = 0;
+
+            for (const s of active) {
+                try {
+                    const existing = findPublishedMatch(s);
+                    const tags = [s.status || 'planned'];
+                    if (s.payment_status) tags.push(s.payment_status);
+
+                    const eventType = s.event_type === '3v3' ? 'game' : (s.event_type || 'tournament');
+                    const cost = s.registration_cost ? String(s.registration_cost) : null;
+                    const location = [s.city, s.state].filter(Boolean).join(', ');
+                    const description = [
+                        s.organizer ? 'Organizer: ' + s.organizer : '',
+                        s.game_guarantee ? s.game_guarantee + ' game guarantee' : '',
+                        s.division ? 'Division: ' + s.division : '',
+                        s.rank_tier ? 'Tier: ' + s.rank_tier : '',
+                        s.notes || ''
+                    ].filter(Boolean).join('\n');
+
+                    const { error } = await trnSupabase.rpc('upsert_calendar_event', {
+                        p_id: existing ? existing.id : null,
+                        p_title: s.name,
+                        p_event_type: eventType,
+                        p_start_date: s.start_date,
+                        p_end_date: s.end_date || s.start_date,
+                        p_location: location,
+                        p_grade_level: 'both',
+                        p_cost: cost,
+                        p_description: description,
+                        p_visibility: 'public',
+                        p_created_by: userId
+                    });
+                    if (error) throw error;
+
+                    if (existing) updated++;
+                    else created++;
+                } catch (e) {
+                    console.error('Publish error for', s.name, ':', e);
+                    errors++;
+                }
+            }
+
+            // Now set published_at + tags on all matching events
+            await loadPublishedState();
+            for (const s of active) {
+                const match = findPublishedMatch(s);
+                if (match) {
+                    const tags = [s.status || 'planned'];
+                    if (s.payment_status) tags.push(s.payment_status);
+                    await trnSupabase
+                        .from('calendar_events')
+                        .update({
+                            published_at: match.published_at || new Date().toISOString(),
+                            recalled_at: null,
+                            tags: tags
+                        })
+                        .eq('id', match.id);
+                }
+            }
+
+            // Refresh published state
+            await loadPublishedState();
+
+            if (btn) { btn.disabled = false; btn.textContent = 'Publish to Parent Portal'; }
+
+            if (errors === 0) {
+                showPublishBanner(
+                    `Published ${active.length} event${active.length !== 1 ? 's' : ''} to the parent portal` +
+                    (created > 0 ? ` (${created} new` + (updated > 0 ? `, ${updated} updated` : '') + ')' :
+                     updated > 0 ? ` (${updated} updated)` : '') + '.',
+                    'published'
+                );
+            } else {
+                showPublishBanner(
+                    `Published ${created + updated} of ${active.length} events. ${errors} failed -- check console.`,
+                    'error'
+                );
+            }
+
+            renderSchedule();
+        }
+
+        function showPublishBanner(msg, type) {
+            let banner = document.getElementById('publish-banner');
+            if (!banner) {
+                banner = document.createElement('div');
+                banner.id = 'publish-banner';
+                banner.className = 'publish-banner';
+                const schedContent = document.getElementById('schedule-content');
+                if (schedContent) schedContent.parentElement.insertBefore(banner, schedContent);
+                else return;
+            }
+            banner.className = 'publish-banner ' + type;
+            banner.textContent = msg;
+            banner.style.display = 'flex';
+            if (type !== 'error') {
+                setTimeout(() => { banner.style.display = 'none'; }, 6000);
+            }
+        }
+
+        // Load existing published schedule from Supabase into the local schedule array
+        async function loadScheduleFromSupabase() {
+            if (!trnSupabase) return;
+            const { data, error } = await trnSupabase
+                .from('calendar_events')
+                .select('id,title,start_date,end_date,location,cost,description,grade_level,event_type,tags,published_at')
+                .in('event_type', ['tournament', 'game', 'season', 'camp'])
+                .not('published_at', 'is', null)
+                .eq('is_cancelled', false)
+                .order('start_date', { ascending: true });
+            if (error) { console.error('loadScheduleFromSupabase:', error); return; }
+            if (!data || data.length === 0) return;
+
+            // Merge into local schedule (don't duplicate)
+            let added = 0;
+            data.forEach(pe => {
+                const exists = schedule.some(s =>
+                    s.name === pe.title && s.start_date === pe.start_date
+                );
+                if (!exists) {
+                    // Parse description for metadata
+                    const desc = pe.description || '';
+                    const orgMatch = desc.match(/^Organizer:\s*(.+)$/m);
+                    const tierMatch = desc.match(/^Tier:\s*(.+)$/m);
+                    const divMatch = desc.match(/^Division:\s*(.+)$/m);
+                    const gameMatch = desc.match(/^(\d+)\s+game guarantee$/m);
+                    const parts = (pe.location || '').split(',').map(s => s.trim());
+
+                    schedule.push({
+                        name: pe.title,
+                        organizer: orgMatch ? orgMatch[1] : '',
+                        start_date: pe.start_date,
+                        end_date: pe.end_date || pe.start_date,
+                        city: parts[0] || '',
+                        state: parts[1] || 'CO',
+                        event_type: pe.event_type || 'tournament',
+                        gender: 'coed',
+                        age_groups: null,
+                        cost_min: pe.cost ? parseFloat(pe.cost) : null,
+                        cost_max: pe.cost ? parseFloat(pe.cost) : null,
+                        game_guarantee: gameMatch ? parseInt(gameMatch[1]) : null,
+                        rank_tier: tierMatch ? tierMatch[1] : null,
+                        rank_competition: null,
+                        rank_exposure: null,
+                        rank_circuit: null,
+                        rank_composite: null,
+                        status: (pe.tags || []).find(t => ['planned','registered','paid','confirmed','completed'].includes(t)) || 'planned',
+                        payment_status: (pe.tags || []).find(t => ['unpaid','paid'].includes(t)) || 'unpaid',
+                        division: divMatch ? divMatch[1] : '',
+                        travel_required: (parts[1] || 'CO').trim() !== 'CO',
+                        hotel_name: '',
+                        hotel_cost: null,
+                        registration_cost: pe.cost ? parseFloat(pe.cost) : null,
+                        notes: '',
+                        _supabase_id: pe.id
+                    });
+                    added++;
+                }
+            });
+
+            if (added > 0) {
+                schedule.sort((a, b) => a.start_date.localeCompare(b.start_date));
+                updateScheduleStats();
+                const activeTabEl = document.querySelector('.tab.active');
+                if (activeTabEl && activeTabEl.dataset.tab === 'our-schedule') {
+                    renderSchedule();
+                }
+                console.log(`Loaded ${added} published events from Supabase into schedule`);
+            }
+        }
+
+        // Attempt Supabase init on page load (non-blocking)
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Small delay to let env-injector run
+                await new Promise(r => setTimeout(r, 300));
+                await initSupabase();
+                if (trnSupabase) {
+                    await loadPublishedState();
+                    await loadScheduleFromSupabase();
+                    console.log('Supabase connected, published events loaded:', window._publishedEvents?.length || 0);
+                }
+            } catch (e) {
+                console.warn('Supabase init deferred:', e.message);
+            }
+        });
+    </script>
+    <script type="module" src="src/lib/env-injector.js"></script>
+    <script src="auth-supabase.js" defer></script>
+</body>
+</html>

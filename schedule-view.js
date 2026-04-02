@@ -220,6 +220,8 @@ const ScheduleView = (() => {
     if (!Array.isArray(tags)) return null;
     if (tags.includes('confirmed')) return { label: 'Confirmed', bg: '#EAF3DE', color: '#3B6D11' };
     if (tags.includes('registered')) return { label: 'Registered', bg: '#EAF3DE', color: '#3B6D11' };
+    if (tags.includes('paid')) return { label: 'Paid', bg: '#EAF3DE', color: '#3B6D11' };
+    if (tags.includes('planned')) return { label: 'Planned', bg: '#FAEEDA', color: '#854F0B' };
     if (tags.includes('pending')) return { label: 'Pending', bg: '#FAEEDA', color: '#854F0B' };
     if (tags.includes('interest')) return { label: 'Interested', bg: '#E6F1FB', color: '#185FA5' };
     if (tags.includes('backup')) return { label: 'Backup', bg: '#F3F4F6', color: '#6B7280' };
