@@ -1105,7 +1105,7 @@ window.switchPortalView = function (viewName, linkElement) {
     }
 
     if (viewName === 'calendar') {
-        injectTrainingEvents();
+        // Schedule view now handled by schedule-view.js (no iframe injection needed)
     }
 }
 

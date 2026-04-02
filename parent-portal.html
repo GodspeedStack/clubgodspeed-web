@@ -745,16 +745,7 @@
 
                     <!-- VIEW: CALENDAR -->
                     <div id="view-calendar" class="portal-view" style="display: none;">
-                        <!-- Schedule List (primary content) -->
-                        <div id="tournament-schedule-container"></div>
-
-                        <!-- Calendar -->
-                        <div style="margin-top:32px">
-                          <div class="calendar-wrapper-v3">
-                              <iframe src="calendar-embed.html?role=parent" id="main-calendar-iframe"
-                                  style="width: 100%; height: 100%; border: none;"></iframe>
-                          </div>
-                        </div>
+                        <div id="schedule-view-root"></div>
                     </div>
 
                     <!-- VIEW: TRAINING -->
@@ -1427,6 +1418,7 @@
     <script src="documents-view.js" defer></script>
     <script src="document-tracker-integration.js" defer></script>
     <script src="tournament-schedule.js?v=20260331b" defer></script>
+    <script src="schedule-view.js?v=20260401a" defer></script>
     <script src="scripts/verify-setup.js" defer></script>
     <script src="src/components/MobileBottomNav.js" defer></script>
     <script src="nav-security.js" defer></script>
@@ -1464,33 +1456,32 @@
     <!-- Tournament Schedule Initialization -->
     <script>
     (function() {
-        let tournamentsLoaded = false;
+        let scheduleLoaded = false;
 
-        function initTournaments() {
-            if (tournamentsLoaded) return;
-            if (typeof TournamentSchedule === 'undefined') return;
+        function initScheduleView() {
+            if (scheduleLoaded) return;
+            if (typeof ScheduleView === 'undefined') return;
             var client = window.auth && window.auth.getSupabaseClient ? window.auth.getSupabaseClient() : null;
             if (!client) return;
-            TournamentSchedule.init(client);
-            TournamentSchedule.load().then(function() {
-                TournamentSchedule.render('tournament-schedule-container');
-                tournamentsLoaded = true;
+            ScheduleView.init(client);
+            ScheduleView.load().then(function() {
+                ScheduleView.render('schedule-view-root');
+                scheduleLoaded = true;
             });
         }
 
-        // Hook into view switching to load tournaments when calendar tab is shown
+        // Hook into view switching
         const origSwitch = window.switchPortalView;
         if (origSwitch) {
             window.switchPortalView = function(viewName, linkElement) {
                 origSwitch.call(this, viewName, linkElement);
-                if (viewName === 'calendar') initTournaments();
+                if (viewName === 'calendar') initScheduleView();
             };
         }
 
-        // Also handle direct hash navigation
         if (window.location.hash === '#calendar' || window.location.hash === '#tournaments') {
             document.addEventListener('DOMContentLoaded', function() {
-                setTimeout(initTournaments, 500);
+                setTimeout(initScheduleView, 500);
             });
         }
     })();
