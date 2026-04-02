@@ -29,16 +29,69 @@ const ScheduleView = (() => {
 
   async function load() {
     if (!supabase) return;
-    const today = new Date().toISOString().split('T')[0];
-    const { data, error } = await supabase
+
+    // Load calendar_events (practices, meetings, etc.)
+    const { data: calData, error: calErr } = await supabase
       .from('calendar_events')
       .select('id,title,event_type,start_date,start_time,end_time,end_date,location,location_url,grade_level,description,cost,tags,color')
       .eq('is_cancelled', false)
       .not('published_at', 'is', null)
       .in('visibility', ['public', 'team_only'])
       .order('start_date', { ascending: true });
-    if (error) { console.error('ScheduleView load:', error); return; }
-    allEvents = data || [];
+    if (calErr) { console.error('ScheduleView load calendar_events:', calErr); }
+
+    // Load team_schedule_view (master tournament source)
+    const { data: schedData, error: schedErr } = await supabase
+      .from('team_schedule_view')
+      .select('schedule_id,tournament_id,tournament_name,start_date,end_date,city,state,event_type,rank_tier,game_guarantee,status')
+      .order('start_date', { ascending: true });
+    if (schedErr) { console.error('ScheduleView load team_schedule_view:', schedErr); }
+
+    // Normalize tournament names for dedup
+    function normalizeName(name) {
+      return (name || '').toLowerCase()
+        .replace(/ day \d+$/i, '')
+        .replace(/^ihoop\s+/i, '')
+        .replace(/\b(the|a|an|of)\b/g, '')
+        .replace(/mountain\s*west/gi, '')
+        .replace(/[^a-z0-9]/g, '');
+    }
+
+    // Build set of normalized schedule names (master source)
+    const scheduleNames = new Set((schedData || []).map(t => normalizeName(t.tournament_name)));
+
+    // Filter out calendar_events tournaments that duplicate team_schedule_view entries
+    const calEvents = (calData || []).filter(e => {
+      if (!['tournament', 'season', 'game', 'camp'].includes(e.event_type)) return true;
+      const norm = normalizeName(e.title);
+      for (const sn of scheduleNames) {
+        if (norm === sn || sn.includes(norm) || norm.includes(sn)) return false;
+      }
+      return true;
+    });
+
+    // Map team_schedule_view rows to the same shape as calendar_events
+    const schedEvents = (schedData || []).map(t => ({
+      id: t.schedule_id || t.tournament_id,
+      title: t.tournament_name,
+      event_type: t.event_type === '3v3' ? 'tournament' : 'tournament',
+      start_date: t.start_date,
+      start_time: null,
+      end_time: null,
+      end_date: t.end_date,
+      location: [t.city, t.state].filter(Boolean).join(', ') || null,
+      location_url: null,
+      grade_level: null,
+      description: [t.rank_tier ? `${t.rank_tier}` : null, t.game_guarantee ? `${t.game_guarantee} games` : null].filter(Boolean).join(' -- '),
+      cost: null,
+      tags: null,
+      color: null,
+      _source: 'team_schedule'
+    }));
+
+    allEvents = [...calEvents, ...schedEvents].sort((a, b) =>
+      (a.start_date || '').localeCompare(b.start_date || '')
+    );
     return allEvents;
   }
 
