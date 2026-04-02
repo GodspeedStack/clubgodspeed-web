@@ -240,6 +240,7 @@ async function routeAuthenticatedUser() {
         // Not yet approved — show waiting room
         if (loginView) loginView.style.display = 'none';
         if (waitingRoom) waitingRoom.style.display = 'flex';
+        initWaitingRoom();
     }
 }
 
@@ -459,6 +460,7 @@ async function handleLogin() {
                         // Not yet approved — show waiting room
                         document.getElementById('portal-login').style.display = 'none';
                         document.getElementById('portal-waiting-room').style.display = 'flex';
+                        initWaitingRoom();
                         btn.innerHTML = 'Sign In';
                         btn.disabled = false;
                         return;
@@ -474,6 +476,7 @@ async function handleLogin() {
                 if (cachedApproval !== 'true') {
                     document.getElementById('portal-login').style.display = 'none';
                     document.getElementById('portal-waiting-room').style.display = 'flex';
+                    initWaitingRoom();
                     btn.innerHTML = 'Sign In';
                     btn.disabled = false;
                     return;
@@ -699,11 +702,14 @@ window.handleSignup = async function() {
                 console.warn('Admin notification skipped:', notifyErr);
             }
 
-            // Success UI
+            // Success UI — explain the two-stage process clearly
             if (typeof godspeedAlert === 'function') {
-                godspeedAlert(`Your account has been created! Check your inbox for a verification email from noreply@clubgodspeed.com to complete your registration.`, "Account Created");
+                godspeedAlert(
+                    `Step 1: Check your inbox for a verification email from noreply@clubgodspeed.com and click the link to verify your address.\n\nStep 2: After verifying, Coach Scott will review and approve your account. You will receive an email when your portal is unlocked.`,
+                    "Account Created"
+                );
             } else {
-                alert("Account Created! Check your email for a verification link from noreply@clubgodspeed.com.");
+                alert("Account Created!\n\nStep 1: Check your email for a verification link from noreply@clubgodspeed.com.\n\nStep 2: After verifying, Coach Scott will review and approve your account.");
             }
             
             // Clear inputs
@@ -751,8 +757,22 @@ window.handleSignup = async function() {
     }
 }
 
-// Resend verification email
+// Resend verification email (rate limited: 1 per 60 seconds)
+let _lastResendTime = 0;
 window.resendVerificationEmail = async function(email) {
+    const now = Date.now();
+    if (now - _lastResendTime < 60000) {
+        const waitSec = Math.ceil((60000 - (now - _lastResendTime)) / 1000);
+        const errorMsg = document.querySelector('.login-error');
+        if (errorMsg) {
+            errorMsg.textContent = 'Please wait ' + waitSec + ' seconds before resending.';
+            errorMsg.style.display = 'block';
+            errorMsg.style.color = '';
+            errorMsg.style.background = '';
+        }
+        return;
+    }
+
     try {
         const sb = window.auth && window.auth.getSupabaseClient ? window.auth.getSupabaseClient() : null;
         if (!sb) { alert('Could not connect. Please try again.'); return; }
@@ -760,14 +780,22 @@ window.resendVerificationEmail = async function(email) {
         if (!email) { alert('Please enter your email first.'); return; }
         const { error } = await sb.auth.resend({ type: 'signup', email });
         if (error) throw error;
+        _lastResendTime = Date.now();
         const errorMsg = document.querySelector('.login-error');
         if (errorMsg) {
-            errorMsg.innerHTML = '✅ Verification email resent! Check your inbox (and spam folder).';
+            errorMsg.textContent = 'Verification email resent! Check your inbox (and spam folder).';
             errorMsg.style.color = '#059669';
             errorMsg.style.background = '#d1fae5';
+            errorMsg.style.display = 'block';
         }
     } catch(e) {
-        alert('Could not resend: ' + (e.message || 'Please try again.'));
+        const errorMsg = document.querySelector('.login-error');
+        if (errorMsg) {
+            errorMsg.textContent = 'Could not resend: ' + (e.message || 'Please try again.');
+            errorMsg.style.display = 'block';
+            errorMsg.style.color = '';
+            errorMsg.style.background = '';
+        }
     }
 };
 
@@ -916,6 +944,96 @@ function handleLogout() {
         }
     });
 }
+
+// --- Waiting Room: Auto-Poll + Status Check ---
+
+let _waitingPollInterval = null;
+
+/**
+ * Populate waiting room with parent/athlete names from profile data
+ * and start auto-polling for approval status every 30 seconds.
+ */
+function initWaitingRoom() {
+    const namesEl = document.getElementById('waiting-room-names');
+    const statusEl = document.getElementById('waiting-room-status');
+    const parentName = localStorage.getItem('gba_user_email');
+    const sb = window.auth?.getSupabaseClient?.();
+
+    // Show parent/athlete name if we have profile data
+    if (sb && namesEl) {
+        const userId = localStorage.getItem('gba_user_id');
+        if (userId) {
+            sb.from('profiles').select('full_name, player_name').eq('id', userId).single()
+                .then(({ data }) => {
+                    if (data && (data.full_name || data.player_name)) {
+                        const parts = [];
+                        if (data.full_name) parts.push(data.full_name);
+                        if (data.player_name) parts.push('Parent of ' + data.player_name);
+                        namesEl.textContent = parts.join(' -- ');
+                        namesEl.style.display = 'block';
+                    }
+                })
+                .catch(() => {});
+        }
+    }
+
+    // Start auto-poll every 30 seconds
+    if (_waitingPollInterval) clearInterval(_waitingPollInterval);
+    _waitingPollInterval = setInterval(() => {
+        checkApprovalStatus(true);
+    }, 30000);
+
+    // Initial status check
+    if (statusEl) statusEl.textContent = 'We will check your status automatically.';
+}
+
+/**
+ * Check approval status on-demand (button click) or via auto-poll.
+ * If approved, route to dashboard. If denied, show denied view.
+ */
+window.checkApprovalStatus = async function (silent) {
+    const statusEl = document.getElementById('waiting-room-status');
+
+    if (!silent && statusEl) {
+        statusEl.textContent = 'Checking...';
+    }
+
+    try {
+        if (window.auth && typeof window.auth.verifyApproval === 'function') {
+            const result = await window.auth.verifyApproval();
+            if (!result) {
+                if (!silent && statusEl) statusEl.textContent = 'Could not reach server. Try again shortly.';
+                return;
+            }
+
+            if (result.denied) {
+                if (_waitingPollInterval) clearInterval(_waitingPollInterval);
+                document.getElementById('portal-waiting-room').style.display = 'none';
+                const deniedView = document.getElementById('portal-denied');
+                if (deniedView) deniedView.style.display = 'flex';
+                return;
+            }
+
+            if (result.approved) {
+                if (_waitingPollInterval) clearInterval(_waitingPollInterval);
+                document.getElementById('portal-waiting-room').style.display = 'none';
+                showDashboard();
+                updateDashboardProfile(localStorage.getItem('gba_user_email'));
+                localStorage.setItem('gba_user_cohort', 'aau');
+                updateUIForCohort();
+                return;
+            }
+
+            // Still pending
+            if (!silent && statusEl) {
+                statusEl.textContent = 'Still under review. We will keep checking automatically.';
+            }
+        }
+    } catch (e) {
+        console.warn('Approval status check failed:', e);
+        if (!silent && statusEl) statusEl.textContent = 'Could not reach server. Try again shortly.';
+    }
+};
 
 // --- Navigation Logic (V3 Side Panel) ---
 
