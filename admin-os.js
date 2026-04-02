@@ -35,24 +35,22 @@ function showToast(message, type='success') {
 
 function confirmModal(title,body,onConfirm){
   const overlay=document.createElement('div');
-  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center';
   const card=document.createElement('div');
-  card.style.cssText='background:var(--card,#1e1e2e);border:1px solid var(--border,#333);border-radius:16px;padding:28px 28px 20px;max-width:340px;width:90%;color:var(--fg,#e0e0e0);font-family:inherit;text-align:center';
+  card.style.cssText='background:var(--card,#1e1e2e);border:1px solid var(--border,#333);border-radius:12px;padding:28px 32px;max-width:420px;width:90%;color:var(--fg,#e0e0e0);font-family:inherit';
   const h=document.createElement('div');
-  h.style.cssText='font-size:17px;font-weight:600;margin-bottom:8px;letter-spacing:-0.01em';h.textContent=title;
+  h.style.cssText='font-size:16px;font-weight:700;margin-bottom:12px';h.textContent=title;
   const p=document.createElement('div');
-  p.style.cssText='font-size:13px;line-height:1.5;white-space:pre-line;color:var(--muted,#aaa);margin-bottom:20px';p.textContent=body;
+  p.style.cssText='font-size:14px;line-height:1.5;white-space:pre-line;color:var(--muted,#aaa);margin-bottom:24px';p.textContent=body;
   const row=document.createElement('div');
-  row.style.cssText='display:flex;gap:8px;border-top:1px solid var(--border,#333);margin:0 -28px;padding:0';
+  row.style.cssText='display:flex;gap:10px;justify-content:flex-end';
   const cancel=document.createElement('button');
-  cancel.textContent='Cancel';
-  cancel.style.cssText='flex:1;padding:14px 0;border:none;background:transparent;color:var(--primary,#3b82f6);font-size:15px;font-weight:400;cursor:pointer;font-family:inherit;border-right:1px solid var(--border,#333)';
+  cancel.textContent='Cancel';cancel.className='btn-xs btn-ghost';
   cancel.onclick=()=>overlay.remove();
-  const cfm=document.createElement('button');
-  cfm.textContent='Add Anyway';
-  cfm.style.cssText='flex:1;padding:14px 0;border:none;background:transparent;color:var(--primary,#3b82f6);font-size:15px;font-weight:600;cursor:pointer;font-family:inherit';
-  cfm.onclick=()=>{overlay.remove();onConfirm();};
-  row.append(cancel,cfm);card.append(h,p,row);overlay.append(card);
+  const confirm=document.createElement('button');
+  confirm.textContent='Add Anyway';confirm.style.cssText='padding:8px 18px;border-radius:8px;border:none;background:#3b82f6;color:#fff;font-weight:600;cursor:pointer;font-size:13px';
+  confirm.onclick=()=>{overlay.remove();onConfirm();};
+  row.append(cancel,confirm);card.append(h,p,row);overlay.append(card);
   overlay.onclick=e=>{if(e.target===overlay)overlay.remove();};
   document.body.appendChild(overlay);
 }
@@ -229,7 +227,6 @@ async function loadDashboard() {
     </div>`).join('') : '<p style="color:var(--muted);font-size:13px">All dues current!</p>';
 
   document.getElementById('dash-activity').innerHTML='<p style="color:var(--muted);font-size:13px">No recent activity.</p>';
-  loadTrainingSchedule('dash-training-schedule');
 }
 
 function renderDashboardPending(requests) {
@@ -244,57 +241,6 @@ function renderDashboardPending(requests) {
   // Update counters
   document.getElementById('m-pending').textContent = requests.length;
   document.getElementById('pending-badge').textContent = requests.length;
-}
-
-// ─── TRAINING SCHEDULE ──────────────────────────────────────
-let cachedTrainingSchedule = null;
-
-async function loadTrainingSchedule(targetId) {
-  const el = document.getElementById(targetId);
-  if (!el) return;
-  try {
-    if (!cachedTrainingSchedule && osSupabase) {
-      const { data, error } = await osSupabase.rpc('get_training_schedule', { p_season: 'Spring/Summer 2026' });
-      if (!error && data) cachedTrainingSchedule = data;
-    }
-    renderTrainingSchedule(el, targetId);
-  } catch (e) { console.error('Training schedule load:', e); }
-}
-
-function renderTrainingSchedule(el, targetId) {
-  const rows = cachedTrainingSchedule || [];
-  if (!rows.length) { el.innerHTML = '<p style="color:var(--muted);font-size:13px">No schedule data.</p>'; return; }
-  const totalSessions = rows.reduce((a, r) => a + (+r.total_sessions || 0), 0);
-  const totalCost = rows.reduce((a, r) => a + (+r.cost || 0), 0);
-  const isDashboard = targetId === 'dash-training-schedule';
-
-  if (isDashboard) {
-    // Compact card layout for dashboard
-    el.innerHTML = rows.map(r => `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-        <div><div style="font-weight:600;font-size:13px">${r.month_label}</div><div style="color:var(--muted);font-size:11px">${r.season_segment} &middot; ${r.sessions_per_week}x/wk &middot; ${r.total_sessions} sessions</div></div>
-        <div style="font-weight:700;font-size:13px">$${(+r.cost).toFixed(0)}</div>
-      </div>`).join('') + `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0 0">
-        <div style="font-weight:800;font-size:13px;color:var(--primary)">Total</div>
-        <div><span style="color:var(--muted);font-size:12px;margin-right:8px">${totalSessions} sessions</span><span style="font-weight:800;font-size:14px;color:var(--primary)">$${totalCost.toLocaleString()}</span></div>
-      </div>`;
-  } else {
-    // Full table for dues panel
-    const tbody = el;
-    tbody.innerHTML = rows.map(r => `<tr>
-      <td style="font-weight:600">${r.month_label}</td>
-      <td>${statusTag(r.season_segment)}</td>
-      <td style="text-align:center">${r.sessions_per_week}x</td>
-      <td style="text-align:center">${r.weeks}</td>
-      <td style="text-align:center;font-weight:600">${r.total_sessions}</td>
-      <td style="text-align:right;font-weight:600">$${(+r.cost).toFixed(0)}</td>
-    </tr>`).join('') + `<tr style="border-top:2px solid var(--border);font-weight:800">
-      <td colspan="4" style="text-align:right;color:var(--primary)">Total</td>
-      <td style="text-align:center;color:var(--primary)">${totalSessions}</td>
-      <td style="text-align:right;color:var(--primary)">$${totalCost.toLocaleString()}</td>
-    </tr>`;
-  }
 }
 
 // ─── PLAYERS & PARENTS ──────────────────────────────────────
@@ -330,7 +276,7 @@ function renderRosterByPlayer(arr) {
   tbody.innerHTML=filtered.map(a=>{
     const parentPhones=(a.parents||[]).map(p=>p.phone).filter(Boolean).join(', ')||'--';
     const dobStr=a.date_of_birth?new Date(a.date_of_birth+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'--';
-    const posLabel=a.player_position?POS_LABELS[a.player_position]||a.player_position:'--';
+    const posLabel=a.position?POS_LABELS[a.position]||a.position:'--';
     const enrolled=a.enrollment_status==='active';
     // Parent link: show linked parent name or "Link" button
     const parentLink=(a.parents||[]).length
@@ -818,7 +764,6 @@ async function loadDues() {
     }
   } catch(e){ console.error('Dues load:',e); }
   renderDues();
-  loadTrainingSchedule('dues-training-tbody');
 
   // Realtime: push toast when a parent submits a new payment
   if(osSupabase && !window._duesPaymentsChannel) {
@@ -2884,7 +2829,7 @@ function renderSchedView(){
     const si=tournSchedule.indexOf(s);
     const cost=((parseFloat(s.registration_cost)||0)+(parseFloat(s.hotel_cost)||0));
     const statusCls=s.status==='paid'||s.status==='registered'?'color:#4ade80':'color:#60a5fa';
-    html+=`<div class="ds-card" >
+    html+=`<div class="ds-card" onclick="openSchedDetail(${si})">
       <div style="text-align:center;min-width:48px">
         <div class="ds-card-mon">${MONTH_NAMES_T[d.getMonth()]}</div>
         <div class="ds-card-day">${d.getDate()}</div>
@@ -3250,34 +3195,8 @@ function prefillInvite(email, name, athlete) {
 }
 window.prefillInvite = prefillInvite;
 
-/** Validate active Supabase session; force re-login if expired. */
-async function requireSession() {
-  if (!osSupabase) { showToast('Not connected. Please refresh and log in.', 'error'); return false; }
-  try {
-    const { data: { session }, error } = await osSupabase.auth.getSession();
-    if (error || !session) {
-      showToast('Session expired. Redirecting to login...', 'error');
-      await osSupabase.auth.signOut().catch(() => {});
-      setTimeout(() => window.location.reload(), 1200);
-      return false;
-    }
-    return true;
-  } catch (_) {
-    showToast('Session check failed. Please refresh.', 'error');
-    return false;
-  }
-}
-
-/** Wrap a promise with a timeout to prevent indefinite hangs. */
-function withTimeout(promise, ms = 15000) {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out after ' + (ms / 1000) + 's')), ms))
-  ]);
-}
-
 async function sendOnboardingInvite() {
-  if (!(await requireSession())) return;
+  if (!osSupabase) return;
   const email = document.getElementById('ob-inv-email').value.trim();
   const parentName = document.getElementById('ob-inv-name').value.trim();
   const athleteName = document.getElementById('ob-inv-athlete').value.trim();
@@ -3287,24 +3206,10 @@ async function sendOnboardingInvite() {
 
   btn.textContent = 'Sending...'; btn.disabled = true;
   try {
-    const { data, error } = await withTimeout(
-      osSupabase.functions.invoke('send-onboarding-invite', {
-        body: { email, parent_name: parentName || null, athlete_name: athleteName || null }
-      })
-    );
-
-    // Extract real error body from FunctionsHttpError
-    if (error) {
-      let detail = error.message;
-      try {
-        if (error.context) {
-          const body = typeof error.context.json === 'function' ? await error.context.json() : null;
-          detail = body?.error || body?.message || JSON.stringify(body) || detail;
-        }
-      } catch (_) {}
-      showToast('Invite failed: ' + detail, 'error');
-      return;
-    }
+    const { data, error } = await osSupabase.functions.invoke('send-onboarding-invite', {
+      body: { email, parent_name: parentName || null, athlete_name: athleteName || null }
+    });
+    if (error) throw error;
 
     const result = data?.results?.[0];
     if (result?.status === 'sent') {
@@ -3325,7 +3230,7 @@ async function sendOnboardingInvite() {
 window.sendOnboardingInvite = sendOnboardingInvite;
 
 async function sendBulkOnboardingInvites() {
-  if (!(await requireSession())) return;
+  if (!osSupabase) return;
 
   try {
     // Get approved parents
@@ -3356,24 +3261,10 @@ async function sendBulkOnboardingInvites() {
       athlete_name: p.player_name || null,
     }));
 
-    const { data, error } = await withTimeout(
-      osSupabase.functions.invoke('send-onboarding-invite', {
-        body: { invites }
-      }),
-      30000 // 30s for bulk
-    );
-
-    if (error) {
-      let detail = error.message;
-      try {
-        if (error.context) {
-          const body = typeof error.context.json === 'function' ? await error.context.json() : null;
-          detail = body?.error || body?.message || JSON.stringify(body) || detail;
-        }
-      } catch (_) {}
-      showToast('Bulk invite failed: ' + detail, 'error');
-      return;
-    }
+    const { data, error } = await osSupabase.functions.invoke('send-onboarding-invite', {
+      body: { invites }
+    });
+    if (error) throw error;
 
     showToast(`Sent ${data?.sent || 0} of ${invites.length} onboarding invites`, 'success');
     loadOnboarding();

@@ -38,3 +38,4 @@ auto-commit.pid
 serviceAccountKey.json
 .vercel
 .env*.local
+.claude/

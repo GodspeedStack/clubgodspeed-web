@@ -59,21 +59,57 @@
     <script>
         const playerList = [
             {
+                id: 'quest',
+                name: 'Quest',
+                lastname: 'Scott',
+                image: 'src/assets/athletes/quest_scott_monster.png',
+                number: '4',
+                stats: {
+                    s1: '5.0',  l1: 'PPG',
+                    s2: '3.0',  l2: 'SPG',
+                    s3: '4.0',  l3: 'DPG',
+                    s4: '8.8',  l4: 'GRD'
+                },
+                games: [
+                    { opp: 'vs. Weeks',   stat: '5 PTS, 3 STL' },
+                    { opp: '@ Practice', stat: 'High Motor' },
+                    { opp: 'Trend',      stat: 'Rising' }
+                ]
+            },
+            {
+                id: 'ashton',
+                name: 'Ashton',
+                lastname: 'Bowman',
+                image: 'src/assets/athletes/ashton_comic.jpg',
+                number: '2',
+                stats: {
+                    s1: '3.0',  l1: 'PPG',
+                    s2: '1.0',  l2: 'STL',
+                    s3: '1.0',  l3: 'REB',
+                    s4: '7.6',  l4: 'GRD'
+                },
+                games: [
+                    { opp: 'vs. Weeks',    stat: '3 PTS, 100% FT' },
+                    { opp: '@ Practice 5', stat: 'Defensive Anchor' },
+                    { opp: 'Trend',        stat: 'Steady Growth' }
+                ]
+            },
+            {
                 id: 'ad-tuiono',
                 name: 'A.D.',
                 lastname: 'Tuiono',
                 image: 'src/assets/athletes/ad_tuiono_99.png',
                 number: '99',
                 stats: {
-                    s1: '—',   l1: 'PPG',
-                    s2: '—',   l2: 'APG',
-                    s3: '—',   l3: 'REB',
-                    s4: '—',   l4: 'GRD'
+                    s1: '—',  l1: 'PPG',
+                    s2: '—',  l2: 'APG',
+                    s3: '—',  l3: 'REB',
+                    s4: '—',  l4: 'GRD'
                 },
                 games: [
-                    { opp: 'vs. TBD',      stat: '— PTS' },
-                    { opp: '@ TBD',        stat: '— PTS' },
-                    { opp: 'Trend',        stat: 'Rising' }
+                    { opp: 'vs. TBD', stat: '— PTS' },
+                    { opp: '@ TBD',   stat: '— PTS' },
+                    { opp: 'Trend',   stat: 'Rising' }
                 ]
             }
         ];
