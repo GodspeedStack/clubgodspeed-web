@@ -21,6 +21,8 @@ const ScheduleView = (() => {
   let activeTab = 0;         // 0=Tournaments, 1=Practice, 2=Full Calendar
   let expandedId = null;     // which tournament card is expanded
   let containerId = null;
+  let availability = {};     // { tournamentId: 'available' | 'unavailable' }
+  let availSaving = {};      // { tournamentId: true } while save in flight
 
   // ─── Init & Load ────────────────────────────────────────────
   function init(supabaseClient) {
@@ -92,7 +94,53 @@ const ScheduleView = (() => {
     allEvents = [...calEvents, ...schedEvents].sort((a, b) =>
       (a.start_date || '').localeCompare(b.start_date || '')
     );
+
+    // Load parent's availability responses
+    await loadAvailability();
+
     return allEvents;
+  }
+
+  // ─── Availability ──────────────────────────────────────────
+  async function loadAvailability() {
+    if (!supabase) return;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data, error } = await supabase
+        .from('tournament_availability')
+        .select('tournament_identifier,status')
+        .eq('parent_id', user.id);
+      if (error) { console.error('ScheduleView loadAvailability:', error); return; }
+      availability = {};
+      (data || []).forEach(r => { availability[r.tournament_identifier] = r.status; });
+    } catch (err) {
+      console.error('ScheduleView loadAvailability:', err);
+    }
+  }
+
+  async function setAvailability(tournamentId, tournamentName, status) {
+    if (!supabase || availSaving[tournamentId]) return;
+    availSaving[tournamentId] = true;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { error } = await supabase
+        .from('tournament_availability')
+        .upsert({
+          parent_id: user.id,
+          tournament_identifier: tournamentId,
+          tournament_name: tournamentName,
+          status: status
+        }, { onConflict: 'parent_id,tournament_identifier' });
+      if (error) { console.error('ScheduleView setAvailability:', error); return; }
+      availability[tournamentId] = status;
+    } catch (err) {
+      console.error('ScheduleView setAvailability:', err);
+    } finally {
+      delete availSaving[tournamentId];
+      render(containerId);
+    }
   }
 
   // ─── Helpers ────────────────────────────────────────────────
@@ -282,9 +330,11 @@ const ScheduleView = (() => {
   }
 
   // ─── Priority Events (full roster required) ─────────────────
-  const PRIORITY_KEYWORDS = ['spring hoops classic', 'jps'];
+  const PRIORITY_KEYWORDS = ['spring hoops classic', 'jps mile high', 'jps freedom', 'jps invitational'];
+  const PRIORITY_EXCLUDE = ['3on3', '3 on 3'];
   function isPriorityEvent(title) {
     const t = (title || '').toLowerCase();
+    if (PRIORITY_EXCLUDE.some(ex => t.includes(ex))) return false;
     return PRIORITY_KEYWORDS.some(kw => t.includes(kw));
   }
 
@@ -332,9 +382,36 @@ const ScheduleView = (() => {
         </div>`
       ).join('');
 
+      // Availability toggle
+      const avail = availability[ev.id];
+      const isAvail = avail === 'available';
+      const isUnavail = avail === 'unavailable';
+      const saving = availSaving[ev.id];
+      const eid = ev.id.replace(/'/g, "\\'");
+      const ename = (ev.title || '').replace(/'/g, "\\'");
+
+      const availToggle = `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f3f4f6">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:#111;text-transform:uppercase;letter-spacing:0.04em">Availability</div>
+            <div style="font-size:11px;color:#6b7280;margin-top:2px">${isAvail ? 'You\'re marked as available' : isUnavail ? 'You\'re marked as unavailable' : 'Let us know if your player can attend'}</div>
+          </div>
+          <div style="display:flex;gap:0;border-radius:6px;overflow:hidden;border:1px solid #d1d5db" onclick="event.stopPropagation()">
+            <button onclick="event.stopPropagation();ScheduleView._setAvail('${eid}','${ename}','available')"
+              style="padding:5px 12px;border:none;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.15s;${isAvail
+                ? 'background:#111;color:#fff'
+                : 'background:#fff;color:#6b7280'}"${saving ? ' disabled' : ''}>Available</button>
+            <button onclick="event.stopPropagation();ScheduleView._setAvail('${eid}','${ename}','unavailable')"
+              style="padding:5px 12px;border:none;border-left:1px solid #d1d5db;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.15s;${isUnavail
+                ? 'background:#111;color:#fff'
+                : 'background:#fff;color:#6b7280'}"${saving ? ' disabled' : ''}>Unavailable</button>
+          </div>
+        </div>`;
+
       detail = `
         <div style="padding:12px 14px 14px;border-top:1px solid #e5e7eb;background:#fafafa;border-radius:0 0 8px 8px">
           ${detailRows}
+          ${availToggle}
           <div style="display:flex;gap:8px;margin-top:12px">
             <button onclick="ScheduleView._addToCalendar('${ev.id}')" style="padding:6px 12px;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#374151;font-size:11px;cursor:pointer;font-weight:600">Add to Calendar</button>
             ${ev.location_url ? `<a href="${ev.location_url}" target="_blank" rel="noopener" style="padding:6px 12px;border-radius:6px;border:none;background:#111;color:#fff;font-size:11px;cursor:pointer;font-weight:600;text-decoration:none;display:inline-flex;align-items:center">Get Directions</a>` : ''}
@@ -355,6 +432,8 @@ const ScheduleView = (() => {
             <div style="display:flex;align-items:center;gap:10px;margin-top:3px;font-size:11px;color:#6b7280">
               <span>${dateLabel}</span>
               ${ev.location ? '<span style="color:#d1d5db">|</span><span>' + ev.location.split(',')[0] + '</span>' : ''}
+              ${availability[ev.id] === 'available' ? '<span style="color:#d1d5db">|</span><span style="color:#15803d;font-weight:600">Available</span>' : ''}
+              ${availability[ev.id] === 'unavailable' ? '<span style="color:#d1d5db">|</span><span style="color:#dc2626;font-weight:600">Unavailable</span>' : ''}
             </div>
           </div>
         </div>
@@ -598,8 +677,12 @@ table{width:100%;border-collapse:collapse;font-size:13px}th{background:#f3f4f6;p
   function _downloadICS() { downloadICS(); }
   function _downloadPDF() { downloadPDF(); }
 
+  function _setAvail(tournamentId, tournamentName, status) {
+    setAvailability(tournamentId, tournamentName, status);
+  }
+
   return {
     init, load, render, downloadICS,
-    _toggle, _setGrade, _setTab, _navMonth, _addToCalendar, _downloadICS, _downloadPDF
+    _toggle, _setGrade, _setTab, _navMonth, _addToCalendar, _downloadICS, _downloadPDF, _setAvail
   };
 })();
