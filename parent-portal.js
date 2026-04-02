@@ -725,20 +725,28 @@ window.handleSignup = async function() {
         
         if (errorMsg) {
             let userFriendlyMessage = "Something went wrong on our end. Please try again!";
-            if (error.message) {
-                if (error.message.includes('already exists') || error.message.includes('already registered') || error.message.includes('already been registered')) {
-                    errorMsg.innerHTML = 'An account with this email already exists. <a href="#" onclick="showLoginForm(); return false;" style="color:#111;font-weight:700;text-decoration:underline;">Log in here</a> or <a href="#" onclick="resendVerificationEmail(\'' + email.replace(/'/g, "\\'") + '\'); return false;" style="color:#111;font-weight:700;text-decoration:underline;">resend verification email</a>.';
-                    errorMsg.style.display = 'block';
-                    const form = document.querySelector('.signup-form');
-                    if (form) { form.classList.add('shake'); setTimeout(() => form.classList.remove('shake'), 500); }
-                    return; // skip textContent assignment below
-                } else if (error.message.includes('not connected') || error.message.includes('fetch') || error.message.includes('Cannot connect')) {
-                    userFriendlyMessage = "We couldn't reach the server right now. Please check your internet connection or disable your adblocker and try again.";
-                } else if (error.message.includes('unavailable')) {
-                    userFriendlyMessage = error.message;
-                } else {
-                    userFriendlyMessage = "Something went wrong creating your account. Please try again.";
-                }
+            const msg = (error.message || '').toLowerCase();
+            if (msg.includes('already') && (msg.includes('exist') || msg.includes('register'))) {
+                // Duplicate email — show login/resend links
+                errorMsg.innerHTML = 'An account with this email already exists. <a href="#" onclick="showLoginForm(); return false;" style="color:#111;font-weight:700;text-decoration:underline;">Log in here</a> or <a href="#" onclick="resendVerificationEmail(\'' + email.replace(/'/g, "\\'") + '\'); return false;" style="color:#111;font-weight:700;text-decoration:underline;">resend verification email</a>.';
+                errorMsg.style.display = 'block';
+                const form = document.querySelector('.signup-form');
+                if (form) { form.classList.add('shake'); setTimeout(() => form.classList.remove('shake'), 500); }
+                return; // skip textContent assignment below
+            } else if (msg.includes('not connected') || msg.includes('fetch') || msg.includes('cannot connect')) {
+                userFriendlyMessage = "We couldn't reach the server right now. Please check your internet connection or disable your adblocker and try again.";
+            } else if (msg.includes('unavailable')) {
+                userFriendlyMessage = error.message;
+            } else if (msg.includes('password') || msg.includes('weak')) {
+                userFriendlyMessage = "Your password is too weak. Please use at least 6 characters.";
+            } else if (msg.includes('rate') || msg.includes('limit') || msg.includes('too many')) {
+                userFriendlyMessage = "Too many attempts. Please wait a minute and try again.";
+            } else if (msg.includes('invalid') && msg.includes('email')) {
+                userFriendlyMessage = "That email address isn't valid. Please double-check and try again.";
+            } else {
+                // Log the actual error for debugging, show safe message to user
+                console.error('[signup] unhandled error category:', error.message);
+                userFriendlyMessage = "Something went wrong creating your account. Please try again.";
             }
             errorMsg.textContent = userFriendlyMessage;
             errorMsg.style.display = 'block';

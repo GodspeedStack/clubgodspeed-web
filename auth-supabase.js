@@ -338,41 +338,52 @@
          * @returns {Promise<Object>} { success: boolean, requiresVerification: boolean }
          */
         signup: async function (email, password, metadata = {}) {
-            if (await ensureSupabaseClient()) {
-                try {
-                    // Supabase handles email verification natively — bypass
-                    // SecureAuth wrapper which never calls supabaseClient.auth.signUp
-                    const { data, error } = await supabaseClient.auth.signUp({
-                        email: email,
-                        password: password,
-                        options: {
-                            data: metadata,
-                            emailRedirectTo: 'https://www.clubgodspeed.com/parent-portal.html'
-                        }
-                    });
-
-                    if (error) {
-                        throw new Error(error.message);
-                    }
-
-                    if (data.user) {
-                        // User profile will be created by trigger
-                        // Email confirmation enabled — users must verify via branded email from noreply@clubgodspeed.com
-                        return {
-                            success: true,
-                            requiresVerification: true,
-                            userId: data.user.id
-                        };
-                    }
-                } catch (error) {
-                    console.error('Signup failed:', error);
-                    if (error.message === 'Failed to fetch' || (error.message && error.message.includes('fetch'))) {
-                        throw new Error('Cannot connect to the server. Please check your internet connection or disable your adblocker and try again.');
-                    }
-                    throw error;
-                }
+            if (!(await ensureSupabaseClient())) {
+                throw new Error('Our signup system is temporarily unavailable. Please try again in a few minutes.');
             }
-            throw new Error('Our signup system is temporarily unavailable. Please try again in a few minutes.');
+
+            try {
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: metadata,
+                        emailRedirectTo: 'https://www.clubgodspeed.com/parent-portal.html'
+                    }
+                });
+
+                if (error) {
+                    console.error('[auth] signUp error:', error.message, error.status);
+                    throw new Error(error.message);
+                }
+
+                // Supabase duplicate-email handling (email confirmation enabled):
+                // Case 1: data.user is null, no error — email already exists
+                // Case 2: data.user has empty identities array — confirmed user already exists
+                // Both are Supabase's email enumeration protection; surface as "already registered"
+                if (!data.user) {
+                    console.warn('[auth] signUp returned null user for:', email);
+                    throw new Error('An account with this email has already been registered.');
+                }
+
+                if (data.user.identities && data.user.identities.length === 0) {
+                    console.warn('[auth] signUp returned empty identities (existing account) for:', email);
+                    throw new Error('An account with this email has already been registered.');
+                }
+
+                // Genuine new user — profile will be created by handle_new_user() trigger
+                return {
+                    success: true,
+                    requiresVerification: true,
+                    userId: data.user.id
+                };
+            } catch (error) {
+                console.error('[auth] signup failed:', error);
+                if (error.message === 'Failed to fetch' || (error.message && error.message.includes('fetch'))) {
+                    throw new Error('Cannot connect to the server. Please check your internet connection or disable your adblocker and try again.');
+                }
+                throw error;
+            }
         },
 
         signInWithOAuth: async function (options) {
