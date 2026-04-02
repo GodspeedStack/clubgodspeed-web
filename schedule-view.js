@@ -281,6 +281,13 @@ const ScheduleView = (() => {
     return null;
   }
 
+  // ─── Priority Events (full roster required) ─────────────────
+  const PRIORITY_KEYWORDS = ['spring hoops classic', 'jps'];
+  function isPriorityEvent(title) {
+    const t = (title || '').toLowerCase();
+    return PRIORITY_KEYWORDS.some(kw => t.includes(kw));
+  }
+
   // ─── Tournament Card ────────────────────────────────────────
   function renderTournamentCard(ev) {
     const isExpanded = expandedId === ev.id;
@@ -288,10 +295,14 @@ const ScheduleView = (() => {
       ? `${fmtShort(ev.start_date)} - ${fmtShort(ev.end_date)}`
       : fmtShort(ev.start_date);
     const gc = gradeBadgeColor(ev.grade_level);
+    const priority = isPriorityEvent(ev.title);
     const status = statusFromTags(ev.tags);
-    const statusBadge = status
+    const statusBadge = (priority
+      ? '<span style="font-size:9px;font-weight:700;letter-spacing:0.06em;border-radius:4px;padding:2px 7px;background:#111;color:#fff">FULL ROSTER</span>'
+      : '')
+      + (status
       ? `<span style="font-size:10px;font-weight:600;border-radius:10px;padding:2px 8px;background:${status.bg};color:${status.color}">${status.label}</span>`
-      : '';
+      : '');
 
     const chevron = isExpanded
       ? '<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="transform:rotate(90deg);transition:transform 0.15s"><path d="M6 3l5 5-5 5"/></svg>'
@@ -312,6 +323,7 @@ const ScheduleView = (() => {
       rows.push(['Division', gradeLabel(ev.grade_level)]);
       if (ev.cost) rows.push(['Cost', '$' + parseFloat(ev.cost).toFixed(0)]);
       if (ev.description) rows.push(['Details', ev.description]);
+      if (priority) rows.push(['Attendance', '<span style="font-weight:600;color:#111">Full roster required.</span> This is a priority event for our program. We need every player present and ready to compete. Please plan accordingly and communicate early if there is a conflict.']);
 
       const detailRows = rows.map(([k, v]) =>
         `<div style="display:flex;gap:12px;padding:8px 0;border-bottom:1px solid #f3f4f6">
