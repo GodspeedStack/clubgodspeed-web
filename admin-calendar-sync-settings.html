@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar Sync Settings | Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            background: #fbfbfd;
+            padding: 4rem 2rem;
+        }
+        .settings-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 2rem;
+        }
+        .settings-header {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 1.5rem;
+        }
+        .settings-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1d1d1f;
+            margin: 0;
+        }
+        .settings-header p {
+            color: #86868b;
+            margin: 0.5rem 0 0 0;
+            font-size: 0.95rem;
+        }
+        .setting-group {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        .setting-group h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin: 0 0 1rem 0;
+        }
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+        }
+        .setting-item:last-child {
+            margin-bottom: 0;
+        }
+        .setting-label {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .setting-label label {
+            font-weight: 500;
+            color: #1d1d1f;
+            font-size: 0.95rem;
+        }
+        .setting-label p {
+            font-size: 0.85rem;
+            color: #86868b;
+            margin: 0;
+        }
+        .setting-control {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+        input[type="number"],
+        input[type="range"],
+        select {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+        }
+        input[type="number"] {
+            width: 100px;
+        }
+        input[type="range"] {
+            width: 150px;
+        }
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+        button {
+            padding: 0.75rem 1.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+        .btn-secondary {
+            background: white;
+            color: #1d1d1f;
+            border-color: #d1d5db;
+        }
+        .btn-secondary:hover {
+            background: #f3f4f6;
+        }
+        .monitoring-section {
+            background: #f0f9ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+        .monitoring-section h3 {
+            color: #0369a1;
+            margin-top: 0;
+        }
+        .metric-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .metric-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 6px;
+            border: 1px solid #bfdbfe;
+        }
+        .metric-label {
+            font-size: 0.85rem;
+            color: #0369a1;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1d1d1f;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .status-connected {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status-disconnected {
+            background: #fee2e2;
+            color: #7f1d1d;
+        }
+        .copy-button {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.85rem;
+            background: #e5e7eb;
+            border-color: #d1d5db;
+            margin-left: 0.5rem;
+        }
+        .notification {
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        .notification.show {
+            display: block;
+        }
+        .notification.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+    </style>
+</head>
+<body>
+    <div class="settings-container">
+        <div class="settings-header">
+            <h1>Calendar Sync Settings</h1>
+            <p>Configure real-time synchronization, notifications, and monitoring for the parent portal calendar.</p>
+        </div>
+
+        <div id="notification" class="notification"></div>
+
+        <!-- Polling Settings -->
+        <div class="setting-group">
+            <h3>Polling Configuration</h3>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <label for="pollingInterval">Fallback Polling Interval</label>
+                    <p>Time between database checks when WebSocket is unavailable (milliseconds)</p>
+                </div>
+                <div class="setting-control">
+                    <input type="number" id="pollingInterval" min="5000" max="180000" step="5000" value="30000">
+                    <span style="color: #86868b; font-size: 0.9rem;" id="pollingDisplay">30s</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Settings -->
+        <div class="setting-group">
+            <h3>Notifications</h3>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <label for="notificationsEnabled">Enable Desktop Notifications</label>
+                    <p>Send browser notifications when calendar updates</p>
+                </div>
+                <div class="setting-control">
+                    <input type="checkbox" id="notificationsEnabled" checked>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <label for="soundEnabled">Enable Notification Sounds</label>
+                    <p>Play subtle beep sound when calendar updates</p>
+                </div>
+                <div class="setting-control">
+                    <input type="checkbox" id="soundEnabled">
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <label for="soundVolume">Sound Volume</label>
+                    <p>Volume level for notification sounds (0-100%)</p>
+                </div>
+                <div class="setting-control">
+                    <input type="range" id="soundVolume" min="0" max="100" value="50">
+                    <span id="volumeDisplay" style="min-width: 40px; text-align: right;">50%</span>
+                    <button class="copy-button" onclick="testSound()">Test</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visual Indicators -->
+        <div class="setting-group">
+            <h3>Visual Indicators</h3>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <label for="visualIndicatorsEnabled">Show Visual Status Indicators</label>
+                    <p>Display sync status badges and animations in calendar</p>
+                </div>
+                <div class="setting-control">
+                    <input type="checkbox" id="visualIndicatorsEnabled" checked>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <label for="showSyncBadge">Show Sync Status Badge</label>
+                    <p>Display "Syncing", "Synced", or "Error" badge in calendar header</p>
+                </div>
+                <div class="setting-control">
+                    <input type="checkbox" id="showSyncBadge" checked>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <label for="showLastSyncTime">Show Last Sync Time</label>
+                    <p>Display timestamp of the last calendar synchronization</p>
+                </div>
+                <div class="setting-control">
+                    <input type="checkbox" id="showLastSyncTime" checked>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <label for="showStatusPulse">Show Status Pulse Animation</label>
+                    <p>Animated pulse effect during sync operations</p>
+                </div>
+                <div class="setting-control">
+                    <input type="checkbox" id="showStatusPulse" checked>
+                </div>
+            </div>
+        </div>
+
+        <!-- Database Monitoring -->
+        <div class="setting-group">
+            <h3>Database Monitoring</h3>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <label for="dbMonitoringEnabled">Enable Database Monitoring</label>
+                    <p>Track queries, performance metrics, and sync activity (logs to browser console)</p>
+                </div>
+                <div class="setting-control">
+                    <input type="checkbox" id="dbMonitoringEnabled" checked>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-label">
+                    <label for="monitoringLogInterval">Monitoring Log Interval</label>
+                    <p>How often to log metrics (milliseconds)</p>
+                </div>
+                <div class="setting-control">
+                    <input type="number" id="monitoringLogInterval" min="5000" max="60000" step="5000" value="10000">
+                    <span style="color: #86868b; font-size: 0.9rem;" id="monitoringDisplay">10s</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitoring Dashboard -->
+        <div class="monitoring-section">
+            <h3>Live Metrics Dashboard</h3>
+            <div class="metric-row">
+                <div class="metric-card">
+                    <div class="metric-label">Total Syncs</div>
+                    <div class="metric-value" id="totalSyncs">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">WebSocket Status</div>
+                    <div id="wsStatus" class="status-badge status-disconnected">Disconnected</div>
+                </div>
+            </div>
+            <div class="metric-row">
+                <div class="metric-card">
+                    <div class="metric-label">Avg Query Time</div>
+                    <div class="metric-value" id="avgQueryTime">0<span style="font-size: 0.8rem;">ms</span></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Total Queries</div>
+                    <div class="metric-value" id="totalQueries">0</div>
+                </div>
+            </div>
+            <div class="metric-row">
+                <div class="metric-card">
+                    <div class="metric-label">Error Rate</div>
+                    <div class="metric-value" id="errorRate">0<span style="font-size: 0.8rem;">%</span></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Polling Mode</div>
+                    <div id="pollingStatus" class="status-badge status-disconnected">No</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
+            <button class="btn-secondary" onclick="resetSettings()">Reset to Defaults</button>
+            <button class="btn-secondary" onclick="exportMetrics()">Export Metrics</button>
+        </div>
+    </div>
+
+    <script src="calendar-sync-config.js"></script>
+    <script>
+        // Initialize form with current settings
+        function initializeForm() {
+            const config = CalendarSyncConfig.getConfig();
+            document.getElementById('pollingInterval').value = config.pollingIntervalMs;
+            document.getElementById('notificationsEnabled').checked = config.notificationsEnabled;
+            document.getElementById('soundEnabled').checked = config.soundEnabled;
+            document.getElementById('soundVolume').value = config.soundVolume * 100;
+            document.getElementById('visualIndicatorsEnabled').checked = config.visualIndicatorsEnabled;
+            document.getElementById('showSyncBadge').checked = config.showSyncBadge;
+            document.getElementById('showLastSyncTime').checked = config.showLastSyncTime;
+            document.getElementById('showStatusPulse').checked = config.showStatusPulse;
+            document.getElementById('dbMonitoringEnabled').checked = config.dbMonitoringEnabled;
+            document.getElementById('monitoringLogInterval').value = config.monitoringLogInterval;
+
+            updateDisplayValues();
+        }
+
+        // Update display values
+        function updateDisplayValues() {
+            const pollingMs = parseInt(document.getElementById('pollingInterval').value);
+            document.getElementById('pollingDisplay').textContent = (pollingMs / 1000) + 's';
+
+            const monitoringMs = parseInt(document.getElementById('monitoringLogInterval').value);
+            document.getElementById('monitoringDisplay').textContent = (monitoringMs / 1000) + 's';
+
+            const volume = parseInt(document.getElementById('soundVolume').value);
+            document.getElementById('volumeDisplay').textContent = volume + '%';
+        }
+
+        // Save settings
+        function saveSettings() {
+            CalendarSyncConfig.setOption('pollingIntervalMs', parseInt(document.getElementById('pollingInterval').value));
+            CalendarSyncConfig.setOption('notificationsEnabled', document.getElementById('notificationsEnabled').checked);
+            CalendarSyncConfig.setOption('soundEnabled', document.getElementById('soundEnabled').checked);
+            CalendarSyncConfig.setOption('soundVolume', parseInt(document.getElementById('soundVolume').value) / 100);
+            CalendarSyncConfig.setOption('visualIndicatorsEnabled', document.getElementById('visualIndicatorsEnabled').checked);
+            CalendarSyncConfig.setOption('showSyncBadge', document.getElementById('showSyncBadge').checked);
+            CalendarSyncConfig.setOption('showLastSyncTime', document.getElementById('showLastSyncTime').checked);
+            CalendarSyncConfig.setOption('showStatusPulse', document.getElementById('showStatusPulse').checked);
+            CalendarSyncConfig.setOption('dbMonitoringEnabled', document.getElementById('dbMonitoringEnabled').checked);
+            CalendarSyncConfig.setOption('monitoringLogInterval', parseInt(document.getElementById('monitoringLogInterval').value));
+
+            showNotification('Settings saved successfully', 'success');
+        }
+
+        // Reset to defaults
+        function resetSettings() {
+            if (confirm('Are you sure? This will reset all settings to defaults.')) {
+                localStorage.removeItem('godspeed_calendar_sync_config');
+                CalendarSyncConfig.loadConfig();
+                initializeForm();
+                showNotification('Settings reset to defaults', 'success');
+            }
+        }
+
+        // Test sound
+        function testSound() {
+            CalendarSyncConfig.playNotificationSound();
+        }
+
+        // Export metrics
+        function exportMetrics() {
+            const summary = CalendarSyncConfig.exportMetrics();
+            console.log('Metrics exported. Check browser console for full details.');
+            showNotification('Metrics exported to console. Open DevTools (F12) to view.', 'success');
+        }
+
+        // Update metrics dashboard
+        function updateMetrics() {
+            const metrics = CalendarSyncConfig.getMonitoringSummary();
+            document.getElementById('totalSyncs').textContent = metrics.totalSyncs;
+            document.getElementById('avgQueryTime').innerHTML = metrics.avgQueryDuration + '<span style="font-size: 0.8rem;">ms</span>';
+            document.getElementById('totalQueries').textContent = metrics.totalQueries;
+            document.getElementById('errorRate').innerHTML = metrics.errorRate + '<span style="font-size: 0.8rem;">%</span>';
+
+            const wsStatus = document.getElementById('wsStatus');
+            wsStatus.textContent = metrics.webSocketConnected ? 'Connected' : 'Disconnected';
+            wsStatus.className = metrics.webSocketConnected ? 'status-badge status-connected' : 'status-badge status-disconnected';
+
+            const pollingStatus = document.getElementById('pollingStatus');
+            pollingStatus.textContent = metrics.pollingActive ? 'Yes (Active)' : 'No';
+            pollingStatus.className = metrics.pollingActive ? 'status-badge status-disconnected' : 'status-badge status-connected';
+        }
+
+        // Show notification
+        function showNotification(message, type) {
+            const notif = document.getElementById('notification');
+            notif.textContent = message;
+            notif.className = `notification show ${type}`;
+            setTimeout(() => {
+                notif.classList.remove('show');
+            }, 3000);
+        }
+
+        // Event listeners
+        document.getElementById('pollingInterval').addEventListener('change', updateDisplayValues);
+        document.getElementById('monitoringLogInterval').addEventListener('change', updateDisplayValues);
+        document.getElementById('soundVolume').addEventListener('change', updateDisplayValues);
+
+        // Initialize and start updates
+        initializeForm();
+        setInterval(updateMetrics, 2000);
+        updateMetrics();
+    </script>
+</body>
+</html>

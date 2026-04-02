@@ -1124,6 +1124,7 @@
 
         // ── Load published events from Supabase and merge into SPECIFIC_EVENTS ──
         async function loadPublishedEvents() {
+            const startTime = performance.now();
             try {
                 const SUPA_URL = 'https://nnqokhqennuxalamnvps.supabase.co';
                 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis';
@@ -1132,8 +1133,15 @@
                 const res = await fetch(url, {
                     headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
                 });
-                if (!res.ok) return;
+                if (!res.ok) {
+                    const duration = performance.now() - startTime;
+                    CalendarSyncConfig.logQuery('loadPublishedEvents', Math.round(duration), 0, new Error(`HTTP ${res.status}`));
+                    return;
+                }
                 const events = await res.json();
+                const duration = performance.now() - startTime;
+                CalendarSyncConfig.logQuery('loadPublishedEvents', Math.round(duration), events.length);
+
                 events.forEach(e => {
                     const start = new Date(e.start_date + 'T12:00:00');
                     const end = e.end_date ? new Date(e.end_date + 'T12:00:00') : start;
@@ -1163,12 +1171,15 @@
                     }
                 });
             } catch (err) {
+                const duration = performance.now() - startTime;
+                CalendarSyncConfig.logQuery('loadPublishedEvents', Math.round(duration), 0, err);
                 console.error('Failed to load published events:', err);
             }
         }
 
         // ── Load practice cancellations from Supabase ──
         async function loadPracticeCancellations() {
+            const startTime = performance.now();
             try {
                 const SUPA_URL = 'https://nnqokhqennuxalamnvps.supabase.co';
                 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis';
@@ -1176,8 +1187,15 @@
                 const res = await fetch(url, {
                     headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
                 });
-                if (!res.ok) return;
+                if (!res.ok) {
+                    const duration = performance.now() - startTime;
+                    CalendarSyncConfig.logQuery('loadPracticeCancellations', Math.round(duration), 0, new Error(`HTTP ${res.status}`));
+                    return;
+                }
                 const cancels = await res.json();
+                const duration = performance.now() - startTime;
+                CalendarSyncConfig.logQuery('loadPracticeCancellations', Math.round(duration), cancels.length);
+
                 cancels.forEach(c => {
                     // Mark the date as SKIP so the recurring practice is suppressed
                     // But preserve any existing specific events on that date
@@ -1189,6 +1207,8 @@
                     }
                 });
             } catch (err) {
+                const duration = performance.now() - startTime;
+                CalendarSyncConfig.logQuery('loadPracticeCancellations', Math.round(duration), 0, err);
                 console.error('Failed to load practice cancellations:', err);
             }
         }
@@ -1217,25 +1237,33 @@
                         },
                         async (payload) => {
                             console.log('Calendar event changed:', payload);
+                            CalendarSyncConfig.setWebSocketStatus(true);
                             // Refresh events and re-render
                             await refreshCalendarData();
                         }
                     )
                     .subscribe();
 
+                CalendarSyncConfig.setWebSocketStatus(true);
                 realtimeUnsubscribe = () => {
                     supabase.removeChannel(subscription);
                 };
             } catch (err) {
                 console.error('Failed to setup realtime sync:', err);
-                // Fallback: implement polling every 30 seconds
+                CalendarSyncConfig.recordPollingActivated();
+
+                // Fallback: implement polling with configurable interval
+                const config = CalendarSyncConfig.getConfig();
                 setInterval(async () => {
                     await refreshCalendarData();
-                }, 30000);
+                }, config.pollingIntervalMs);
             }
         }
 
         async function refreshCalendarData() {
+            const startTime = performance.now();
+            CalendarSyncConfig.updateSyncBadge('syncing');
+
             try {
                 // Clear tournament/event data
                 const dateKeys = Object.keys(SPECIFIC_EVENTS);
@@ -1246,28 +1274,47 @@
                     }
                 });
 
-                // Reload from database
+                // Reload from database with timing
+                const loadStart = performance.now();
                 await Promise.all([loadPublishedEvents(), loadPracticeCancellations()]);
+                const loadDuration = performance.now() - loadStart;
+
+                CalendarSyncConfig.logQuery('refreshData', Math.round(loadDuration));
 
                 // Re-render calendar
                 renderCalendar();
-                console.log('Calendar refreshed from realtime event');
+
+                const totalDuration = performance.now() - startTime;
+                CalendarSyncConfig.recordSync(Math.round(totalDuration), true);
+                console.log(`✓ Calendar refreshed in ${Math.round(totalDuration)}ms`);
             } catch (err) {
+                const duration = performance.now() - startTime;
+                CalendarSyncConfig.logQuery('refreshData', Math.round(duration), 0, err);
+                CalendarSyncConfig.recordSync(Math.round(duration), false);
                 console.error('Failed to refresh calendar data:', err);
             }
         }
 
         // Init: load dynamic events + cancellations, then render
         document.addEventListener('DOMContentLoaded', async () => {
+            const startTime = performance.now();
+
+            // Load initial data
             await Promise.all([loadPublishedEvents(), loadPracticeCancellations()]);
             renderCalendar();
+
+            const initialLoadDuration = performance.now() - startTime;
+            console.log(`✓ Initial calendar load: ${Math.round(initialLoadDuration)}ms`);
 
             // Setup real-time sync after initial load
             setTimeout(() => {
                 setupRealtimeSync();
+                // Start periodic monitoring if enabled
+                CalendarSyncConfig.startMonitoring();
             }, 500);
         });
     </script>
+    <script src="calendar-sync-config.js"></script>
     <script src="branded-modal.js"></script>
     <script src="security.js"></script>
     <script src="auth.js"></script>
