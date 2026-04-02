@@ -42,7 +42,7 @@ CREATE POLICY "Coaches read all availability"
     EXISTS (
       SELECT 1 FROM profiles
       WHERE profiles.id = auth.uid()
-      AND profiles.role IN ('coach', 'director', 'admin')
+      AND profiles.role IN ('coach'::app_role, 'director'::app_role)
     )
   );
 
