@@ -358,7 +358,7 @@ const ScheduleView = (() => {
       ? '<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="transform:rotate(90deg);transition:transform 0.15s"><path d="M6 3l5 5-5 5"/></svg>'
       : '<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="transition:transform 0.15s"><path d="M6 3l5 5-5 5"/></svg>';
 
-    // Availability toggle -- always visible on the card face
+    // Availability state
     const avail = availability[ev.id];
     const isAvail = avail === 'available';
     const isUnavail = avail === 'unavailable';
@@ -367,19 +367,27 @@ const ScheduleView = (() => {
     const eid = ev.id.replace(/'/g, "\\'");
     const ename = (ev.title || '').replace(/'/g, "\\'");
 
-    const availBtnAvail = `<button onclick="event.stopPropagation();ScheduleView._setAvail('${eid}','${ename}','available')"
-      style="padding:4px 10px;border:none;font-size:10px;font-weight:600;cursor:pointer;transition:all 0.15s;border-radius:4px 0 0 4px;${isAvail
-        ? 'background:#15803d;color:#fff'
-        : 'background:#fff;color:#6b7280'}"${saving ? ' disabled' : ''}>Available</button>`;
-    const availBtnUnavail = `<button onclick="event.stopPropagation();ScheduleView._setAvail('${eid}','${ename}','unavailable')"
-      style="padding:4px 10px;border:none;border-left:1px solid #d1d5db;font-size:10px;font-weight:600;cursor:pointer;transition:all 0.15s;border-radius:0 4px 4px 0;${isUnavail
-        ? 'background:#dc2626;color:#fff'
-        : 'background:#fff;color:#6b7280'}"${saving ? ' disabled' : ''}>Unavailable</button>`;
+    // iOS-style segmented control: pill background, sliding active state
+    function segBtn(label, value, isActive) {
+      const activeStyle = value === 'available'
+        ? 'background:#111;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.12)'
+        : 'background:#111;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.12)';
+      const inactiveStyle = 'background:transparent;color:#9ca3af';
+      return `<button onclick="event.stopPropagation();ScheduleView._setAvail('${eid}','${ename}','${value}')"
+        style="padding:4px 12px;border:none;font-size:10px;font-weight:600;cursor:pointer;transition:all 0.2s ease;border-radius:6px;white-space:nowrap;${isActive ? activeStyle : inactiveStyle}"${saving ? ' disabled' : ''}>${label}</button>`;
+    }
 
-    const availToggleInline = `
-      <div style="display:flex;align-items:center;gap:0;border-radius:4px;overflow:hidden;border:1px solid ${noResponse ? '#f59e0b' : '#d1d5db'};flex-shrink:0${noResponse ? ';box-shadow:0 0 0 1px #f59e0b' : ''}" onclick="event.stopPropagation()">
-        ${availBtnAvail}${availBtnUnavail}
+    const availToggle = `
+      <div style="display:inline-flex;align-items:center;gap:2px;padding:2px;border-radius:8px;background:#f3f4f6;flex-shrink:0" onclick="event.stopPropagation()">
+        ${segBtn('In', 'available', isAvail)}${segBtn('Out', 'unavailable', isUnavail)}
       </div>`;
+
+    // Status dot for the card face subtitle
+    const availDot = isAvail
+      ? '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;flex-shrink:0"></span><span style="color:#15803d;font-weight:500">In</span>'
+      : isUnavail
+      ? '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#ef4444;flex-shrink:0"></span><span style="color:#dc2626;font-weight:500">Out</span>'
+      : '';
 
     let detail = '';
     if (isExpanded) {
@@ -415,13 +423,8 @@ const ScheduleView = (() => {
         </div>`;
     }
 
-    // Prompt text when no response yet
-    const respondPrompt = noResponse
-      ? '<span style="font-size:9px;color:#f59e0b;font-weight:600;white-space:nowrap">Respond</span>'
-      : '';
-
     return `
-      <div style="border:1px solid ${isExpanded ? '#111' : noResponse ? '#f59e0b' : '#e5e7eb'};border-radius:8px;margin-bottom:8px;overflow:hidden;transition:border-color 0.15s;cursor:pointer" onclick="ScheduleView._toggle('${ev.id}')">
+      <div style="border:1px solid ${isExpanded ? '#111' : '#e5e7eb'};border-radius:8px;margin-bottom:8px;overflow:hidden;transition:border-color 0.15s;cursor:pointer" onclick="ScheduleView._toggle('${ev.id}')">
         <div style="padding:12px 14px;display:flex;align-items:center;gap:10px">
           <div style="color:#9ca3af;flex-shrink:0">${chevron}</div>
           <div style="flex:1;min-width:0">
@@ -430,15 +433,13 @@ const ScheduleView = (() => {
               <span style="font-size:10px;font-weight:600;border-radius:4px;padding:2px 7px;background:${gc.bg};color:${gc.color};border:1px solid ${gc.border}">${gradeLabel(ev.grade_level)}</span>
               ${statusBadge}
             </div>
-            <div style="display:flex;align-items:center;gap:10px;margin-top:3px;font-size:11px;color:#6b7280">
+            <div style="display:flex;align-items:center;gap:8px;margin-top:3px;font-size:11px;color:#6b7280">
               <span>${dateLabel}</span>
               ${ev.location ? '<span style="color:#d1d5db">|</span><span>' + ev.location.split(',')[0] + '</span>' : ''}
+              ${availDot ? '<span style="color:#d1d5db">|</span><span style="display:inline-flex;align-items:center;gap:4px">' + availDot + '</span>' : ''}
             </div>
           </div>
-          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-            ${respondPrompt}
-            ${availToggleInline}
-          </div>
+          ${availToggle}
         </div>
         ${detail}
       </div>`;
