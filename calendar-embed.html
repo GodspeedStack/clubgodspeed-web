@@ -1217,6 +1217,77 @@
             }
         }
 
+        // ── Load tournaments from admin "Our Schedule" (team_schedule_view) ──
+        // This is the MASTER source -- same table the admin portal reads from
+        async function loadScheduledTournaments() {
+            const startTime = performance.now();
+            try {
+                const SUPA_URL = 'https://nnqokhqennuxalamnvps.supabase.co';
+                const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis';
+                const url = `${SUPA_URL}/rest/v1/team_schedule_view?select=schedule_id,tournament_id,tournament_name,start_date,end_date,city,state,event_type,rank_tier,game_guarantee,status,registration_cost,payment_status&order=start_date.asc`;
+                const res = await fetch(url, {
+                    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
+                });
+                if (!res.ok) {
+                    const duration = performance.now() - startTime;
+                    CalendarSyncConfig.logQuery('loadScheduledTournaments', Math.round(duration), 0, new Error(`HTTP ${res.status}`));
+                    return;
+                }
+                const tournaments = await res.json();
+                const duration = performance.now() - startTime;
+                CalendarSyncConfig.logQuery('loadScheduledTournaments', Math.round(duration), tournaments.length);
+
+                tournaments.forEach(t => {
+                    const start = new Date(t.start_date + 'T12:00:00');
+                    const end = t.end_date ? new Date(t.end_date + 'T12:00:00') : start;
+                    let dayNum = 0;
+                    const totalDays = Math.round((end - start) / 86400000) + 1;
+                    const location = [t.city, t.state].filter(Boolean).join(', ') || 'TBD';
+                    const tierLabel = t.rank_tier ? ` [${t.rank_tier}]` : '';
+                    const gamesLabel = t.game_guarantee ? `${t.game_guarantee} games` : '';
+                    const eventLabel = t.event_type === '3v3' ? '3v3' : 'Tournament';
+                    const dateRange = totalDays > 1 ? ` (${t.start_date} - ${t.end_date})` : '';
+
+                    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                        dayNum++;
+                        const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                        const dayLabel = totalDays > 1 && dayNum > 1 ? ` Day ${dayNum}` : '';
+
+                        // Skip if this tournament is already in calendar_events (avoid duplicates)
+                        if (SPECIFIC_EVENTS[ds] && Array.isArray(SPECIFIC_EVENTS[ds])) {
+                            const alreadyExists = SPECIFIC_EVENTS[ds].some(ev =>
+                                ev.type === 'tournament' && ev.title.replace(/ Day \d+$/, '') === t.tournament_name
+                            );
+                            if (alreadyExists) return;
+                        }
+
+                        const evObj = {
+                            type: 'tournament',
+                            title: t.tournament_name + dayLabel,
+                            fullTitle: t.tournament_name + tierLabel + dateRange,
+                            time: 'TBD',
+                            loc: location,
+                            desc: [eventLabel, gamesLabel, tierLabel].filter(Boolean).join(' -- '),
+                            pillClass: 'event-tournament',
+                            color: '#1d1d1f',
+                            textColor: 'light',
+                            duration: 1,
+                            _source: 'team_schedule'
+                        };
+
+                        if (!SPECIFIC_EVENTS[ds]) SPECIFIC_EVENTS[ds] = [];
+                        if (SPECIFIC_EVENTS[ds] !== 'SKIP' && Array.isArray(SPECIFIC_EVENTS[ds])) {
+                            SPECIFIC_EVENTS[ds].push(evObj);
+                        }
+                    }
+                });
+            } catch (err) {
+                const duration = performance.now() - startTime;
+                CalendarSyncConfig.logQuery('loadScheduledTournaments', Math.round(duration), 0, err);
+                console.error('Failed to load scheduled tournaments:', err);
+            }
+        }
+
         // ── Real-time Subscription to Calendar Events ──
         let realtimeUnsubscribe = null;
 
@@ -1228,21 +1299,32 @@
                     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis'
                 );
 
-                // Subscribe to all calendar_events changes
+                // Subscribe to calendar_events AND team_tournament_schedule changes
                 const subscription = supabase
-                    .channel('calendar_events_realtime')
+                    .channel('calendar_realtime_all')
                     .on(
                         'postgres_changes',
                         {
-                            event: '*', // Listen to insert, update, delete
+                            event: '*',
                             schema: 'public',
-                            table: 'calendar_events',
-                            filter: 'visibility=in.(public,team_only)'
+                            table: 'calendar_events'
                         },
                         async (payload) => {
                             console.log('Calendar event changed:', payload);
                             CalendarSyncConfig.setWebSocketStatus(true);
-                            // Refresh events and re-render
+                            await refreshCalendarData();
+                        }
+                    )
+                    .on(
+                        'postgres_changes',
+                        {
+                            event: '*',
+                            schema: 'public',
+                            table: 'team_tournament_schedule'
+                        },
+                        async (payload) => {
+                            console.log('Tournament schedule changed:', payload);
+                            CalendarSyncConfig.setWebSocketStatus(true);
                             await refreshCalendarData();
                         }
                     )
@@ -1269,18 +1351,23 @@
             CalendarSyncConfig.updateSyncBadge('syncing');
 
             try {
-                // Clear tournament/event data
+                // Clear all dynamic event data, keep hardcoded events
                 const dateKeys = Object.keys(SPECIFIC_EVENTS);
                 dateKeys.forEach(key => {
-                    // Remove tournament events only, keep hardcoded events
                     if (Array.isArray(SPECIFIC_EVENTS[key])) {
-                        SPECIFIC_EVENTS[key] = SPECIFIC_EVENTS[key].filter(ev => ev.type !== 'tournament');
+                        SPECIFIC_EVENTS[key] = SPECIFIC_EVENTS[key].filter(ev =>
+                            ev.type !== 'tournament' && ev._source !== 'team_schedule'
+                        );
                     }
                 });
 
-                // Reload from database with timing
+                // Reload from all sources with timing
                 const loadStart = performance.now();
-                await Promise.all([loadPublishedEvents(), loadPracticeCancellations()]);
+                await Promise.all([
+                    loadPublishedEvents(),
+                    loadScheduledTournaments(),
+                    loadPracticeCancellations()
+                ]);
                 const loadDuration = performance.now() - loadStart;
 
                 CalendarSyncConfig.logQuery('refreshData', Math.round(loadDuration));
@@ -1303,8 +1390,12 @@
         document.addEventListener('DOMContentLoaded', async () => {
             const startTime = performance.now();
 
-            // Load initial data
-            await Promise.all([loadPublishedEvents(), loadPracticeCancellations()]);
+            // Load initial data from all sources (calendar_events + team_schedule_view)
+            await Promise.all([
+                loadPublishedEvents(),
+                loadScheduledTournaments(),
+                loadPracticeCancellations()
+            ]);
             renderCalendar();
 
             const initialLoadDuration = performance.now() - startTime;
