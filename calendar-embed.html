@@ -1242,6 +1242,8 @@
                     return (name || '').toLowerCase()
                         .replace(/ day \d+$/i, '')
                         .replace(/^ihoop\s+/i, '')
+                        .replace(/\b(the|a|an|of)\b/g, '')
+                        .replace(/mountain\s*west/gi, '')
                         .replace(/[^a-z0-9]/g, '');
                 }
 
