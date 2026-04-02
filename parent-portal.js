@@ -152,7 +152,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // so it handles the case where the user arrives with tokens in the URL but no
     // localStorage session yet.
     window.addEventListener('gba:authStateChanged', function onAuthChanged(e) {
-        if (e.detail && e.detail.isLoggedIn && !document.getElementById('portal-dashboard').style.display.includes('flex')) {
+        const dashEl = document.getElementById('portal-dashboard');
+        const dashVisible = dashEl && (dashEl.style.display === 'flex' || dashEl.style.display === 'block');
+        if (e.detail && e.detail.isLoggedIn && !dashVisible) {
             routeAuthenticatedUser();
             // Clean the hash fragments from the URL so a page refresh doesn't re-trigger
             if (window.location.hash && window.location.hash.includes('access_token')) {
@@ -185,11 +187,26 @@ document.addEventListener('DOMContentLoaded', () => {
  * gba:authStateChanged listener can share the same logic.
  */
 async function routeAuthenticatedUser() {
-    const savedEmail = localStorage.getItem('gba_user_email');
+    let savedEmail = localStorage.getItem('gba_user_email');
 
     // Sync RBAC immediately so the 100ms security check doesn't bounce them back to login
     if (window.Security && window.Security.RBAC) {
         window.Security.RBAC.setRole(window.Security.RBAC.roles.PARENT);
+    }
+
+    // If no saved email, try to recover from Supabase session
+    if (!savedEmail && window.auth && typeof window.auth.getCurrentUser === 'function') {
+        try {
+            const user = await window.auth.getCurrentUser();
+            if (user && user.email) {
+                savedEmail = user.email;
+                localStorage.setItem('gba_user_email', user.email);
+                if (user.id) localStorage.setItem('gba_user_id', user.id);
+                console.log('[portal] Recovered email from Supabase session:', user.email);
+            }
+        } catch (e) {
+            console.warn('[portal] Could not recover user from session:', e);
+        }
     }
 
     if (!savedEmail) return;
@@ -198,21 +215,29 @@ async function routeAuthenticatedUser() {
     const waitingRoom = document.getElementById('portal-waiting-room');
     const deniedView = document.getElementById('portal-denied');
 
-    // Always verify approval against the server — never trust localStorage alone
-    let approved = localStorage.getItem('gba_user_approved') === 'true';
+    // Always verify approval against the server -- never trust localStorage alone
+    let approved = false;
     let denied = false;
 
     if (window.auth && typeof window.auth.verifyApproval === 'function') {
         try {
             const result = await window.auth.verifyApproval();
+            // verifyApproval now always returns an object (never null)
             if (result) {
                 approved = result.approved;
                 denied = result.denied;
+                if (result.error) {
+                    console.warn('[portal] verifyApproval returned with error:', result.error);
+                }
             }
         } catch (e) {
-            console.warn('Server approval check failed, using cached status:', e);
-            // Fall through to cached localStorage value
+            console.warn('[portal] Server approval check failed:', e);
+            // On network failure, use cached value as last resort
+            approved = localStorage.getItem('gba_user_approved') === 'true';
         }
+    } else {
+        // Auth module not loaded -- use cached value
+        approved = localStorage.getItem('gba_user_approved') === 'true';
     }
 
     if (denied) {
@@ -237,7 +262,7 @@ async function routeAuthenticatedUser() {
         showDashboard();
         updateDashboardProfile(savedEmail);
     } else {
-        // Not yet approved — show waiting room
+        // Not yet approved -- show waiting room
         if (loginView) loginView.style.display = 'none';
         if (waitingRoom) waitingRoom.style.display = 'flex';
         initWaitingRoom();
@@ -440,12 +465,12 @@ async function handleLogin() {
             }
         }
 
-        // Handle successful login — server-side approval verification
+        // Handle successful login -- server-side approval verification
         if (loginSuccess) {
             try {
                 btn.innerHTML = 'Verifying...';
 
-                // Server-side approval check — no timeouts, no fallbacks
+                // Server-side approval check -- verifyApproval now always returns an object
                 if (window.auth && typeof window.auth.verifyApproval === 'function') {
                     const approval = await window.auth.verifyApproval();
 
@@ -457,7 +482,7 @@ async function handleLogin() {
                     }
 
                     if (approval && !approval.approved) {
-                        // Not yet approved — show waiting room
+                        // Not yet approved -- show waiting room (covers both pending and missing profile)
                         document.getElementById('portal-login').style.display = 'none';
                         document.getElementById('portal-waiting-room').style.display = 'flex';
                         initWaitingRoom();
@@ -467,20 +492,18 @@ async function handleLogin() {
                     }
                 }
             } catch (verifyError) {
-                if (verifyError.message.includes('denied by administration')) {
+                if (verifyError.message && verifyError.message.includes('denied by administration')) {
                     throw verifyError;
                 }
-                console.warn('Approval verification error, using cached status:', verifyError);
-                // Fall through to cached localStorage check
-                const cachedApproval = localStorage.getItem('gba_user_approved');
-                if (cachedApproval !== 'true') {
-                    document.getElementById('portal-login').style.display = 'none';
-                    document.getElementById('portal-waiting-room').style.display = 'flex';
-                    initWaitingRoom();
-                    btn.innerHTML = 'Sign In';
-                    btn.disabled = false;
-                    return;
-                }
+                console.warn('[portal] Approval verification error:', verifyError);
+                // On network error, show waiting room instead of using stale cache
+                // This prevents a race where stale cache says approved=false but server says true
+                document.getElementById('portal-login').style.display = 'none';
+                document.getElementById('portal-waiting-room').style.display = 'flex';
+                initWaitingRoom();
+                btn.innerHTML = 'Sign In';
+                btn.disabled = false;
+                return;
             }
 
             // Approved — show dashboard
@@ -956,6 +979,7 @@ function handleLogout() {
 // --- Waiting Room: Auto-Poll + Status Check ---
 
 let _waitingPollInterval = null;
+let _waitingPollFailures = 0;
 
 /**
  * Populate waiting room with parent/athlete names from profile data
@@ -964,7 +988,7 @@ let _waitingPollInterval = null;
 function initWaitingRoom() {
     const namesEl = document.getElementById('waiting-room-names');
     const statusEl = document.getElementById('waiting-room-status');
-    const parentName = localStorage.getItem('gba_user_email');
+    const parentEmail = localStorage.getItem('gba_user_email');
     const sb = window.auth?.getSupabaseClient?.();
 
     // Show parent/athlete name if we have profile data
@@ -979,19 +1003,36 @@ function initWaitingRoom() {
                         if (data.player_name) parts.push('Parent of ' + data.player_name);
                         namesEl.textContent = parts.join(' -- ');
                         namesEl.style.display = 'block';
+                    } else {
+                        // No profile data -- show email as fallback
+                        if (parentEmail) {
+                            namesEl.textContent = parentEmail;
+                            namesEl.style.display = 'block';
+                        }
+                        console.warn('[portal] initWaitingRoom: profile has no name for user:', userId);
                     }
                 })
-                .catch(() => {});
+                .catch((err) => {
+                    console.warn('[portal] initWaitingRoom: profile fetch failed:', err.message || err);
+                    // Show email as fallback on error
+                    if (parentEmail) {
+                        namesEl.textContent = parentEmail;
+                        namesEl.style.display = 'block';
+                    }
+                });
         }
     }
 
-    // Start auto-poll every 30 seconds
+    // Start auto-poll every 15 seconds (was 30s -- faster for better UX on approval)
     if (_waitingPollInterval) clearInterval(_waitingPollInterval);
     _waitingPollInterval = setInterval(() => {
         checkApprovalStatus(true);
-    }, 30000);
+    }, 15000);
 
-    // Initial status check
+    // Run initial check immediately
+    checkApprovalStatus(true);
+
+    // Update status text
     if (statusEl) statusEl.textContent = 'We will check your status automatically.';
 }
 
@@ -1009,10 +1050,19 @@ window.checkApprovalStatus = async function (silent) {
     try {
         if (window.auth && typeof window.auth.verifyApproval === 'function') {
             const result = await window.auth.verifyApproval();
+
+            // verifyApproval now always returns an object, but handle null defensively
             if (!result) {
+                _waitingPollFailures++;
                 if (!silent && statusEl) statusEl.textContent = 'Could not reach server. Try again shortly.';
+                if (_waitingPollFailures >= 5 && statusEl) {
+                    statusEl.textContent = 'Having trouble reaching the server. Please check your connection and refresh the page.';
+                }
                 return;
             }
+
+            // Reset failure counter on any successful response
+            _waitingPollFailures = 0;
 
             if (result.denied) {
                 if (_waitingPollInterval) clearInterval(_waitingPollInterval);
@@ -1038,8 +1088,12 @@ window.checkApprovalStatus = async function (silent) {
             }
         }
     } catch (e) {
-        console.warn('Approval status check failed:', e);
+        _waitingPollFailures++;
+        console.warn('[portal] Approval status check failed:', e);
         if (!silent && statusEl) statusEl.textContent = 'Could not reach server. Try again shortly.';
+        if (_waitingPollFailures >= 5 && statusEl) {
+            statusEl.textContent = 'Having trouble reaching the server. Please check your connection and refresh the page.';
+        }
     }
 };
 
