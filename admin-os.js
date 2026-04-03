@@ -948,18 +948,19 @@ async function quickRecordPayment() {
 
   try {
     // 1. Find next unpaid installment for this enrollment
+    qpFeedback('Step 1/6: Finding installment...', '');
     let installmentId = null;
-    const {data:unpaid} = await osSupabase.from('dues_installments')
+    const {data:unpaid, error:unpaidErr} = await osSupabase.from('dues_installments')
       .select('id,amount')
       .eq('enrollment_id', enrollmentId)
       .in('status', ['pending','overdue'])
       .order('due_date')
       .limit(1)
       .maybeSingle();
+    if(unpaidErr) throw new Error('Step 1 installment lookup: ' + unpaidErr.message);
     if(unpaid) {
       installmentId = unpaid.id;
     } else {
-      // Create a one-off installment
       const {data:inst, error:instErr} = await osSupabase.from('dues_installments').insert({
         enrollment_id: enrollmentId,
         installment_number: 99,
@@ -967,11 +968,12 @@ async function quickRecordPayment() {
         due_date: new Date().toISOString().split('T')[0],
         status: 'pending'
       }).select('id').single();
-      if(instErr) throw instErr;
+      if(instErr) throw new Error('Step 1 installment create: ' + instErr.message);
       installmentId = inst.id;
     }
 
     // 2. Record the dues_payment
+    qpFeedback('Step 2/6: Recording payment...', '');
     const {error:payErr} = await osSupabase.from('dues_payments').insert({
       enrollment_id: enrollmentId,
       installment_id: installmentId,
@@ -984,18 +986,22 @@ async function quickRecordPayment() {
       parent_name: parentName,
       player_name: athleteName
     });
-    if(payErr) throw payErr;
+    if(payErr) throw new Error('Step 2 dues_payment: ' + payErr.message);
 
     // 3. Mark installment paid
-    await osSupabase.from('dues_installments').update({
+    qpFeedback('Step 3/6: Marking installment paid...', '');
+    const {error:markErr} = await osSupabase.from('dues_installments').update({
       status: 'paid',
       paid_at: new Date().toISOString()
     }).eq('id', installmentId);
+    if(markErr) console.warn('Step 3 installment mark:', markErr.message);
 
     // 4. Update enrollment total_paid + status
-    const {data:enr} = await osSupabase.from('parent_dues_enrollment')
+    qpFeedback('Step 4/6: Updating enrollment...', '');
+    const {data:enr, error:enrErr} = await osSupabase.from('parent_dues_enrollment')
       .select('total_paid,total_owed,status')
       .eq('id', enrollmentId).single();
+    if(enrErr) console.warn('Step 4 enrollment read:', enrErr.message);
     if(enr) {
       const newPaid = (parseFloat(enr.total_paid) || 0) + amount;
       const newStatus = newPaid >= parseFloat(enr.total_owed) ? 'paid_in_full' : 'active';
@@ -1006,17 +1012,16 @@ async function quickRecordPayment() {
     }
 
     // 5. Sync to parent-portal tables (payment_plans + payments)
-    // The parent portal reads ONLY from these tables, so this step is critical.
+    qpFeedback('Step 5/6: Syncing to parent portal...', '');
     if(parentEmail) {
       try {
         const {data:prof} = await osSupabase.from('profiles')
           .select('id').eq('email', parentEmail).maybeSingle();
         if(prof) {
-          // Find or create payment_plans row
-          let {data:pp} = await osSupabase.from('payment_plans')
+          let {data:pp, error:ppErr} = await osSupabase.from('payment_plans')
             .select('id,total_amount').eq('parent_id', prof.id).maybeSingle();
+          if(ppErr) console.warn('Step 5 plan lookup:', ppErr.message);
           if(!pp) {
-            // No plan exists -- create one so the parent portal has data
             const {data:newPlan, error:planErr} = await osSupabase.from('payment_plans')
               .insert({
                 parent_id: prof.id,
@@ -1025,11 +1030,10 @@ async function quickRecordPayment() {
                 total_amount: enr ? parseFloat(enr.total_owed) || 745 : 745,
                 status: 'active'
               }).select('id,total_amount').single();
-            if(planErr) { console.warn('Plan create failed:', planErr.message); }
-            else { pp = newPlan; }
+            if(planErr) console.warn('Step 5 plan create:', planErr.message);
+            else pp = newPlan;
           }
           if(pp) {
-            // Find next pending payment row and mark confirmed
             const {data:uiPay} = await osSupabase.from('payments')
               .select('id,amount')
               .eq('plan_id', pp.id)
@@ -1038,14 +1042,14 @@ async function quickRecordPayment() {
               .limit(1)
               .maybeSingle();
             if(uiPay) {
-              await osSupabase.from('payments').update({
+              const {error:upErr} = await osSupabase.from('payments').update({
                 status: 'confirmed',
                 paid_at: new Date().toISOString(),
                 payment_method: method
               }).eq('id', uiPay.id);
+              if(upErr) console.warn('Step 5 payment update:', upErr.message);
             } else {
-              // No pending row -- create a confirmed payment record
-              await osSupabase.from('payments').insert({
+              const {error:inErr} = await osSupabase.from('payments').insert({
                 plan_id: pp.id,
                 parent_id: prof.id,
                 installment_number: 1,
@@ -1055,8 +1059,8 @@ async function quickRecordPayment() {
                 paid_at: new Date().toISOString(),
                 payment_method: method
               });
+              if(inErr) console.warn('Step 5 payment insert:', inErr.message);
             }
-            // If fully paid, mark plan completed
             const newPaid = (parseFloat(enr?.total_paid) || 0) + amount;
             if(newPaid >= (parseFloat(enr?.total_owed) || 745)) {
               await osSupabase.from('payment_plans').update({ status: 'completed' }).eq('id', pp.id);
@@ -1066,7 +1070,8 @@ async function quickRecordPayment() {
       } catch(e) { console.warn('Portal sync error:', e.message); }
     }
 
-    // 6. Thank-you email
+    // 6. Thank-you email (10s timeout so it never blocks the UI)
+    qpFeedback('Step 6/6: Sending thank-you email...', '');
     if(parentEmail) {
       try {
         const fnUrl = (window.SUPABASE_CONFIG?.url || 'https://nnqokhqennuxalamnvps.supabase.co')
@@ -1074,6 +1079,8 @@ async function quickRecordPayment() {
         const anonKey = window.SUPABASE_CONFIG?.anonKey || '';
         const {data:{session}} = await osSupabase.auth.getSession();
         const token = session?.access_token || anonKey;
+        const ac = new AbortController();
+        const timer = setTimeout(() => ac.abort(), 10000);
         await fetch(fnUrl, {
           method: 'POST',
           headers: {
@@ -1081,8 +1088,10 @@ async function quickRecordPayment() {
             'Authorization': 'Bearer ' + token,
             'apikey': anonKey
           },
-          body: JSON.stringify({ email: parentEmail, name: parentName, athlete: athleteName, amount: amount, method: method })
+          body: JSON.stringify({ email: parentEmail, name: parentName, athlete: athleteName, amount: amount, method: method }),
+          signal: ac.signal
         });
+        clearTimeout(timer);
       } catch(e) { console.warn('Thank-you email skipped:', e.message); }
     }
 
@@ -1095,10 +1104,10 @@ async function quickRecordPayment() {
     // Refresh data
     await loadDues();
     await loadQuickPayParents();
-    // Refresh dashboard stats if visible
     if(currentPanel === 'dashboard') loadDashboard();
 
   } catch(e) {
+    console.error('quickRecordPayment failed:', e);
     qpFeedback('Error: ' + e.message, 'error');
     showToast('Payment error: ' + e.message, 'error');
   } finally {
