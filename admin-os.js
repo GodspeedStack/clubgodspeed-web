@@ -764,6 +764,7 @@ async function loadDues() {
     }
   } catch(e){ console.error('Dues load:',e); }
   renderDues();
+  loadQuickPayParents();
 
   // Realtime: push toast when a parent submits a new payment
   if(osSupabase && !window._duesPaymentsChannel) {
@@ -878,6 +879,186 @@ async function markInstallmentPaid(id) {
   try { if(osSupabase) await osSupabase.from('dues_installments').update({status:'paid',paid_at:new Date().toISOString()}).eq('id',id); }
   catch(e){ showToast('Error: '+e.message,'error'); return; }
   showToast('Installment marked as paid'); loadDues();
+}
+
+// ─── QUICK-RECORD PAYMENT BAR ──────────────────────────────
+let _qpEnrollments = [];
+
+async function loadQuickPayParents() {
+  if(!osSupabase) return;
+  const select = document.getElementById('qp-parent');
+  if(!select) return;
+  try {
+    const {data} = await osSupabase.from('parent_dues_enrollment')
+      .select('id,parent_name,parent_email,athlete_name,total_owed,total_paid,status')
+      .order('athlete_name',{ascending:true});
+    _qpEnrollments = data || [];
+    // Clear and rebuild
+    select.innerHTML = '<option value="">Select parent...</option>';
+    _qpEnrollments.forEach(e => {
+      const remaining = Math.max((parseFloat(e.total_owed)||0) - (parseFloat(e.total_paid)||0), 0);
+      const label = (e.athlete_name||'--') + ' -- ' + (e.parent_name||e.parent_email||'--');
+      const suffix = e.status === 'paid_in_full' ? ' [PAID]' : remaining > 0 ? ' [$' + remaining.toFixed(0) + ' due]' : '';
+      const opt = document.createElement('option');
+      opt.value = e.id;
+      opt.textContent = label + suffix;
+      opt.dataset.email = e.parent_email || '';
+      opt.dataset.name = e.parent_name || '';
+      opt.dataset.athlete = e.athlete_name || '';
+      opt.dataset.remaining = remaining;
+      if(e.status === 'paid_in_full') opt.style.color = '#6b7280';
+      select.appendChild(opt);
+    });
+  } catch(e) { console.error('Quick pay parents load:', e); }
+}
+
+function selectPayMethod(el) {
+  document.querySelectorAll('#qp-method-pills .qp-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function qpFeedback(msg, type) {
+  const el = document.getElementById('qp-feedback');
+  if(!el) return;
+  el.style.display = 'block';
+  el.style.color = type === 'error' ? '#ff453a' : type === 'success' ? '#34c759' : 'var(--muted)';
+  el.textContent = msg;
+  if(type === 'success') setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
+
+async function quickRecordPayment() {
+  const select = document.getElementById('qp-parent');
+  const amountInput = document.getElementById('qp-amount');
+  const btn = document.getElementById('qp-submit');
+  const enrollmentId = select?.value;
+  const amount = parseFloat(amountInput?.value);
+  const method = document.querySelector('#qp-method-pills .qp-pill.active')?.dataset?.method || 'venmo';
+
+  if(!enrollmentId) { qpFeedback('Select a parent first.', 'error'); select?.focus(); return; }
+  if(!amount || amount <= 0) { qpFeedback('Enter a valid amount.', 'error'); amountInput?.focus(); return; }
+  if(!osSupabase) { qpFeedback('Not connected.', 'error'); return; }
+
+  const opt = select.options[select.selectedIndex];
+  const parentEmail = opt.dataset.email;
+  const parentName = opt.dataset.name;
+  const athleteName = opt.dataset.athlete;
+
+  btn.disabled = true; btn.textContent = 'Recording...';
+  qpFeedback('', '');
+
+  try {
+    // 1. Find next unpaid installment for this enrollment
+    let installmentId = null;
+    const {data:unpaid} = await osSupabase.from('dues_installments')
+      .select('id,amount')
+      .eq('enrollment_id', enrollmentId)
+      .in('status', ['pending','overdue'])
+      .order('due_date')
+      .limit(1)
+      .maybeSingle();
+    if(unpaid) {
+      installmentId = unpaid.id;
+    } else {
+      // Create a one-off installment
+      const {data:inst, error:instErr} = await osSupabase.from('dues_installments').insert({
+        enrollment_id: enrollmentId,
+        installment_number: 99,
+        amount: amount,
+        due_date: new Date().toISOString().split('T')[0],
+        status: 'pending'
+      }).select('id').single();
+      if(instErr) throw instErr;
+      installmentId = inst.id;
+    }
+
+    // 2. Record the dues_payment
+    const {error:payErr} = await osSupabase.from('dues_payments').insert({
+      enrollment_id: enrollmentId,
+      installment_id: installmentId,
+      stripe_payment_intent: 'manual_' + method + '_' + Date.now(),
+      amount: amount,
+      currency: 'usd',
+      status: 'succeeded',
+      paid_at: new Date().toISOString(),
+      parent_email: parentEmail,
+      parent_name: parentName,
+      player_name: athleteName
+    });
+    if(payErr) throw payErr;
+
+    // 3. Mark installment paid
+    await osSupabase.from('dues_installments').update({
+      status: 'paid',
+      paid_at: new Date().toISOString()
+    }).eq('id', installmentId);
+
+    // 4. Update enrollment total_paid + status
+    const {data:enr} = await osSupabase.from('parent_dues_enrollment')
+      .select('total_paid,total_owed,status')
+      .eq('id', enrollmentId).single();
+    if(enr) {
+      const newPaid = (parseFloat(enr.total_paid) || 0) + amount;
+      const newStatus = newPaid >= parseFloat(enr.total_owed) ? 'paid_in_full' : 'active';
+      await osSupabase.from('parent_dues_enrollment').update({
+        total_paid: newPaid,
+        status: newStatus
+      }).eq('id', enrollmentId);
+    }
+
+    // 5. Also update the UI-side payment_plans + payments tables
+    if(parentEmail) {
+      try {
+        const {data:prof} = await osSupabase.from('profiles')
+          .select('id').eq('email', parentEmail).maybeSingle();
+        if(prof) {
+          const {data:pp} = await osSupabase.from('payment_plans')
+            .select('id').eq('parent_id', prof.id).maybeSingle();
+          if(pp) {
+            const {data:uiPay} = await osSupabase.from('payments')
+              .select('id,amount')
+              .eq('plan_id', pp.id)
+              .eq('status', 'pending')
+              .order('due_date')
+              .limit(1)
+              .maybeSingle();
+            if(uiPay) {
+              await osSupabase.from('payments').update({
+                status: 'paid',
+                paid_at: new Date().toISOString()
+              }).eq('id', uiPay.id);
+            }
+          }
+        }
+      } catch(e) { console.warn('UI table sync skipped:', e.message); }
+    }
+
+    // 6. Thank-you email (fire and forget)
+    if(parentEmail) {
+      try {
+        await osSupabase.functions.invoke('send-payment-thank-you', {
+          body: { email: parentEmail, name: parentName, athlete: athleteName, amount: amount, method: method }
+        });
+      } catch(e) { console.warn('Thank-you email skipped:', e.message); }
+    }
+
+    // Success -- reset form
+    qpFeedback('$' + amount.toFixed(2) + ' via ' + method + ' recorded for ' + (athleteName || parentName), 'success');
+    showToast('$' + amount.toFixed(2) + ' via ' + method + ' recorded for ' + (athleteName || parentName));
+    select.value = '';
+    amountInput.value = '';
+
+    // Refresh data
+    await loadDues();
+    await loadQuickPayParents();
+    // Refresh dashboard stats if visible
+    if(currentPanel === 'dashboard') loadDashboard();
+
+  } catch(e) {
+    qpFeedback('Error: ' + e.message, 'error');
+    showToast('Payment error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Record';
+  }
 }
 
 // ─── PRO SHOP ORDERS ────────────────────────────────────────
