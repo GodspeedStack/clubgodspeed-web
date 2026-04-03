@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
         <a href="https://clubgodspeed.com/parent-portal.html#billing" style="color:#2563eb;text-decoration:none;font-weight:600;">Parent Portal</a>.
       </p>
       <p style="font-size:15px;color:#333;margin:16px 0 0;">
-        Thank you for investing in your player's development. We appreciate your support.
+        You're helping us build brotherhood for boys in Northeast Denver and beyond. We appreciate your support.
       </p>
       <p style="font-size:15px;color:#333;margin:24px 0 0;">
         -- Coach Scott

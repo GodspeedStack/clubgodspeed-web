@@ -1005,15 +1005,31 @@ async function quickRecordPayment() {
       }).eq('id', enrollmentId);
     }
 
-    // 5. Also update the UI-side payment_plans + payments tables
+    // 5. Sync to parent-portal tables (payment_plans + payments)
+    // The parent portal reads ONLY from these tables, so this step is critical.
     if(parentEmail) {
       try {
         const {data:prof} = await osSupabase.from('profiles')
           .select('id').eq('email', parentEmail).maybeSingle();
         if(prof) {
-          const {data:pp} = await osSupabase.from('payment_plans')
-            .select('id').eq('parent_id', prof.id).maybeSingle();
+          // Find or create payment_plans row
+          let {data:pp} = await osSupabase.from('payment_plans')
+            .select('id,total_amount').eq('parent_id', prof.id).maybeSingle();
+          if(!pp) {
+            // No plan exists -- create one so the parent portal has data
+            const {data:newPlan, error:planErr} = await osSupabase.from('payment_plans')
+              .insert({
+                parent_id: prof.id,
+                player_name: athleteName || '--',
+                plan_type: 'full',
+                total_amount: enr ? parseFloat(enr.total_owed) || 745 : 745,
+                status: 'active'
+              }).select('id,total_amount').single();
+            if(planErr) { console.warn('Plan create failed:', planErr.message); }
+            else { pp = newPlan; }
+          }
           if(pp) {
+            // Find next pending payment row and mark confirmed
             const {data:uiPay} = await osSupabase.from('payments')
               .select('id,amount')
               .eq('plan_id', pp.id)
@@ -1023,20 +1039,49 @@ async function quickRecordPayment() {
               .maybeSingle();
             if(uiPay) {
               await osSupabase.from('payments').update({
-                status: 'paid',
-                paid_at: new Date().toISOString()
+                status: 'confirmed',
+                paid_at: new Date().toISOString(),
+                payment_method: method
               }).eq('id', uiPay.id);
+            } else {
+              // No pending row -- create a confirmed payment record
+              await osSupabase.from('payments').insert({
+                plan_id: pp.id,
+                parent_id: prof.id,
+                installment_number: 1,
+                amount: amount,
+                due_date: new Date().toISOString().split('T')[0],
+                status: 'confirmed',
+                paid_at: new Date().toISOString(),
+                payment_method: method
+              });
+            }
+            // If fully paid, mark plan completed
+            const newPaid = (parseFloat(enr?.total_paid) || 0) + amount;
+            if(newPaid >= (parseFloat(enr?.total_owed) || 745)) {
+              await osSupabase.from('payment_plans').update({ status: 'completed' }).eq('id', pp.id);
             }
           }
         }
-      } catch(e) { console.warn('UI table sync skipped:', e.message); }
+      } catch(e) { console.warn('Portal sync error:', e.message); }
     }
 
-    // 6. Thank-you email (fire and forget)
+    // 6. Thank-you email
     if(parentEmail) {
       try {
-        await osSupabase.functions.invoke('send-payment-thank-you', {
-          body: { email: parentEmail, name: parentName, athlete: athleteName, amount: amount, method: method }
+        const fnUrl = (window.SUPABASE_CONFIG?.url || 'https://nnqokhqennuxalamnvps.supabase.co')
+          + '/functions/v1/send-payment-thank-you';
+        const anonKey = window.SUPABASE_CONFIG?.anonKey || '';
+        const {data:{session}} = await osSupabase.auth.getSession();
+        const token = session?.access_token || anonKey;
+        await fetch(fnUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token,
+            'apikey': anonKey
+          },
+          body: JSON.stringify({ email: parentEmail, name: parentName, athlete: athleteName, amount: amount, method: method })
         });
       } catch(e) { console.warn('Thank-you email skipped:', e.message); }
     }
