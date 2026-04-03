@@ -23,6 +23,7 @@ const ScheduleView = (() => {
   let containerId = null;
   let availability = {};     // { tournamentId: 'available' | 'unavailable' }
   let availSaving = {};      // { tournamentId: true } while save in flight
+  let availTally = {};       // { tournamentId: { playing: N, out: N } } — admin only (RLS-gated)
 
   // ─── Init & Load ────────────────────────────────────────────
   function init(supabaseClient) {
@@ -107,6 +108,8 @@ const ScheduleView = (() => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      // Load current user's responses
       const { data, error } = await supabase
         .from('tournament_availability')
         .select('tournament_identifier,status')
@@ -114,6 +117,18 @@ const ScheduleView = (() => {
       if (error) { console.error('ScheduleView loadAvailability:', error); return; }
       availability = {};
       (data || []).forEach(r => { availability[r.tournament_identifier] = r.status; });
+
+      // Load all responses for tally (RLS: coaches/directors get all rows, parents get only own)
+      const { data: allData, error: allErr } = await supabase
+        .from('tournament_availability')
+        .select('tournament_identifier,status');
+      if (allErr) { console.error('ScheduleView loadTally:', allErr); return; }
+      availTally = {};
+      (allData || []).forEach(r => {
+        if (!availTally[r.tournament_identifier]) availTally[r.tournament_identifier] = { playing: 0, out: 0 };
+        if (r.status === 'available') availTally[r.tournament_identifier].playing++;
+        else if (r.status === 'unavailable') availTally[r.tournament_identifier].out++;
+      });
     } catch (err) {
       console.error('ScheduleView loadAvailability:', err);
     }
@@ -413,9 +428,22 @@ const ScheduleView = (() => {
         </div>`
       ).join('');
 
+      // Availability tally (visible to coaches/directors via RLS — shows when >1 total response)
+      const tally = availTally[ev.id];
+      const tallyTotal = tally ? (tally.playing + tally.out) : 0;
+      const tallyHtml = tallyTotal > 1 ? `
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f3f4f6">
+          <div style="width:72px;flex-shrink:0;font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.04em">Roster</div>
+          <div style="display:flex;align-items:center;gap:12px;font-size:12px">
+            <span style="display:inline-flex;align-items:center;gap:4px"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e"></span><span style="font-weight:600;color:#15803d">${tally.playing} Playing</span></span>
+            <span style="display:inline-flex;align-items:center;gap:4px"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#ef4444"></span><span style="font-weight:600;color:#dc2626">${tally.out} Out</span></span>
+            <span style="color:#9ca3af;font-weight:500">${12 - tally.playing - tally.out} No Response</span>
+          </div>
+        </div>` : '';
+
       detail = `
         <div style="padding:12px 14px 14px;border-top:1px solid #e5e7eb;background:#fafafa;border-radius:0 0 8px 8px">
-          ${detailRows}
+          ${detailRows}${tallyHtml}
           <div style="display:flex;gap:8px;margin-top:12px">
             <button onclick="ScheduleView._addToCalendar('${ev.id}')" style="padding:6px 12px;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#374151;font-size:11px;cursor:pointer;font-weight:600">Add to Calendar</button>
             ${ev.location_url ? `<a href="${ev.location_url}" target="_blank" rel="noopener" style="padding:6px 12px;border-radius:6px;border:none;background:#111;color:#fff;font-size:11px;cursor:pointer;font-weight:600;text-decoration:none;display:inline-flex;align-items:center">Get Directions</a>` : ''}
