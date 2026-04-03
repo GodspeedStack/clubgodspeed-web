@@ -382,11 +382,9 @@ const ScheduleView = (() => {
     const eid = ev.id.replace(/'/g, "\\'");
     const ename = (ev.title || '').replace(/'/g, "\\'");
 
-    // iOS-style segmented control: pill background, sliding active state
+    // iOS-style segmented control: white active on gray track
     function segBtn(label, value, isActive) {
-      const activeStyle = value === 'available'
-        ? 'background:#111;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.12)'
-        : 'background:#111;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.12)';
+      const activeStyle = 'background:#fff;color:#111;box-shadow:0 1px 2px rgba(0,0,0,0.08)';
       const inactiveStyle = 'background:transparent;color:#9ca3af';
       return `<button onclick="event.stopPropagation();ScheduleView._setAvail('${eid}','${ename}','${value}')"
         style="padding:4px 12px;border:none;font-size:10px;font-weight:600;cursor:pointer;transition:all 0.2s ease;border-radius:6px;white-space:nowrap;${isActive ? activeStyle : inactiveStyle}"${saving ? ' disabled' : ''}>${label}</button>`;
