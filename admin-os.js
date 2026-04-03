@@ -870,7 +870,7 @@ function renderDues() {
     <td style="font-weight:600">${inst.enrollment?.parent_name||'--'}</td><td style="color:var(--muted)">${inst.enrollment?.athlete_name||'--'}</td>
     <td>#${inst.installment_number||idx+1}</td><td>$${(+inst.amount||0).toFixed(0)}</td><td style="color:var(--muted)">${fmtShort(inst.due_date)}</td>
     <td>${statusTag(inst.status)}</td><td style="color:var(--muted)">${inst.paid_at?fmtShort(inst.paid_at):'--'}</td>
-    <td><div style="display:flex;gap:4px">${inst.status!=='paid'?`<button class="btn btn-ghost btn-xs" onclick="markInstallmentPaid('${inst.id}')">Mark Paid</button>`:''}</div></td>
+    <td><div style="display:flex;gap:4px">${inst.status!=='paid'?`<button class="btn btn-ghost btn-xs" onclick="markInstallmentPaid('${inst.id}')">Mark Paid</button>`:`<button class="btn btn-ghost btn-xs" style="color:#ff453a" onclick="deletePayment('${inst.id}','${(inst.enrollment?.id||'')}','${(inst.enrollment?.parent_email||'').replace(/'/g,"\\'")}',${+inst.amount||0})">Delete</button>`}</div></td>
   </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px">No installments found</td></tr>';
 }
 function filterDues(f) { duesFilter=f; renderDues(); }
@@ -879,6 +879,126 @@ async function markInstallmentPaid(id) {
   try { if(osSupabase) await osSupabase.from('dues_installments').update({status:'paid',paid_at:new Date().toISOString()}).eq('id',id); }
   catch(e){ showToast('Error: '+e.message,'error'); return; }
   showToast('Installment marked as paid'); loadDues();
+}
+
+// ─── DELETE / REVERSE PAYMENT ──────────────────────────────
+async function deletePayment(installmentId, enrollmentId, parentEmail, amount) {
+  if(!osSupabase) return;
+  // Confirmation dialog -- intentional friction for destructive financial action
+  const confirmEl = document.getElementById('qp-delete-confirm');
+  if(!confirmEl) {
+    // Build inline confirmation once
+    const bar = document.getElementById('quick-pay-bar');
+    if(!bar) return;
+    const div = document.createElement('div');
+    div.id = 'qp-delete-confirm';
+    div.style.cssText = 'width:100%;margin-top:8px;padding:14px 16px;background:rgba(255,69,58,0.08);border:1px solid rgba(255,69,58,0.3);border-radius:12px;display:none';
+    div.innerHTML = '<div id="qp-delete-summary" style="font-size:14px;color:#fff;line-height:1.5;margin-bottom:12px"></div>' +
+      '<div style="display:flex;gap:8px;justify-content:flex-end">' +
+      '<button class="btn btn-sm" style="padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;background:transparent;border:1px solid var(--border);color:var(--muted)" onclick="document.getElementById(\'qp-delete-confirm\').style.display=\'none\'">Cancel</button>' +
+      '<button id="qp-delete-btn" class="btn btn-sm" style="padding:8px 20px;border-radius:8px;font-size:13px;font-weight:700;background:#ff453a;color:#fff;border:none">Delete Payment</button>' +
+      '</div>';
+    bar.appendChild(div);
+  }
+  const panel = document.getElementById('qp-delete-confirm');
+  const summary = document.getElementById('qp-delete-summary');
+
+  // Look up context for the confirmation
+  let parentName = parentEmail || '--';
+  let athleteName = '--';
+  if(enrollmentId) {
+    const enrMatch = _qpEnrollments.find(e => e.id === enrollmentId);
+    if(enrMatch) { parentName = enrMatch.parent_name || parentEmail; athleteName = enrMatch.athlete_name || '--'; }
+  }
+
+  summary.innerHTML =
+    '<div style="font-weight:700;font-size:15px;margin-bottom:6px;color:#ff453a">Delete Payment</div>' +
+    '<div style="display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px">' +
+    '<span style="color:var(--muted)">Player</span><span style="font-weight:600">' + athleteName + '</span>' +
+    '<span style="color:var(--muted)">Parent</span><span>' + parentName + '</span>' +
+    '<span style="color:var(--muted)">Amount</span><span style="font-weight:700;color:#ff453a">$' + amount.toFixed(2) + '</span>' +
+    '</div>' +
+    '<div style="margin-top:8px;font-size:12px;color:var(--muted)">This will reverse the payment in admin tables, parent portal, and enrollment totals.</div>';
+
+  panel.style.display = 'block';
+  panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+
+  // Wire up the confirm button (replace handler to avoid stacking)
+  const btn = document.getElementById('qp-delete-btn');
+  btn.onclick = async () => {
+    btn.disabled = true; btn.textContent = 'Deleting...';
+    try {
+      await executeDeletePayment(installmentId, enrollmentId, parentEmail, amount);
+      panel.style.display = 'none';
+      showToast('Payment deleted and reversed');
+      loadDues();
+    } catch(e) {
+      showToast('Delete error: ' + e.message, 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Delete Payment';
+    }
+  };
+}
+
+async function executeDeletePayment(installmentId, enrollmentId, parentEmail, amount) {
+  if(!osSupabase) throw new Error('Not connected');
+
+  // 1. Delete the dues_payment linked to this installment
+  const {error:dpErr} = await osSupabase.from('dues_payments')
+    .delete()
+    .eq('installment_id', installmentId);
+  if(dpErr) console.warn('dues_payments delete:', dpErr.message);
+
+  // 2. Reset installment back to pending
+  const {data:inst} = await osSupabase.from('dues_installments')
+    .select('installment_number').eq('id', installmentId).maybeSingle();
+  if(inst && inst.installment_number === 99) {
+    // One-off installment created by quick-pay -- remove it entirely
+    await osSupabase.from('dues_installments').delete().eq('id', installmentId);
+  } else {
+    await osSupabase.from('dues_installments').update({
+      status: 'pending', paid_at: null
+    }).eq('id', installmentId);
+  }
+
+  // 3. Subtract from enrollment total_paid
+  if(enrollmentId) {
+    const {data:enr} = await osSupabase.from('parent_dues_enrollment')
+      .select('total_paid,total_owed,status').eq('id', enrollmentId).maybeSingle();
+    if(enr) {
+      const newPaid = Math.max((parseFloat(enr.total_paid) || 0) - amount, 0);
+      const newStatus = newPaid >= parseFloat(enr.total_owed) ? 'paid_in_full' : 'active';
+      await osSupabase.from('parent_dues_enrollment').update({
+        total_paid: newPaid, status: newStatus
+      }).eq('id', enrollmentId);
+    }
+  }
+
+  // 4. Reverse portal-side payment (payments + payment_plans)
+  if(parentEmail) {
+    try {
+      const {data:prof} = await osSupabase.from('profiles')
+        .select('id').eq('email', parentEmail).maybeSingle();
+      if(prof) {
+        // Find the most recent confirmed payment for this amount and reverse it
+        const {data:portalPay} = await osSupabase.from('payments')
+          .select('id,plan_id,amount')
+          .eq('parent_id', prof.id)
+          .eq('status', 'confirmed')
+          .order('paid_at', {ascending: false})
+          .limit(5);
+        // Match by amount (closest match)
+        const match = (portalPay || []).find(p => Math.abs(parseFloat(p.amount) - amount) < 0.01);
+        if(match) {
+          await osSupabase.from('payments').delete().eq('id', match.id);
+          // If payment_plan exists, ensure status is active (not completed)
+          if(match.plan_id) {
+            await osSupabase.from('payment_plans').update({status: 'active'}).eq('id', match.plan_id);
+          }
+        }
+      }
+    } catch(e) { console.warn('Portal payment reverse:', e.message); }
+  }
 }
 
 // ─── QUICK-RECORD PAYMENT BAR ──────────────────────────────
