@@ -882,28 +882,11 @@ async function markInstallmentPaid(id) {
 }
 
 // ─── DELETE / REVERSE PAYMENT ──────────────────────────────
-async function deletePayment(installmentId, enrollmentId, parentEmail, amount) {
+function deletePayment(installmentId, enrollmentId, parentEmail, amount) {
   if(!osSupabase) return;
-  // Confirmation dialog -- intentional friction for destructive financial action
-  const confirmEl = document.getElementById('qp-delete-confirm');
-  if(!confirmEl) {
-    // Build inline confirmation once
-    const bar = document.getElementById('quick-pay-bar');
-    if(!bar) return;
-    const div = document.createElement('div');
-    div.id = 'qp-delete-confirm';
-    div.style.cssText = 'width:100%;margin-top:8px;padding:14px 16px;background:rgba(255,69,58,0.08);border:1px solid rgba(255,69,58,0.3);border-radius:12px;display:none';
-    div.innerHTML = '<div id="qp-delete-summary" style="font-size:14px;color:#fff;line-height:1.5;margin-bottom:12px"></div>' +
-      '<div style="display:flex;gap:8px;justify-content:flex-end">' +
-      '<button class="btn btn-sm" style="padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;background:transparent;border:1px solid var(--border);color:var(--muted)" onclick="document.getElementById(\'qp-delete-confirm\').style.display=\'none\'">Cancel</button>' +
-      '<button id="qp-delete-btn" class="btn btn-sm" style="padding:8px 20px;border-radius:8px;font-size:13px;font-weight:700;background:#ff453a;color:#fff;border:none">Delete Payment</button>' +
-      '</div>';
-    bar.appendChild(div);
-  }
-  const panel = document.getElementById('qp-delete-confirm');
-  const summary = document.getElementById('qp-delete-summary');
+  amount = parseFloat(amount) || 0;
 
-  // Look up context for the confirmation
+  // Look up context
   let parentName = parentEmail || '--';
   let athleteName = '--';
   if(enrollmentId) {
@@ -911,31 +894,46 @@ async function deletePayment(installmentId, enrollmentId, parentEmail, amount) {
     if(enrMatch) { parentName = enrMatch.parent_name || parentEmail; athleteName = enrMatch.athlete_name || '--'; }
   }
 
-  summary.innerHTML =
-    '<div style="font-weight:700;font-size:15px;margin-bottom:6px;color:#ff453a">Delete Payment</div>' +
-    '<div style="display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px">' +
-    '<span style="color:var(--muted)">Player</span><span style="font-weight:600">' + athleteName + '</span>' +
-    '<span style="color:var(--muted)">Parent</span><span>' + parentName + '</span>' +
-    '<span style="color:var(--muted)">Amount</span><span style="font-weight:700;color:#ff453a">$' + amount.toFixed(2) + '</span>' +
-    '</div>' +
-    '<div style="margin-top:8px;font-size:12px;color:var(--muted)">This will reverse the payment in admin tables, parent portal, and enrollment totals.</div>';
+  // Modal overlay -- always visible regardless of scroll
+  let overlay = document.getElementById('delete-pay-overlay');
+  if(overlay) overlay.remove();
 
-  panel.style.display = 'block';
-  panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+  overlay = document.createElement('div');
+  overlay.id = 'delete-pay-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px)';
+  overlay.innerHTML =
+    '<div style="background:var(--card-bg,#1c1c1e);border:1px solid rgba(255,69,58,0.3);border-radius:16px;padding:24px 28px;max-width:380px;width:90%">' +
+      '<div style="font-weight:700;font-size:16px;color:#ff453a;margin-bottom:14px">Delete Payment</div>' +
+      '<div style="display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px;color:#fff">' +
+        '<span style="color:var(--muted)">Player</span><span style="font-weight:600">' + athleteName + '</span>' +
+        '<span style="color:var(--muted)">Parent</span><span>' + parentName + '</span>' +
+        '<span style="color:var(--muted)">Amount</span><span style="font-weight:700;color:#ff453a">$' + amount.toFixed(2) + '</span>' +
+      '</div>' +
+      '<div style="margin-top:10px;font-size:12px;color:var(--muted)">Reverses admin tables, parent portal, and enrollment totals.</div>' +
+      '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px">' +
+        '<button id="del-cancel-btn" class="btn btn-sm" style="padding:8px 18px;border-radius:10px;font-size:13px;font-weight:600;background:transparent;border:1px solid var(--border);color:var(--muted)">Cancel</button>' +
+        '<button id="del-confirm-btn" class="btn btn-sm" style="padding:8px 22px;border-radius:10px;font-size:13px;font-weight:700;background:#ff453a;color:#fff;border:none">Delete Payment</button>' +
+      '</div>' +
+    '</div>';
 
-  // Wire up the confirm button (replace handler to avoid stacking)
-  const btn = document.getElementById('qp-delete-btn');
-  btn.onclick = async () => {
+  document.body.appendChild(overlay);
+
+  // Close on backdrop click or Cancel
+  overlay.addEventListener('click', (ev) => { if(ev.target === overlay) overlay.remove(); });
+  document.getElementById('del-cancel-btn').onclick = () => overlay.remove();
+
+  // Confirm handler
+  document.getElementById('del-confirm-btn').onclick = async () => {
+    const btn = document.getElementById('del-confirm-btn');
     btn.disabled = true; btn.textContent = 'Deleting...';
     try {
       await executeDeletePayment(installmentId, enrollmentId, parentEmail, amount);
-      panel.style.display = 'none';
+      overlay.remove();
       showToast('Payment deleted and reversed');
       loadDues();
     } catch(e) {
-      showToast('Delete error: ' + e.message, 'error');
-    } finally {
       btn.disabled = false; btn.textContent = 'Delete Payment';
+      showToast('Delete error: ' + e.message, 'error');
     }
   };
 }
