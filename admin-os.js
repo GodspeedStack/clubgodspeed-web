@@ -1278,6 +1278,7 @@ async function loadComms() {
     }
   } catch(e){}
   renderBroadcasts();
+  initAvailability();
 }
 function renderBroadcasts() {
   document.getElementById('broadcast-tbody').innerHTML=allBroadcasts.length ? allBroadcasts.map(m=>`<tr style="cursor:pointer" onclick="viewBroadcast('${m.id}')">
@@ -1334,6 +1335,182 @@ function viewBroadcast(id) {
       <div style="text-align:center;padding:16px;background:rgba(255,255,255,.03);border-radius:8px"><div style="font-size:24px;font-weight:800">${m.delivered_count||0}</div><div style="font-size:11px;color:var(--muted);margin-top:4px">DELIVERED</div></div>
       <div style="text-align:center;padding:16px;background:rgba(255,255,255,.03);border-radius:8px"><div style="font-size:24px;font-weight:800">${m.read_count||0}</div><div style="font-size:11px;color:var(--muted);margin-top:4px">READ</div></div>
     </div>`;
+}
+
+// ─── AVAILABILITY CHECK (SMS) ──────────────────────────────
+let _currentAvailCheckId = null;
+let _availRealtimeChannel = null;
+
+function previewAvailSms() {
+  const title = document.getElementById('avail-title').value;
+  const dateVal = document.getElementById('avail-date').value;
+  if(!title || !dateVal) { showToast('Enter title and date first', 'error'); return; }
+  const dateStr = new Date(dateVal + 'T12:00:00').toLocaleDateString('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric'
+  });
+  const preview = `GODSPEED BASKETBALL\n\n${title} -- ${dateStr}\n\nIs your player available?\nReply 1 for YES\nReply 2 for NO\n\nPlease include player name if you have multiple athletes.\n\nBROTHERHOOD. HABITS. SUCCESS.`;
+  const el = document.getElementById('avail-preview');
+  el.textContent = preview;
+  el.style.display = 'block';
+}
+
+async function sendAvailCheck() {
+  const title = document.getElementById('avail-title').value;
+  const dateVal = document.getElementById('avail-date').value;
+  const eventType = document.getElementById('avail-type').value;
+  if(!title || !dateVal) { showToast('Title and date required', 'error'); return; }
+  if(!osSupabase) { showToast('Not connected', 'error'); return; }
+
+  const btn = document.getElementById('avail-send-btn');
+  btn.disabled = true; btn.textContent = 'Sending...';
+  const fb = document.getElementById('avail-feedback');
+
+  try {
+    const fnUrl = (window.SUPABASE_CONFIG?.url || 'https://nnqokhqennuxalamnvps.supabase.co')
+      + '/functions/v1/send-availability-sms';
+    const anonKey = window.SUPABASE_CONFIG?.anonKey || '';
+    const {data:{session}} = await osSupabase.auth.getSession();
+    const token = session?.access_token || anonKey;
+
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), 30000);
+
+    const res = await fetch(fnUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+        'apikey': anonKey
+      },
+      body: JSON.stringify({ title, event_date: dateVal, event_type: eventType }),
+      signal: ac.signal
+    });
+    clearTimeout(timer);
+
+    const result = await res.json();
+    if(!res.ok) throw new Error(result.error || 'Send failed');
+
+    _currentAvailCheckId = result.check_id;
+    fb.style.display = 'block';
+    fb.style.color = '#34c759';
+    fb.textContent = `Sent to ${result.sent} parents` + (result.failed ? ` (${result.failed} failed)` : '');
+    showToast(`Availability check sent to ${result.sent} parents`);
+
+    // Load responses + subscribe to realtime
+    loadAvailResponses(result.check_id);
+    subscribeAvailRealtime(result.check_id);
+    loadAvailHistory();
+
+  } catch(e) {
+    fb.style.display = 'block';
+    fb.style.color = '#ff453a';
+    fb.textContent = 'Error: ' + e.message;
+    showToast('SMS error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Send to All Parents';
+  }
+}
+
+async function loadAvailResponses(checkId) {
+  if(!checkId || !osSupabase) return;
+  _currentAvailCheckId = checkId;
+
+  const {data, error} = await osSupabase
+    .from('availability_responses')
+    .select('*')
+    .eq('check_id', checkId)
+    .order('responded_at', {ascending: true});
+
+  if(error) { console.warn('Avail responses:', error.message); return; }
+  renderAvailResponses(data || []);
+  subscribeAvailRealtime(checkId);
+}
+
+function renderAvailResponses(responses) {
+  const tbody = document.getElementById('avail-resp-tbody');
+  if(!tbody) return;
+
+  const avail = responses.filter(r => r.response === 'available');
+  const unavail = responses.filter(r => r.response === 'unavailable');
+  const unknown = responses.filter(r => r.response === 'unknown');
+
+  const countEl = document.getElementById('avail-response-count');
+  if(countEl) {
+    countEl.textContent = `${avail.length} yes / ${unavail.length} no / ${unknown.length} pending`;
+  }
+
+  if(!responses.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:32px">Waiting for replies...</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = responses.map(r => {
+    const color = r.response === 'available' ? '#34c759'
+      : r.response === 'unavailable' ? '#ff453a'
+      : 'var(--muted)';
+    const label = r.response === 'available' ? 'Available'
+      : r.response === 'unavailable' ? 'Unavailable'
+      : 'Pending';
+    const time = r.responded_at && r.response !== 'unknown'
+      ? new Date(r.responded_at).toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'})
+      : '--';
+    return `<tr>
+      <td style="font-weight:600">${r.player_name || '--'}</td>
+      <td style="color:var(--muted);font-size:13px">${r.phone || '--'}</td>
+      <td><span style="color:${color};font-weight:700;font-size:13px">${label}</span></td>
+      <td style="color:var(--muted);font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.raw_reply || '--'}</td>
+      <td style="color:var(--muted);font-size:12px">${time}</td>
+    </tr>`;
+  }).join('');
+}
+
+function subscribeAvailRealtime(checkId) {
+  if(_availRealtimeChannel) {
+    osSupabase.removeChannel(_availRealtimeChannel);
+  }
+  _availRealtimeChannel = osSupabase
+    .channel('avail-responses-' + checkId)
+    .on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'availability_responses',
+      filter: 'check_id=eq.' + checkId
+    }, () => {
+      // Refresh on any change
+      loadAvailResponses(checkId);
+    })
+    .subscribe();
+}
+
+async function loadAvailHistory() {
+  if(!osSupabase) return;
+  const {data} = await osSupabase
+    .from('availability_checks')
+    .select('id, title, event_date, status')
+    .order('created_at', {ascending: false})
+    .limit(10);
+
+  if(!data || !data.length) return;
+
+  const sel = document.getElementById('avail-history-select');
+  const toggle = document.getElementById('avail-history-toggle');
+  if(!sel || !toggle) return;
+
+  toggle.style.display = 'block';
+  sel.innerHTML = '<option value="">Previous checks...</option>' +
+    data.map(c => `<option value="${c.id}">${c.title} (${c.event_date})</option>`).join('');
+}
+
+// Auto-load history when comms panel opens
+function initAvailability() {
+  // Set default date to tomorrow
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const dateInput = document.getElementById('avail-date');
+  if(dateInput && !dateInput.value) {
+    dateInput.value = tomorrow.toISOString().split('T')[0];
+  }
+  loadAvailHistory();
 }
 
 // ─── DATA ENTRY ─────────────────────────────────────────────
