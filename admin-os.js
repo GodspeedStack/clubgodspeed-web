@@ -926,10 +926,9 @@ function qpFeedback(msg, type) {
   if(type === 'success') setTimeout(() => { el.style.display = 'none'; }, 4000);
 }
 
-async function quickRecordPayment() {
+function qpShowConfirm() {
   const select = document.getElementById('qp-parent');
   const amountInput = document.getElementById('qp-amount');
-  const btn = document.getElementById('qp-submit');
   const enrollmentId = select?.value;
   const amount = parseFloat(amountInput?.value);
   const method = document.querySelector('#qp-method-pills .qp-pill.active')?.dataset?.method || 'venmo';
@@ -937,6 +936,48 @@ async function quickRecordPayment() {
   if(!enrollmentId) { qpFeedback('Select a parent first.', 'error'); select?.focus(); return; }
   if(!amount || amount <= 0) { qpFeedback('Enter a valid amount.', 'error'); amountInput?.focus(); return; }
   if(!osSupabase) { qpFeedback('Not connected.', 'error'); return; }
+
+  const opt = select.options[select.selectedIndex];
+  const athleteName = opt.dataset.athlete || '--';
+  const parentName = opt.dataset.name || opt.dataset.email || '--';
+  const remaining = parseFloat(opt.dataset.remaining) || 0;
+  const afterBalance = Math.max(remaining - amount, 0);
+
+  const confirmEl = document.getElementById('qp-confirm');
+  const summaryEl = document.getElementById('qp-confirm-summary');
+  summaryEl.innerHTML =
+    '<div style="font-weight:700;font-size:15px;margin-bottom:6px">Confirm Payment</div>' +
+    '<div style="display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px">' +
+    '<span style="color:var(--muted)">Player</span><span style="font-weight:600">' + athleteName + '</span>' +
+    '<span style="color:var(--muted)">Parent</span><span>' + parentName + '</span>' +
+    '<span style="color:var(--muted)">Amount</span><span style="font-weight:700;color:#34c759">$' + amount.toFixed(2) + '</span>' +
+    '<span style="color:var(--muted)">Method</span><span style="text-transform:capitalize">' + method + '</span>' +
+    '<span style="color:var(--muted)">Balance after</span><span>$' + afterBalance.toFixed(2) + ' remaining</span>' +
+    '</div>';
+  confirmEl.style.display = 'block';
+  qpFeedback('', '');
+  document.getElementById('qp-submit').style.display = 'none';
+}
+
+function qpCancelConfirm() {
+  document.getElementById('qp-confirm').style.display = 'none';
+  document.getElementById('qp-submit').style.display = '';
+  qpFeedback('', '');
+}
+
+async function quickRecordPayment() {
+  // Hide confirmation panel, show progress on the main bar
+  document.getElementById('qp-confirm').style.display = 'none';
+  document.getElementById('qp-submit').style.display = '';
+
+  const select = document.getElementById('qp-parent');
+  const amountInput = document.getElementById('qp-amount');
+  const btn = document.getElementById('qp-submit');
+  const enrollmentId = select?.value;
+  const amount = parseFloat(amountInput?.value);
+  const method = document.querySelector('#qp-method-pills .qp-pill.active')?.dataset?.method || 'venmo';
+
+  if(!enrollmentId || !amount || amount <= 0 || !osSupabase) return;
 
   const opt = select.options[select.selectedIndex];
   const parentEmail = opt.dataset.email;

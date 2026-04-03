@@ -734,7 +734,14 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
           <button class="qp-pill" data-method="zelle" onclick="selectPayMethod(this)">Zelle</button>
           <button class="qp-pill" data-method="check" onclick="selectPayMethod(this)">Check</button>
         </div>
-        <button id="qp-submit" class="btn btn-primary btn-sm" style="padding:10px 20px;border-radius:10px;font-size:14px;font-weight:700;white-space:nowrap" onclick="quickRecordPayment()">Record</button>
+        <button id="qp-submit" class="btn btn-primary btn-sm" style="padding:10px 20px;border-radius:10px;font-size:14px;font-weight:700;white-space:nowrap" onclick="qpShowConfirm()">Record</button>
+        <div id="qp-confirm" style="display:none;width:100%;margin-top:8px;padding:14px 16px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:12px">
+          <div id="qp-confirm-summary" style="font-size:14px;color:#fff;line-height:1.5;margin-bottom:12px"></div>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button class="btn btn-sm" style="padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;background:transparent;border:1px solid var(--border);color:var(--muted)" onclick="qpCancelConfirm()">Cancel</button>
+            <button id="qp-confirm-btn" class="btn btn-sm" style="padding:8px 20px;border-radius:8px;font-size:13px;font-weight:700;background:#34c759;color:#fff;border:none" onclick="quickRecordPayment()">Confirm Payment</button>
+          </div>
+        </div>
         <div id="qp-feedback" style="width:100%;font-size:13px;margin-top:4px;display:none"></div>
       </div>
       <div class="card">
