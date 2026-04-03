@@ -379,12 +379,12 @@ const ScheduleView = (() => {
 
     const availToggle = `
       <div style="display:inline-flex;align-items:center;gap:2px;padding:2px;border-radius:8px;background:#f3f4f6;flex-shrink:0" onclick="event.stopPropagation()">
-        ${segBtn('In', 'available', isAvail)}${segBtn('Out', 'unavailable', isUnavail)}
+        ${segBtn('Playing', 'available', isAvail)}${segBtn('Out', 'unavailable', isUnavail)}
       </div>`;
 
     // Status dot for the card face subtitle
     const availDot = isAvail
-      ? '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;flex-shrink:0"></span><span style="color:#15803d;font-weight:500">In</span>'
+      ? '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;flex-shrink:0"></span><span style="color:#15803d;font-weight:500">Playing</span>'
       : isUnavail
       ? '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#ef4444;flex-shrink:0"></span><span style="color:#dc2626;font-weight:500">Out</span>'
       : '';
