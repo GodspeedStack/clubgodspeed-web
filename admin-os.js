@@ -943,62 +943,16 @@ async function deletePayment(installmentId, enrollmentId, parentEmail, amount) {
 async function executeDeletePayment(installmentId, enrollmentId, parentEmail, amount) {
   if(!osSupabase) throw new Error('Not connected');
 
-  // 1. Delete the dues_payment linked to this installment
-  const {error:dpErr} = await osSupabase.from('dues_payments')
-    .delete()
-    .eq('installment_id', installmentId);
-  if(dpErr) console.warn('dues_payments delete:', dpErr.message);
+  // Single atomic RPC call -- reverses all 4 tables in one transaction
+  const {data, error} = await osSupabase.rpc('reverse_payment', {
+    p_installment_id: installmentId,
+    p_enrollment_id: enrollmentId || null,
+    p_parent_email: parentEmail || null,
+    p_amount: amount
+  });
 
-  // 2. Reset installment back to pending
-  const {data:inst} = await osSupabase.from('dues_installments')
-    .select('installment_number').eq('id', installmentId).maybeSingle();
-  if(inst && inst.installment_number === 99) {
-    // One-off installment created by quick-pay -- remove it entirely
-    await osSupabase.from('dues_installments').delete().eq('id', installmentId);
-  } else {
-    await osSupabase.from('dues_installments').update({
-      status: 'pending', paid_at: null
-    }).eq('id', installmentId);
-  }
-
-  // 3. Subtract from enrollment total_paid
-  if(enrollmentId) {
-    const {data:enr} = await osSupabase.from('parent_dues_enrollment')
-      .select('total_paid,total_owed,status').eq('id', enrollmentId).maybeSingle();
-    if(enr) {
-      const newPaid = Math.max((parseFloat(enr.total_paid) || 0) - amount, 0);
-      const newStatus = newPaid >= parseFloat(enr.total_owed) ? 'paid_in_full' : 'active';
-      await osSupabase.from('parent_dues_enrollment').update({
-        total_paid: newPaid, status: newStatus
-      }).eq('id', enrollmentId);
-    }
-  }
-
-  // 4. Reverse portal-side payment (payments + payment_plans)
-  if(parentEmail) {
-    try {
-      const {data:prof} = await osSupabase.from('profiles')
-        .select('id').eq('email', parentEmail).maybeSingle();
-      if(prof) {
-        // Find the most recent confirmed payment for this amount and reverse it
-        const {data:portalPay} = await osSupabase.from('payments')
-          .select('id,plan_id,amount')
-          .eq('parent_id', prof.id)
-          .eq('status', 'confirmed')
-          .order('paid_at', {ascending: false})
-          .limit(5);
-        // Match by amount (closest match)
-        const match = (portalPay || []).find(p => Math.abs(parseFloat(p.amount) - amount) < 0.01);
-        if(match) {
-          await osSupabase.from('payments').delete().eq('id', match.id);
-          // If payment_plan exists, ensure status is active (not completed)
-          if(match.plan_id) {
-            await osSupabase.from('payment_plans').update({status: 'active'}).eq('id', match.plan_id);
-          }
-        }
-      }
-    } catch(e) { console.warn('Portal payment reverse:', e.message); }
-  }
+  if(error) throw new Error(error.message);
+  if(data && !data.ok) throw new Error(data.error || 'Reversal failed');
 }
 
 // ─── QUICK-RECORD PAYMENT BAR ──────────────────────────────
