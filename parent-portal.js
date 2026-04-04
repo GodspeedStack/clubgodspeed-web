@@ -3790,7 +3790,10 @@ function renderPaymentsTimeline(container, payments, plan, supabase) {
             borderColor = '#f59e0b';
             const btnBg = isFullPay ? '#0a0a0a' : '#6b7280';
             const btnLabel = isFullPay ? 'Pay Now' : 'Pay Early';
-            actionBtn = `<button id="${btnId}" class="btn-primary" style="padding:8px 18px;font-size:0.85rem;background:${btnBg};color:#fff;font-weight:700;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;min-width:100px;justify-content:center;" data-payment-id="${payment.id}" data-amount="${payment.amount}" data-installment="${payment.installment_number}" data-label="${rowLabel}" onclick="window._directCheckout(this)">${btnLabel}</button>`;
+            const btnStyle = isFullPay
+                ? `background:#0a0a0a;color:#fff;border:none;`
+                : `background:#fff;color:#111;border:2px solid #111;`;
+            actionBtn = `<button id="${btnId}" class="btn-primary" style="padding:8px 18px;font-size:0.85rem;${btnStyle}font-weight:700;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;min-width:100px;justify-content:center;" data-payment-id="${payment.id}" data-amount="${payment.amount}" data-installment="${payment.installment_number}" data-label="${rowLabel}" onclick="window._directCheckout(this)">${btnLabel}</button>`;
         }
 
         // Block later installments until prior ones are paid
