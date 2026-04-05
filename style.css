@@ -210,48 +210,48 @@ a {
 /* Buttons */
 .btn-primary {
     display: inline-flex;
-    /* Use flex for perfect centering */
     align-items: center;
     justify-content: center;
     background: #0071e3;
     color: #ffffff !important;
     padding: 1rem 2rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
     line-height: 1;
-    /* Reset line height */
     border-radius: 999px;
     font-weight: 600;
     font-size: 0.95rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    white-space: nowrap;
     transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     box-shadow: 0 4px 12px rgba(0, 113, 227, 0.25);
     border: none;
     cursor: pointer;
     text-decoration: none;
-    /* Ensure no underline */
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(0, 113, 227, 0.35);
     background: #0077ed;
-    /* Slight lighten */
 }
 
 .btn-secondary {
     display: inline-flex;
-    /* Use flex for perfect centering */
     align-items: center;
     justify-content: center;
     border: 1px solid rgba(0, 0, 0, 0.1);
     padding: 1rem 2rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
     line-height: 1;
-    /* Reset line height */
     border-radius: 999px;
     font-weight: 600;
     font-size: 0.95rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    white-space: nowrap;
     transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
     color: #1d1d1f;
     background: #ffffff;
@@ -264,7 +264,6 @@ a {
     background: #f5f5f7;
     transform: scale(1.02);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    /* Apple style lift */
 }
 
 .btn-black {
@@ -362,7 +361,6 @@ a {
 .cta-group {
     display: flex;
     gap: 1rem;
-    margin-left: 12px; /* Slight offset requested to match exact reference */
 }
 
 /* Static layout replaces tailwind animations */
