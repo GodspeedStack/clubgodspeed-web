@@ -70,7 +70,7 @@ export const rosterData = [
         notes: "High IQ, but poor defense. Struggles with wing trap."
     },
     {
-        name: "Khalik",
+        name: "Khaliq",
         grade: 6.38,
         tier: "Limited",
         trend: "Steady", // Assumed steady if not specified

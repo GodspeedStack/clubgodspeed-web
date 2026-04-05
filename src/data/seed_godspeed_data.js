@@ -21,7 +21,7 @@ export const roster = [
     { id: "p9", name: "Junior", nickname: "Gene Jr", tier: "Limited", avg_grade: 6.54, trend: "Declining", notes: "Spacing issues. Cramped during sprints." },
     { id: "p10", name: "Kyrie", tier: "Limited", avg_grade: 6.35, trend: "Up", notes: "18pts scorer but low effort. Improving closeout speed." },
     { id: "p11", name: "Oliver", tier: "Rotation/Starter", avg_grade: 8.12, trend: "Rocket", notes: "Huge jump in Practice 8. 'Best practice yet'." },
-    { id: "p12", name: "Khalik", tier: "Limited", avg_grade: 6.93, trend: "Improving", notes: "Learning help defense. Hands are improving." }
+    { id: "p12", name: "Khaliq", tier: "Limited", avg_grade: 6.93, trend: "Improving", notes: "Learning help defense. Hands are improving." }
 ];
 
 // PART B: The Game Stats (Weeks Tournament)
@@ -58,7 +58,7 @@ export const practiceHistory = [
         date: "Dec 16",
         focus: "Team Execution",
         attendance: {
-            absent: ["p10", "p9", "p8", "p5", "p12"], // Khyrie, Junior, Ashton, Howard, Khalik
+            absent: ["p10", "p9", "p8", "p5", "p12"], // Khyrie, Junior, Ashton, Howard, Khaliq
             present: ["p1", "p2", "p3", "p4", "p6", "p7", "p11"]
         },
         grades: [

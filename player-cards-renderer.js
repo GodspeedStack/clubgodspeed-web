@@ -36,7 +36,7 @@
     { name: 'Junior',  jersey: 9,  pos: 'G'  },
     { name: 'Kyrie',   jersey: 10, pos: 'G'  },
     { name: 'Oliver',  jersey: 11, pos: 'SF' },
-    { name: 'Khalik',  jersey: 12, pos: 'PF' },
+    { name: 'Khaliq',  jersey: 12, pos: 'PF' },
   ];
 
   /* ── Inject Styles (once) ────────────────────────────────── */

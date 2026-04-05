@@ -36,7 +36,7 @@ INSERT INTO public.athletes (id, first_name, last_name, jersey_number, position,
 ('a1000000-0000-0000-0000-000000000009', 'Junior',  'Player',  9, 'G',    'active', '10U Development Black', '2025-2026', 'Scheme IQ / Conditioning'),
 ('a1000000-0000-0000-0000-000000000010', 'Kyrie',   'Player', 10, 'G',    'active', '10U Development Black', '2025-2026', 'Improving closeouts'),
 ('a1000000-0000-0000-0000-000000000011', 'Oliver',  'Player', 11, 'SF',   'active', '10U Development Black', '2025-2026', 'Huge jump in Practice 8'),
-('a1000000-0000-0000-0000-000000000012', 'Khalik',  'Player', 12, 'PF',   'active', '10U Development Black', '2025-2026', 'Learning help defense')
+('a1000000-0000-0000-0000-000000000012', 'Khaliq',  'Player', 12, 'PF',   'active', '10U Development Black', '2025-2026', 'Learning help defense')
 ON CONFLICT DO NOTHING;
 
 -- ── 3. Team Rosters ──────────────────────────────────────────
