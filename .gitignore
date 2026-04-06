@@ -39,3 +39,10 @@ serviceAccountKey.json
 .vercel
 .env*.local
 .claude/
+
+# Legacy backups (use git history instead)
+_broken_backup/
+_current_backup_before_reset/
+
+# Lock files
+.~lock.*
