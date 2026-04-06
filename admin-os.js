@@ -9,7 +9,7 @@ let BLOG_POSTS = [], MEMOS = [], CAMPAIGNS = [], allPlayers = [], allRequests = 
 let allInstallments = [], allOrders = [], allBroadcasts = [], allCalEvents = [];
 let allRosterAthletes = [];
 let duesFilter = 'all', ordersFilter = 'all';
-let rosterView = 'players'; // 'players' or 'parents'
+let rosterView = 'players'; // 'players' or 'parents
 let calYear, calMonth, calView = 'month';
 let teamRosterCache = {};
 
@@ -311,7 +311,7 @@ function renderRosterByParent(arr) {
     <td style="color:var(--muted)">${p.email}</td>
     <td style="color:var(--muted)">${p.phone||'--'}</td>
     <td>${statusTag(p.approved?'Approved':'Pending')}</td>
-    <td><button class="btn btn-ghost btn-xs" onclick="viewParentProfile('${p.id}')">View</button></td></tr>`).join('');
+    <td style="display:flex;gap:6px"><button class="btn btn-ghost btn-xs" onclick="viewParentProfile('${p.id}')">View</button><button class="btn btn-ghost btn-xs" onclick="impersonateParent('${p.id}','${esc(p.full_name||p.email).replace(/'/g,"\\'")}')">View as</button></td></tr>`).join('');
 }
 
 // ── Inline save: player name ──
@@ -460,6 +460,43 @@ function viewParentProfile(id) {
       <button class="btn btn-ghost btn-sm" onclick="resendVerification('${p.email}')" style="width:100%;justify-content:center;gap:6px"><i data-lucide="mail" style="width:14px;height:14px"></i>Resend Email Verification</button>
     </div>`;
 }
+
+// ─── PARENT IMPERSONATION ────────────────────────────────────
+async function impersonateParent(targetUserId, targetLabel) {
+  const reason = prompt('Reason for viewing as ' + targetLabel + ':');
+  if (reason === null) return;
+  if (!reason || reason.trim().length < 3) {
+    showToast('Please enter a reason (at least 3 characters)', 'error');
+    return;
+  }
+  if (!osSupabase) { showToast('Not connected', 'error'); return; }
+  try {
+    const { data: { session } } = await osSupabase.auth.getSession();
+    if (!session) { showToast('Session expired - please log in again', 'error'); return; }
+    const fnBase = (osSupabase.supabaseUrl || window.SUPABASE_CONFIG?.url || '').replace(/\/$/, '');
+    const anonKey = window.SUPABASE_CONFIG?.anonKey || '';
+    const res = await fetch(fnBase + '/functions/v1/admin-impersonate', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + session.access_token,
+        'apikey': anonKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ target_user_id: targetUserId, reason: reason.trim() })
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      const code = res.status;
+      showToast((json.error || ('Error ' + code)), 'error');
+      return;
+    }
+    window.open(json.action_link, '_blank', 'noopener,noreferrer');
+    showToast('Opened in new tab - use incognito window for clean session');
+  } catch (e) {
+    showToast('Impersonation failed: ' + e.message, 'error');
+  }
+}
+window.impersonateParent = impersonateParent;
 
 // ── Link existing parent to athlete ──
 function openLinkParentModal(athleteId,athleteName) {

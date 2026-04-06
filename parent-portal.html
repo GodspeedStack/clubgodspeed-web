@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Parent Portal | Godspeed Basketball</title>
 
-    <!-- Resource Hints -->
+    <!-- Resource Hints --
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
@@ -52,6 +52,62 @@
 </head>
 
 <body class="aau-page">
+
+    <!-- ADMIN IMPERSONATION BANNER -->
+    <div id="impersonation-banner"
+         style="display:none;position:sticky;top:0;z-index:9999;background:#f59e0b;color:#1c1917;padding:10px 20px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;align-items:center;justify-content:space-between;gap:12px;">
+        <span>Admin view -- acting as <span id="impersonation-email" style="font-weight:800"></span></span>
+        <button onclick="exitImpersonation()"
+                style="background:#1c1917;color:#fef3c7;border:none;padding:5px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.02em;white-space:nowrap;">Exit</button>
+    </div>
+    <script>
+    (function () {
+        // Persist flag if entering via magic link
+        var params = new URLSearchParams(window.location.search);
+        if (params.get('impersonated') === '1') {
+            sessionStorage.setItem('gs_impersonation_active', '1');
+        }
+
+        if (sessionStorage.getItem('gs_impersonation_active') === '1') {
+            document.addEventListener('DOMContentLoaded', function () {
+                var banner = document.getElementById('impersonation-banner');
+                if (banner) banner.style.display = 'flex';
+
+                // Populate email — retry until window.auth is ready
+                var attempts = 0;
+                var maxAttempts = 10;
+                function tryPopulate() {
+                    var client = window.auth && typeof window.auth.getSupabaseClient === 'function'
+                        ? window.auth.getSupabaseClient() : null;
+                    if (client) {
+                        client.auth.getUser().then(function (res) {
+                            var email = res && res.data && res.data.user && res.data.user.email;
+                            if (email) {
+                                var el = document.getElementById('impersonation-email');
+                                if (el) el.textContent = email;
+                            }
+                        }).catch(function () {});
+                    } else if (attempts < maxAttempts) {
+                        attempts++;
+                        setTimeout(tryPopulate, 500);
+                    }
+                }
+                tryPopulate();
+            });
+        }
+    })();
+
+    function exitImpersonation() {
+        sessionStorage.removeItem('gs_impersonation_active');
+        var client = window.auth && typeof window.auth.getSupabaseClient === 'function'
+            ? window.auth.getSupabaseClient() : null;
+        if (client) {
+            client.auth.signOut().finally(function () { window.location.href = '/'; });
+        } else {
+            window.location.href = '/';
+        }
+    }
+    </script>
 
     <!-- Navigation -->
         <nav class="navbar">
