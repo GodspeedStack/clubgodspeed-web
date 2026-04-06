@@ -22,15 +22,28 @@
     function _isNetworkError(error) {
         if (!error) return false;
         const msg = (error.message || '').toLowerCase();
+        // Only match genuine network/fetch failures — NOT any message that
+        // happens to contain the substring "fetch" (e.g. Supabase DB errors).
         return msg === 'failed to fetch'
             || msg.includes('networkerror')
             || msg.includes('network error')
             || msg.includes('net::err_')
             || msg.includes('load failed')
-            || msg.includes('fetch')
             || msg.includes('econnrefused')
             || msg.includes('enotfound')
-            || error.name === 'TypeError' && msg.includes('fetch');
+            || (error.name === 'TypeError' && msg.includes('fetch'));
+    }
+
+    /** Detect Supabase database/trigger errors that are transient and retryable */
+    function _isDatabaseError(error) {
+        if (!error) return false;
+        const msg = (error.message || '').toLowerCase();
+        return msg.includes('database error')
+            || msg.includes('db error')
+            || msg.includes('violates')
+            || msg.includes('trigger')
+            || msg.includes('transaction')
+            || msg.includes('timeout');
     }
 
     // Initialize Supabase client if available
@@ -436,48 +449,140 @@
                 throw new Error('Our signup system is temporarily unavailable. Please try again in a few minutes.');
             }
 
-            try {
-                const { data, error } = await supabaseClient.auth.signUp({
-                    email: email,
-                    password: password,
-                    options: {
-                        data: metadata,
-                        emailRedirectTo: 'https://www.clubgodspeed.com/parent-portal.html'
+            const MAX_RETRIES = 2;
+            let lastError = null;
+
+            for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+                try {
+                    console.log('[auth] signUp attempt', attempt, 'for:', email);
+                    const { data, error } = await supabaseClient.auth.signUp({
+                        email: email,
+                        password: password,
+                        options: {
+                            data: metadata,
+                            emailRedirectTo: 'https://www.clubgodspeed.com/parent-portal.html'
+                        }
+                    });
+
+                    if (error) {
+                        console.error('[auth] signUp error (attempt ' + attempt + '):', error.message, error.status, JSON.stringify(error));
+                        // Retry on transient database/server errors
+                        if (_isDatabaseError(error) && attempt < MAX_RETRIES) {
+                            lastError = error;
+                            console.warn('[auth] Retrying signup after database error...');
+                            await new Promise(r => setTimeout(r, 1500 * attempt));
+                            continue;
+                        }
+                        throw new Error(error.message);
                     }
-                });
 
-                if (error) {
-                    console.error('[auth] signUp error:', error.message, error.status);
-                    throw new Error(error.message);
-                }
+                    // Supabase duplicate-email handling (email confirmation enabled):
+                    // Case 1: data.user is null, no error — email already exists
+                    // Case 2: data.user has empty identities array — confirmed user already exists
+                    // Both are Supabase's email enumeration protection; surface as "already registered"
+                    if (!data.user) {
+                        console.warn('[auth] signUp returned null user for:', email);
+                        throw new Error('An account with this email has already been registered.');
+                    }
 
-                // Supabase duplicate-email handling (email confirmation enabled):
-                // Case 1: data.user is null, no error — email already exists
-                // Case 2: data.user has empty identities array — confirmed user already exists
-                // Both are Supabase's email enumeration protection; surface as "already registered"
-                if (!data.user) {
-                    console.warn('[auth] signUp returned null user for:', email);
-                    throw new Error('An account with this email has already been registered.');
-                }
+                    if (data.user.identities && data.user.identities.length === 0) {
+                        console.warn('[auth] signUp returned empty identities (existing account) for:', email);
+                        throw new Error('An account with this email has already been registered.');
+                    }
 
-                if (data.user.identities && data.user.identities.length === 0) {
-                    console.warn('[auth] signUp returned empty identities (existing account) for:', email);
-                    throw new Error('An account with this email has already been registered.');
-                }
+                    // Genuine new user — profile will be created by handle_new_user() trigger.
+                    // Fallback: ensure profile row exists even if trigger failed.
+                    try {
+                        const { error: profileCheckError } = await supabaseClient
+                            .from('profiles')
+                            .select('id')
+                            .eq('id', data.user.id)
+                            .single();
 
-                // Genuine new user — profile will be created by handle_new_user() trigger
-                return {
-                    success: true,
-                    requiresVerification: true,
-                    userId: data.user.id
-                };
-            } catch (error) {
-                console.error('[auth] signup failed:', error);
-                if (_isNetworkError(error)) {
-                    throw new Error('Cannot connect to the server. Please check your internet connection or disable your adblocker and try again.');
+                        if (profileCheckError) {
+                            console.warn('[auth] Profile not created by trigger, inserting fallback profile for:', email);
+                            const { error: insertError } = await supabaseClient
+                                .from('profiles')
+                                .upsert({
+                                    id: data.user.id,
+                                    email: email,
+                                    full_name: metadata.parent_name || metadata.full_name || null,
+                                    phone: metadata.phone || null,
+                                    player_name: metadata.player_name || null,
+                                    grade: metadata.grade || null,
+                                    role: 'parent',
+                                    approved: false
+                                }, { onConflict: 'id' });
+
+                            if (insertError) {
+                                // Non-fatal — signup succeeded, profile can be fixed later by admin
+                                console.warn('[auth] Fallback profile insert failed (non-blocking):', insertError.message);
+                            } else {
+                                console.log('[auth] Fallback profile created successfully for:', email);
+                            }
+                        }
+                    } catch (profileFallbackErr) {
+                        // Non-fatal — the user IS signed up, profile will be reconciled
+                        console.warn('[auth] Profile fallback check failed (non-blocking):', profileFallbackErr);
+                    }
+
+                    // Also ensure login_requests row exists for admin approval workflow
+                    try {
+                        // Check if a login_request already exists for this user
+                        const { data: existingLR } = await supabaseClient
+                            .from('login_requests')
+                            .select('id')
+                            .eq('user_id', data.user.id)
+                            .maybeSingle();
+
+                        if (!existingLR) {
+                            const { error: lrError } = await supabaseClient
+                                .from('login_requests')
+                                .insert({
+                                    user_id: data.user.id,
+                                    email: email,
+                                    full_name: metadata.parent_name || metadata.full_name || null,
+                                    requested_role: 'parent',
+                                    grade: metadata.grade || null,
+                                    player_name: metadata.player_name || null
+                                });
+
+                            if (lrError) {
+                                console.warn('[auth] Fallback login_request insert failed (non-blocking):', lrError.message);
+                            }
+                        }
+                    } catch (lrFallbackErr) {
+                        console.warn('[auth] login_request fallback failed (non-blocking):', lrFallbackErr);
+                    }
+
+                    return {
+                        success: true,
+                        requiresVerification: true,
+                        userId: data.user.id
+                    };
+                } catch (error) {
+                    lastError = error;
+                    console.error('[auth] signup failed (attempt ' + attempt + '):', error.message, error);
+
+                    // Retry on transient database/network errors (but not on user-facing errors)
+                    if (attempt < MAX_RETRIES && (_isDatabaseError(error) || _isNetworkError(error))) {
+                        console.warn('[auth] Retrying signup in', (1500 * attempt) + 'ms...');
+                        await new Promise(r => setTimeout(r, 1500 * attempt));
+                        continue;
+                    }
+
+                    if (_isNetworkError(error)) {
+                        throw new Error('Cannot connect to the server. Please check your internet connection or disable your adblocker and try again.');
+                    }
+                    if (_isDatabaseError(error)) {
+                        throw new Error('database_error: Our system hit a temporary issue saving your account. Please try again in a moment.');
+                    }
+                    throw error;
                 }
-                throw error;
             }
+
+            // Should not reach here, but safety net
+            throw lastError || new Error('Signup failed after multiple attempts. Please try again.');
         },
 
         signInWithOAuth: async function (options) {

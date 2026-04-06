@@ -745,7 +745,9 @@ window.handleSignup = async function() {
         }
     } catch (error) {
         console.error('Signup error:', error);
-        
+        console.error('[signup] raw error message:', error.message);
+        console.error('[signup] error stack:', error.stack);
+
         if (errorMsg) {
             let userFriendlyMessage = "Something went wrong on our end. Please try again!";
             const msg = (error.message || '').toLowerCase();
@@ -756,7 +758,7 @@ window.handleSignup = async function() {
                 const form = document.querySelector('.signup-form');
                 if (form) { form.classList.add('shake'); setTimeout(() => form.classList.remove('shake'), 500); }
                 return; // skip textContent assignment below
-            } else if (msg.includes('not connected') || msg.includes('fetch') || msg.includes('cannot connect')) {
+            } else if (msg.includes('not connected') || msg.includes('failed to fetch') || msg.includes('cannot connect') || msg.includes('network error')) {
                 userFriendlyMessage = "We couldn't reach the server right now. Please check your internet connection or disable your adblocker and try again.";
             } else if (msg.includes('unavailable')) {
                 userFriendlyMessage = error.message;
@@ -766,14 +768,16 @@ window.handleSignup = async function() {
                 userFriendlyMessage = "Too many attempts. Please wait a minute and try again.";
             } else if (msg.includes('invalid') && msg.includes('email')) {
                 userFriendlyMessage = "That email address isn't valid. Please double-check and try again.";
+            } else if (msg.includes('database') || msg.includes('trigger') || msg.includes('violates') || msg.includes('transaction') || msg.includes('timeout') || msg.includes('database_error')) {
+                userFriendlyMessage = "Our system ran into a temporary issue. Please wait a moment and try again. If this keeps happening, contact Coach Scott.";
             } else {
                 // Log the actual error for debugging, show safe message to user
                 console.error('[signup] unhandled error category:', error.message);
-                userFriendlyMessage = "Something went wrong creating your account. Please try again.";
+                userFriendlyMessage = "Something went wrong creating your account. Please try again — if the issue continues, text Coach Scott.";
             }
             errorMsg.textContent = userFriendlyMessage;
             errorMsg.style.display = 'block';
-            
+
             const form = document.querySelector('.signup-form');
             if (form) {
                 form.classList.add('shake');
