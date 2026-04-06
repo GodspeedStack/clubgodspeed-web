@@ -85,6 +85,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     })();
 
+    // ── Admin Impersonation Banner ─────────────────────────────────────
+    (function injectImpersonationBanner() {
+        const params = new URLSearchParams(window.location.search);
+        if (!params.get('impersonating')) return;
+
+        // Strip the flag from the URL so refreshes don't re-trigger
+        history.replaceState(null, '', window.location.pathname);
+
+        const banner = document.createElement('div');
+        banner.id = 'admin-impersonation-banner';
+        banner.style.cssText = [
+            'position:fixed;top:0;left:0;right:0;z-index:999999',
+            'background:linear-gradient(90deg,#f59e0b 0%,#d97706 100%)',
+            'color:#000;font-family:inherit',
+            'display:flex;align-items:center;justify-content:space-between',
+            'padding:10px 20px;gap:12px',
+            'box-shadow:0 2px 20px rgba(245,158,11,0.45)',
+        ].join(';');
+
+        banner.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;font-weight:800;line-height:1.3">
+            <span style="font-size:20px;flex-shrink:0">👁</span>
+            <span>ADMIN VIEW &mdash; You are previewing this portal as the parent. Any actions taken are real and will affect their account.</span>
+          </div>
+          <button
+            id="imp-banner-dismiss"
+            style="flex-shrink:0;background:rgba(0,0,0,0.15);border:none;border-radius:6px;padding:5px 12px;font-weight:800;font-size:12px;cursor:pointer;color:#000;white-space:nowrap"
+          >Dismiss ✕</button>`;
+
+        document.body.style.paddingTop = '48px';
+        document.body.insertBefore(banner, document.body.firstChild);
+
+        document.getElementById('imp-banner-dismiss').addEventListener('click', () => {
+            banner.remove();
+            document.body.style.paddingTop = '';
+        });
+    })();
+
     initSignaturePad();
     initPortalNav();
 
@@ -139,6 +177,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     signupEyeOffIcon.style.display = 'none';
               }
             }
+        });
+    }
+
+    // Auto-format phone number as user types: 555-555-5555
+    const signupPhone = document.getElementById('signup-phone');
+    if (signupPhone) {
+        signupPhone.addEventListener('input', function () {
+            const digits = this.value.replace(/\D/g, '').slice(0, 10);
+            let formatted = digits;
+            if (digits.length > 6) {
+                formatted = digits.slice(0, 3) + '-' + digits.slice(3, 6) + '-' + digits.slice(6);
+            } else if (digits.length > 3) {
+                formatted = digits.slice(0, 3) + '-' + digits.slice(3);
+            }
+            this.value = formatted;
         });
     }
 
@@ -387,12 +440,12 @@ async function handleLogin() {
                     return;
                 }
 
-                // Check if login was successful
-                if (result === true || (result && result.success !== false)) {
+                // Check if login was successful (explicit success check)
+                if (result && result.success === true) {
                     loginSuccess = true;
-              } else {
+                } else {
                     errorMessage = result?.error || result?.message || errorMessage;
-               }
+                }
             } catch (authError) {
                 console.error('Auth login error:', authError);
               errorMessage = authError.message || errorMessage;
@@ -401,10 +454,13 @@ async function handleLogin() {
                 if (authError.message && authError.message.includes('Invalid login credentials')) {
                     errorMessage = 'Invalid email or password. Please check your credentials and try again.';
                 } else if (authError.message && authError.message.includes('Email not confirmed')) {
-                    // Show inline resend link
+                    // Show inline resend link (sanitize email to prevent XSS)
                     if (errorMsg) {
-                        errorMsg.innerHTML = `Check your inbox for a verification email from noreply@clubgodspeed.com.<br><a href="#" onclick="resendVerificationEmail('${email}'); return false;" style="color:#111;font-weight:700;text-decoration:underline;">Didn't get it? Resend →</a>`;
+                        const safeEmail = escapeHTML(email);
+                        errorMsg.innerHTML = 'Check your inbox for a verification email from noreply@clubgodspeed.com.<br><a href="#" id="resend-verify-link" style="color:#111;font-weight:700;text-decoration:underline;">Didn\'t get it? Resend &rarr;</a>';
                         errorMsg.style.display = 'block';
+                        const resendLink = document.getElementById('resend-verify-link');
+                        if (resendLink) resendLink.addEventListener('click', (e) => { e.preventDefault(); resendVerificationEmail(email); });
                     }
                     btn.innerHTML = 'Sign In'; btn.disabled = false;
                     return;
@@ -416,54 +472,8 @@ async function handleLogin() {
             }
         }
 
-        // If Supabase auth not available or failed, try SecureAuth
-        if (!loginSuccess && window.Security && window.Security.SecureAuth) {
-            try {
-                const result = await window.Security.SecureAuth.login(email, password);
-
-                if (result && result.requires2FA) {
-                    const twoFactorDiv = document.createElement('div');
-                    twoFactorDiv.id = 'two-factor-input';
-                    twoFactorDiv.className = 'mt-4';
-                    twoFactorDiv.innerHTML = `
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Enter 2FA Code</label>
-                        <input type="text" id="two-factor-code" placeholder="000000" maxlength="6" 
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600"
-                            pattern="[0-9]{6}">
-                        <button type="button" id="submit-2fa-btn-2"
-                            class="mt-2 w-full py-3 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700 transition">
-                            Verify 2FA Code
-                        </button>
-                    `;
-                    const form = document.querySelector('.login-form');
-                    if (form) {
-                        form.appendChild(twoFactorDiv);
-                        // Attach event listener instead of inline onclick
-                        const submitBtn = document.getElementById('submit-2fa-btn-2');
-                        if (submitBtn) {
-                            submitBtn.addEventListener('click', () => {
-                                if (window.submit2FA) window.submit2FA();
-                            });
-                        }
-                    }
-                    btn.innerHTML = 'Sign In';
-                    btn.disabled = false;
-                    return;
-                }
-
-                if (result && result.success) {
-                    loginSuccess = true;
-                    if (window.Security && window.Security.RBAC) {
-                        window.Security.RBAC.setRole(window.Security.RBAC.roles.PARENT);
-                    }
-                } else {
-                    errorMessage = result?.error || result?.message || errorMessage;
-                }
-            } catch (secureAuthError) {
-                console.error('SecureAuth error:', secureAuthError);
-                errorMessage = secureAuthError.message || errorMessage;
-            }
-        }
+        // NOTE: SecureAuth is already called inside auth.login() as its first attempt
+        // (auth-supabase.js line 122). No redundant second call needed here.
 
         // Handle successful login -- server-side approval verification
         if (loginSuccess) {
@@ -552,8 +562,10 @@ async function handleLogin() {
                     userFriendlyMessage = "The email or password you typed doesn't match our records. Please try again.";
                 } else if (error.message.includes('Email not confirmed') || error.message.includes('verify')) {
                     const loginEmail = document.getElementById('email')?.value?.trim() || '';
-                    errorMsg.innerHTML = 'Check your inbox for a verification email from noreply@clubgodspeed.com.<br><a href="#" onclick="resendVerificationEmail(\'' + loginEmail.replace(/'/g, "\\'") + '\'); return false;" style="color:#111;font-weight:700;text-decoration:underline;">Didn\'t get it? Resend verification email</a>';
+                    errorMsg.innerHTML = 'Check your inbox for a verification email from noreply@clubgodspeed.com.<br><a href="#" id="resend-verify-link-2" style="color:#111;font-weight:700;text-decoration:underline;">Didn\'t get it? Resend verification email</a>';
                     errorMsg.style.display = 'block';
+                    const resendLink2 = document.getElementById('resend-verify-link-2');
+                    if (resendLink2) resendLink2.addEventListener('click', (e) => { e.preventDefault(); resendVerificationEmail(loginEmail); });
                     const form = document.querySelector('.login-form');
                     if (form) { form.classList.add('shake'); setTimeout(() => form.classList.remove('shake'), 500); }
                     btn.innerHTML = 'Sign In'; btn.disabled = false;
@@ -598,7 +610,8 @@ window.handleSignup = async function() {
     const password = passwordInput ? passwordInput.value : '';
     const parentName = parentNameInput ? parentNameInput.value.trim() : '';
     const playerName = playerNameInput ? playerNameInput.value.trim() : '';
-    const playerAge = playerAgeInput ? parseInt(playerAgeInput.value, 10) : 0;
+    const playerAgeRaw = playerAgeInput ? playerAgeInput.value.trim() : '';
+    const playerAge = parseInt(playerAgeRaw, 10);
     const phone = phoneInput ? phoneInput.value.trim() : '';
 
     const btn = document.querySelector('.signup-form button[type="submit"]') || document.querySelector('#portal-signup button[type="submit"]');
@@ -606,13 +619,14 @@ window.handleSignup = async function() {
     if (errorMsg) errorMsg.style.display = 'none';
 
     // 1. Input validation & visual HIGHLIGHTING
+    // Use raw string for age empty check so 0 isn't treated as empty
     let hasEmpty = false;
     [
         {input: emailInput, val: email},
         {input: passwordInput, val: password},
         {input: parentNameInput, val: parentName},
         {input: playerNameInput, val: playerName},
-        {input: playerAgeInput, val: playerAge},
+        {input: playerAgeInput, val: playerAgeRaw},
         {input: phoneInput, val: phone}
     ].forEach(f => {
         if (!f.val) {
@@ -656,6 +670,35 @@ window.handleSignup = async function() {
         return;
     }
 
+    // Validate phone number (at least 10 digits)
+    const phoneDigits = phone.replace(/\D/g, '');
+    if (phoneDigits.length < 10) {
+        if (errorMsg) {
+            errorMsg.textContent = "Please enter a valid phone number (at least 10 digits).";
+            errorMsg.style.display = 'block';
+        }
+        if (phoneInput) {
+            phoneInput.style.borderColor = '#ef4444';
+            phoneInput.style.backgroundColor = '#fef2f2';
+            phoneInput.addEventListener('input', function() { this.style.borderColor = ''; this.style.backgroundColor = ''; }, { once: true });
+        }
+        return;
+    }
+
+    // Validate player age range
+    if (isNaN(playerAge) || playerAge < 5 || playerAge > 19) {
+        if (errorMsg) {
+            errorMsg.textContent = "Player age must be between 5 and 19.";
+            errorMsg.style.display = 'block';
+        }
+        if (playerAgeInput) {
+            playerAgeInput.style.borderColor = '#ef4444';
+            playerAgeInput.style.backgroundColor = '#fef2f2';
+            playerAgeInput.addEventListener('input', function() { this.style.borderColor = ''; this.style.backgroundColor = ''; }, { once: true });
+        }
+        return;
+    }
+
     // Check rate limiting if available
     if (window.Security && window.Security.RateLimiter) {
         const rateCheck = window.Security.RateLimiter.check('signup', email);
@@ -676,11 +719,13 @@ window.handleSignup = async function() {
 
         let signupSuccess = false;
 
-        // Derive grade from age (age 9→4th, 10→5th, etc.)
+        // Derive approximate grade from age using current school year month
+        // (Aug-Dec: age-5 is typical; Jan-Jul: age-6 since school year started prior fall)
         const ageNum = parseInt(playerAge, 10);
-        const gradeNum = ageNum >= 5 ? ageNum - 5 : null;
+        const currentMonth = new Date().getMonth(); // 0=Jan
+        const gradeNum = currentMonth >= 7 ? ageNum - 5 : ageNum - 6; // Aug+ vs Jan-Jul
         const gradeSuffix = gradeNum === 1 ? 'st' : gradeNum === 2 ? 'nd' : gradeNum === 3 ? 'rd' : 'th';
-        const grade = (gradeNum !== null && gradeNum >= 0 && gradeNum <= 12)
+        const grade = (Number.isFinite(gradeNum) && gradeNum >= 0 && gradeNum <= 12)
             ? `${gradeNum}${gradeSuffix}`
             : null;
 
@@ -752,9 +797,13 @@ window.handleSignup = async function() {
             let userFriendlyMessage = "Something went wrong on our end. Please try again!";
             const msg = (error.message || '').toLowerCase();
             if (msg.includes('already') && (msg.includes('exist') || msg.includes('register'))) {
-                // Duplicate email — show login/resend links
-                errorMsg.innerHTML = 'An account with this email already exists. <a href="#" onclick="showLoginForm(); return false;" style="color:#111;font-weight:700;text-decoration:underline;">Log in here</a> or <a href="#" onclick="resendVerificationEmail(\'' + email.replace(/'/g, "\\'") + '\'); return false;" style="color:#111;font-weight:700;text-decoration:underline;">resend verification email</a>.';
+                // Duplicate email — show login/resend links (use event listeners, not inline onclick)
+                errorMsg.innerHTML = 'An account with this email already exists. <a href="#" id="signup-go-login" style="color:#111;font-weight:700;text-decoration:underline;">Log in here</a> or <a href="#" id="signup-resend-verify" style="color:#111;font-weight:700;text-decoration:underline;">resend verification email</a>.';
                 errorMsg.style.display = 'block';
+                const goLogin = document.getElementById('signup-go-login');
+                if (goLogin) goLogin.addEventListener('click', (e) => { e.preventDefault(); showLoginForm(); });
+                const resendV = document.getElementById('signup-resend-verify');
+                if (resendV) resendV.addEventListener('click', (e) => { e.preventDefault(); resendVerificationEmail(email); });
                 const form = document.querySelector('.signup-form');
                 if (form) { form.classList.add('shake'); setTimeout(() => form.classList.remove('shake'), 500); }
                 return; // skip textContent assignment below

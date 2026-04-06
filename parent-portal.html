@@ -40,7 +40,7 @@
 
     <!-- Portal Specific Styles -->
     <!-- Tailwind CSS (Added to support existing utility classes) -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com" defer></script>
     <link rel="stylesheet" href="parent-portal.css">
     <link rel="stylesheet" href="nav-unified.css">
         <style>/* GS Portal Fix v1 */
@@ -195,7 +195,7 @@
                     </div>
                     <div class="form-group">
                         <label for="signup-phone">Phone Number</label>
-                        <input type="tel" id="signup-phone" placeholder="(555) 555-5555" required>
+                        <input type="tel" id="signup-phone" placeholder="555-555-5555" required>
                     </div>
                     <button type="submit" class="btn-primary full-width">Create Account</button>
 
@@ -1402,7 +1402,7 @@
     <!-- Supabase Client (load with defer for non-blocking) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script type="module" src="src/lib/env-injector.js"></script>
-    <script src="auth-supabase.js?v=20260405c" defer></script>
+    <script src="auth-supabase.js?v=20260405d" defer></script>
     <script src="analytics.js" defer></script>
     <script src="security.js" defer></script>
     <script type="module" src="src/lib/exposeServices.js" defer></script>
@@ -1410,11 +1410,11 @@
     <script src="supabase-data-bridge.js" defer></script>
     <script src="export-functions.js" defer></script>
     <script src="receipt-view.js" defer></script>
-    <script src="parent-portal.js?v=20260405b" defer></script>
+    <script src="parent-portal.js?v=20260405d" defer></script>
     <script src="performance-renderer.js?v=5" defer></script>
     <script src="player-cards-renderer.js?v=1" defer></script>
     <!-- Non-critical scripts (async for independent loading) -->
-    <script src="branded-modal.js"></script>
+    <script src="branded-modal.js" defer></script>
     <script src="documents-view.js" defer></script>
     <script src="document-tracker-integration.js" defer></script>
     <script src="tournament-schedule.js?v=20260331b" defer></script>
@@ -1422,7 +1422,7 @@
     <script src="scripts/verify-setup.js" defer></script>
     <script src="src/components/MobileBottomNav.js" defer></script>
     <script src="nav-security.js" defer></script>
-    <script src="training-cart.js"></script>
+    <script src="training-cart.js" defer></script>
 
     <!-- Training Cart Drawer -->
     <div id="training-cart-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 99998;" onclick="closeTrainingCart()"></div>
