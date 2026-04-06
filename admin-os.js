@@ -9,7 +9,7 @@ let BLOG_POSTS = [], MEMOS = [], CAMPAIGNS = [], allPlayers = [], allRequests = 
 let allInstallments = [], allOrders = [], allBroadcasts = [], allCalEvents = [];
 let allRosterAthletes = [];
 let duesFilter = 'all', ordersFilter = 'all';
-let rosterView = 'players'; // 'players' or 'parents'
+let rosterView = 'players'; // 'players' or 'parents
 let calYear, calMonth, calView = 'month';
 let teamRosterCache = {};
 
@@ -311,7 +311,7 @@ function renderRosterByParent(arr) {
     <td style="color:var(--muted)">${p.email}</td>
     <td style="color:var(--muted)">${p.phone||'--'}</td>
     <td>${statusTag(p.approved?'Approved':'Pending')}</td>
-    <td style="display:flex;gap:6px"><button class="btn btn-ghost btn-xs" onclick="viewParentProfile('${p.id}')">View</button><button class="btn btn-ghost btn-xs" onclick="impersonateParent('${p.id}','${esc(p.full_name||p.email)}')">View as</button></td></tr>`).join('');
+    <td style="display:flex;gap:6px"><button class="btn btn-ghost btn-xs" onclick="viewParentProfile('${p.id}')">View</button><button class="btn btn-ghost btn-xs" onclick="impersonateParent('${p.id}','${esc(p.full_name||p.email).replace(/'/g,"\\'")}')">View as</button></td></tr>`).join('');
 }
 
 // ── Inline save: player name ──
