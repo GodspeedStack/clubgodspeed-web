@@ -495,69 +495,33 @@
                         throw new Error('An account with this email has already been registered.');
                     }
 
-                    // Genuine new user — profile will be created by handle_new_user() trigger.
-                    // Fallback: ensure profile row exists even if trigger failed.
-                    try {
-                        const { error: profileCheckError } = await supabaseClient
-                            .from('profiles')
-                            .select('id')
-                            .eq('id', data.user.id)
-                            .single();
-
-                        if (profileCheckError) {
-                            console.warn('[auth] Profile not created by trigger, inserting fallback profile for:', email);
-                            const { error: insertError } = await supabaseClient
+                    // Genuine new user — profile + login_request created by
+                    // handle_new_user() / handle_new_login_request() SECURITY DEFINER triggers.
+                    // Note: After signUp with email confirmation, Supabase does NOT return an
+                    // active session, so auth.uid() is NULL on the client. This means RLS-protected
+                    // queries (SELECT/INSERT on profiles, login_requests) will always fail here.
+                    // The triggers run inside the INSERT transaction and bypass RLS, so records
+                    // ARE created reliably. Client-side fallback is skipped intentionally.
+                    if (data.session) {
+                        // Session exists (e.g. email confirmation disabled) — verify records
+                        try {
+                            const { error: profileCheckError } = await supabaseClient
                                 .from('profiles')
-                                .upsert({
-                                    id: data.user.id,
-                                    email: email,
-                                    full_name: metadata.parent_name || metadata.full_name || null,
-                                    phone: metadata.phone || null,
-                                    player_name: metadata.player_name || null,
-                                    grade: metadata.grade || null,
-                                    role: 'parent',
-                                    approved: false
-                                }, { onConflict: 'id' });
+                                .select('id')
+                                .eq('id', data.user.id)
+                                .single();
 
-                            if (insertError) {
-                                // Non-fatal — signup succeeded, profile can be fixed later by admin
-                                console.warn('[auth] Fallback profile insert failed (non-blocking):', insertError.message);
+                            if (profileCheckError) {
+                                console.warn('[auth] Profile not found via client (trigger may still be running):', email);
                             } else {
-                                console.log('[auth] Fallback profile created successfully for:', email);
+                                console.log('[auth] Profile verified for:', email);
                             }
+                        } catch (verifyErr) {
+                            // Non-fatal — trigger creates the records server-side
+                            console.log('[auth] Profile verification skipped (non-blocking):', verifyErr.message);
                         }
-                    } catch (profileFallbackErr) {
-                        // Non-fatal — the user IS signed up, profile will be reconciled
-                        console.warn('[auth] Profile fallback check failed (non-blocking):', profileFallbackErr);
-                    }
-
-                    // Also ensure login_requests row exists for admin approval workflow
-                    try {
-                        // Check if a login_request already exists for this user
-                        const { data: existingLR } = await supabaseClient
-                            .from('login_requests')
-                            .select('id')
-                            .eq('user_id', data.user.id)
-                            .maybeSingle();
-
-                        if (!existingLR) {
-                            const { error: lrError } = await supabaseClient
-                                .from('login_requests')
-                                .insert({
-                                    user_id: data.user.id,
-                                    email: email,
-                                    full_name: metadata.parent_name || metadata.full_name || null,
-                                    requested_role: 'parent',
-                                    grade: metadata.grade || null,
-                                    player_name: metadata.player_name || null
-                                });
-
-                            if (lrError) {
-                                console.warn('[auth] Fallback login_request insert failed (non-blocking):', lrError.message);
-                            }
-                        }
-                    } catch (lrFallbackErr) {
-                        console.warn('[auth] login_request fallback failed (non-blocking):', lrFallbackErr);
+                    } else {
+                        console.log('[auth] No session after signUp (email confirmation required) — trigger handles profile + login_request creation for:', email);
                     }
 
                     return {
