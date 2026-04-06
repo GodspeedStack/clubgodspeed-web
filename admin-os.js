@@ -311,7 +311,7 @@ function renderRosterByParent(arr) {
     <td style="color:var(--muted)">${p.email}</td>
     <td style="color:var(--muted)">${p.phone||'--'}</td>
     <td>${statusTag(p.approved?'Approved':'Pending')}</td>
-    <td style="display:flex;gap:6px"><button class="btn btn-ghost btn-xs" onclick="viewParentProfile('${p.id}')">View</button><button class="btn btn-ghost btn-xs" onclick="impersonateParent('${p.id}','${esc(p.full_name||p.email)}')">View as</button></td></tr>`).join('');
+    <td><div style="display:flex;gap:5px;align-items:center"><button class="btn btn-ghost btn-xs" onclick="viewParentProfile('${p.id}')">View</button><button class="btn btn-ghost btn-xs" title="Login as this parent" style="background:rgba(245,158,11,0.12);color:#f59e0b;border:1px solid rgba(245,158,11,0.3)" onclick="viewAsParent('${p.id}','${esc(p.email)}','${esc(p.full_name||p.email)}')">👁 View as</button></div></td></tr>`).join('');
 }
 
 // ── Inline save: player name ──
@@ -456,47 +456,77 @@ function viewParentProfile(id) {
       <div><label style="font-size:11px;color:var(--muted)">Grade</label><div style="margin-top:4px">${p.grade||'--'}</div></div>
       <div><label style="font-size:11px;color:var(--muted)">Status</label><div style="margin-top:4px;display:flex;align-items:center;gap:8px">${statusTag(p.approved?'Approved':'Pending')}${!p.approved?`<button class="btn btn-ghost btn-xs" onclick="approveProfile('${p.id}')">Approve</button>`:''}</div></div>
     </div>
-    <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
+    <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px;display:flex;flex-direction:column;gap:8px">
       <button class="btn btn-ghost btn-sm" onclick="resendVerification('${p.email}')" style="width:100%;justify-content:center;gap:6px"><i data-lucide="mail" style="width:14px;height:14px"></i>Resend Email Verification</button>
+      <button class="btn btn-sm" onclick="viewAsParent('${p.id}','${(p.email||'').replace(/'/g,"\\'")  }','${(p.full_name||p.email).replace(/'/g,"\\'") }')" style="width:100%;justify-content:center;gap:6px;background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.35);border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;padding:8px 0"><i data-lucide="eye" style="width:14px;height:14px"></i>👁 View Portal as This Parent</button>
     </div>`;
 }
 
-// ─── PARENT IMPERSONATION ────────────────────────────────────
-async function impersonateParent(targetUserId, targetLabel) {
-  const reason = prompt('Reason for viewing as ' + targetLabel + ':');
-  if (reason === null) return;
-  if (!reason || reason.trim().length < 3) {
-    showToast('Please enter a reason (at least 3 characters)', 'error');
-    return;
-  }
-  if (!osSupabase) { showToast('Not connected', 'error'); return; }
+// ── Admin Impersonation — View Portal as Parent ──
+window.viewAsParent = async function(profileId, email, name) {
+  if (!osSupabase) { showToast('Not connected to Supabase', 'error'); return; }
+  if (!confirm(`Open the parent portal as ${name || email}?\n\nThis action will be logged in the admin audit trail.`)) return;
+
+  // Spinner overlay
+  const loadingOverlay = document.createElement('div');
+  loadingOverlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;color:#fff;font-family:inherit';
+  loadingOverlay.innerHTML = `
+    <style>@keyframes _spin{to{transform:rotate(360deg)}}</style>
+    <div style="width:40px;height:40px;border:3px solid rgba(255,255,255,0.15);border-top-color:#f59e0b;border-radius:50%;animation:_spin 0.8s linear infinite"></div>
+    <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.9)">Generating secure access link…</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.45)">Expires in 5 minutes · Single-use</div>`;
+  document.body.appendChild(loadingOverlay);
+
   try {
-    const { data: { session } } = await osSupabase.auth.getSession();
-    if (!session) { showToast('Session expired - please log in again', 'error'); return; }
-    const fnBase = (osSupabase.supabaseUrl || window.SUPABASE_CONFIG?.url || '').replace(/\/$/, '');
-    const anonKey = window.SUPABASE_CONFIG?.anonKey || '';
-    const res = await fetch(fnBase + '/functions/v1/admin-impersonate', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + session.access_token,
-        'apikey': anonKey,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ target_user_id: targetUserId, reason: reason.trim() })
+    const { data, error } = await osSupabase.functions.invoke('admin-impersonate', {
+      body: { target_email: email, target_name: name },
     });
-    const json = await res.json();
-    if (!res.ok) {
-      const code = res.status;
-      showToast((json.error || ('Error ' + code)), 'error');
+
+    loadingOverlay.remove();
+
+    if (error || !data?.magic_link) {
+      const msg = data?.error || data?.hint || error?.message || 'Unknown error';
+      showToast('Impersonation failed: ' + msg, 'error');
       return;
     }
-    window.open(json.action_link, '_blank', 'noopener,noreferrer');
-    showToast('Opened in new tab - use incognito window for clean session');
-  } catch (e) {
-    showToast('Impersonation failed: ' + e.message, 'error');
+
+    const expiresLocal = new Date(data.expires_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    const safeLink = data.magic_link;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'imp-modal-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
+    overlay.innerHTML = `
+      <div style="background:var(--card,#1e1e2e);border:1.5px solid rgba(245,158,11,0.45);border-radius:18px;padding:30px 32px;max-width:500px;width:100%;color:var(--fg,#e0e0e0);font-family:inherit;box-shadow:0 0 60px rgba(245,158,11,0.18)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <span style="font-size:24px">👁</span>
+          <div style="font-size:18px;font-weight:800">Admin View — Portal Access</div>
+        </div>
+        <div style="font-size:13px;color:var(--muted,#aaa);margin-bottom:22px;line-height:1.6">
+          Secure one-time link generated for <strong style="color:var(--fg,#fff)">${name||email}</strong>.<br>
+          <span style="color:#f59e0b;font-weight:600">Expires at ${expiresLocal}</span> · Single-use · Logged to audit trail.
+        </div>
+        <div style="background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.2);border-radius:10px;padding:14px;margin-bottom:22px">
+          <div style="font-size:10px;font-weight:800;color:#f59e0b;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px">⚠ Security Notice</div>
+          <div style="font-size:12px;color:var(--muted,#aaa);line-height:1.5">This link bypasses the password requirement. Do not share it. Opening it will sign you in as this parent and any actions taken will affect their real account.</div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button id="imp-open-btn" style="flex:1;padding:12px 0;border-radius:10px;border:none;background:#f59e0b;color:#000;font-weight:800;font-size:14px;cursor:pointer">Open Portal →</button>
+          <button id="imp-copy-btn" style="padding:12px 18px;border-radius:10px;border:1px solid var(--border,#333);background:transparent;color:var(--fg,#e0e0e0);font-weight:600;font-size:13px;cursor:pointer">Copy</button>
+          <button id="imp-cancel-btn" style="padding:12px 14px;border-radius:10px;border:1px solid var(--border,#333);background:transparent;color:var(--muted,#aaa);font-size:13px;cursor:pointer">✕</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+
+    document.getElementById('imp-open-btn').onclick = () => { window.open(safeLink, '_blank'); overlay.remove(); };
+    document.getElementById('imp-copy-btn').onclick = () => { navigator.clipboard?.writeText(safeLink).then(() => showToast('Link copied!')); };
+    document.getElementById('imp-cancel-btn').onclick = () => overlay.remove();
+    overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+  } catch(e) {
+    loadingOverlay.remove();
+    showToast('Error: ' + e.message, 'error');
   }
-}
-window.impersonateParent = impersonateParent;
+};
 
 // ── Link existing parent to athlete ──
 function openLinkParentModal(athleteId,athleteName) {
