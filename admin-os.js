@@ -311,7 +311,57 @@ function renderRosterByParent(arr) {
     <td style="color:var(--muted)">${p.email}</td>
     <td style="color:var(--muted)">${p.phone||'--'}</td>
     <td>${statusTag(p.approved?'Approved':'Pending')}</td>
-    <td style="display:flex;gap:6px"><button class="btn btn-ghost btn-xs" onclick="viewParentProfile('${p.id}')">View</button><button class="btn btn-ghost btn-xs" onclick="impersonateParent('${p.id}','${esc(p.full_name||p.email).replace(/'/g,"\\'")}')">View as</button></td></tr>`).join('');
+    <td>
+      <button class="btn btn-ghost btn-xs" onclick="viewParentProfile('${p.id}')">View</button>
+      <button class="btn btn-ghost btn-xs" onclick="impersonateParent('${p.id}','${esc(p.full_name||p.email)}')">View as</button>
+    </td></tr>`).join('');
+}
+
+// ── Admin impersonation: mint a single-use magic link for the target parent ──
+// Opens the parent-portal in a new tab so admin sees exactly what they see.
+// Every invocation writes an append-only row to impersonation_audit.
+async function impersonateParent(targetUserId, targetLabel) {
+  if (!osSupabase) { showToast('Not signed in','error'); return; }
+  const reason = window.prompt(
+    `View as "${targetLabel}"?\n\nEnter a brief reason (required, logged to audit):`,
+    ''
+  );
+  if (reason === null) return; // user cancelled
+  const trimmed = (reason || '').trim();
+  if (trimmed.length < 3) { showToast('Reason must be at least 3 characters','error'); return; }
+
+  try {
+    const { data: session } = await osSupabase.auth.getSession();
+    const token = session?.session?.access_token;
+    if (!token) { showToast('Session expired — sign in again','error'); return; }
+
+    const res = await fetch(
+      `${osSupabase.supabaseUrl}/functions/v1/admin-impersonate`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ target_user_id: targetUserId, reason: trimmed }),
+      }
+    );
+
+    const payload = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const msg = payload?.error || `HTTP ${res.status}`;
+      showToast('Impersonation failed: '+msg,'error');
+      return;
+    }
+
+    // Open the magic link in a new tab. Advise incognito in the toast.
+    const link = payload.action_link;
+    if (!link) { showToast('No link returned','error'); return; }
+    window.open(link, '_blank', 'noopener,noreferrer');
+    showToast('Opened view-as session. Use an incognito window to avoid signing out of admin.','info');
+  } catch (e) {
+    showToast('Error: '+(e.message||String(e)),'error');
+  }
 }
 
 // ── Inline save: player name ──
