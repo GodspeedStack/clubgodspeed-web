@@ -473,7 +473,12 @@
                             await new Promise(r => setTimeout(r, 1500 * attempt));
                             continue;
                         }
-                        throw new Error(error.message);
+                        // Preserve Supabase error code and reasons (e.g. weak_password + pwned)
+                        const authErr = new Error(error.message);
+                        if (error.code) authErr.code = error.code;
+                        if (error.reasons) authErr.reasons = error.reasons;
+                        if (error.status) authErr.status = error.status;
+                        throw authErr;
                     }
 
                     // Supabase duplicate-email handling (email confirmation enabled):

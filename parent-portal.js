@@ -763,7 +763,12 @@ window.handleSignup = async function() {
             } else if (msg.includes('unavailable')) {
                 userFriendlyMessage = error.message;
             } else if (msg.includes('password') || msg.includes('weak')) {
-                userFriendlyMessage = "Your password is too weak. Please use at least 6 characters.";
+                // Differentiate pwned password (HaveIBeenPwned) from generic weak password
+                if (msg.includes('known') || msg.includes('easy to guess') || (error.code === 'weak_password' && error.reasons && error.reasons.includes('pwned'))) {
+                    userFriendlyMessage = "That password has appeared in a data breach and isn't safe to use. Please choose a different, unique password.";
+                } else {
+                    userFriendlyMessage = "Your password is too weak. Please use at least 6 characters with a mix of letters, numbers, and symbols.";
+                }
             } else if (msg.includes('rate') || msg.includes('limit') || msg.includes('too many')) {
                 userFriendlyMessage = "Too many attempts. Please wait a minute and try again.";
             } else if (msg.includes('invalid') && msg.includes('email')) {
