@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waiting Room Demo | Godspeed Basketball</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f5f7;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 40px;
+            background: #fff;
+            border-bottom: 2px solid #2563eb;
+        }
+        .logo {
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: 1.25rem;
+            letter-spacing: 0.02em;
+            color: #111;
+        }
+        .logo span { color: #2563eb; }
+        .nav-links { display: flex; gap: 32px; align-items: center; }
+        .nav-links a {
+            text-decoration: none;
+            color: #111;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .card-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+        .login-card {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+            padding: 40px 30px;
+            text-align: center;
+            max-width: 480px;
+            width: 100%;
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+                        box-shadow 0.6s ease;
+        }
+        .login-card.approved {
+            transform: scale(1.02);
+            box-shadow: 0 8px 40px rgba(34, 197, 94, 0.2);
+        }
+        .clock-icon {
+            margin: 0 auto 24px;
+            width: 80px;
+            height: 80px;
+            position: relative;
+        }
+        .clock-hand-minute {
+            transform-origin: 40px 40px;
+        }
+        .clock-hand-hour {
+            transform-origin: 40px 40px;
+        }
+        .waiting-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+            color: #111;
+            transition: opacity 0.4s ease;
+        }
+        .waiting-title span { color: #f59e0b; }
+        .names {
+            color: #111;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 1.05rem;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            transition: opacity 0.4s ease;
+        }
+        .status {
+            color: #999;
+            font-size: 0.85rem;
+            margin-bottom: 24px;
+            transition: all 0.3s ease;
+        }
+        .btn-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn-check {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.15s ease;
+        }
+        .btn-check:hover { background: #1d4ed8; transform: scale(1.02); }
+        .btn-check:active { transform: scale(0.98); }
+        .btn-signout {
+            background: transparent;
+            border: 2px solid #e5e7eb;
+            color: #4b5563;
+            padding: 12px 24px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+        }
+        .btn-signout:hover { border-color: #d1d5db; }
+        .demo-badge {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            z-index: 10;
+        }
+        .demo-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #111;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            z-index: 10;
+            transition: background 0.2s ease, transform 0.15s ease;
+            border: none;
+        }
+        .demo-controls:hover { background: #333; transform: scale(1.03); }
+
+        /* Approved state animations */
+        .approved-icon {
+            display: none;
+            margin: 0 auto 24px;
+            width: 64px;
+            height: 64px;
+        }
+        .approved-icon.show {
+            display: block;
+            animation: icon-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        @keyframes icon-pop {
+            0% { transform: scale(0); opacity: 0; }
+            60% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .approved-title {
+            display: none;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+            color: #111;
+        }
+        .approved-title span { color: #22c55e; }
+        .approved-title.show {
+            display: block;
+            animation: fade-up 0.5s ease forwards;
+            animation-delay: 0.2s;
+            opacity: 0;
+        }
+        .approved-subtitle {
+            display: none;
+            color: #666;
+            font-size: 1.05rem;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        .approved-subtitle.show {
+            display: block;
+            animation: fade-up 0.5s ease forwards;
+            animation-delay: 0.4s;
+            opacity: 0;
+        }
+        .btn-enter {
+            display: none;
+            background: #22c55e;
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.15s ease;
+        }
+        .btn-enter.show {
+            display: inline-block;
+            animation: fade-up 0.5s ease forwards;
+            animation-delay: 0.6s;
+            opacity: 0;
+        }
+        .btn-enter:hover { background: #16a34a; transform: scale(1.03); }
+        @keyframes fade-up {
+            0% { opacity: 0; transform: translateY(12px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Confetti burst */
+        .confetti-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 100;
+            overflow: hidden;
+        }
+        .confetti {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+            animation: confetti-fall linear forwards;
+        }
+        @keyframes confetti-fall {
+            0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">GODSPEED<span>BASKETBALL</span></div>
+        <div class="nav-links">
+            <a href="#">HOME</a>
+            <a href="#">TRAINING</a>
+            <a href="#">AAU</a>
+            <a href="#">SHOP</a>
+            <a href="#">ABOUT</a>
+        </div>
+    </nav>
+
+    <div class="demo-badge">DEMO -- This is what new parents see before approval</div>
+
+    <div class="card-wrapper">
+        <div class="login-card" id="card">
+            <!-- WAITING STATE -->
+            <div id="waiting-state">
+                <div class="clock-icon">
+                    <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                        <circle cx="40" cy="40" r="36" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/>
+                        <g class="clock-hand-hour">
+                            <line x1="40" y1="40" x2="40" y2="20" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/>
+                        </g>
+                        <g class="clock-hand-minute">
+                            <line x1="40" y1="40" x2="56" y2="48" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/>
+                        </g>
+                    </svg>
+                </div>
+                <h2 class="waiting-title">ACCOUNT <span>UNDER REVIEW</span></h2>
+                <p class="names">Denis Petrov -- Parent of Anton</p>
+                <p class="subtitle">
+                    Welcome to Godspeed. To protect the privacy and security of our athletes, your account is currently being reviewed by our administration.
+                    <br><br>
+                    You will receive an email as soon as your account is approved and unlocked.
+                </p>
+                <p class="status" id="status-text">We will check your status automatically.</p>
+                <div class="btn-row">
+                    <button class="btn-check" onclick="simulateCheck()">Check Status</button>
+                    <button class="btn-signout">Sign Out</button>
+                </div>
+            </div>
+
+            <!-- APPROVED STATE (hidden until triggered) -->
+            <div id="approved-state" style="display:none;">
+                <div class="approved-icon" id="approved-icon">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="8 12 11 15 16 9"></polyline>
+                    </svg>
+                </div>
+                <h2 class="approved-title" id="approved-title">ACCOUNT <span>APPROVED</span></h2>
+                <p class="names">Denis Petrov -- Parent of Anton</p>
+                <p class="approved-subtitle" id="approved-sub">
+                    Your account has been approved by Coach Scott. Welcome to the Godspeed family.
+                </p>
+                <button class="btn-enter" id="btn-enter">Enter Portal</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="confetti-container" id="confetti"></div>
+
+    <button class="demo-controls" onclick="simulateApproval()">
+        Simulate Approval
+    </button>
+
+    <script>
+        // Tick-tock clock animation
+        (function initClock() {
+            const minuteHand = document.querySelector('.clock-hand-minute');
+            const hourHand = document.querySelector('.clock-hand-hour');
+            let minuteAngle = 0;
+            let hourAngle = 0;
+            let currentMinuteAngle = 0;
+            let currentHourAngle = 0;
+
+            function tick() {
+                // Advance 6 degrees per tick (one second mark)
+                minuteAngle += 6;
+                hourAngle += 0.5;
+
+                // Animate with spring overshoot for the tick-tock feel
+                animateHand(minuteHand, currentMinuteAngle, minuteAngle, 'minute');
+                animateHand(hourHand, currentHourAngle, hourAngle, 'hour');
+
+                currentMinuteAngle = minuteAngle;
+                currentHourAngle = hourAngle;
+            }
+
+            function animateHand(el, from, to, type) {
+                const duration = 300;
+                const overshoot = type === 'minute' ? 1.8 : 0.3;
+                const start = performance.now();
+
+                function frame(now) {
+                    const t = Math.min((now - start) / duration, 1);
+                    // Spring easing: overshoots then settles
+                    const ease = 1 - Math.pow(1 - t, 3) * Math.cos(t * Math.PI * overshoot);
+                    const angle = from + (to - from) * ease;
+                    el.style.transform = `rotate(${angle}deg)`;
+                    if (t < 1) requestAnimationFrame(frame);
+                }
+                requestAnimationFrame(frame);
+            }
+
+            // Tick every 2 seconds for a deliberate, slow tick-tock
+            setInterval(tick, 2000);
+            // Initial position
+            minuteHand.style.transform = 'rotate(0deg)';
+            hourHand.style.transform = 'rotate(0deg)';
+        })();
+
+        let isApproved = false;
+
+        function simulateCheck() {
+            const status = document.getElementById('status-text');
+            status.textContent = 'Checking...';
+            status.style.color = '#2563eb';
+            setTimeout(() => {
+                if (!isApproved) {
+                    status.textContent = 'Still under review. We will keep checking automatically.';
+                    status.style.color = '#999';
+                }
+            }, 1500);
+        }
+
+        function simulateApproval() {
+            if (isApproved) return;
+            isApproved = true;
+
+            const card = document.getElementById('card');
+            const waitingState = document.getElementById('waiting-state');
+            const approvedState = document.getElementById('approved-state');
+
+            // Fade out waiting state
+            waitingState.style.transition = 'opacity 0.4s ease';
+            waitingState.style.opacity = '0';
+
+            setTimeout(() => {
+                waitingState.style.display = 'none';
+                approvedState.style.display = 'block';
+                card.classList.add('approved');
+
+                // Trigger staggered animations
+                document.getElementById('approved-icon').classList.add('show');
+                document.getElementById('approved-title').classList.add('show');
+                document.getElementById('approved-sub').classList.add('show');
+                document.getElementById('btn-enter').classList.add('show');
+
+                // Fire confetti
+                launchConfetti();
+            }, 500);
+        }
+
+        function launchConfetti() {
+            const container = document.getElementById('confetti');
+            const colors = ['#2563eb', '#f59e0b', '#22c55e', '#111', '#60a5fa', '#fbbf24'];
+            for (let i = 0; i < 60; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'confetti';
+                piece.style.left = Math.random() * 100 + '%';
+                piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                piece.style.width = (4 + Math.random() * 6) + 'px';
+                piece.style.height = (4 + Math.random() * 6) + 'px';
+                piece.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+                piece.style.animationDelay = (Math.random() * 0.5) + 's';
+                container.appendChild(piece);
+            }
+            // Clean up confetti after animation
+            setTimeout(() => { container.innerHTML = ''; }, 4000);
+        }
+    </script>
+</body>
+</html>

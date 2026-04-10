@@ -46,3 +46,13 @@ _current_backup_before_reset/
 
 # Lock files
 .~lock.*
+
+# PII / Private data (never commit)
+godspeed-parent-contacts.xlsx
+*parent-contacts*.xlsx
+*parent_contacts*.xlsx
+Godspeed_Game_Log_*.xlsx
+
+# Legacy spec docs -- per project rule, implement frontend directly, no .docx specs
+Godspeed_Multi_Parent_Spec.docx
+docs/Godspeed_Multi_Parent_Spec.docx
