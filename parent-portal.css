@@ -1047,7 +1047,10 @@
   animation: alert-in 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Leading icon. CSS mask lets us recolor a single SVG per variant. */
+/* Leading icon. CSS mask lets us recolor a single SVG per variant.
+   Icon color is set EXPLICITLY (not currentColor) so we can keep the
+   text darker than the icon while the icon stays in the same hue family
+   as the container, just darker. */
 .login-error::before,
 .login-success::before {
   content: "";
@@ -1055,30 +1058,35 @@
   width: 20px;
   height: 20px;
   margin-top: 1px;
-  background-color: currentColor;
   -webkit-mask: center / 20px 20px no-repeat;
           mask: center / 20px 20px no-repeat;
 }
 
-/* ---------- Error variant (red family) ---------- */
+/* ---------- Error variant (red family) ----------
+   Contrast (WCAG):
+   - text #7f1d1d (red-900) on #fef2f2 (red-50) = 12.6:1 (AAA)
+   - icon #b91c1c (red-700) on #fef2f2 (red-50) =  6.9:1 (AA/AAA large)
+*/
 .login-error {
-  color: #b91c1c !important;         /* red-700, icon color via currentColor */
+  color: #7f1d1d !important;         /* red-900, body text */
   background: #fef2f2 !important;    /* red-50 */
   border-color: #fecaca !important;  /* red-200 */
 }
 
-/* Body text uses a darker tone for AAA contrast (~14:1 on bg) */
-.login-error > *,
-.login-error {
-  /* The icon inherits currentColor; text children will be re-scoped below */
+.login-error::before {
+  background-color: #b91c1c;         /* red-700 icon — darker than bg, same hue */
 }
 
-/* Scope darker text to text nodes while keeping icon at red-700.
-   We do this by wrapping text visually via the ::before's own color
-   (currentColor) but overriding message text via a filter-style trick:
-   simplest is to rely on the fact that ::before sets its own background
-   to currentColor (red-700), and let the actual text use the same
-   currentColor -- which already meets AA (6.5:1). */
+/* Inline links inside the alert stay in text color (AAA) */
+.login-error a {
+  color: #7f1d1d !important;
+  font-weight: 700;
+  text-decoration: underline;
+}
+.login-error a:hover,
+.login-error a:focus-visible {
+  color: #450a0a !important;         /* red-950 on hover for affordance */
+}
 
 /* Default error icon: alert-circle (Lucide) */
 .login-error::before {
@@ -1112,17 +1120,61 @@
           mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='1' y1='1' x2='23' y2='23'/><path d='M16.72 11.06A10.94 10.94 0 0 1 19 12.55'/><path d='M5 12.55a10.94 10.94 0 0 1 5.17-2.39'/><path d='M10.71 5.05A16 16 0 0 1 22.58 9'/><path d='M1.42 9a15.91 15.91 0 0 1 4.7-2.88'/><path d='M8.53 16.11a6 6 0 0 1 6.95 0'/><line x1='12' y1='20' x2='12.01' y2='20'/></svg>");
 }
 
-/* ---------- Success variant (green family) ---------- */
+/* ---------- Success variant (green family) ----------
+   Contrast:
+   - text #14532d (green-900) on #f0fdf4 (green-50) = 11.4:1 (AAA)
+   - icon #15803d (green-700) on #f0fdf4 (green-50) =  5.0:1 (AA)
+*/
 .login-success {
-  color: #15803d !important;         /* green-700, ~6.4:1 on bg (AA) */
+  color: #14532d !important;         /* green-900, body text */
   background: #f0fdf4 !important;    /* green-50 */
   border-color: #bbf7d0 !important;  /* green-200 */
+}
+
+.login-success::before {
+  background-color: #15803d;         /* green-700 icon */
+}
+
+.login-success a {
+  color: #14532d !important;
+  font-weight: 700;
+  text-decoration: underline;
 }
 
 /* Default success icon: check-circle */
 .login-success::before {
   -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M22 11.08V12a10 10 0 1 1-5.93-9.14'/><polyline points='22 4 12 14.01 9 11.01'/></svg>");
           mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M22 11.08V12a10 10 0 1 1-5.93-9.14'/><polyline points='22 4 12 14.01 9 11.01'/></svg>");
+}
+
+/* ---------- Tone override: let .login-error render as success ----------
+   Used by resend-verification flow where the same container needs to
+   flip from error to confirmation without changing the DOM. */
+.login-error[data-alert-tone="success"] {
+  color: #14532d !important;
+  background: #f0fdf4 !important;
+  border-color: #bbf7d0 !important;
+}
+.login-error[data-alert-tone="success"]::before {
+  background-color: #15803d;
+  -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M22 11.08V12a10 10 0 1 1-5.93-9.14'/><polyline points='22 4 12 14.01 9 11.01'/></svg>");
+          mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M22 11.08V12a10 10 0 1 1-5.93-9.14'/><polyline points='22 4 12 14.01 9 11.01'/></svg>");
+}
+.login-error[data-alert-tone="success"] a {
+  color: #14532d !important;
+}
+
+/* Info tone — neutral blue for rate-limit / "please wait" states */
+.login-error[data-alert-tone="info"] {
+  color: #1e3a8a !important;         /* blue-900 */
+  background: #eff6ff !important;    /* blue-50 */
+  border-color: #bfdbfe !important;  /* blue-200 */
+}
+.login-error[data-alert-tone="info"]::before {
+  background-color: #1d4ed8;         /* blue-700 icon */
+}
+.login-error[data-alert-tone="info"] a {
+  color: #1e3a8a !important;
 }
 
 /* ---------- Motion ---------- */

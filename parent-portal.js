@@ -16,6 +16,34 @@ function setAlertIcon(el, kind) {
     else delete el.dataset.alertIcon;
 }
 
+/**
+ * Flip the visual tone of a .login-error container.
+ * @param {HTMLElement|null} el
+ * @param {'success'|'info'|null} tone - null = default (error/red)
+ * Used when the same container needs to render a non-error confirmation
+ * (e.g. "verification email resent") without swapping the DOM node.
+ */
+function setAlertTone(el, tone) {
+    if (!el) return;
+    if (tone) el.dataset.alertTone = tone;
+    else delete el.dataset.alertTone;
+}
+
+/**
+ * Reset an alert container to a hidden, clean state.
+ * Clears text, icon variant, tone override, and any stale inline color/background
+ * left over from pre-tone-helper code paths.
+ */
+function resetAlert(el) {
+    if (!el) return;
+    el.style.display = 'none';
+    el.textContent = '';
+    delete el.dataset.alertIcon;
+    delete el.dataset.alertTone;
+    el.style.color = '';
+    el.style.background = '';
+}
+
 // Security utility functions
 function escapeHTML(str) {
     if (typeof str !== 'string') return '';
@@ -406,7 +434,9 @@ async function handleLogin() {
         const rateCheck = window.Security.RateLimiter.check('login', email);
         if (!rateCheck.allowed) {
             if (errorMsg) {
-                errorMsg.textContent = rateCheck.message || "You've tried too many times! Please wait a little bit and try again.";
+                setAlertTone(errorMsg, null);
+                setAlertIcon(errorMsg, 'clock');
+                errorMsg.textContent = rateCheck.message || "You tried too many times. Please wait a few minutes and try again.";
                 errorMsg.style.display = 'block';
             }
             return;
@@ -561,6 +591,9 @@ async function handleLogin() {
         if (!loginSuccess) {
             // Show error message
             if (errorMsg) {
+                // Only set a default icon if one hasn't been chosen upstream
+                if (!errorMsg.dataset.alertIcon) setAlertIcon(errorMsg, null);
+                setAlertTone(errorMsg, null);
                 errorMsg.textContent = errorMessage;
                 errorMsg.style.display = 'block';
 
@@ -706,7 +739,9 @@ window.handleSignup = async function() {
     const phoneDigits = phone.replace(/\D/g, '');
     if (phoneDigits.length < 10) {
         if (errorMsg) {
-            errorMsg.textContent = "Please enter a valid phone number (at least 10 digits).";
+            setAlertTone(errorMsg, null);
+            setAlertIcon(errorMsg, null);
+            errorMsg.textContent = "Please type a real phone number with at least 10 numbers.";
             errorMsg.style.display = 'block';
         }
         if (phoneInput) {
@@ -720,6 +755,8 @@ window.handleSignup = async function() {
     // Validate player age range
     if (isNaN(playerAge) || playerAge < 5 || playerAge > 19) {
         if (errorMsg) {
+            setAlertTone(errorMsg, null);
+            setAlertIcon(errorMsg, null);
             errorMsg.textContent = "Player age must be between 5 and 19.";
             errorMsg.style.display = 'block';
         }
@@ -736,7 +773,9 @@ window.handleSignup = async function() {
         const rateCheck = window.Security.RateLimiter.check('signup', email);
         if (!rateCheck.allowed) {
             if (errorMsg) {
-                errorMsg.textContent = rateCheck.message || "You've tried too many times! Please wait a little bit and try again.";
+                setAlertTone(errorMsg, null);
+                setAlertIcon(errorMsg, 'clock');
+                errorMsg.textContent = rateCheck.message || "You tried too many times. Please wait a few minutes and try again.";
                 errorMsg.style.display = 'block';
             }
             return;
@@ -890,41 +929,63 @@ window.handleSignup = async function() {
 // Resend verification email (rate limited: 1 per 60 seconds)
 let _lastResendTime = 0;
 window.resendVerificationEmail = async function(email) {
+    // Prefer the currently visible login view's alert container
+    const visibleAlert =
+        document.querySelector('#portal-login:not([style*="display: none"]) .login-error') ||
+        document.querySelector('#portal-signup:not([style*="display: none"]) .login-error') ||
+        document.querySelector('.login-error');
+
     const now = Date.now();
     if (now - _lastResendTime < 60000) {
         const waitSec = Math.ceil((60000 - (now - _lastResendTime)) / 1000);
-        const errorMsg = document.querySelector('.login-error');
-        if (errorMsg) {
-            errorMsg.textContent = 'Please wait ' + waitSec + ' seconds before resending.';
-            errorMsg.style.display = 'block';
-            errorMsg.style.color = '';
-            errorMsg.style.background = '';
+        if (visibleAlert) {
+            setAlertTone(visibleAlert, 'info');
+            setAlertIcon(visibleAlert, 'clock');
+            visibleAlert.textContent = 'Please wait ' + waitSec + ' seconds before resending.';
+            visibleAlert.style.display = 'block';
         }
         return;
     }
 
     try {
         const sb = window.auth && window.auth.getSupabaseClient ? window.auth.getSupabaseClient() : null;
-        if (!sb) { alert('Could not connect. Please try again.'); return; }
+        if (!sb) {
+            if (visibleAlert) {
+                setAlertTone(visibleAlert, null);
+                setAlertIcon(visibleAlert, 'wifi-off');
+                visibleAlert.textContent = 'We cannot reach the server. Please check your internet and try again.';
+                visibleAlert.style.display = 'block';
+            }
+            return;
+        }
         email = email || document.getElementById('email')?.value?.trim();
-        if (!email) { alert('Please enter your email first.'); return; }
+        if (!email) {
+            if (visibleAlert) {
+                setAlertTone(visibleAlert, null);
+                setAlertIcon(visibleAlert, 'mail');
+                visibleAlert.textContent = 'Please type your email address first.';
+                visibleAlert.style.display = 'block';
+            }
+            return;
+        }
         const { error } = await sb.auth.resend({ type: 'signup', email });
         if (error) throw error;
         _lastResendTime = Date.now();
-        const errorMsg = document.querySelector('.login-error');
-        if (errorMsg) {
-            errorMsg.textContent = 'Verification email resent! Check your inbox (and spam folder).';
-            errorMsg.style.color = '#059669';
-            errorMsg.style.background = '#d1fae5';
-            errorMsg.style.display = 'block';
+        if (visibleAlert) {
+            setAlertTone(visibleAlert, 'success');
+            setAlertIcon(visibleAlert, 'mail');
+            visibleAlert.textContent = 'Verification email sent. Please check your inbox and spam folder.';
+            visibleAlert.style.display = 'block';
         }
     } catch(e) {
-        const errorMsg = document.querySelector('.login-error');
-        if (errorMsg) {
-            errorMsg.textContent = 'Could not resend: ' + (e.message || 'Please try again.');
-            errorMsg.style.display = 'block';
-            errorMsg.style.color = '';
-            errorMsg.style.background = '';
+        if (visibleAlert) {
+            setAlertTone(visibleAlert, null);
+            setAlertIcon(visibleAlert, 'mail');
+            const msg = (e && e.message) ? e.message : '';
+            visibleAlert.textContent = msg
+                ? 'We could not resend the email: ' + msg
+                : 'We could not resend the email. Please try again.';
+            visibleAlert.style.display = 'block';
         }
     }
 };
@@ -3383,12 +3444,8 @@ window.showLoginForm = function () {
     const updatePwd = document.getElementById('portal-update-password');
     if (updatePwd) updatePwd.style.display = 'none';
 
-    // Clear any error messages
-    const errorMsg = document.querySelector('#portal-login .login-error');
-    if (errorMsg) {
-        errorMsg.style.display = 'none';
-        errorMsg.textContent = '';
-    }
+    // Clear any error messages (text, icon, tone, stale inline styles)
+    resetAlert(document.querySelector('#portal-login .login-error'));
 }
 
 window.showSignupForm = function () {
@@ -3398,12 +3455,7 @@ window.showSignupForm = function () {
     const updatePwd = document.getElementById('portal-update-password');
     if (updatePwd) updatePwd.style.display = 'none';
 
-    // Clear any error messages
-    const errorMsg = document.querySelector('#portal-signup .login-error');
-    if (errorMsg) {
-        errorMsg.style.display = 'none';
-        errorMsg.textContent = '';
-    }
+    resetAlert(document.querySelector('#portal-signup .login-error'));
 }
 
 window.showPasswordResetForm = function () {
@@ -3413,43 +3465,24 @@ window.showPasswordResetForm = function () {
     const updatePwd = document.getElementById('portal-update-password');
     if (updatePwd) updatePwd.style.display = 'none';
 
-    // Clear any messages
-    const errorMsg = document.querySelector('#portal-reset .login-error');
-    const successMsg = document.querySelector('#portal-reset .login-success');
-    if (errorMsg) {
-        errorMsg.style.display = 'none';
-        errorMsg.textContent = '';
-    }
-    if (successMsg) {
-        successMsg.style.display = 'none';
-        successMsg.textContent = '';
-    }
+    resetAlert(document.querySelector('#portal-reset .login-error'));
+    resetAlert(document.querySelector('#portal-reset .login-success'));
 }
 
 window.showUpdatePasswordForm = function () {
     document.getElementById('portal-login').style.setProperty('display', 'none', 'important');
     document.getElementById('portal-signup').style.setProperty('display', 'none', 'important');
     document.getElementById('portal-reset').style.setProperty('display', 'none', 'important');
-    
+
     // Hide dashboard if it was visible
     const dashboard = document.getElementById('portal-dashboard');
     if (dashboard) dashboard.style.setProperty('display', 'none', 'important');
-    
+
     const updatePwd = document.getElementById('portal-update-password');
     if (updatePwd) updatePwd.style.setProperty('display', 'flex', 'important');
 
-    // Clear any messages
-    const errorMsg = document.querySelector('#portal-update-password .login-error');
-    const successMsg = document.querySelector('#portal-update-password .login-success');
-
-    if (errorMsg) {
-        errorMsg.style.display = 'none';
-        errorMsg.textContent = '';
-    }
-    if (successMsg) {
-        successMsg.style.display = 'none';
-        successMsg.textContent = '';
-    }
+    resetAlert(document.querySelector('#portal-update-password .login-error'));
+    resetAlert(document.querySelector('#portal-update-password .login-success'));
 }
 
 /**
@@ -3550,6 +3583,8 @@ window.handlePasswordReset = async function () {
             }
 
             if (!successMsg || successMsg.style.display === 'none') {
+                setAlertTone(errorMsg, null);
+                setAlertIcon(errorMsg, 'mail');
                 errorMsg.textContent = userFriendlyMessage;
                 errorMsg.style.display = 'block';
             }
