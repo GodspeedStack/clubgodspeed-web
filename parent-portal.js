@@ -3,6 +3,19 @@
  * Handles Waiver Signing (Canvas), Navigation (V3 Side Panel), and Authentication.
  */
 
+/**
+ * Set the icon shown next to an alert message.
+ * @param {HTMLElement|null} el - .login-error or .login-success element
+ * @param {string|null} kind - one of 'lock' | 'mail' | 'clock' | 'shield' | 'wifi-off' | null
+ *                             null clears to the default icon (alert-circle / check-circle).
+ * Icons are rendered via CSS mask; see parent-portal.css "ALERTS" section.
+ */
+function setAlertIcon(el, kind) {
+    if (!el) return;
+    if (kind) el.dataset.alertIcon = kind;
+    else delete el.dataset.alertIcon;
+}
+
 // Security utility functions
 function escapeHTML(str) {
     if (typeof str !== 'string') return '';
@@ -355,6 +368,7 @@ async function handleLogin() {
 
     if (hasEmpty) {
         if (errorMsg) {
+            setAlertIcon(errorMsg, null);
             errorMsg.textContent = "You forgot to type your email or password.";
             errorMsg.style.display = 'block';
         }
@@ -365,7 +379,8 @@ async function handleLogin() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
         if (errorMsg) {
-            errorMsg.textContent = "That email doesn't look quite right!";
+            setAlertIcon(errorMsg, 'mail');
+            errorMsg.textContent = "That email does not look right. Please check it.";
             errorMsg.style.display = 'block';
         }
         return;
@@ -374,6 +389,7 @@ async function handleLogin() {
     // Basic password validation (minimum length)
     if (password.length < 6) {
         if (errorMsg) {
+            setAlertIcon(errorMsg, 'lock');
             errorMsg.textContent = "Your password must be 6 characters or more.";
             errorMsg.style.display = 'block';
         }
@@ -453,11 +469,13 @@ async function handleLogin() {
                 // Provide specific error messages
                 if (authError.message && authError.message.includes('Invalid login credentials')) {
                     errorMessage = 'Your email or password is wrong. Please try again.';
+                    setAlertIcon(errorMsg, 'lock');
                 } else if (authError.message && authError.message.includes('Email not confirmed')) {
                     // Show inline resend link (sanitize email to prevent XSS)
                     if (errorMsg) {
                         const safeEmail = escapeHTML(email);
-                        errorMsg.innerHTML = 'Check your inbox for a verification email from noreply@clubgodspeed.com.<br><a href="#" id="resend-verify-link" style="color:#111;font-weight:700;text-decoration:underline;">Didn\'t get it? Resend &rarr;</a>';
+                        setAlertIcon(errorMsg, 'mail');
+                        errorMsg.innerHTML = 'Check your inbox for a verification email from noreply@clubgodspeed.com.<br><a href="#" id="resend-verify-link" style="color:inherit;font-weight:700;text-decoration:underline;">Didn\'t get it? Resend &rarr;</a>';
                         errorMsg.style.display = 'block';
                         const resendLink = document.getElementById('resend-verify-link');
                         if (resendLink) resendLink.addEventListener('click', (e) => { e.preventDefault(); resendVerificationEmail(email); });
@@ -465,9 +483,13 @@ async function handleLogin() {
                     btn.innerHTML = 'Sign In'; btn.disabled = false;
                     return;
                 } else if (authError.message && authError.message.includes('Too many requests')) {
-                    errorMessage = 'Too many login attempts. Please wait a few minutes and try again.';
+                    errorMessage = 'You tried too many times. Please wait a few minutes and try again.';
+                    setAlertIcon(errorMsg, 'clock');
                 } else if (authError.message === 'Failed to fetch') {
-                    errorMessage = 'Network error: Cannot connect to the server. Your adblocker or firewall might be blocking the connection.';
+                    errorMessage = 'We cannot reach the server. Please check your internet and try again.';
+                    setAlertIcon(errorMsg, 'wifi-off');
+                } else {
+                    setAlertIcon(errorMsg, null);
                 }
             }
         }
@@ -560,9 +582,11 @@ async function handleLogin() {
             if (error.message) {
                 if (error.message.includes('Invalid login credentials') || error.message.includes('password')) {
                     userFriendlyMessage = "Your email or password is wrong. Please try again.";
+                    setAlertIcon(errorMsg, 'lock');
                 } else if (error.message.includes('Email not confirmed') || error.message.includes('verify')) {
                     const loginEmail = document.getElementById('email')?.value?.trim() || '';
-                    errorMsg.innerHTML = 'Check your inbox for a verification email from noreply@clubgodspeed.com.<br><a href="#" id="resend-verify-link-2" style="color:#111;font-weight:700;text-decoration:underline;">Didn\'t get it? Resend verification email</a>';
+                    setAlertIcon(errorMsg, 'mail');
+                    errorMsg.innerHTML = 'Check your inbox for a verification email from noreply@clubgodspeed.com.<br><a href="#" id="resend-verify-link-2" style="color:inherit;font-weight:700;text-decoration:underline;">Didn\'t get it? Resend verification email</a>';
                     errorMsg.style.display = 'block';
                     const resendLink2 = document.getElementById('resend-verify-link-2');
                     if (resendLink2) resendLink2.addEventListener('click', (e) => { e.preventDefault(); resendVerificationEmail(loginEmail); });
@@ -571,15 +595,20 @@ async function handleLogin() {
                     btn.innerHTML = 'Sign In'; btn.disabled = false;
                     return;
                 } else if (error.message.includes('denied by administration')) {
-                    userFriendlyMessage = error.message;
+                    userFriendlyMessage = "Your account is blocked. Please contact your coach.";
+                    setAlertIcon(errorMsg, 'shield');
                 } else if (error.message.includes('Cannot connect') || error.message.includes('fetch')) {
-                    userFriendlyMessage = "Cannot connect to the server. Please check your internet connection or disable your adblocker and try again.";
+                    userFriendlyMessage = "We cannot reach the server. Please check your internet and try again.";
+                    setAlertIcon(errorMsg, 'wifi-off');
                 } else if (error.message.includes('rate limit') || error.message.includes('Too many')) {
-                    userFriendlyMessage = "You've tried to log in too many times. Please wait a few minutes and try again.";
+                    userFriendlyMessage = "You tried too many times. Please wait a few minutes and try again.";
+                    setAlertIcon(errorMsg, 'clock');
                 } else if (error.message.includes('unavailable')) {
-                    userFriendlyMessage = error.message;
+                    userFriendlyMessage = "Our system is down right now. Please try again in a few minutes.";
+                    setAlertIcon(errorMsg, 'wifi-off');
                 } else {
                     userFriendlyMessage = "Something went wrong. Please try again.";
+                    setAlertIcon(errorMsg, null);
                 }
             }
 
@@ -641,6 +670,7 @@ window.handleSignup = async function() {
 
     if (hasEmpty) {
         if (errorMsg) {
+            setAlertIcon(errorMsg, null);
             errorMsg.textContent = "You missed a spot. Please fill out every box in the form.";
             errorMsg.style.display = 'block';
         }
@@ -651,7 +681,8 @@ window.handleSignup = async function() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
         if (errorMsg) {
-            errorMsg.textContent = "That email doesn't look quite right!";
+            setAlertIcon(errorMsg, 'mail');
+            errorMsg.textContent = "That email does not look right. Please check it.";
             errorMsg.style.display = 'block';
         }
         return;
@@ -659,6 +690,7 @@ window.handleSignup = async function() {
 
     if (password.length < 6) {
         if (errorMsg) {
+            setAlertIcon(errorMsg, 'lock');
             errorMsg.textContent = "Your password must be 6 characters or more.";
             errorMsg.style.display = 'block';
         }
@@ -797,8 +829,9 @@ window.handleSignup = async function() {
             let userFriendlyMessage = "Something went wrong on our end. Please try again!";
             const msg = (error.message || '').toLowerCase();
             if (msg.includes('already') && (msg.includes('exist') || msg.includes('register'))) {
-                // Duplicate email — show login/resend links (use event listeners, not inline onclick)
-                errorMsg.innerHTML = 'An account with this email already exists. <a href="#" id="signup-go-login" style="color:#111;font-weight:700;text-decoration:underline;">Log in here</a> or <a href="#" id="signup-resend-verify" style="color:#111;font-weight:700;text-decoration:underline;">resend verification email</a>.';
+                // Duplicate email -- show login/resend links (use event listeners, not inline onclick)
+                setAlertIcon(errorMsg, 'mail');
+                errorMsg.innerHTML = 'An account with this email already exists. <a href="#" id="signup-go-login" style="color:inherit;font-weight:700;text-decoration:underline;">Log in here</a> or <a href="#" id="signup-resend-verify" style="color:inherit;font-weight:700;text-decoration:underline;">resend verification email</a>.';
                 errorMsg.style.display = 'block';
                 const goLogin = document.getElementById('signup-go-login');
                 if (goLogin) goLogin.addEventListener('click', (e) => { e.preventDefault(); showLoginForm(); });
@@ -808,26 +841,34 @@ window.handleSignup = async function() {
                 if (form) { form.classList.add('shake'); setTimeout(() => form.classList.remove('shake'), 500); }
                 return; // skip textContent assignment below
             } else if (msg.includes('not connected') || msg.includes('failed to fetch') || msg.includes('cannot connect') || msg.includes('network error')) {
-                userFriendlyMessage = "We couldn't reach the server right now. Please check your internet connection or disable your adblocker and try again.";
+                userFriendlyMessage = "We cannot reach the server. Please check your internet and try again.";
+                setAlertIcon(errorMsg, 'wifi-off');
             } else if (msg.includes('unavailable')) {
-                userFriendlyMessage = error.message;
+                userFriendlyMessage = "Our system is down right now. Please try again in a few minutes.";
+                setAlertIcon(errorMsg, 'wifi-off');
             } else if (msg.includes('password') || msg.includes('weak')) {
                 // Differentiate pwned password (HaveIBeenPwned) from generic weak password
                 if (msg.includes('known') || msg.includes('easy to guess') || (error.code === 'weak_password' && error.reasons && error.reasons.includes('pwned'))) {
                     userFriendlyMessage = "This password is not safe. It has been leaked online. Please pick a new one.";
+                    setAlertIcon(errorMsg, 'shield');
                 } else {
                     userFriendlyMessage = "Your password is too easy to guess. Please mix letters and numbers.";
+                    setAlertIcon(errorMsg, 'lock');
                 }
             } else if (msg.includes('rate') || msg.includes('limit') || msg.includes('too many')) {
-                userFriendlyMessage = "Too many attempts. Please wait a minute and try again.";
+                userFriendlyMessage = "You tried too many times. Please wait a minute and try again.";
+                setAlertIcon(errorMsg, 'clock');
             } else if (msg.includes('invalid') && msg.includes('email')) {
-                userFriendlyMessage = "That email address isn't valid. Please double-check and try again.";
+                userFriendlyMessage = "That email address is not valid. Please check it and try again.";
+                setAlertIcon(errorMsg, 'mail');
             } else if (msg.includes('database') || msg.includes('trigger') || msg.includes('violates') || msg.includes('transaction') || msg.includes('timeout') || msg.includes('database_error')) {
-                userFriendlyMessage = "Our system ran into a temporary issue. Please wait a moment and try again. If this keeps happening, contact Coach Scott.";
+                userFriendlyMessage = "Our system hit a small bump. Please wait a moment and try again. If this keeps happening, text Coach Scott.";
+                setAlertIcon(errorMsg, null);
             } else {
                 // Log the actual error for debugging, show safe message to user
                 console.error('[signup] unhandled error category:', error.message);
-                userFriendlyMessage = "Something went wrong creating your account. Please try again — if the issue continues, text Coach Scott.";
+                userFriendlyMessage = "Something went wrong. Please try again. If it keeps happening, text Coach Scott.";
+                setAlertIcon(errorMsg, null);
             }
             errorMsg.textContent = userFriendlyMessage;
             errorMsg.style.display = 'block';
@@ -3431,7 +3472,8 @@ window.handlePasswordReset = async function () {
             emailInput.addEventListener('input', function() { this.style.borderColor = ''; this.style.backgroundColor = ''; }, { once: true });
         }
         if (errorMsg) {
-            errorMsg.textContent = 'Please type in your email address!';
+            setAlertIcon(errorMsg, 'mail');
+            errorMsg.textContent = 'Please type your email address.';
             errorMsg.style.display = 'block';
         }
         return;
@@ -3441,7 +3483,8 @@ window.handlePasswordReset = async function () {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
         if (errorMsg) {
-            errorMsg.textContent = 'Please enter a valid email address';
+            setAlertIcon(errorMsg, 'mail');
+            errorMsg.textContent = 'That email does not look right. Please check it.';
             errorMsg.style.display = 'block';
         }
         return;
@@ -3530,6 +3573,7 @@ window.handleUpdatePassword = async function () {
 
     if (newPassword.length < 6) {
         if (errorMsg) {
+            setAlertIcon(errorMsg, 'lock');
             errorMsg.textContent = 'Your password must be 6 characters or more.';
             errorMsg.style.display = 'block';
         }
@@ -3566,6 +3610,7 @@ window.handleUpdatePassword = async function () {
     } catch (error) {
         console.error('Update password error:', error);
         if (errorMsg) {
+            setAlertIcon(errorMsg, 'lock');
             errorMsg.textContent = 'We could not save your new password. Please try again.';
             errorMsg.style.display = 'block';
         }
