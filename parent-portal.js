@@ -374,7 +374,7 @@ async function handleLogin() {
     // Basic password validation (minimum length)
     if (password.length < 6) {
         if (errorMsg) {
-            errorMsg.textContent = "Your password needs to be at least 6 characters long.";
+            errorMsg.textContent = "Your password must be 6 characters or more.";
             errorMsg.style.display = 'block';
         }
         if (passwordInput) {
@@ -402,7 +402,7 @@ async function handleLogin() {
 
     try {
         let loginSuccess = false;
-        let errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+        let errorMessage = 'Your email or password is wrong. Please try again.';
 
         // Authenticate via Supabase (real backend)
         if (!loginSuccess && window.auth && typeof window.auth.login === 'function') {
@@ -452,7 +452,7 @@ async function handleLogin() {
 
                 // Provide specific error messages
                 if (authError.message && authError.message.includes('Invalid login credentials')) {
-                    errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+                    errorMessage = 'Your email or password is wrong. Please try again.';
                 } else if (authError.message && authError.message.includes('Email not confirmed')) {
                     // Show inline resend link (sanitize email to prevent XSS)
                     if (errorMsg) {
@@ -559,7 +559,7 @@ async function handleLogin() {
 
             if (error.message) {
                 if (error.message.includes('Invalid login credentials') || error.message.includes('password')) {
-                    userFriendlyMessage = "The email or password you typed doesn't match our records. Please try again.";
+                    userFriendlyMessage = "Your email or password is wrong. Please try again.";
                 } else if (error.message.includes('Email not confirmed') || error.message.includes('verify')) {
                     const loginEmail = document.getElementById('email')?.value?.trim() || '';
                     errorMsg.innerHTML = 'Check your inbox for a verification email from noreply@clubgodspeed.com.<br><a href="#" id="resend-verify-link-2" style="color:#111;font-weight:700;text-decoration:underline;">Didn\'t get it? Resend verification email</a>';
@@ -659,7 +659,7 @@ window.handleSignup = async function() {
 
     if (password.length < 6) {
         if (errorMsg) {
-            errorMsg.textContent = "Your password must be at least 6 characters long.";
+            errorMsg.textContent = "Your password must be 6 characters or more.";
             errorMsg.style.display = 'block';
         }
         if (passwordInput) {
@@ -814,9 +814,9 @@ window.handleSignup = async function() {
             } else if (msg.includes('password') || msg.includes('weak')) {
                 // Differentiate pwned password (HaveIBeenPwned) from generic weak password
                 if (msg.includes('known') || msg.includes('easy to guess') || (error.code === 'weak_password' && error.reasons && error.reasons.includes('pwned'))) {
-                    userFriendlyMessage = "That password has appeared in a data breach and isn't safe to use. Please choose a different, unique password.";
+                    userFriendlyMessage = "This password is not safe. It has been leaked online. Please pick a new one.";
                 } else {
-                    userFriendlyMessage = "Your password is too weak. Please use at least 6 characters with a mix of letters, numbers, and symbols.";
+                    userFriendlyMessage = "Your password is too easy to guess. Please mix letters and numbers.";
                 }
             } else if (msg.includes('rate') || msg.includes('limit') || msg.includes('too many')) {
                 userFriendlyMessage = "Too many attempts. Please wait a minute and try again.";
@@ -3530,7 +3530,7 @@ window.handleUpdatePassword = async function () {
 
     if (newPassword.length < 6) {
         if (errorMsg) {
-            errorMsg.textContent = 'Password must be at least 6 characters.';
+            errorMsg.textContent = 'Your password must be 6 characters or more.';
             errorMsg.style.display = 'block';
         }
         return;
@@ -3566,7 +3566,7 @@ window.handleUpdatePassword = async function () {
     } catch (error) {
         console.error('Update password error:', error);
         if (errorMsg) {
-            errorMsg.textContent = error.message || 'Failed to update password.';
+            errorMsg.textContent = 'We could not save your new password. Please try again.';
             errorMsg.style.display = 'block';
         }
         if (btn) {
