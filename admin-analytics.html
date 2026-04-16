@@ -213,12 +213,12 @@
 
                     if (user) {
                         const { data: profileData, error: profileErr } = await supabase
-                            .from('user_profiles')
-                            .select('role')
+                            .from('profiles')
+                            .select('role,approved')
                             .eq('id', user.id)
                             .single();
-                        
-                        if (!profileErr && profileData?.role === 'admin') {
+
+                        if (!profileErr && ['coach','director'].includes(profileData?.role) && profileData?.approved) {
                             isAdmin = true;
                         }
                     }
@@ -265,9 +265,10 @@
 
             try {
                 const { data: pending, error } = await supabase
-                    .from('parent_accounts')
+                    .from('profiles')
                     .select('id, email, created_at')
-                    .eq('approval_status', 'pending')
+                    .eq('role', 'parent')
+                    .eq('approved', false)
                     .order('created_at', { ascending: false });
 
                 if (error) {
@@ -328,16 +329,14 @@
             const supabase = window.auth.getSupabaseClient();
             try {
                 const { error } = await supabase
-                    .from('parent_accounts')
-                    .update({ approval_status: 'approved' })
+                    .from('profiles')
+                    .update({ approved: true })
                     .eq('id', parentId);
 
                 if (error) throw error;
-                
-                // Optional: Trigger an Welcome email via your backend/Supabase Edge Function here.
-                
+
                 alert(`${email} has been approved and their account is now unlocked!`);
-                fetchPendingApprovals(); // Refresh list
+                fetchPendingApprovals();
             } catch (err) {
                 console.error("Failed to approve parent:", err);
                 alert("Error approving parent. See console for details.");
@@ -346,9 +345,8 @@
 
         async function denyParent(parentId, email, isMock) {
             if(!confirm(`WARNING: Are you sure you want to REJECT ${email}? They will not be able to log in.`)) return;
-            
+
             if (isMock) {
-                // Update Local Storage
                 let arr = JSON.parse(localStorage.getItem('pending_access_requests') || '[]');
                 const idx = arr.findIndex(x => x.id === parentId);
                 if (idx > -1) arr[idx].status = 'rejected';
@@ -361,8 +359,8 @@
             const supabase = window.auth.getSupabaseClient();
             try {
                 const { error } = await supabase
-                    .from('parent_accounts')
-                    .update({ approval_status: 'rejected' })
+                    .from('profiles')
+                    .delete()
                     .eq('id', parentId);
 
                 if (error) throw error;

@@ -219,14 +219,33 @@ async function loadDashboard() {
   document.getElementById('pending-badge').textContent=requests.length;
   renderDashboardPending(requests);
 
-  const unpaid=dues.filter(d=>d.payment_status==='unpaid'||d.payment_status==='partial');
-  document.getElementById('dash-dues-list').innerHTML = unpaid.length ? unpaid.slice(0,4).map(d=>`
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-      <div><div style="font-weight:600;font-size:13px">${d.full_name}</div><div style="color:var(--muted);font-size:11px">Balance: $${(+d.balance).toFixed(0)}</div></div>
-      ${statusTag(d.payment_status)}
-    </div>`).join('') : '<p style="color:var(--muted);font-size:13px">All dues current!</p>';
+  const unpaid=dues.filter(d=>{const bal=(+d.total_owed||0)-(+d.total_paid||0); return bal>0;});
+  document.getElementById('dash-dues-list').innerHTML = unpaid.length ? unpaid.slice(0,4).map(d=>{
+    const bal=(+d.total_owed||0)-(+d.total_paid||0);
+    const pctPaid=d.total_owed>0?Math.round((+d.total_paid||0)/(+d.total_owed)*100):0;
+    const payStatus=pctPaid===0?'unpaid':pctPaid>=100?'paid':'partial';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div><div style="font-weight:600;font-size:13px">${d.parent_name||'Unknown'}</div><div style="color:var(--muted);font-size:11px">Balance: $${bal.toFixed(0)}</div></div>
+      ${statusTag(payStatus)}
+    </div>`;
+  }).join('') : '<p style="color:var(--muted);font-size:13px">All dues current!</p>';
 
-  document.getElementById('dash-activity').innerHTML='<p style="color:var(--muted);font-size:13px">No recent activity.</p>';
+  // ── Recent Activity: pull last 8 events from dues_payments + login_requests ──
+  try {
+    const activities=[];
+    if(osSupabase){
+      const [pay,req]=await Promise.all([
+        osSupabase.from('dues_payments').select('id,parent_name,player_name,amount,payment_date,status').order('payment_date',{ascending:false}).limit(5),
+        osSupabase.from('login_requests').select('id,full_name,email,status,created_at').order('created_at',{ascending:false}).limit(5),
+      ]);
+      (pay.data||[]).forEach(p=>activities.push({ts:p.payment_date,html:`<div style="font-weight:600;font-size:13px">${p.parent_name||'Parent'} paid $${(+p.amount).toFixed(0)}</div><div style="color:var(--muted);font-size:11px">${p.player_name?'for '+p.player_name+' -- ':''} ${fmtShort(p.payment_date)}</div>`}));
+      (req.data||[]).forEach(r=>activities.push({ts:r.created_at,html:`<div style="font-weight:600;font-size:13px">${r.full_name||r.email} ${r.status==='approved'?'approved':'requested access'}</div><div style="color:var(--muted);font-size:11px">${fmtShort(r.created_at)}</div>`}));
+    }
+    activities.sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+    document.getElementById('dash-activity').innerHTML=activities.length
+      ? activities.slice(0,6).map(a=>`<div style="padding:6px 0;border-bottom:1px solid var(--border)">${a.html}</div>`).join('')
+      : '<p style="color:var(--muted);font-size:13px">No recent activity.</p>';
+  } catch(e){ document.getElementById('dash-activity').innerHTML='<p style="color:var(--muted);font-size:13px">No recent activity.</p>'; }
 }
 
 function renderDashboardPending(requests) {
@@ -2945,11 +2964,11 @@ async function initTournamentChecklist(eventId) {
 // ─── BLOG ───────────────────────────────────────────────────
 async function loadBlog() {
   try { if(osSupabase){ const {data}=await osSupabase.from('blog_posts').select('id,title,status,published_at,excerpt,body,tags').order('created_at',{ascending:false}); BLOG_POSTS=data||[]; } } catch(e){}
-  if(!BLOG_POSTS.length) BLOG_POSTS=[{id:'b1',title:'Welcome to the 2026 Season',status:'published',published_at:new Date().toISOString(),excerpt:'Exciting things ahead.',body:'# Welcome\n\nWe are thrilled to kick off another great season!',tags:['news']}];
+  // No mock fallback -- show honest empty state if no blog posts exist yet
   renderBlogList();
 }
 function renderBlogList() {
-  document.getElementById('blog-list').innerHTML=BLOG_POSTS.map(p=>`<div onclick="editBlog('${p.id}')" style="padding:10px;border-radius:8px;cursor:pointer;margin-bottom:6px;border:1px solid var(--border)" onmouseover="this.style.background='rgba(255,255,255,.04)'" onmouseout="this.style.background=''"><div style="font-weight:600;font-size:13px;margin-bottom:4px">${p.title}</div>${statusTag(p.status)}</div>`).join('');
+  document.getElementById('blog-list').innerHTML=BLOG_POSTS.length ? BLOG_POSTS.map(p=>`<div onclick="editBlog('${p.id}')" style="padding:10px;border-radius:8px;cursor:pointer;margin-bottom:6px;border:1px solid var(--border)" onmouseover="this.style.background='rgba(255,255,255,.04)'" onmouseout="this.style.background=''"><div style="font-weight:600;font-size:13px;margin-bottom:4px">${p.title}</div>${statusTag(p.status)}</div>`).join('') : '<p style="color:var(--muted);font-size:13px;padding:16px 0">No blog posts yet. Click "New Post" to create one.</p>';
 }
 function newBlogPost() { ['blog-editing-id','blog-title','blog-excerpt','blog-tags','blog-body'].forEach(id=>document.getElementById(id).value=''); document.getElementById('blog-editor-title').textContent='New Post'; }
 function editBlog(id) { const p=BLOG_POSTS.find(x=>x.id===id); if(!p) return; document.getElementById('blog-editing-id').value=p.id; document.getElementById('blog-title').value=p.title; document.getElementById('blog-excerpt').value=p.excerpt||''; document.getElementById('blog-tags').value=(p.tags||[]).join(', '); document.getElementById('blog-body').value=p.body||''; document.getElementById('blog-editor-title').textContent='Editing: '+p.title; }
@@ -2969,11 +2988,11 @@ async function saveBlog(status) {
 // ─── MEMOS ──────────────────────────────────────────────────
 async function loadMemos() {
   try { if(osSupabase){ const {data}=await osSupabase.from('memo_summary').select('*').order('created_at',{ascending:false}); MEMOS=data||[]; } } catch(e){}
-  if(!MEMOS.length) MEMOS=[{id:'m1',subject:'Practice Schedule - Week 2',recipient:'all_coaches',author_name:'Scott G.',created_at:new Date().toISOString(),ack_count:3,body:'Practice at 6pm Tuesday.'}];
+  // No mock fallback -- show honest empty state if no memos exist yet
   renderMemoList();
 }
 function renderMemoList() {
-  document.getElementById('memos-list').innerHTML=MEMOS.map(m=>`<div onclick="viewMemo('${m.id}')" style="padding:10px;border-radius:8px;cursor:pointer;margin-bottom:6px;border:1px solid var(--border)" onmouseover="this.style.background='rgba(255,255,255,.04)'" onmouseout="this.style.background=''"><div style="font-weight:600;font-size:13px;margin-bottom:4px">${m.subject}</div><div style="display:flex;justify-content:space-between">${statusTag(m.recipient)}<span style="color:var(--muted);font-size:11px">Acks: ${m.ack_count||0}</span></div></div>`).join('');
+  document.getElementById('memos-list').innerHTML=MEMOS.length ? MEMOS.map(m=>`<div onclick="viewMemo('${m.id}')" style="padding:10px;border-radius:8px;cursor:pointer;margin-bottom:6px;border:1px solid var(--border)" onmouseover="this.style.background='rgba(255,255,255,.04)'" onmouseout="this.style.background=''"><div style="font-weight:600;font-size:13px;margin-bottom:4px">${m.subject}</div><div style="display:flex;justify-content:space-between">${statusTag(m.recipient)}<span style="color:var(--muted);font-size:11px">Acks: ${m.ack_count||0}</span></div></div>`).join('') : '<p style="color:var(--muted);font-size:13px;padding:16px 0">No memos yet. Click "New Memo" to create one.</p>';
 }
 function newMemo() { ['memo-editing-id','memo-subject','memo-body'].forEach(id=>document.getElementById(id).value=''); document.getElementById('memo-acks').innerHTML=''; document.getElementById('memo-editor-title').textContent='New Memo'; }
 function viewMemo(id) { const m=MEMOS.find(x=>x.id===id); if(!m) return; document.getElementById('memo-editing-id').value=m.id; document.getElementById('memo-subject').value=m.subject; document.getElementById('memo-body').value=m.body||''; document.getElementById('memo-recipient').value=m.recipient; document.getElementById('memo-editor-title').textContent=m.subject; document.getElementById('memo-acks').innerHTML=`<div style="padding:12px;background:rgba(255,255,255,.03);border-radius:8px"><div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px">ACKNOWLEDGMENTS</div><div style="font-size:13px">${m.ack_count>0?`${m.ack_count} coaches acknowledged`:'No acknowledgments yet'}</div></div>`; }
@@ -3133,33 +3152,9 @@ function doLogout() { if(window.auth?.logout) window.auth.logout(); else window.
 // TOURNAMENT CATALOG + SCHEDULE BUILDER
 // ============================================================
 
-const TOURN_MOCK=[
-{id:'t1',name:'Rocky Mountain Showdown',organizer_name:'Bigfoot Hoops',organizer_circuit:'Bigfoot Hoops',start_date:'2026-04-11',end_date:'2026-04-12',city:'Denver',state:'CO',region:'Mountain West',event_type:'tournament',gender:'boys',age_groups:'10U-17U',cost_min:325,cost_max:375,game_guarantee:3,rank_competition:7,rank_exposure:6,rank_circuit:7,rank_composite:6.7,rank_tier:'Premier',ability_level:'Competitive',is_certified:true,source_page:'colorado'},
-{id:'t2',name:'Front Range Classic',organizer_name:'Prep Hoops',organizer_circuit:'Prep Hoops',start_date:'2026-04-18',end_date:'2026-04-19',city:'Aurora',state:'CO',region:'Mountain West',event_type:'tournament',gender:'boys',age_groups:'10U-14U',cost_min:300,cost_max:350,game_guarantee:3,rank_competition:8,rank_exposure:8,rank_circuit:8,rank_composite:8.0,rank_tier:'Elite',ability_level:'Elite/Competitive',is_certified:true,source_page:'colorado'},
-{id:'t3',name:'Mile High Madness',organizer_name:'Game Time Events',organizer_circuit:'Game Time Events',start_date:'2026-04-25',end_date:'2026-04-26',city:'Lakewood',state:'CO',region:'Mountain West',event_type:'tournament',gender:'coed',age_groups:'8U-14U',cost_min:250,cost_max:300,game_guarantee:3,rank_competition:6,rank_exposure:5,rank_circuit:7,rank_composite:5.9,rank_tier:'Select',ability_level:'Competitive',is_certified:true,source_page:'colorado'},
-{id:'t4',name:'Pikes Peak Invitational',organizer_name:'HoopSource',organizer_circuit:'HoopSource',start_date:'2026-05-02',end_date:'2026-05-03',city:'Colorado Springs',state:'CO',region:'Mountain West',event_type:'tournament',gender:'boys',age_groups:'10U-17U',cost_min:350,cost_max:400,game_guarantee:4,rank_competition:8,rank_exposure:7,rank_circuit:8,rank_composite:7.7,rank_tier:'Premier',ability_level:'Elite/Competitive',is_certified:true,source_page:'colorado'},
-{id:'t5',name:'Colorado Crossover',organizer_name:'Jr EYBL',organizer_circuit:'Jr EYBL',start_date:'2026-05-09',end_date:'2026-05-10',city:'Denver',state:'CO',region:'Mountain West',event_type:'tournament',gender:'boys',age_groups:'10U-17U',cost_min:400,cost_max:450,game_guarantee:4,rank_competition:9,rank_exposure:9,rank_circuit:8,rank_composite:8.8,rank_tier:'Elite',ability_level:'Elite',is_certified:true,is_ncaa_certified:true,source_page:'colorado'},
-{id:'t6',name:'Spring Tipoff Classic',organizer_name:'Bigfoot Hoops',organizer_circuit:'Bigfoot Hoops',start_date:'2026-05-16',end_date:'2026-05-17',city:'Thornton',state:'CO',region:'Mountain West',event_type:'tournament',gender:'boys',age_groups:'8U-14U',cost_min:275,cost_max:325,game_guarantee:3,rank_competition:6,rank_exposure:5,rank_circuit:7,rank_composite:5.9,rank_tier:'Select',ability_level:'Competitive/Developmental',is_certified:true,source_page:'colorado'},
-{id:'t7',name:'Memorial Day Showcase',organizer_name:'Prep Hoops',organizer_circuit:'Prep Hoops',start_date:'2026-05-23',end_date:'2026-05-25',city:'Denver',state:'CO',region:'Mountain West',event_type:'showcase',gender:'boys',age_groups:'12U-17U',cost_min:450,cost_max:500,game_guarantee:4,rank_competition:9,rank_exposure:9,rank_circuit:8,rank_composite:8.8,rank_tier:'Elite',ability_level:'Elite',is_certified:true,is_ncaa_certified:true,source_page:'colorado'},
-{id:'t8',name:'Denver Dribble Fest',organizer_name:'Colorado Hoops',organizer_circuit:'Independent',start_date:'2026-04-11',end_date:'2026-04-11',city:'Denver',state:'CO',region:'Mountain West',event_type:'1-day',gender:'coed',age_groups:'8U-12U',cost_min:75,cost_max:100,game_guarantee:2,rank_competition:3,rank_exposure:2,rank_circuit:4,rank_composite:2.9,rank_tier:'Open',ability_level:'Developmental',is_certified:false,source_page:'colorado'},
-{id:'t9',name:'Texas Takeover',organizer_name:'Nike EYBL',organizer_circuit:'Nike EYBL',start_date:'2026-06-06',end_date:'2026-06-08',city:'Dallas',state:'TX',region:'South',event_type:'tournament',gender:'boys',age_groups:'10U-17U',cost_min:500,cost_max:600,game_guarantee:5,rank_competition:10,rank_exposure:10,rank_circuit:10,rank_composite:10.0,rank_tier:'Elite',ability_level:'Elite',is_certified:true,is_ncaa_certified:true,source_page:'texas'},
-{id:'t10',name:'Lone Star Shootout',organizer_name:'Prep Hoops',organizer_circuit:'Prep Hoops',start_date:'2026-06-13',end_date:'2026-06-14',city:'Houston',state:'TX',region:'South',event_type:'tournament',gender:'boys',age_groups:'10U-17U',cost_min:375,cost_max:425,game_guarantee:4,rank_competition:8,rank_exposure:8,rank_circuit:8,rank_composite:8.0,rank_tier:'Elite',ability_level:'Elite/Competitive',is_certified:true,source_page:'texas'},
-{id:'t11',name:'Arizona Desert Classic',organizer_name:'Game Time Events',organizer_circuit:'Game Time Events',start_date:'2026-06-20',end_date:'2026-06-21',city:'Phoenix',state:'AZ',region:'West',event_type:'tournament',gender:'boys',age_groups:'10U-14U',cost_min:350,cost_max:400,game_guarantee:3,rank_competition:7,rank_exposure:6,rank_circuit:7,rank_composite:6.7,rank_tier:'Premier',ability_level:'Competitive',is_certified:true,source_page:'arizona'},
-{id:'t12',name:'Summer Slam Hoopfest',organizer_name:'HoopSource',organizer_circuit:'HoopSource',start_date:'2026-06-27',end_date:'2026-06-29',city:'Denver',state:'CO',region:'Mountain West',event_type:'tournament',gender:'boys',age_groups:'10U-17U',cost_min:400,cost_max:475,game_guarantee:4,rank_competition:8,rank_exposure:7,rank_circuit:8,rank_composite:7.7,rank_tier:'Premier',ability_level:'Elite/Competitive',is_certified:true,source_page:'colorado'},
-{id:'t13',name:'4th of July Classic',organizer_name:'Bigfoot Hoops',organizer_circuit:'Bigfoot Hoops',start_date:'2026-07-03',end_date:'2026-07-05',city:'Denver',state:'CO',region:'Mountain West',event_type:'tournament',gender:'boys',age_groups:'8U-17U',cost_min:350,cost_max:425,game_guarantee:4,rank_competition:7,rank_exposure:6,rank_circuit:7,rank_composite:6.7,rank_tier:'Premier',ability_level:'Competitive',is_certified:true,source_page:'colorado'},
-{id:'t14',name:'Mountain West Championships',organizer_name:'Jr EYBL',organizer_circuit:'Jr EYBL',start_date:'2026-07-10',end_date:'2026-07-12',city:'Denver',state:'CO',region:'Mountain West',event_type:'tournament',gender:'boys',age_groups:'10U-17U',cost_min:450,cost_max:525,game_guarantee:5,rank_competition:9,rank_exposure:9,rank_circuit:8,rank_composite:8.8,rank_tier:'Elite',ability_level:'Elite',is_certified:true,is_ncaa_certified:true,source_page:'colorado'},
-{id:'t15',name:'All-American Showcase',organizer_name:'Under Armour',organizer_circuit:'Under Armour',start_date:'2026-07-17',end_date:'2026-07-19',city:'Las Vegas',state:'NV',region:'West',event_type:'showcase',gender:'boys',age_groups:'12U-17U',cost_min:550,cost_max:650,game_guarantee:5,rank_competition:10,rank_exposure:10,rank_circuit:10,rank_composite:10.0,rank_tier:'Elite',ability_level:'Elite',is_certified:true,is_ncaa_certified:true,source_page:'nevada'},
-{id:'t16',name:'Rocky Mountain 3v3 Jam',organizer_name:'Colorado Hoops',organizer_circuit:'Independent',start_date:'2026-05-02',end_date:'2026-05-02',city:'Boulder',state:'CO',region:'Mountain West',event_type:'3v3',gender:'coed',age_groups:'8U-14U',cost_min:75,cost_max:100,game_guarantee:4,rank_competition:3,rank_exposure:2,rank_circuit:4,rank_composite:2.9,rank_tier:'Open',ability_level:'Developmental',is_certified:false,source_page:'colorado'},
-{id:'t17',name:'Centennial State Slam',organizer_name:'Prep Hoops',organizer_circuit:'Prep Hoops',start_date:'2026-05-30',end_date:'2026-05-31',city:'Fort Collins',state:'CO',region:'Mountain West',event_type:'tournament',gender:'boys',age_groups:'10U-14U',cost_min:300,cost_max:350,game_guarantee:3,rank_competition:7,rank_exposure:7,rank_circuit:8,rank_composite:7.3,rank_tier:'Premier',ability_level:'Competitive',is_certified:true,source_page:'colorado'},
-{id:'t18',name:'Kansas City Classic',organizer_name:'Bigfoot Hoops',organizer_circuit:'Bigfoot Hoops',start_date:'2026-06-06',end_date:'2026-06-07',city:'Kansas City',state:'KS',region:'Midwest',event_type:'tournament',gender:'boys',age_groups:'10U-17U',cost_min:325,cost_max:375,game_guarantee:3,rank_competition:7,rank_exposure:6,rank_circuit:7,rank_composite:6.7,rank_tier:'Premier',ability_level:'Competitive',is_certified:true,source_page:'kansas'},
-{id:'t19',name:'Utah Summer Hoops',organizer_name:'HoopSource',organizer_circuit:'HoopSource',start_date:'2026-07-24',end_date:'2026-07-25',city:'Salt Lake City',state:'UT',region:'Mountain West',event_type:'tournament',gender:'boys',age_groups:'10U-14U',cost_min:325,cost_max:375,game_guarantee:3,rank_competition:7,rank_exposure:6,rank_circuit:8,rank_composite:6.9,rank_tier:'Premier',ability_level:'Competitive',is_certified:true,source_page:'utah'},
-{id:'t20',name:'Western Regionals',organizer_name:'Nike EYBL',organizer_circuit:'Nike EYBL',start_date:'2026-07-31',end_date:'2026-08-02',city:'Los Angeles',state:'CA',region:'West',event_type:'tournament',gender:'boys',age_groups:'10U-17U',cost_min:550,cost_max:650,game_guarantee:5,rank_competition:10,rank_exposure:10,rank_circuit:10,rank_composite:10.0,rank_tier:'Elite',ability_level:'Elite',is_certified:true,is_ncaa_certified:true,source_page:'california'},
-{id:'t21',name:'Denver Skills Camp',organizer_name:'Colorado Hoops',organizer_circuit:'Independent',start_date:'2026-04-04',end_date:'2026-04-05',city:'Denver',state:'CO',region:'Mountain West',event_type:'camp',gender:'coed',age_groups:'8U-14U',cost_min:125,cost_max:175,game_guarantee:null,rank_competition:3,rank_exposure:3,rank_circuit:4,rank_composite:3.3,rank_tier:'Open',ability_level:'Developmental',is_certified:false,source_page:'colorado'},
-{id:'t22',name:'New Mexico Invitational',organizer_name:'Game Time Events',organizer_circuit:'Game Time Events',start_date:'2026-06-13',end_date:'2026-06-14',city:'Albuquerque',state:'NM',region:'Mountain West',event_type:'tournament',gender:'boys',age_groups:'10U-14U',cost_min:300,cost_max:350,game_guarantee:3,rank_competition:6,rank_exposure:5,rank_circuit:7,rank_composite:5.9,rank_tier:'Select',ability_level:'Competitive',is_certified:true,source_page:'new_mexico'},
-{id:'t23',name:'Colorado Premier League',organizer_name:'Jr EYBL',organizer_circuit:'Jr EYBL',start_date:'2026-04-18',end_date:'2026-06-20',city:'Denver',state:'CO',region:'Mountain West',event_type:'league',gender:'boys',age_groups:'10U-14U',cost_min:600,cost_max:750,game_guarantee:10,rank_competition:9,rank_exposure:8,rank_circuit:8,rank_composite:8.5,rank_tier:'Elite',ability_level:'Elite/Competitive',is_certified:true,source_page:'colorado'},
-{id:'t24',name:'Oklahoma Thunder Classic',organizer_name:'Prep Hoops',organizer_circuit:'Prep Hoops',start_date:'2026-07-10',end_date:'2026-07-12',city:'Oklahoma City',state:'OK',region:'South',event_type:'tournament',gender:'boys',age_groups:'10U-17U',cost_min:350,cost_max:400,game_guarantee:4,rank_competition:7,rank_exposure:7,rank_circuit:8,rank_composite:7.3,rank_tier:'Premier',ability_level:'Competitive',is_certified:true,source_page:'oklahoma'},
-{id:'t25',name:'Wyoming Shootout',organizer_name:'Bigfoot Hoops',organizer_circuit:'Bigfoot Hoops',start_date:'2026-08-08',end_date:'2026-08-09',city:'Cheyenne',state:'WY',region:'Mountain West',event_type:'tournament',gender:'boys',age_groups:'10U-14U',cost_min:275,cost_max:325,game_guarantee:3,rank_competition:5,rank_exposure:4,rank_circuit:7,rank_composite:5.2,rank_tier:'Select',ability_level:'Competitive/Developmental',is_certified:true,source_page:'wyoming'}
-];
+// Mock data removed -- tournament catalog is live from Supabase tournament_catalog view.
+// If the view returns no rows, an empty state is shown instead of fake data.
+const TOURN_MOCK=[];
 
 let allTournaments=[];
 let filteredTourn=[];

@@ -527,16 +527,27 @@
 // Connects to Supabase for live data.
 // ============================================================
 
-// ── Supabase Client (uses same auth as parent portal) ────
-// In production, import from your shared auth module.
-// For now, expects window.supabase to be initialized.
-const SUPABASE_URL = ''; // Set in deployment
-const SUPABASE_ANON_KEY = ''; // Set in deployment
-
+// ── Supabase Client — uses shared auth module ────
 let supabaseClient = null;
 let complianceData = [];
 let documentsData = [];
 let parentsData = [];
+
+function getDocSupabaseClient() {
+  if (supabaseClient) return supabaseClient;
+  if (window.auth?.getSupabaseClient) {
+    supabaseClient = window.auth.getSupabaseClient();
+    return supabaseClient;
+  }
+  const cfg = window.SUPABASE_CONFIG;
+  if (cfg?.url && cfg?.anonKey && window.supabase?.createClient) {
+    supabaseClient = window.supabase.createClient(cfg.url, cfg.anonKey, {
+      auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
+    });
+    return supabaseClient;
+  }
+  return null;
+}
 
 // ── Initialize ──────────────────────────────────────────
 async function init() {
@@ -550,8 +561,16 @@ async function init() {
         });
     });
 
-    // If Supabase is available, load live data
-    if (window.supabase || (SUPABASE_URL && SUPABASE_ANON_KEY)) {
+    // Wait for auth module to initialize
+    await new Promise(r => setTimeout(r, 400));
+    supabaseClient = getDocSupabaseClient();
+
+    if (supabaseClient) {
+        // Verify director role before showing data
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) { loadDemoData(); return; }
+        const { data: prof } = await supabaseClient.from('profiles').select('role,approved').eq('id', session.user.id).maybeSingle();
+        if (!prof || !['coach','director'].includes(prof.role) || !prof.approved) { loadDemoData(); return; }
         await loadLiveData();
     } else {
         loadDemoData();
@@ -774,37 +793,65 @@ function exitImpersonation() {
     document.getElementById('impersonationBanner').classList.remove('active');
 }
 
-// ── Actions ─────────────────────────────────────────────
+// ── Actions: edge-function backed ──────────────────────
+async function callDocNotification(payload) {
+    if (!supabaseClient) { alert('Not connected to Supabase'); return false; }
+    try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) { alert('Session expired -- sign in again'); return false; }
+        const res = await fetch(
+            supabaseClient.supabaseUrl + '/functions/v1/send-document-notification',
+            {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + session.access_token, 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }
+        );
+        const result = await res.json().catch(() => ({}));
+        if (!res.ok) { alert('Send failed: ' + (result.error || 'HTTP ' + res.status)); return false; }
+        return true;
+    } catch (err) { alert('Error: ' + err.message); return false; }
+}
+
 async function sendReminder(email, docSlug) {
     if (!confirm('Send reminder to ' + email + ' for ' + docSlug + '?')) return;
-
-    // In production, call the edge function
-    console.log('[admin] Sending reminder to', email, 'for', docSlug);
-    alert('Reminder sent to ' + email);
+    const ok = await callDocNotification({ type: 'reminder', parent_email: email, document_slug: docSlug });
+    if (ok) alert('Reminder sent to ' + email);
 }
 
 async function sendBulkReminders() {
     const unsigned = complianceData.filter(c => c.agreement_status !== 'signed');
     if (!confirm('Send reminders to ' + unsigned.length + ' unsigned agreements?')) return;
-
-    console.log('[admin] Sending bulk reminders for', unsigned.length, 'agreements');
-    alert('Bulk reminders queued: ' + unsigned.length + ' emails');
+    let sent = 0;
+    for (const c of unsigned) {
+        const ok = await callDocNotification({ type: 'reminder', parent_email: c.parent_email, document_slug: c.document_slug });
+        if (ok) sent++;
+    }
+    alert('Reminders sent: ' + sent + '/' + unsigned.length);
 }
 
 async function sendEscalations() {
-    const atRisk = complianceData.filter(c => c.roster_at_risk);
+    const atRisk = complianceData.filter(c => c.roster_at_risk && c.agreement_status !== 'signed');
     if (!confirm('Send escalation warnings to ' + atRisk.length + ' at-risk agreements?')) return;
-
-    console.log('[admin] Sending escalations for', atRisk.length, 'at-risk agreements');
-    alert('Escalation warnings queued: ' + atRisk.length + ' emails');
+    let sent = 0;
+    for (const c of atRisk) {
+        const ok = await callDocNotification({ type: 'escalation', parent_email: c.parent_email, document_slug: c.document_slug });
+        if (ok) sent++;
+    }
+    alert('Escalations sent: ' + sent + '/' + atRisk.length);
 }
 
 function notifyAllForDoc(docSlug) {
     const unsigned = complianceData.filter(c => c.document_slug === docSlug && c.agreement_status !== 'signed');
     if (!confirm('Notify ' + unsigned.length + ' parents who haven\'t signed this document?')) return;
-
-    console.log('[admin] Notifying for doc:', docSlug, '—', unsigned.length, 'parents');
-    alert('Notifications sent: ' + unsigned.length);
+    (async () => {
+        let sent = 0;
+        for (const c of unsigned) {
+            const ok = await callDocNotification({ type: 'reminder', parent_email: c.parent_email, document_slug: docSlug });
+            if (ok) sent++;
+        }
+        alert('Notifications sent: ' + sent + '/' + unsigned.length);
+    })();
 }
 
 function exportComplianceCSV() {
