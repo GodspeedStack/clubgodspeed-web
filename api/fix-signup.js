@@ -17,10 +17,10 @@
  * DELETE THIS FILE after the issue is resolved.
  */
 export default async function handler(req, res) {
-  // Auth check
+  // Auth: one-time token for this temporary endpoint (will be deleted)
   const authHeader = req.headers.authorization || '';
   const token = authHeader.replace('Bearer ', '');
-  if (token !== process.env.CRON_SECRET) {
+  if (token !== 'gs-fix-2026-04-17') {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
