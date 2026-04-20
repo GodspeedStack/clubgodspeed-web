@@ -193,8 +193,8 @@ window.handleCoachLogin = async function () {
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
-    const adminHash = "4792c7f3c8c1dba6c44f84106fea8e6f983eb02c6961384863719180d437a057"; // G0DSP33D_ADMIN!
-    const coachHash = "e550d0bfd3a72149b46a225a35927c0272eb4cd4796c550fdd899da66e508ae6"; // G0DSP33D_EL1T3!
+    const adminHash = "96573e41fd926dedacbafea45e6c34a1ae3492e415d7ac1febd6cfb9166b98f6";
+    const coachHash = "3dd49e099ff05b4287bcfeb3d4cd34908f4671b92824080231e552988a86c66e";
 
     let hash = "";
     try {
@@ -202,13 +202,12 @@ window.handleCoachLogin = async function () {
     } catch(e) {
         console.warn("Hash calc failed");
     }
-    
+
     let role = null;
-    const cleanCode = code.toUpperCase();
-    
-    if (hash === adminHash || cleanCode === 'G0DSP33D_ADMIN!' || cleanCode === 'DEMO') {
+
+    if (hash === adminHash) {
         role = 'admin';
-    } else if (hash === coachHash || cleanCode === 'G0DSP33D_EL1T3!') {
+    } else if (hash === coachHash) {
         role = 'coach';
     } else {
         godspeedAlert("That code doesn't match our records. Please try again.", "GODSPEED BASKETBALL");

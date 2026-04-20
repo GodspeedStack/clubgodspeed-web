@@ -4,7 +4,7 @@
 This guide explains how to migrate coaches from the hash-based authentication system to Supabase Auth for better scalability and security.
 
 ## Current State
-- **Hash-based auth**: Coaches use access codes (G0DSP33D_ADMIN!, G0DSP33D_EL1T3!)
+- **Hash-based auth**: Coaches use access codes (rotated; see Scott for current codes)
 - **Client-side only**: No server-side validation
 - **Limited scalability**: Doesn't scale well for multiple coaches
 
@@ -52,7 +52,7 @@ The coach portal now supports both methods:
    - If 2FA enabled, enter 2FA code
 
 2. **Hash-based** (fallback):
-   - Enter access code (G0DSP33D_ADMIN! or G0DSP33D_EL1T3!)
+   - Enter access code (ask Scott for current codes)
    - Works for backward compatibility
 
 ### Step 3: Migrate Existing Coaches
