@@ -211,6 +211,28 @@ async function loadFundraisingCredit(supabase, userId, totalDue) {
           statusText.style.color = '#10b981';
           statusCard.style.borderLeftColor = '#10b981';
         }
+
+        // Also update static Venmo modal if it exists
+        const modalBalance = document.getElementById('tuition-modal-balance');
+        if (modalBalance) modalBalance.textContent = '$' + newBalance.toFixed(2);
+
+        const quickFull = document.getElementById('tuition-quick-full');
+        if (quickFull) {
+          quickFull.textContent = '$' + Math.ceil(newBalance) + ' Full';
+          quickFull.onclick = function() { document.getElementById('tuition-pay-amount').value = newBalance.toFixed(2); };
+        }
+        const quickHalf = document.getElementById('tuition-quick-half');
+        if (quickHalf) {
+          const half = Math.ceil(newBalance / 2);
+          quickHalf.textContent = '$' + half + ' Half';
+          quickHalf.onclick = function() { document.getElementById('tuition-pay-amount').value = half; };
+        }
+        const quickCustom = document.getElementById('tuition-quick-custom');
+        if (quickCustom) {
+          const custom = Math.min(250, Math.ceil(newBalance));
+          quickCustom.textContent = '$' + custom;
+          quickCustom.onclick = function() { document.getElementById('tuition-pay-amount').value = custom; };
+        }
       }, 2200);
     });
   } catch (e) { console.error('Fundraising credit load:', e); }
