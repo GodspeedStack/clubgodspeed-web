@@ -952,7 +952,7 @@
                             <h2 style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 1.35rem; color: #111; letter-spacing: -0.02em; text-transform: uppercase; margin: 0;">Performance</h2>
                         </div>
                         <div id="perf-root">
-                            <div style="text-align:center;padding:40px 0;color:#9ca3af;font-size:0.85rem;">Loading performance data...</div>
+                            <div style="text-align:center;padding:40px 0;color:#9ca3af;font-size:0.85rem;">No evaluations yet. Performance data will appear here after your athlete's next evaluation.</div>
                         </div>
                     </div>
 
@@ -965,7 +965,7 @@
                             <span style="font-size: 0.7rem; font-weight: 600; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.06em;">Tap to flip</span>
                         </div>
                         <div id="player-cards-root" style="display:flex;flex-wrap:wrap;gap:20px;justify-content:center;">
-                            <div style="text-align:center;padding:40px 0;color:rgba(255,255,255,0.3);font-size:0.85rem;width:100%;">Loading player cards...</div>
+                            <div style="text-align:center;padding:40px 0;color:rgba(255,255,255,0.3);font-size:0.85rem;width:100%;">Player cards are generated from game stats. Check back after the next tournament.</div>
                         </div>
                         <div id="player-cards-cta" style="display:none;margin-top:24px;background:rgba(255,255,255,0.05);border-radius:14px;padding:20px 24px;border:1px solid rgba(255,255,255,0.08);">
                             <div style="display:flex;align-items:center;gap:14px;">
@@ -1174,7 +1174,7 @@
                                 </div>
                               </div>
                               <div id="billing-training-rows" style="padding:0 20px 16px">
-                                <div style="text-align:center;padding:16px;color:#888;font-size:0.85rem">Loading schedule...</div>
+                                <div style="text-align:center;padding:16px;color:#888;font-size:0.85rem">Schedule will appear when your payment plan is active.</div>
                               </div>
                             </div>
 
@@ -1237,7 +1237,7 @@
                                     <!-- Injected JS -->
                                     <div
                                         style="text-align: center; padding: 20px; background: rgba(255,255,255,0.5); border-radius: 12px; color: #888; font-size: 0.9rem;">
-                                        All caught up! No open invoices.</div>
+                                        </div>
                                 </div>
                             </div>
 
@@ -1433,9 +1433,9 @@
             </div>
           </div>
           <div style="display:flex;gap:8px;margin-bottom:16px;">
-            <button onclick="document.getElementById('tuition-pay-amount').value='745'" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e5e5ea;background:#f9f9f9;font-size:0.8rem;font-weight:700;cursor:pointer;color:#111;">$745 Full</button>
-            <button onclick="document.getElementById('tuition-pay-amount').value='375'" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e5e5ea;background:#f9f9f9;font-size:0.8rem;font-weight:700;cursor:pointer;color:#111;">$375 Half</button>
-            <button onclick="document.getElementById('tuition-pay-amount').value='250'" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e5e5ea;background:#f9f9f9;font-size:0.8rem;font-weight:700;cursor:pointer;color:#111;">$250</button>
+            <button id="tuition-quick-full" onclick="document.getElementById('tuition-pay-amount').value='745'" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e5e5ea;background:#f9f9f9;font-size:0.8rem;font-weight:700;cursor:pointer;color:#111;">$745 Full</button>
+            <button id="tuition-quick-half" onclick="document.getElementById('tuition-pay-amount').value='375'" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e5e5ea;background:#f9f9f9;font-size:0.8rem;font-weight:700;cursor:pointer;color:#111;">$375 Half</button>
+            <button id="tuition-quick-custom" onclick="document.getElementById('tuition-pay-amount').value='250'" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e5e5ea;background:#f9f9f9;font-size:0.8rem;font-weight:700;cursor:pointer;color:#111;">$250</button>
           </div>
           <div style="margin-bottom:16px;">
             <label style="display:block;font-size:0.75rem;font-weight:700;color:#86868b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Note (optional)</label>
