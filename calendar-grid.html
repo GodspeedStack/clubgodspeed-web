@@ -753,7 +753,7 @@
     <!-- Sync Modal -->
     <div class="sync-modal" id="syncModal">
         <h3 style="margin-top: 0; margin-bottom: 0.5rem;">Sync Calendar</h3>
-        <p style="color: #86868b; font-size: 0.9rem; margin-bottom: 1.5rem;">Add the 2025-26 Season to your device.</p>
+        <p style="color: #86868b; font-size: 0.9rem; margin-bottom: 1.5rem;">Add the 2026 season to your device.</p>
 
         <button class="sync-btn-option" onclick="processSync('apple')">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -781,7 +781,7 @@
             <button class="modal-close" onclick="closeContactModal()">✕</button>
             <div class="modal-info">
                 <div>
-                    <h2 class="modal-title">GET IN<br>TOUCH</h2>
+                    <h2 class="modal-title">GET IN TOUCH</h2>
                     <p style="color: #86868b; font-weight: 500; line-height: 1.6;">Questions about the Academy, AAU
                         teams, or training? We're locked in.</p>
                 </div>
@@ -794,7 +794,7 @@
                     </div>
                     <div class="contact-detail-item">
                         <div class="contact-label">Direct Email</div>
-                        <div class="contact-value">info@godspeed.com</div>
+                        <div class="contact-value">info@clubgodspeed.com</div>
                     </div>
                     <div class="contact-detail-item" style="margin-bottom: 0;">
                         <div class="contact-label">Socials</div>
@@ -836,68 +836,14 @@
                         <textarea class="modal-input" rows="4" style="resize: none;"
                             placeholder="How can we help you build your legacy?"></textarea>
                     </div>
-                    <button type="submit" class="modal-btn">Send Message_</button>
+                    <button type="submit" class="modal-btn">Send Message</button>
                 </form>
             </div>
         </div>
     </div>
 
-    <footer class="bg-gray-50 pt-20 pb-16 border-t border-gray-100">
-        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-12">
-            <div class="md:col-span-4">
-                <div class="text-2xl font-black tracking-tighter mb-6">
-                    GODSPEED<span class="text-blue-600">BASKETBALL</span>
-                </div>
-                <p class="text-gray-500 leading-relaxed max-w-sm text-sm">
-                    Building the future of Denver basketball.<br>
-                    Character. Discipline. Excellence.
-                </p>
-            </div>
-            <div class="md:col-span-8 grid grid-cols-2 md:grid-cols-5 gap-8">
-                <div>
-                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Programs</h4>
-                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
-                        <li><a href="training.html" class="hover:text-blue-600 transition">Training</a></li>
-                        <li><a href="aau.html" class="hover:text-blue-600 transition">AAU Club</a></li>
-                        <li style="display: none;"><a href="#" class="text-gray-400 cursor-not-allowed block py-1" style="text-decoration: none;"  onclick="alert('Coming soon!'); return false;">Academy </a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Athletes</h4>
-                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
-                        <li><a href="#" class=" text-gray-400 cursor-not-allowed"  onclick="alert('Coming soon!'); return false;">Skill Assessment</a></li>
-                        <li><a href="card-preview.html"  class="hover:text-blue-600 transition" >Player Card</a></li>
-                        <li><a href="#" class="text-gray-400 cursor-not-allowed block py-1" style="text-decoration: none;"  onclick="alert('Coming soon!'); return false;">AAU Camps </a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Shop</h4>
-                    <ul class="space-y-4 text-sm text-gray-400 font-medium">
-                        <li class="cursor-not-allowed">Apparel</li>
-                        <li class="cursor-not-allowed">Footwear</li>
-                        <li class="cursor-not-allowed">Accessories</li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Parents</h4>
-                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
-                        <li><a href="#" class=" text-gray-400 cursor-not-allowed"  onclick="alert('Coming soon!'); return false;">Parent Assessment</a></li>
-                        <li><a href="parent-portal.html" class="hover:text-blue-600 transition">Parent Portal</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-bold text-black uppercase tracking-wide text-xs mb-6">Company</h4>
-                    <ul class="space-y-4 text-sm text-gray-600 font-medium">
-                        <li><a href="about.html" class="hover:text-blue-600 transition">About Us</a></li>
-                        <li><a href="#contact" class="hover:text-blue-600 transition">Contact</a></li>
-                        <li><a href="#" class=" text-gray-400 cursor-not-allowed"  onclick="alert('Coming soon!'); return false;">Coach Portal</a></li>
-                        <li><a href="admin-os.html">Director Login</a></li>
-                        <li><a href="#" class="text-gray-400 cursor-not-allowed block py-1" style="text-decoration: none;"  onclick="alert('Coming soon!'); return false;">Careers </a></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </footer>
+    <footer id="gs-shared-footer"></footer>
+    <script src="shared-footer.js" defer></script>
 
     <script src="script.js"></script>
     <script type="module" src="backend.js"></script>
