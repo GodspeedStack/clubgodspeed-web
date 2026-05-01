@@ -2309,29 +2309,24 @@ async function calculateRemainingHours(parentEmail) {
     // Check Supabase first
    if (supabase && window.auth?.isSupabaseAvailable?.()) {
         try {
-          const { data: parentAccount, error: accountError } = await supabase
-                .from('profiles')
-                .select('id')
-               .eq('email', parentEmail)
-                .single();
+            // Resolve athlete IDs for this parent from roster
+            const athletes = (db.roster || []).filter(a => a.parentId === parentEmail);
+            const athleteIds = athletes.map(a => a.athleteId);
 
-            if (accountError) {
-                console.error('Error fetching parent account:', accountError);
-                // Fall through to mock data
-          } else if (parentAccount) {
-                const { data: purchases, error: purchasesError } = await supabase
-                    .from('training_purchases')
-                    .select('hours_purchased, hours_used')
-                   .eq('parent_id', parentAccount.id)
-                    .eq('status', 'active');
+            if (athleteIds.length > 0) {
+                // Query training_hours_summary (view) -- already aggregates per package
+                const { data: summaries, error: summaryError } = await supabase
+                    .from('training_hours_summary')
+                    .select('hours_purchased, hours_used, hours_remaining')
+                    .in('athlete_id', athleteIds);
 
-                if (purchasesError) {
-                   console.error('Error fetching purchases:', purchasesError);
-                   // Fall through to mock data
-                } else if (purchases) {
-                    totalPurchased = purchases.reduce((sum, p) => sum + (parseFloat(p.hours_purchased) || 0), 0);
-                    totalUsed = purchases.reduce((sum, p) => sum + (parseFloat(p.hours_used) || 0), 0);
-              }
+                if (summaryError) {
+                    console.error('Error fetching training hours summary:', summaryError);
+                    // Fall through to mock data
+                } else if (summaries && summaries.length > 0) {
+                    totalPurchased = summaries.reduce((sum, s) => sum + (parseFloat(s.hours_purchased) || 0), 0);
+                    totalUsed = summaries.reduce((sum, s) => sum + (parseFloat(s.hours_used) || 0), 0);
+                }
             }
         } catch (e) {
             console.error('Error calculating remaining hours:', e);
@@ -2566,66 +2561,34 @@ async function loadSessionCounts(parentEmail) {
 
         if (supabase && window.auth?.isSupabaseAvailable?.()) {
             try {
-                const { data: parentAccount, error: accountError } = await supabase
-                    .from('profiles')
-                    .select('id')
-                    .eq('email', parentEmail)
-                    .single();
+                const athleteIds = athletes.map(a => a.athleteId);
 
-                if (accountError) {
-                    console.error('Error fetching parent account for session counts:', accountError);
-                    // Fall through to use default counts (0)
-                } else if (parentAccount) {
-                    const athleteIds = athletes.map(a => a.athleteId);
-
-                    // Get completed sessions (attendance records)
-                    const { data: purchases, error: purchasesError } = await supabase
-                        .from('training_purchases')
+                if (athleteIds.length > 0) {
+                    // Completed: count attendance records for this parent's athletes
+                    const { data: attendance, error: attendError } = await supabase
+                        .from('training_attendance')
                         .select('id')
-                        .eq('parent_id', parentAccount.id)
-                        .in('athlete_id', athleteIds);
+                        .in('athlete_id', athleteIds)
+                        .eq('status', 'present');
 
-                    if (purchasesError) {
-                        console.error('Error fetching purchases for session counts:', purchasesError);
-                    } else if (purchases && purchases.length > 0) {
-                        const purchaseIds = purchases.map(p => p.id);
-                        const { data: attendance, error: attendanceError } = await supabase
-                            .from('training_attendance')
-                            .select('id')
-                            .in('purchase_id', purchaseIds);
-
-                        if (attendanceError) {
-                            console.error('Error fetching attendance:', attendanceError);
-                        } else {
-                            completedCount = attendance ? attendance.length : 0;
-                        }
+                    if (attendError) {
+                        console.error('Error fetching attendance:', attendError);
+                    } else {
+                        completedCount = attendance ? attendance.length : 0;
                     }
 
-                    // Get upcoming sessions
-                    const { data: enrollments, error: enrollmentsError } = await supabase
-                        .from('player_enrollments')
-                        .select('program_id')
-                        .eq('parent_id', parentAccount.id)
-                        .in('athlete_id', athleteIds)
-                        .eq('status', 'active');
+                    // Upcoming: future scheduled sessions
+                    const today = new Date().toISOString().split('T')[0];
+                    const { data: upcoming, error: upcomingError } = await supabase
+                        .from('training_sessions')
+                        .select('id')
+                        .gte('session_date', today)
+                        .eq('session_type', 'individual_workout');
 
-                    if (enrollmentsError) {
-                        console.error('Error fetching enrollments:', enrollmentsError);
-                    } else if (enrollments && enrollments.length > 0) {
-                        const programIds = enrollments.map(e => e.program_id);
-                        const today = new Date().toISOString().split('T')[0];
-                        const { data: sessions, error: sessionsError } = await supabase
-                            .from('training_sessions')
-                            .select('id')
-                            .in('program_id', programIds)
-                            .gte('session_date', today)
-                            .eq('status', 'scheduled');
-
-                        if (sessionsError) {
-                            console.error('Error fetching sessions:', sessionsError);
-                        } else {
-                            upcomingCount = sessions ? sessions.length : 0;
-                        }
+                    if (upcomingError) {
+                        console.error('Error fetching upcoming sessions:', upcomingError);
+                    } else {
+                        upcomingCount = upcoming ? upcoming.length : 0;
                     }
                 }
             } catch (error) {
@@ -2691,41 +2654,11 @@ async function loadTrainingCalendar(parentEmail) {
         }
 
         // Load enrollments to filter calendar
+        // NOTE: player_enrollments table does not exist in current schema.
+        // Enrollment data is derived from roster active_enrollments.
         let enrolledPrograms = [];
-        if (supabase && window.auth?.isSupabaseAvailable?.()) {
-            try {
-                const { data: parentAccount, error: accountError } = await supabase
-                    .from('profiles')
-                    .select('id')
-                    .eq('email', parentEmail)
-                    .single();
 
-                if (accountError) {
-                    console.error('Error fetching parent account for calendar:', accountError);
-                    // Fall through to roster fallback
-                } else if (parentAccount) {
-                    const athleteIds = athletes.map(a => a.athleteId);
-                    const { data: enrollments, error: enrollmentsError } = await supabase
-                        .from('player_enrollments')
-                        .select('program_id, enrolled_sessions')
-                        .eq('parent_id', parentAccount.id)
-                        .in('athlete_id', athleteIds)
-                        .eq('status', 'active');
-
-                    if (enrollmentsError) {
-                        console.error('Error fetching enrollments for calendar:', enrollmentsError);
-                        // Fall through to roster fallback
-                    } else if (enrollments) {
-                        enrolledPrograms = enrollments.map(e => e.program_id);
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading enrollments:', error);
-                // Fall through to roster fallback
-            }
-        }
-
-        // Fallback: get from roster active_enrollments
+        // Get from roster active_enrollments
         if (enrolledPrograms.length === 0) {
             athletes.forEach(athlete => {
                 if (athlete.active_enrollments) {
@@ -2809,42 +2742,11 @@ async function loadSkillsPrograms(parentEmail) {
         if (!container) return;
 
         const athletes = (db.roster || []).filter(a => a.parentId === parentEmail);
+        // NOTE: player_enrollments table does not exist in current schema.
+        // Programs are derived from roster active_enrollments.
         let programs = [];
 
-        if (supabase && window.auth?.isSupabaseAvailable?.()) {
-            try {
-                const { data: parentAccount, error: accountError } = await supabase
-                    .from('profiles')
-                    .select('id')
-                    .eq('email', parentEmail)
-                    .single();
-
-                if (accountError) {
-                    console.error('Error fetching parent account for skills programs:', accountError);
-                    // Fall through to roster fallback
-                } else if (parentAccount) {
-                    const athleteIds = athletes.map(a => a.athleteId);
-                    const { data: enrollments, error: enrollmentsError } = await supabase
-                        .from('player_enrollments')
-                        .select('*, training_packages(name, description, program_type)')
-                        .eq('parent_id', parentAccount.id)
-                        .in('athlete_id', athleteIds)
-                        .eq('status', 'active');
-
-                    if (enrollmentsError) {
-                        console.error('Error fetching enrollments for skills programs:', enrollmentsError);
-                        // Fall through to roster fallback
-                    } else if (enrollments) {
-                        programs = enrollments;
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading skills programs:', error);
-                // Fall through to roster fallback
-            }
-        }
-
-        // Fallback: get from roster
+        // Get from roster
         if (programs.length === 0) {
             athletes.forEach(athlete => {
                 if (athlete.active_enrollments && athlete.active_enrollments.length > 0) {
@@ -3175,142 +3077,176 @@ async function loadInvoices(parentEmail) {
 window.loadReceipts = () => loadReceipts(localStorage.getItem('gba_user_email'));
 window.loadInvoices = () => loadInvoices(localStorage.getItem('gba_user_email'));
 /**
- * Generate and print a training statement/receipt with hours summary
+ * viewTrainingStatement() -- dual-package layout
+ * Renders per-package stat boxes matching the approved PDF design.
+ * Data source: training_hours_summary view (returns multiple rows per athlete)
  */
-function viewTrainingStatement(email) {
-    const db = getDB();
-    const rawRecord = db.trainingRecords ? db.trainingRecords[email] : null;
-    const record = getLedgerProfile(rawRecord);
+async function viewTrainingStatement() {
+  const client = window.auth?.getSupabaseClient();
+  if (!client) { alert('Not logged in'); return; }
 
-    if (!record) {
-        godspeedAlert('No training record found for this user.', 'Info');
-        return;
-    }
+  const profile = await window.auth.getProfile();
+  const athleteName = profile?.athlete_name || 'Athlete';
+  const parentEmail = profile?.email || '';
 
-    const parentName = localStorage.getItem('gba_parent_name') || 'Parent';
-    const date = new Date().toLocaleDateString();
+  // Fetch all packages for this athlete
+  const { data: packages, error } = await client
+    .from('training_hours_summary')
+    .select('*')
+    .eq('athlete_id', profile.athlete_id)
+    .order('purchase_date', { ascending: true });
 
-    const w = window.open('', '_blank', 'width=850,height=900');
-    w.document.write(`
-        <html>
-        <head>
-            <title>Training Statement - Godspeed</title>
-            <style>
-                body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; line-height: 1.5; padding: 40px; }
-                .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; border-bottom: 2px solid #000; padding-bottom: 20px; }
-                .logo { font-size: 24px; font-weight: 900; letter-spacing: -1px; text-transform: uppercase; }
-                .logo span { color: #0071e3; }
-                .invoice-details { text-align: right; }
-                .invoice-details h1 { margin: 0; font-size: 20px; text-transform: uppercase; color: #555; }
-                .invoice-details p { margin: 5px 0 0; font-size: 14px; color: #777; }
-                
-                .section-title { font-size: 14px; font-weight: 700; text-transform: uppercase; color: #555; margin: 30px 0 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-                
-                .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
-                .stat-box { background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #eee; text-align: center; }
-                .stat-val { font-size: 24px; font-weight: 700; color: #111; display: block; margin-bottom: 5px; }
-                .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #666; font-weight: 600; }
+  if (error || !packages || packages.length === 0) {
+    alert('No training data found.');
+    return;
+  }
 
-                table { width: 100%; border-collapse: collapse; font-size: 13px; }
-                th { text-align: left; background: #f3f4f6; padding: 10px; font-weight: 600; text-transform: uppercase; font-size: 11px; color: #555; }
-                td { padding: 12px 10px; border-bottom: 1px solid #eee; }
-                tr:last-child td { border-bottom: none; }
-                
-                .amount { font-weight: 700; color: #111; }
-                
-                .footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #888; text-align: center; }
-                .print-btn { display: inline-block; background: #0071e3; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px; margin-bottom: 20px; cursor: pointer; }
-                @media print { .print-btn { display: none; } }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <div class="logo">GODSPEED<span style="color: #0071e3;">BASKETBALL</span></div>
-                <div class="invoice-details">
-                    <h1>Training Statement</h1>
-                    <p>Date: ${date}</p>
-                    <p>Account: ${parentName}</p>
-                    <p>Email: ${email}</p>
-                </div>
-            </div>
+  // Fetch all individual sessions for this athlete
+  const { data: sessions } = await client
+    .from('training_attendance')
+    .select('session_id, training_sessions(session_date, duration_minutes, title, session_notes)')
+    .eq('athlete_id', profile.athlete_id)
+    .eq('status', 'present')
+    .order('session_id');
 
-            <div class="section-title">Hours Summary</div>
-            <div class="summary-grid">
-                <div class="stat-box">
-                    <span class="stat-val">${record.hours.totalPurchased}</span>
-                    <span class="stat-label">Active Purchased</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-val">${Number(record.hours.used).toFixed(1)}</span>
-                    <span class="stat-label">Active Used</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-val" style="color: #0071e3;">${Number(record.hours.remaining).toFixed(1)}</span>
-                    <span class="stat-label">Hours Remaining</span>
-                </div>
-            </div>
+  // Filter to individual_workout sessions and sort by date
+  const individualSessions = (sessions || [])
+    .filter(s => s.training_sessions)
+    .map(s => ({
+      date: s.training_sessions.session_date,
+      duration: s.training_sessions.duration_minutes,
+      title: s.training_sessions.title
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date));
 
-            <div class="section-title">Purchase History</div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Item</th>
-                        <th>Status</th>
-                        <th style="text-align:right;">Amount</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${record.purchases.map(p => `
-                        <tr>
-                            <td>${p.date}</td>
-                            <td>${p.item}</td>
-                            <td><span style="background:#dcfce7; color:#166534; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:700;">${p.status.toUpperCase()}</span></td>
-                            <td style="text-align:right;" class="amount">${p.amount}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
+  // Assign sessions to packages by date range
+  const packageSessions = packages.map((pkg, idx) => {
+    const nextPurchase = packages[idx + 1]?.purchase_date || '9999-12-31';
+    const matched = individualSessions.filter(
+      s => s.date >= pkg.purchase_date && s.date < nextPurchase
+    );
+    return { ...pkg, sessions: matched };
+  });
 
-            <div class="section-title">Usage Log</div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Activity</th>
-                        <th>Notes</th>
-                        <th style="text-align:right;">Hours Deducted</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${record.logs.map((l, index) => {
-                        const isRecent = index === 0;
-                        const rowStyle = isRecent ? 'background: #eff6ff;' : '';
-                        const badge = isRecent ? '<span style="background:#2563eb; color:white; padding:2px 6px; border-radius:4px; font-size:9px; margin-left:8px; font-weight:bold; letter-spacing:0.5px; vertical-align:middle;">LATEST</span>' : '';
-                        
-                        return `
-                        <tr style="${rowStyle}">
-                            <td style="${isRecent ? 'font-weight:700; color:#1d4ed8;' : ''}">${l.date}${badge}</td>
-                            <td style="${isRecent ? 'font-weight:600;' : ''}">${l.activity}</td>
-                            <td style="${isRecent ? 'font-weight:500;' : ''}">${l.notes}</td>
-                            <td style="text-align:right; font-weight:700; ${isRecent ? 'color:#1d4ed8;' : ''}">-${l.time}</td>
-                        </tr>
-                        `;
-                    }).join('')}
-                </tbody>
-            </table>
+  // Determine completed vs in-progress
+  const getStatus = (pkg) => {
+    if (pkg.hours_remaining <= 0) return { label: 'COMPLETED', color: '#16a34a' };
+    return { label: 'IN PROGRESS', color: '#d97706' };
+  };
 
-            <div class="footer">
-                <p>Godspeed Basketball Academy<br>Thank you for your business.</p>
-            </div>
+  const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-            <script>
-                window.onload = function() { window.print(); }
-            </script>
-        </body>
-        </html>
-    `);
-    w.document.close();
+  // Build package stat-box HTML
+  let packageBoxesHtml = '';
+  packageSessions.forEach(pkg => {
+    const status = getStatus(pkg);
+    packageBoxesHtml += `
+      <div style="margin-bottom: 10px;">
+        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #333; margin-bottom: 8px;">
+          ${pkg.package_label}${pkg.price ? '  --  $' + Number(pkg.price).toFixed(0) : ''}
+          <span style="color: ${status.color}; margin-left: 12px;">${status.label}</span>
+        </div>
+        <div class="summary-grid">
+          <div class="stat-box">
+            <span class="stat-val">${Number(pkg.hours_purchased).toFixed(1)}</span>
+            <span class="stat-label">Hours Purchased</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-val">${Number(pkg.hours_used).toFixed(1)}</span>
+            <span class="stat-label">Hours Used</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-val">${Number(pkg.hours_remaining).toFixed(1)}</span>
+            <span class="stat-label">Hours Remaining</span>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  // Build session log rows -- fully data-driven
+  let sessionCounter = {};
+  let sessionRowsHtml = '';
+  packageSessions.forEach(pkg => {
+    if (!sessionCounter[pkg.package_label]) sessionCounter[pkg.package_label] = 0;
+    pkg.sessions.forEach(s => {
+      sessionCounter[pkg.package_label]++;
+      const hrs = (s.duration / 60).toFixed(1);
+      sessionRowsHtml += `
+        <tr>
+          <td>${s.date}</td>
+          <td>${pkg.package_label}</td>
+          <td class="amount">${hrs} hrs</td>
+          <td>Session ${sessionCounter[pkg.package_label]} of ${pkg.sessions.length}</td>
+        </tr>
+      `;
+    });
+  });
+
+  const win = window.open('', '_blank', 'width=850,height=900');
+  win.document.write(`<!DOCTYPE html>
+<html>
+<head>
+<title>Training Statement - ${athleteName}</title>
+<style>
+  body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; line-height: 1.5; padding: 40px; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; border-bottom: 2px solid #000; padding-bottom: 20px; }
+  .logo { font-size: 24px; font-weight: 900; letter-spacing: -1px; text-transform: uppercase; }
+  .logo span { color: #0071e3; }
+  .invoice-details { text-align: right; }
+  .invoice-details h1 { margin: 0; font-size: 13px; font-weight: 700; text-transform: uppercase; color: #555; }
+  .invoice-details p { margin: 5px 0 0; font-size: 14px; color: #777; }
+  .section-title { font-size: 14px; font-weight: 700; text-transform: uppercase; color: #555; margin: 30px 0 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+  .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 10px; }
+  .stat-box { background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #eee; text-align: center; }
+  .stat-val { font-size: 24px; font-weight: 700; color: #111; display: block; margin-bottom: 5px; }
+  .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #666; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; background: #f3f4f6; padding: 10px; font-weight: 600; text-transform: uppercase; font-size: 11px; color: #555; }
+  td { padding: 12px 10px; border-bottom: 1px solid #eee; }
+  .amount { font-weight: 700; color: #111; }
+  .footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #888; text-align: center; }
+  .print-btn { display: inline-block; background: #0071e3; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px; margin-bottom: 20px; cursor: pointer; }
+  @media print { .print-btn { display: none; } }
+</style>
+</head>
+<body>
+  <a class="print-btn" onclick="window.print()">Print Statement</a>
+
+  <div class="header">
+    <div class="logo">GODSPEED<span>BASKETBALL</span></div>
+    <div class="invoice-details">
+      <h1>Training Statement</h1>
+      <p>Date: ${today}</p>
+      <p>Athlete: ${athleteName}</p>
+    </div>
+  </div>
+
+  <div class="section-title">Hours Summary</div>
+  ${packageBoxesHtml}
+
+  <div class="section-title">Session Log</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Package</th>
+        <th>Duration</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${sessionRowsHtml}
+    </tbody>
+  </table>
+
+  <div class="footer">
+    GODSPEED BASKETBALL  |  BROTHERHOOD. HABITS. SUCCESS.<br>
+    clubgodspeed.com
+  </div>
+</body>
+</html>`);
+  win.document.close();
 }
 
 /**
