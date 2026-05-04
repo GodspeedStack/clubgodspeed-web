@@ -20,6 +20,7 @@
     'Quest':  { image: 'src/assets/athletes/quest_scott_monster.png', lastname: 'Scott' },
     'Ashton': { image: 'src/assets/athletes/ashton_comic.jpg',        lastname: 'Bowman' },
     'A.D.':   { image: 'src/assets/athletes/ad_tuiono_99.png',        lastname: 'Tuiono' },
+    'Anton':  { image: 'src/assets/athletes/anton_mythic_art.png',    lastname: 'Blyakhman' },
   };
 
   /* ── Full Roster ─────────────────────────────────────────── */
@@ -31,7 +32,7 @@
     { name: 'Cassius', jersey: 3,  pos: 'G'  },
     { name: 'A.D.',    jersey: 99, pos: 'PF', stats: { PPG: '—', APG: '—', REB: '—', GRD: '—' }, games: [{ opp: 'vs. TBD', stat: '— PTS' }, { opp: '@ TBD', stat: '— PTS' }, { opp: 'Trend', stat: 'Rising' }] },
     { name: 'Howard',  jersey: 5,  pos: 'C'  },
-    { name: 'Anton',   jersey: 12, pos: 'PG' },
+    { name: 'Anton',   jersey: 12, pos: 'PG', stats: { PPG: '5.5', APG: '1.5', SPG: '1.5', GRD: '8.2' }, games: [{ opp: 'Game 1', stat: '7 PTS, 2 AST, 1 STL' }, { opp: 'Game 2', stat: '4 PTS, 1 AST, 2 STL' }, { opp: 'Trend', stat: 'Floor General' }] },
     { name: 'Emory',   jersey: 7,  pos: 'SF' },
     { name: 'Junior',  jersey: 9,  pos: 'G'  },
     { name: 'Kyrie',   jersey: 10, pos: 'G'  },
