@@ -91,36 +91,59 @@ async function init() {
   const loading = document.getElementById('loading');
   const loginScreen = document.getElementById('admin-login-screen');
   const msg = document.getElementById('loading-msg');
+
+  function showLogin() { loading.style.display='none'; loginScreen.style.display='flex'; }
+
+  // Hard timeout: if init takes >5s, force login screen
+  const bailTimer = setTimeout(() => {
+    console.warn('[admin-os] init timed out after 5s, showing login');
+    showLogin();
+  }, 5000);
+
   try {
     osSupabase = window.location.search.includes('preview=1') ? null : getOrCreateSupabaseClient();
     if (osSupabase) {
       msg.textContent = 'Verifying session...';
-      const { data: { session } } = await osSupabase.auth.getSession();
-      if (!session) { loading.style.display = 'none'; loginScreen.style.display = 'flex'; return; }
+
+      // Race getSession against a 4s timeout to prevent hang on stale tokens
+      const sessionResult = await Promise.race([
+        osSupabase.auth.getSession(),
+        new Promise(r => setTimeout(() => r({ data: { session: null }, error: 'timeout' }), 4000))
+      ]);
+      const session = sessionResult?.data?.session;
+      if (!session) { clearTimeout(bailTimer); showLogin(); return; }
+
       // Refresh expired sessions before proceeding
       if (session.expires_at && session.expires_at < Math.floor(Date.now() / 1000)) {
-        const { data: refreshed, error: refreshErr } = await osSupabase.auth.refreshSession();
-        if (refreshErr || !refreshed?.session) { loading.style.display = 'none'; loginScreen.style.display = 'flex'; return; }
+        const { data: refreshed, error: refreshErr } = await Promise.race([
+          osSupabase.auth.refreshSession(),
+          new Promise(r => setTimeout(() => r({ data: null, error: 'timeout' }), 4000))
+        ]);
+        if (refreshErr || !refreshed?.session) { clearTimeout(bailTimer); showLogin(); return; }
       }
+
       msg.textContent = 'Verifying admin credentials...';
-      const { data } = await osSupabase.from('profiles').select('role,approved,full_name,email').eq('id', session.user.id).single();
+      const {data} = await osSupabase.from('profiles').select('role,approved,full_name,email').eq('id',session.user.id).single();
       if ((data?.role === 'director' || data?.role === 'coach') && data?.approved) {
         document.getElementById('director-name').textContent = data.full_name || (data?.role === 'director' ? 'Director' : 'Coach');
         document.getElementById('director-email').textContent = data.email;
-        document.getElementById('director-initials').textContent = (data.full_name || 'D').charAt(0).toUpperCase();
-        loading.style.display = 'none'; loginScreen.style.display = 'none';
+        document.getElementById('director-initials').textContent = (data.full_name||'D').charAt(0).toUpperCase();
+        clearTimeout(bailTimer);
+        loading.style.display='none'; loginScreen.style.display='none';
         await loadDashboard(); loadTeamsDropdowns(); return;
       } else {
+        clearTimeout(bailTimer);
         msg.textContent = 'Unauthorized: Coach or Director access required.';
         loading.querySelector('h2').style.webkitTextFillColor = '#ef4444';
-        setTimeout(async () => { await osSupabase.auth.signOut(); window.location.reload(); }, 2000); return;
+        setTimeout(async()=>{ await osSupabase.auth.signOut(); window.location.reload(); },2000); return;
       }
     }
-    loading.style.display = 'none';
-    document.getElementById('director-name').textContent = 'Offline Mode';
-    document.getElementById('director-email').textContent = 'No connection';
+    clearTimeout(bailTimer);
+    loading.style.display='none';
+    document.getElementById('director-name').textContent='Offline Mode';
+    document.getElementById('director-email').textContent='No connection';
     await loadDashboard();
-  } catch (e) { console.error(e); loading.style.display = 'none'; await loadDashboard(); }
+  } catch(e) { clearTimeout(bailTimer); console.error(e); loading.style.display='none'; await loadDashboard(); }
 }
 
 // ─── LOGIN ──────────────────────────────────────────────────
