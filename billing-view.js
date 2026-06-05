@@ -25,8 +25,11 @@ async function resolveEnrollmentData(supabase, userId) {
       .from('parent_dues_enrollment')
       .select('total_owed, total_paid')
       .eq('athlete_id', links[0].athlete_id)
-      .limit(1)
-      .single();
+      .order('total_paid', { ascending: false })
+      .limit(1);
+    if (enr.data && enr.data.length) {
+      enr.data = enr.data[0];
+    }
     if (enr.data) {
       result.totalOwed = parseFloat(enr.data.total_owed) || 745;
       result.totalPaid = parseFloat(enr.data.total_paid) || 0;
