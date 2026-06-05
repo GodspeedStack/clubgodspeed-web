@@ -7,6 +7,35 @@
 'use strict';
 
 /**
+ * Resolve enrollment data: total_owed and total_paid from parent_dues_enrollment.
+ * Falls back to hardcoded $745 / $0 if no enrollment record exists.
+ */
+async function resolveEnrollmentData(supabase, userId) {
+  var result = { totalOwed: 745, totalPaid: 0 };
+  try {
+    var resp = await supabase
+      .from('parent_player_links')
+      .select('athlete_id')
+      .eq('profile_id', userId)
+      .limit(1);
+    var links = resp.data;
+    if (!links || !links.length) return result;
+
+    var enr = await supabase
+      .from('parent_dues_enrollment')
+      .select('total_owed, total_paid')
+      .eq('athlete_id', links[0].athlete_id)
+      .limit(1)
+      .single();
+    if (enr.data) {
+      result.totalOwed = parseFloat(enr.data.total_owed) || 745;
+      result.totalPaid = parseFloat(enr.data.total_paid) || 0;
+    }
+  } catch (e) { console.warn('Enrollment lookup:', e); }
+  return result;
+}
+
+/**
  * Render Billing Dashboard
  */
 window.renderBilling = async function (email) {
@@ -38,6 +67,11 @@ window.renderBilling = async function (email) {
 
         const user = session.user;
 
+        // 0. Resolve actual dues from enrollment table (replaces hardcoded $745)
+        const enrollment = await resolveEnrollmentData(supabase, user.id);
+        const baseDues = enrollment.totalOwed;
+        const paidSoFar = enrollment.totalPaid;
+
         // 1. Fetch Payment Plan
         const { data: plans, error: plansError } = await supabase
             .from('payment_plans')
@@ -55,9 +89,9 @@ window.renderBilling = async function (email) {
             statusTextEl.style.color = '#ef4444';
             statusCard.style.borderLeftColor = '#ef4444';
             if (sectionHeaderEl) sectionHeaderEl.textContent = 'Payment Plan';
-            await renderPlanSelectionUI(container, user.id, supabase, email);
-            if (totalDueEl) totalDueEl.textContent = '$745.00';
-            loadFundraisingCredit(supabase, user.id, 745);
+            await renderPlanSelectionUI(container, user.id, supabase, email, baseDues, paidSoFar);
+            if (totalDueEl) totalDueEl.textContent = '$' + Math.max(baseDues - paidSoFar, 0).toFixed(2);
+            loadFundraisingCredit(supabase, user.id, baseDues, paidSoFar);
             return;
         }
 
@@ -91,7 +125,7 @@ window.renderBilling = async function (email) {
             statusTextEl.textContent = isOverdue ? 'Payment Overdue' : 'Payment Due ' + (now < aprilFirst ? 'Apr 1' : 'Soon');
             statusTextEl.style.color = isOverdue ? '#ef4444' : '#f59e0b';
             statusCard.style.borderLeftColor = isOverdue ? '#ef4444' : '#f59e0b';
-            if (totalDueEl) totalDueEl.textContent = '$745.00';
+            if (totalDueEl) totalDueEl.textContent = '$' + Math.max(baseDues - paidSoFar, 0).toFixed(2);
         } else {
             statusTextEl.textContent = 'Paid in Full';
             statusTextEl.style.color = '#10b981';
@@ -99,9 +133,9 @@ window.renderBilling = async function (email) {
             if (totalDueEl) totalDueEl.textContent = '$0.00';
         }
 
-        // Load fundraising credit — always pass base dues ($745) so the
-        // breakdown shows the full amount before credits are applied.
-        loadFundraisingCredit(supabase, user.id, 745);
+        // Load fundraising credit — pass real base dues and payments so the
+        // breakdown and header reflect the actual remaining balance.
+        loadFundraisingCredit(supabase, user.id, baseDues, paidSoFar);
 
     } catch (e) {
         console.error("Billing Error:", e);
@@ -124,7 +158,7 @@ function handleDemoBilling(container, totalDueEl, statusTextEl, statusCard) {
 }
 
 // ─── FUNDRAISING CREDIT (parent billing view) ──────────────
-async function loadFundraisingCredit(supabase, userId, totalDue) {
+async function loadFundraisingCredit(supabase, userId, totalDue, totalPaid) {
   const card = document.getElementById('billing-fundraising-card');
   if (!card) return;
   try {
@@ -151,7 +185,11 @@ async function loadFundraisingCredit(supabase, userId, totalDue) {
     if (raised <= 0) return;
 
     const originalDues = totalDue || 745;
-    const newBalance = Math.max(originalDues - raised, 0);
+    const paid = totalPaid || 0;
+    // afterFundraising: for the fundraising card breakdown (excludes payments)
+    const afterFundraising = Math.max(originalDues - raised, 0);
+    // finalRemaining: for the header total (fundraising + payments combined)
+    const finalRemaining = Math.max(afterFundraising - paid, 0);
     const progressPct = Math.min((raised / originalDues) * 100, 100);
 
     // 3. Populate static values
@@ -160,7 +198,7 @@ async function loadFundraisingCredit(supabase, userId, totalDue) {
     document.getElementById('fc-raised').textContent = '-$' + raised.toFixed(2);
     document.getElementById('fc-original-strike').textContent = '$' + originalDues.toFixed(2);
     document.getElementById('fc-progress-label').textContent = Math.round(progressPct) + '% offset by fundraising';
-    document.getElementById('fc-remaining-label').textContent = newBalance > 0 ? '$' + newBalance.toFixed(2) + ' remaining' : 'Fully covered!';
+    document.getElementById('fc-remaining-label').textContent = afterFundraising > 0 ? '$' + afterFundraising.toFixed(2) + ' after fundraising' : 'Fully covered by fundraising!';
 
     // 4. Show card
     card.style.display = 'block';
@@ -188,7 +226,7 @@ async function loadFundraisingCredit(supabase, userId, totalDue) {
         const balanceRow = document.getElementById('fc-balance-row');
         balanceRow.style.opacity = '1';
         balanceRow.style.transform = 'translateY(0)';
-        animateCountdown(newBalanceEl, originalDues, newBalance, 900);
+        animateCountdown(newBalanceEl, originalDues, afterFundraising, 900);
       }, 800);
 
       // Progress bar + confetti burst
@@ -200,36 +238,37 @@ async function loadFundraisingCredit(supabase, userId, totalDue) {
         launchFundraisingConfetti();
       }, 1200);
 
-      // Update main status card
+      // Update main status card — animate from payment-adjusted amount to final
       setTimeout(() => {
         const totalDueEl = document.getElementById('billing-total-due');
-        if (totalDueEl) animateCountdown(totalDueEl, originalDues, newBalance, 600);
+        var headerFrom = Math.max(originalDues - paid, 0);
+        if (totalDueEl) animateCountdown(totalDueEl, headerFrom, finalRemaining, 600);
         const statusCard = document.getElementById('billing-status-card');
         const statusText = document.getElementById('billing-status-text');
-        if (newBalance <= 0 && statusCard && statusText) {
-          statusText.textContent = 'Covered by Fundraising';
+        if (finalRemaining <= 0 && statusCard && statusText) {
+          statusText.textContent = paid > 0 ? 'Paid in Full' : 'Covered by Fundraising';
           statusText.style.color = '#10b981';
           statusCard.style.borderLeftColor = '#10b981';
         }
 
         // Also update static Venmo modal if it exists
         const modalBalance = document.getElementById('tuition-modal-balance');
-        if (modalBalance) modalBalance.textContent = '$' + newBalance.toFixed(2);
+        if (modalBalance) modalBalance.textContent = '$' + finalRemaining.toFixed(2);
 
         const quickFull = document.getElementById('tuition-quick-full');
         if (quickFull) {
-          quickFull.textContent = '$' + Math.ceil(newBalance) + ' Full';
-          quickFull.onclick = function() { document.getElementById('tuition-pay-amount').value = newBalance.toFixed(2); };
+          quickFull.textContent = '$' + Math.ceil(finalRemaining) + ' Full';
+          quickFull.onclick = function() { document.getElementById('tuition-pay-amount').value = finalRemaining.toFixed(2); };
         }
         const quickHalf = document.getElementById('tuition-quick-half');
         if (quickHalf) {
-          const half = Math.ceil(newBalance / 2);
+          const half = Math.ceil(finalRemaining / 2);
           quickHalf.textContent = '$' + half + ' Half';
           quickHalf.onclick = function() { document.getElementById('tuition-pay-amount').value = half; };
         }
         const quickCustom = document.getElementById('tuition-quick-custom');
         if (quickCustom) {
-          const custom = Math.min(250, Math.ceil(newBalance));
+          const custom = Math.min(250, Math.ceil(finalRemaining));
           quickCustom.textContent = '$' + custom;
           quickCustom.onclick = function() { document.getElementById('tuition-pay-amount').value = custom; };
         }
@@ -345,9 +384,9 @@ async function loadBillingTrainingSchedule() {
   } catch (e) { console.error('Training schedule load:', e); }
 }
 
-async function renderPlanSelectionUI(container, parentId, supabase, email) {
+async function renderPlanSelectionUI(container, parentId, supabase, email, enrolledOwed, enrolledPaid) {
     // Resolve fundraising credit to calculate adjusted total
-    const BASE_DUES = 745;
+    const BASE_DUES = enrolledOwed || 745;
     let fundraisingCredit = 0;
     let athleteName = '';
     try {
