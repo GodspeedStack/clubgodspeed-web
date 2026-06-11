@@ -1,6 +1,3 @@
-[config]
-id = "nnqokhqennuxalamnvps"
-
 # ── Edge Function Configuration ──────────────────────────────
 # Functions that use service_role internally and are called from
 # the client SDK with a user session JWT should have verify_jwt = false
