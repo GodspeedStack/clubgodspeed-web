@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fundraising Admin | Godspeed</title>
+    <meta name="robots" content="noindex">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --blue: #2563eb; --ink: #111111; --muted: #6e6e73; --line: #e5e5ea; --bg-soft: #f5f5f7; --red: #dc2626; --green: #059669; }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif; color: var(--ink); background: var(--bg-soft); font-size: 14px; }
+        .topbar { background: var(--ink); color: #fff; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .topbar .brand { font-weight: 800; letter-spacing: 2px; font-size: 13px; }
+        .topbar .brand span { color: #3b82f6; }
+        .topbar a { color: #a1a1a6; text-decoration: none; font-size: 13px; }
+        .wrap { max-width: 1200px; margin: 0 auto; padding: 28px 24px 80px; }
+        h1 { font-size: 22px; font-weight: 800; margin: 0 0 4px; }
+        .sub { color: var(--muted); margin: 0 0 24px; }
+        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
+        .stat-card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+        .stat-card .num { font-size: 26px; font-weight: 800; }
+        .stat-card .lbl { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+        .panel { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 24px; margin-bottom: 20px; }
+        .panel h2 { font-size: 15px; font-weight: 700; margin: 0 0 16px; display: flex; justify-content: space-between; align-items: center; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { text-align: left; padding: 8px 10px; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--line); white-space: nowrap; }
+        td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+        .num-cell { text-align: right; font-variant-numeric: tabular-nums; }
+        .chip { display: inline-block; border-radius: 6px; padding: 3px 10px; font-size: 12px; font-weight: 600; }
+        .chip-blue { background: #eff6ff; color: var(--blue); }
+        .chip-green { background: #ecfdf5; color: var(--green); }
+        .chip-gray { background: var(--bg-soft); color: var(--muted); }
+        .chip-amber { background: #fffbeb; color: #b45309; }
+        .act { text-decoration: none; cursor: pointer; font-size: 13px; }
+        .act-blue { color: var(--blue); }
+        .act-red { color: var(--red); }
+        .act:hover { opacity: .6; }
+        .pill { background: var(--blue); color: #fff; border: none; cursor: pointer; padding: 10px 24px; border-radius: 999px; font-weight: 700; font-size: 13px; font-family: inherit; }
+        .pill-ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+        .pill-red { background: var(--red); }
+        .pill:disabled { opacity: .5; cursor: default; }
+        .confirm-panel { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 12px; padding: 16px 20px; margin-top: 14px; display: none; }
+        .confirm-panel p { margin: 0 0 12px; font-size: 13px; }
+        .field { padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line); font-size: 13px; font-family: inherit; }
+        .field:focus { outline: none; border-color: var(--blue); }
+        .login-card { max-width: 380px; margin: 80px auto; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 36px; text-align: center; }
+        .status { font-size: 13px; min-height: 18px; margin-top: 10px; }
+        .status.err { color: var(--red); }
+        .status.ok { color: var(--green); }
+        .bar-mini { background: var(--bg-soft); border-radius: 999px; height: 6px; width: 120px; display: inline-block; vertical-align: middle; overflow: hidden; }
+        .bar-mini > div { background: var(--blue); height: 6px; border-radius: 999px; }
+        #app { display: none; }
+        .inline-edit { width: 80px; }
+        .muted { color: var(--muted); }
+    </style>
+</head>
+
+<body>
+    <div class="topbar">
+        <div class="brand">GODSPEED<span>RAISE</span> ADMIN</div>
+        <a href="admin-os.html">Back to Admin OS</a>
+    </div>
+
+    <div class="login-card" id="login-gate">
+        <h1 style="font-size:18px;">Fundraising Admin</h1>
+        <p class="muted" style="margin: 8px 0 20px;">Staff sign-in required.</p>
+        <button class="pill" id="login-btn" style="width:100%;">Sign in with Google</button>
+        <div class="status err" id="login-error"></div>
+    </div>
+
+    <div class="wrap" id="app">
+        <h1 id="campaign-title">Loading campaign...</h1>
+        <p class="sub" id="campaign-meta"></p>
+
+        <div class="cards">
+            <div class="stat-card"><div class="num" id="s-raised">$0</div><div class="lbl">Raised</div></div>
+            <div class="stat-card"><div class="num" id="s-goal">$0</div><div class="lbl">Goal</div></div>
+            <div class="stat-card"><div class="num" id="s-donors">0</div><div class="lbl">Donations</div></div>
+            <div class="stat-card"><div class="num" id="s-contacts">0</div><div class="lbl">Contacts loaded</div></div>
+            <div class="stat-card"><div class="num" id="s-emails">0</div><div class="lbl">Emails sent</div></div>
+        </div>
+
+        <div class="panel" id="launch-panel">
+            <h2>Campaign control</h2>
+            <div id="status-row" style="margin-bottom: 8px;"></div>
+            <button class="pill" id="launch-btn" style="display:none;">Launch campaign</button>
+            <button class="pill pill-red" id="end-btn" style="display:none;">End campaign</button>
+            <div class="confirm-panel" id="confirm-panel">
+                <p id="confirm-text"></p>
+                <button class="pill" id="confirm-yes">Confirm</button>
+                <button class="pill pill-ghost" id="confirm-no">Cancel</button>
+            </div>
+            <div class="status" id="control-status"></div>
+        </div>
+
+        <div class="panel">
+            <h2>Athletes <span><a class="act act-blue" id="export-csv">Export donations CSV</a></span></h2>
+            <table>
+                <thead><tr>
+                    <th>Athlete</th><th>Progress</th><th class="num-cell">Raised</th><th class="num-cell">Goal</th>
+                    <th class="num-cell">Donors</th><th class="num-cell">Contacts</th><th>Parent linked</th><th></th>
+                </tr></thead>
+                <tbody id="athlete-rows"></tbody>
+            </table>
+        </div>
+
+        <div class="panel">
+            <h2>Recent donations</h2>
+            <table>
+                <thead><tr><th>When</th><th>Donor</th><th>Email</th><th>For</th><th class="num-cell">Amount</th><th>Status</th></tr></thead>
+                <tbody id="donation-rows"></tbody>
+            </table>
+            <p class="muted" id="donations-empty" style="display:none;">No donations yet.</p>
+        </div>
+
+        <div class="panel">
+            <h2>Email activity (latest 100)</h2>
+            <table>
+                <thead><tr><th>Sent</th><th>Type</th><th>Recipient</th></tr></thead>
+                <tbody id="email-rows"></tbody>
+            </table>
+            <p class="muted" id="emails-empty" style="display:none;">Nothing sent yet. The engine runs daily once the campaign is live.</p>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            'use strict';
+            const SUPABASE_URL = 'https://nnqokhqennuxalamnvps.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis';
+            const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            const CAMPAIGN_SLUG = new URLSearchParams(location.search).get('c') || '10u-season-2026';
+
+            let campaign = null;
+            let pendingAction = null;
+
+            const usd = (n) => '$' + Number(n || 0).toLocaleString('en-US');
+            function esc(s) { const d = document.createElement('div'); d.textContent = String(s == null ? '' : s); return d.innerHTML; }
+            function setStatus(id, msg, ok) { const el = document.getElementById(id); el.textContent = msg; el.className = 'status ' + (ok ? 'ok' : 'err'); }
+
+            async function init() {
+                const { data: { session } } = await sb.auth.getSession();
+                if (!session) return;
+                const { data: profile } = await sb.from('profiles').select('role').eq('id', session.user.id).single();
+                if (!profile || !['director', 'coach'].includes(profile.role)) {
+                    document.getElementById('login-gate').innerHTML = '<h1 style="font-size:18px;">Access denied</h1><p class="muted">Staff accounts only.</p>';
+                    return;
+                }
+                document.getElementById('login-gate').style.display = 'none';
+                document.getElementById('app').style.display = 'block';
+                await loadAll();
+            }
+
+            async function loadAll() {
+                const { data: c } = await sb.from('fundraising_campaigns')
+                    .select('*').eq('slug', CAMPAIGN_SLUG).single();
+                if (!c) { document.getElementById('campaign-title').textContent = 'Campaign not found: ' + CAMPAIGN_SLUG; return; }
+                campaign = c;
+
+                document.getElementById('campaign-title').textContent = c.title;
+                document.getElementById('campaign-meta').textContent =
+                    'Runs ' + new Date(c.starts_at).toLocaleDateString() + ' to ' + new Date(c.ends_at).toLocaleDateString();
+
+                const statusChip = { draft: 'chip-gray', live: 'chip-green', ended: 'chip-amber', paid_out: 'chip-blue' }[c.status] || 'chip-gray';
+                document.getElementById('status-row').innerHTML = 'Status: <span class="chip ' + statusChip + '">' + esc(c.status.toUpperCase()) + '</span>';
+                document.getElementById('launch-btn').style.display = c.status === 'draft' ? 'inline-block' : 'none';
+                document.getElementById('end-btn').style.display = c.status === 'live' ? 'inline-block' : 'none';
+
+                const [{ data: board }, { data: donations }, { data: contacts }, { data: emails }] = await Promise.all([
+                    sb.from('participant_leaderboard').select('*').eq('campaign_id', c.id).order('raised', { ascending: false }),
+                    sb.from('donations').select('*').eq('campaign_id', c.id).order('created_at', { ascending: false }).limit(100),
+                    sb.from('fundraiser_contacts').select('id, participant_id'),
+                    sb.from('fundraiser_email_log').select('email_type, recipient, sent_at').order('sent_at', { ascending: false }).limit(100)
+                ]);
+
+                const participants = board || [];
+                const totalRaised = participants.reduce((s, p) => s + Number(p.raised), 0);
+                const completed = (donations || []).filter(d => d.status === 'completed');
+                document.getElementById('s-raised').textContent = usd(totalRaised);
+                document.getElementById('s-goal').textContent = usd(c.goal_amount);
+                document.getElementById('s-donors').textContent = completed.length;
+                document.getElementById('s-contacts').textContent = (contacts || []).length;
+                document.getElementById('s-emails').textContent = (emails || []).length >= 100 ? '100+' : (emails || []).length;
+
+                const contactCount = {};
+                (contacts || []).forEach(x => { contactCount[x.participant_id] = (contactCount[x.participant_id] || 0) + 1; });
+
+                // Need parent linkage info
+                const { data: parts } = await sb.from('campaign_participants')
+                    .select('id, parent_id, personal_goal').eq('campaign_id', c.id);
+                const partById = {};
+                (parts || []).forEach(p => { partById[p.id] = p; });
+
+                document.getElementById('athlete-rows').innerHTML = participants.map(function (p) {
+                    const pct = Math.min(Math.round((Number(p.raised) / Number(p.personal_goal || 1)) * 100), 100);
+                    const cCount = contactCount[p.participant_id] || 0;
+                    const linked = partById[p.participant_id] && partById[p.participant_id].parent_id;
+                    const contactsChip = cCount === 0 ? 'chip-amber' : 'chip-blue';
+                    return '<tr>'
+                        + '<td><strong>' + esc(p.athlete_name) + '</strong></td>'
+                        + '<td><span class="bar-mini"><div style="width:' + pct + '%"></div></span> <span class="muted">' + pct + '%</span></td>'
+                        + '<td class="num-cell">' + usd(p.raised) + '</td>'
+                        + '<td class="num-cell"><input class="field inline-edit" type="number" value="' + Number(p.personal_goal) + '" data-goal-for="' + p.participant_id + '"></td>'
+                        + '<td class="num-cell">' + p.donor_count + '</td>'
+                        + '<td class="num-cell"><span class="chip ' + contactsChip + '">' + cCount + '</span></td>'
+                        + '<td>' + (linked ? '<span class="chip chip-green">Linked</span>' : '<span class="chip chip-gray">Not linked</span>') + '</td>'
+                        + '<td><a class="act act-blue" data-save-goal="' + p.participant_id + '">Save goal</a> · '
+                        + '<a class="act act-blue" target="_blank" href="fundraise-player.html?p=' + encodeURIComponent(p.slug) + '&c=' + encodeURIComponent(CAMPAIGN_SLUG) + '">View page</a></td>'
+                        + '</tr>';
+                }).join('');
+
+                document.querySelectorAll('[data-save-goal]').forEach(function (a) {
+                    a.addEventListener('click', async function () {
+                        const id = a.getAttribute('data-save-goal');
+                        const val = parseFloat(document.querySelector('[data-goal-for="' + id + '"]').value);
+                        if (!Number.isFinite(val) || val <= 0) return;
+                        await sb.from('campaign_participants').update({ personal_goal: val }).eq('id', id);
+                        a.textContent = 'Saved';
+                        setTimeout(function () { a.textContent = 'Save goal'; }, 1500);
+                    });
+                });
+
+                // Donations
+                const dRows = donations || [];
+                document.getElementById('donations-empty').style.display = dRows.length ? 'none' : 'block';
+                const nameByPart = {};
+                participants.forEach(p => { nameByPart[p.participant_id] = p.athlete_name; });
+                document.getElementById('donation-rows').innerHTML = dRows.map(function (d) {
+                    const chip = { completed: 'chip-green', pending: 'chip-gray', refunded: 'chip-amber' }[d.status];
+                    return '<tr>'
+                        + '<td class="muted">' + new Date(d.created_at).toLocaleString() + '</td>'
+                        + '<td>' + esc(d.donor_name) + (d.is_anonymous ? ' <span class="chip chip-gray">Anon on wall</span>' : '') + '</td>'
+                        + '<td class="muted">' + esc(d.donor_email) + '</td>'
+                        + '<td>' + esc(nameByPart[d.participant_id] || 'Team') + '</td>'
+                        + '<td class="num-cell"><strong>' + usd(d.amount) + '</strong></td>'
+                        + '<td><span class="chip ' + chip + '">' + d.status + '</span></td>'
+                        + '</tr>';
+                }).join('');
+
+                // Email log
+                const eRows = emails || [];
+                document.getElementById('emails-empty').style.display = eRows.length ? 'none' : 'block';
+                document.getElementById('email-rows').innerHTML = eRows.map(function (e) {
+                    return '<tr><td class="muted">' + new Date(e.sent_at).toLocaleString() + '</td>'
+                        + '<td><span class="chip chip-blue">' + esc(e.email_type) + '</span></td>'
+                        + '<td class="muted">' + esc(e.recipient) + '</td></tr>';
+                }).join('');
+
+                // CSV export
+                document.getElementById('export-csv').onclick = function () {
+                    const header = 'created_at,donor_name,donor_email,athlete,amount,status,message\n';
+                    const body = dRows.map(function (d) {
+                        const cells = [d.created_at, d.donor_name, d.donor_email, nameByPart[d.participant_id] || 'Team', d.amount, d.status, d.message || ''];
+                        return cells.map(function (v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(',');
+                    }).join('\n');
+                    const blob = new Blob([header + body], { type: 'text/csv' });
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = 'godspeed-donations-' + CAMPAIGN_SLUG + '.csv';
+                    a.click();
+                };
+            }
+
+            // Campaign control with confirmation panel (intentional friction)
+            function askConfirm(action, text) {
+                pendingAction = action;
+                document.getElementById('confirm-text').textContent = text;
+                document.getElementById('confirm-panel').style.display = 'block';
+            }
+            document.getElementById('launch-btn').addEventListener('click', function () {
+                askConfirm('live', 'Launching makes the campaign public and starts the automated email cadence to every uploaded contact on the next engine run. Confirm launch?');
+            });
+            document.getElementById('end-btn').addEventListener('click', function () {
+                askConfirm('ended', 'Ending stops all ask emails and triggers the final impact email to donors. This cannot be undone. Confirm end?');
+            });
+            document.getElementById('confirm-no').addEventListener('click', function () {
+                pendingAction = null;
+                document.getElementById('confirm-panel').style.display = 'none';
+            });
+            document.getElementById('confirm-yes').addEventListener('click', async function () {
+                if (!pendingAction || !campaign) return;
+                const { error } = await sb.from('fundraising_campaigns').update({ status: pendingAction }).eq('id', campaign.id);
+                document.getElementById('confirm-panel').style.display = 'none';
+                if (error) { setStatus('control-status', 'Failed: ' + error.message, false); return; }
+                setStatus('control-status', 'Campaign is now ' + pendingAction + '.', true);
+                pendingAction = null;
+                await loadAll();
+            });
+
+            document.getElementById('login-btn').addEventListener('click', async function () {
+                const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } });
+                if (error) setStatus('login-error', error.message, false);
+            });
+
+            sb.auth.onAuthStateChange(function (event) { if (event === 'SIGNED_IN') init(); });
+            init();
+        })();
+    </script>
+</body>
+
+</html>

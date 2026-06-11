@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support a Player | Godspeed Basketball</title>
+    <meta name="description" content="Back a Godspeed athlete directly. Zero platform fees. Every dollar goes to the kids.">
+    <meta property="og:title" content="Support a Player | Godspeed Basketball">
+    <meta property="og:description" content="Zero platform fees. Every dollar goes to the kids.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/hero-collage.png">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="responsive-nav.css">
+    <link rel="stylesheet" href="nav-unified.css">
+    <style>
+        :root {
+            --blue: #2563eb;
+            --ink: #111111;
+            --muted: #6e6e73;
+            --line: #e5e5ea;
+            --bg-soft: #f5f5f7;
+        }
+
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Inter', -apple-system, sans-serif; color: var(--ink); background: #fff; }
+
+        .navbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1.25rem 2rem; position: sticky; top: 0; z-index: 1000;
+            background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); width: 100%;
+        }
+
+        .raise-wrap { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
+
+        .player-hero { background: var(--ink); color: #fff; padding: 64px 0 56px; }
+        .hero-flex { display: flex; gap: 32px; align-items: center; flex-wrap: wrap; }
+        .big-avatar { width: 112px; height: 112px; border-radius: 50%; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 38px; flex-shrink: 0; overflow: hidden; }
+        .big-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .player-hero .kicker { color: #3b82f6; font-size: 13px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; margin: 0 0 10px; }
+        .player-hero h1 { font-size: clamp(30px, 5vw, 46px); font-weight: 900; margin: 0 0 6px; line-height: 1.1; }
+        .player-hero .team { color: #a1a1a6; font-size: 15px; margin: 0; }
+
+        .hero-progress { background: rgba(255,255,255,0.08); border-radius: 16px; padding: 24px; margin-top: 32px; }
+        .bar-track { background: rgba(255,255,255,0.15); border-radius: 999px; height: 12px; overflow: hidden; }
+        .bar-fill { background: var(--blue); height: 12px; border-radius: 999px; width: 0; transition: width 1.2s cubic-bezier(.22,1,.36,1); }
+        .hero-stats { display: flex; gap: 36px; margin-top: 18px; flex-wrap: wrap; }
+        .hero-stat .num { font-size: 24px; font-weight: 900; }
+        .hero-stat .lbl { font-size: 12px; color: #a1a1a6; letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+        .layout { display: grid; grid-template-columns: 1fr 400px; gap: 40px; padding: 56px 0; }
+        @media (max-width: 880px) { .layout { grid-template-columns: 1fr; } }
+
+        .story h2 { font-size: 22px; font-weight: 900; margin: 0 0 14px; }
+        .story p { font-size: 15px; line-height: 1.7; color: #3a3a3c; }
+        .zero-fee { background: var(--bg-soft); border-radius: 14px; padding: 18px 22px; font-size: 13px; color: var(--muted); line-height: 1.6; margin-top: 24px; }
+        .zero-fee strong { color: var(--ink); }
+
+        .supporters { margin-top: 36px; }
+        .supporters h2 { font-size: 22px; font-weight: 900; margin: 0 0 14px; }
+        .sup-card { border-bottom: 1px solid var(--line); padding: 14px 0; }
+        .sup-card .top { display: flex; justify-content: space-between; align-items: baseline; }
+        .sup-card .name { font-weight: 700; font-size: 14px; }
+        .sup-card .amt { font-weight: 900; color: var(--blue); font-size: 14px; }
+        .sup-card .msg { font-size: 13px; color: var(--muted); margin: 4px 0 0; line-height: 1.5; }
+
+        .donate-card { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 32px; position: sticky; top: 96px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); }
+        .donate-card h2 { font-size: 19px; font-weight: 900; margin: 0 0 18px; }
+        .amount-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+        .amount-btn { padding: 12px 0; border-radius: 12px; border: 1px solid var(--line); background: #fff; font-weight: 700; font-size: 14px; cursor: pointer; font-family: inherit; }
+        .amount-btn:hover { border-color: var(--blue); }
+        .amount-active { background: var(--blue); color: #fff; border-color: var(--blue); }
+        .field { width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--line); font-size: 14px; font-family: inherit; margin-bottom: 10px; }
+        .field:focus { outline: none; border-color: var(--blue); }
+        .anon-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+        .form-error { color: #dc2626; font-size: 13px; min-height: 18px; margin-bottom: 6px; }
+        .pill { display: inline-block; background: var(--blue); color: #fff; border: none; cursor: pointer;
+                padding: 13px 32px; border-radius: 999px; font-weight: 700; font-size: 15px; font-family: inherit;
+                text-decoration: none; transition: opacity .15s; }
+        .pill:hover { opacity: .85; }
+        .pill-ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); font-size: 13px; padding: 10px 20px; }
+        .pill-ghost:hover { background: var(--bg-soft); opacity: 1; }
+        .secure-note { font-size: 12px; color: #a1a1a6; margin-top: 10px; }
+        .share-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+
+        .thanks-banner { display: none; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; border-radius: 14px; padding: 16px 20px; margin-top: 24px; font-size: 14px; font-weight: 600; }
+        .back-link { display: inline-block; color: #a1a1a6; text-decoration: none; font-size: 13px; margin-bottom: 18px; }
+        .back-link:hover { color: #fff; }
+        .skeleton { color: transparent !important; background: rgba(255,255,255,0.1); border-radius: 8px; animation: pulse 1.4s ease-in-out infinite; }
+        @keyframes pulse { 50% { opacity: .5; } }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="logo">GODSPEED<span style="color: #2563eb;">BASKETBALL</span></div>
+        <div class="nav-desktop-unified">
+            <div class="nav-links-unified">
+                <a href="index.html">Home</a>
+                <a href="training.html">Training</a>
+                <a href="aau.html">AAU</a>
+                <a href="fundraise.html" style="color: #2563eb;">Fundraise</a>
+                <a href="about.html">About</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="player-hero">
+        <div class="raise-wrap">
+            <a class="back-link" id="back-link" href="fundraise.html">&larr; Back to team campaign</a>
+            <div class="hero-flex">
+                <div class="big-avatar" id="player-avatar"></div>
+                <div>
+                    <p class="kicker">Godspeed Raise</p>
+                    <h1 id="player-name" class="skeleton">Player</h1>
+                    <p class="team" id="campaign-title">10U Development Black</p>
+                </div>
+            </div>
+            <div class="hero-progress">
+                <div class="bar-track"><div class="bar-fill" id="hero-bar"></div></div>
+                <div class="hero-stats">
+                    <div class="hero-stat"><div class="num" id="stat-raised">$0</div><div class="lbl">Raised</div></div>
+                    <div class="hero-stat"><div class="num" id="stat-goal">$0</div><div class="lbl">Goal</div></div>
+                    <div class="hero-stat"><div class="num" id="stat-donors">0</div><div class="lbl">Donors</div></div>
+                    <div class="hero-stat"><div class="num" id="stat-days">0</div><div class="lbl">Days left</div></div>
+                </div>
+            </div>
+            <div class="thanks-banner" data-thanks-banner>Thank you. Your donation went through and a receipt is on its way to your inbox.</div>
+        </div>
+    </header>
+
+    <div class="raise-wrap">
+        <div class="layout">
+            <div>
+                <div class="story">
+                    <h2 id="story-heading">Why I'm fundraising</h2>
+                    <p id="player-story">Loading...</p>
+                    <div class="zero-fee">
+                        <strong>Where your money goes:</strong> Godspeed runs its own fundraising platform. Unlike the big platforms that keep 14 to 24 percent, only card processing comes out of your gift. The rest funds tournaments, training, travel, and gear.
+                    </div>
+                </div>
+                <div class="supporters">
+                    <h2>Supporters</h2>
+                    <div id="supporter-list"></div>
+                    <p id="sup-empty" style="display:none; color: var(--muted); font-size: 14px;">Be the first to back <span id="sup-empty-name"></span>.</p>
+                </div>
+            </div>
+
+            <div>
+                <div class="donate-card">
+                    <h2 id="donate-heading">Make a donation</h2>
+                    <form data-donate-form novalidate>
+                        <div class="amount-row">
+                            <button type="button" class="amount-btn" data-amount="25">$25</button>
+                            <button type="button" class="amount-btn amount-active" data-amount="50">$50</button>
+                            <button type="button" class="amount-btn" data-amount="100">$100</button>
+                            <button type="button" class="amount-btn" data-amount="250">$250</button>
+                        </div>
+                        <input class="field" type="number" min="5" step="1" value="50" data-amount-input placeholder="Custom amount" aria-label="Donation amount">
+                        <input class="field" type="text" name="donorName" placeholder="Your name" autocomplete="name" maxlength="120">
+                        <input class="field" type="email" name="donorEmail" placeholder="Email for your receipt" autocomplete="email" maxlength="254">
+                        <input class="field" type="text" name="message" placeholder="Message of support (optional)" maxlength="280">
+                        <label class="anon-row"><input type="checkbox" name="isAnonymous"> Keep my name off the donor wall</label>
+                        <div class="form-error" data-form-error></div>
+                        <button type="submit" class="pill" data-donate-submit style="width: 100%;">Donate securely</button>
+                        <p class="secure-note">Payments are processed by Stripe. Godspeed never sees or stores your card details.</p>
+                    </form>
+                    <div class="share-row">
+                        <button class="pill pill-ghost" id="copy-link">Copy link</button>
+                        <a class="pill pill-ghost" id="share-sms">Text</a>
+                        <a class="pill pill-ghost" id="share-email">Email</a>
+                        <a class="pill pill-ghost" id="share-x" target="_blank" rel="noopener">X</a>
+                        <a class="pill pill-ghost" id="share-fb" target="_blank" rel="noopener">Facebook</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="shared-footer"></div>
+
+    <script src="fundraise.js"></script>
+    <script src="shared-footer.js"></script>
+    <script>
+        (async function () {
+            const R = window.GodspeedRaise;
+            R.thanksBanner();
+            R.wireDonateForm(document);
+            document.getElementById('back-link').href = 'fundraise.html?c=' + R.campaignSlug;
+
+            let data;
+            try { data = await R.fetchCampaign(); } catch (e) { console.error(e); return; }
+            const c = data.campaign;
+            const p = (data.participants || []).find(function (x) { return x.slug === R.playerSlug; });
+
+            if (!c || !p) {
+                document.getElementById('player-name').textContent = 'Player not found';
+                document.getElementById('player-name').classList.remove('skeleton');
+                document.getElementById('player-story').textContent = 'Check the team page for all active fundraisers.';
+                return;
+            }
+
+            const first = p.name.split(' ')[0];
+            document.title = 'Support ' + p.name + ' | Godspeed Basketball';
+            const nameEl = document.getElementById('player-name');
+            nameEl.textContent = p.name;
+            nameEl.classList.remove('skeleton');
+            document.getElementById('campaign-title').textContent = c.title;
+            document.getElementById('story-heading').textContent = 'Why ' + first + ' is fundraising';
+            document.getElementById('donate-heading').textContent = 'Back ' + first;
+            document.getElementById('sup-empty-name').textContent = first;
+            document.getElementById('player-story').textContent = p.story
+                || (first + ' is raising money for the Godspeed season: tournaments, training, travel, and gear. Every gift, no matter the size, moves ' + first + ' closer to the goal.');
+
+            const avatar = document.getElementById('player-avatar');
+            if (p.photo) {
+                avatar.innerHTML = '<img src="' + R.esc(p.photo) + '" alt="' + R.esc(p.name) + '">';
+            } else {
+                avatar.textContent = p.name.split(/\s+/).map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase();
+            }
+
+            document.getElementById('stat-raised').textContent = R.usd(p.raised);
+            document.getElementById('stat-goal').textContent = R.usd(p.goal);
+            document.getElementById('stat-donors').textContent = p.donors;
+            document.getElementById('stat-days').textContent = R.daysLeft(c.ends_at);
+            requestAnimationFrame(function () {
+                document.getElementById('hero-bar').style.width = R.pct(p.raised, p.goal) + '%';
+            });
+
+            // Supporters for this player only
+            const mine = (data.donor_wall || []).filter(function (d) { return d.participant === p.name; });
+            if (mine.length === 0) {
+                document.getElementById('sup-empty').style.display = 'block';
+            } else {
+                document.getElementById('supporter-list').innerHTML = mine.map(function (d) {
+                    return '<div class="sup-card">'
+                        + '<div class="top"><span class="name">' + R.esc(d.name) + '</span><span class="amt">' + R.usd(d.amount) + '</span></div>'
+                        + (d.message ? '<p class="msg">' + R.esc(d.message) + '</p>' : '')
+                        + '</div>';
+                }).join('');
+            }
+
+            // Share
+            const pageUrl = 'https://www.clubgodspeed.com/fundraise-player.html?p=' + encodeURIComponent(p.slug) + '&c=' + encodeURIComponent(R.campaignSlug);
+            const links = R.shareLinks(pageUrl, p.name);
+            document.getElementById('share-sms').href = links.sms;
+            document.getElementById('share-email').href = links.email;
+            document.getElementById('share-x').href = links.x;
+            document.getElementById('share-fb').href = links.facebook;
+            document.getElementById('copy-link').addEventListener('click', function () { R.copyLink(pageUrl, this); });
+        })();
+    </script>
+</body>
+
+</html>

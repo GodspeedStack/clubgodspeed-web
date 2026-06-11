@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fundraise | Godspeed Basketball</title>
+    <meta name="description" content="Support Godspeed Basketball. Zero platform fees. Every dollar goes to the kids.">
+    <meta property="og:title" content="Fundraise | Godspeed Basketball">
+    <meta property="og:description" content="Zero platform fees. Every dollar goes to the kids.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/hero-collage.png">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="responsive-nav.css">
+    <link rel="stylesheet" href="nav-unified.css">
+    <style>
+        :root {
+            --blue: #2563eb;
+            --ink: #111111;
+            --muted: #6e6e73;
+            --line: #e5e5ea;
+            --bg-soft: #f5f5f7;
+        }
+
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Inter', -apple-system, sans-serif; color: var(--ink); background: #fff; }
+
+        .navbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1.25rem 2rem; position: sticky; top: 0; z-index: 1000;
+            background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); width: 100%;
+        }
+
+        .raise-wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+        /* Hero */
+        .raise-hero { background: var(--ink); color: #fff; padding: 72px 0 64px; }
+        .raise-hero .kicker { color: #3b82f6; font-size: 13px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; margin: 0 0 16px; }
+        .raise-hero h1 { font-size: clamp(32px, 5vw, 52px); font-weight: 900; line-height: 1.08; margin: 0 0 12px; }
+        .raise-hero .sub { color: #a1a1a6; font-size: 18px; margin: 0 0 36px; max-width: 560px; }
+
+        .hero-progress { background: rgba(255,255,255,0.08); border-radius: 16px; padding: 28px; max-width: 640px; }
+        .bar-track { background: rgba(255,255,255,0.15); border-radius: 999px; height: 12px; overflow: hidden; }
+        .bar-fill { background: var(--blue); height: 12px; border-radius: 999px; width: 0; transition: width 1.2s cubic-bezier(.22,1,.36,1); }
+        .hero-stats { display: flex; gap: 40px; margin-top: 20px; flex-wrap: wrap; }
+        .hero-stat .num { font-size: 26px; font-weight: 900; }
+        .hero-stat .lbl { font-size: 12px; color: #a1a1a6; letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+        .pill { display: inline-block; background: var(--blue); color: #fff; border: none; cursor: pointer;
+                padding: 14px 36px; border-radius: 999px; font-weight: 700; font-size: 15px; font-family: inherit;
+                text-decoration: none; transition: opacity .15s; }
+        .pill:hover { opacity: .85; }
+        .pill-ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+        .pill-ghost:hover { background: var(--bg-soft); opacity: 1; }
+
+        /* Sections */
+        section.raise-section { padding: 64px 0; }
+        section.raise-section.alt { background: var(--bg-soft); }
+        .section-head { font-size: 28px; font-weight: 900; margin: 0 0 6px; }
+        .section-sub { color: var(--muted); margin: 0 0 36px; font-size: 15px; }
+
+        /* Difference cards */
+        .diff-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+        .diff-card { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 28px; }
+        .diff-card .big { font-size: 34px; font-weight: 900; color: var(--blue); margin: 0 0 6px; }
+        .diff-card h3 { font-size: 15px; font-weight: 700; margin: 0 0 8px; }
+        .diff-card p { font-size: 13px; color: var(--muted); line-height: 1.55; margin: 0; }
+
+        /* Player grid */
+        .player-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+        .player-card { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 24px; display: flex; flex-direction: column; transition: box-shadow .2s, transform .2s; }
+        .player-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        .avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 18px; margin-bottom: 14px; }
+        .player-card h3 { margin: 0 0 10px; font-size: 17px; font-weight: 700; }
+        .mini-track { background: var(--bg-soft); border-radius: 999px; height: 8px; overflow: hidden; }
+        .mini-fill { background: var(--blue); height: 8px; border-radius: 999px; }
+        .mini-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 6px; margin-bottom: 16px; }
+        .player-card a.card-cta { margin-top: auto; text-align: center; background: var(--ink); color: #fff; text-decoration: none; padding: 10px 0; border-radius: 999px; font-weight: 600; font-size: 14px; }
+        .player-card a.card-cta:hover { background: var(--blue); }
+
+        /* Donor wall */
+        .wall-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+        .wall-card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
+        .wall-card .top { display: flex; justify-content: space-between; align-items: baseline; }
+        .wall-card .name { font-weight: 700; font-size: 14px; }
+        .wall-card .amt { font-weight: 900; color: var(--blue); font-size: 15px; }
+        .wall-card .msg { font-size: 13px; color: var(--muted); margin: 6px 0 0; line-height: 1.5; }
+        .wall-card .meta { font-size: 11px; color: #a1a1a6; margin-top: 8px; }
+
+        /* Donate form */
+        .donate-card { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 36px; max-width: 560px; }
+        .amount-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 12px; }
+        .amount-btn { padding: 12px 0; border-radius: 12px; border: 1px solid var(--line); background: #fff; font-weight: 700; font-size: 15px; cursor: pointer; font-family: inherit; }
+        .amount-btn:hover { border-color: var(--blue); }
+        .amount-active { background: var(--blue); color: #fff; border-color: var(--blue); }
+        .field { width: 100%; padding: 13px 16px; border-radius: 12px; border: 1px solid var(--line); font-size: 15px; font-family: inherit; margin-bottom: 12px; }
+        .field:focus { outline: none; border-color: var(--blue); }
+        .anon-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+        .form-error { color: #dc2626; font-size: 13px; min-height: 18px; margin-bottom: 8px; }
+        .secure-note { font-size: 12px; color: #a1a1a6; margin-top: 12px; }
+
+        .thanks-banner { display: none; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; border-radius: 14px; padding: 16px 20px; margin: 24px 0 0; font-size: 14px; font-weight: 600; }
+
+        /* Share */
+        .share-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .skeleton { color: transparent !important; background: var(--bg-soft); border-radius: 8px; animation: pulse 1.4s ease-in-out infinite; }
+        @keyframes pulse { 50% { opacity: .5; } }
+
+        @media (max-width: 640px) {
+            .raise-hero { padding: 48px 0 40px; }
+            .donate-card { padding: 24px; }
+            .amount-row { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="logo">GODSPEED<span style="color: #2563eb;">BASKETBALL</span></div>
+        <div class="nav-desktop-unified">
+            <div class="nav-links-unified">
+                <a href="index.html">Home</a>
+                <a href="training.html">Training</a>
+                <a href="aau.html">AAU</a>
+                <a href="fundraise.html" style="color: #2563eb;">Fundraise</a>
+                <a href="about.html">About</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <header class="raise-hero">
+        <div class="raise-wrap">
+            <p class="kicker">Godspeed Raise</p>
+            <h1 id="campaign-title" class="skeleton">2026 Season Fund</h1>
+            <p class="sub" id="campaign-subtitle">Zero platform fees. Every dollar goes to the kids.</p>
+
+            <div class="hero-progress">
+                <div class="bar-track"><div class="bar-fill" id="hero-bar"></div></div>
+                <div class="hero-stats">
+                    <div class="hero-stat"><div class="num" id="stat-raised">$0</div><div class="lbl">Raised</div></div>
+                    <div class="hero-stat"><div class="num" id="stat-goal">$0</div><div class="lbl">Goal</div></div>
+                    <div class="hero-stat"><div class="num" id="stat-donors">0</div><div class="lbl">Donors</div></div>
+                    <div class="hero-stat"><div class="num" id="stat-days">0</div><div class="lbl">Days left</div></div>
+                </div>
+                <div style="margin-top: 24px;">
+                    <a href="#donate" class="pill">Donate now</a>
+                </div>
+            </div>
+            <div class="thanks-banner" data-thanks-banner>Thank you. Your donation went through and a receipt is on its way to your inbox.</div>
+        </div>
+    </header>
+
+    <!-- Why different -->
+    <section class="raise-section alt">
+        <div class="raise-wrap">
+            <h2 class="section-head">Built different, on purpose</h2>
+            <p class="section-sub">Traditional fundraising platforms keep 14 to 24 percent of what you give. We built our own.</p>
+            <div class="diff-grid">
+                <div class="diff-card">
+                    <p class="big">~97%</p>
+                    <h3>Goes to the program</h3>
+                    <p>Only card processing comes out. No platform fee, no service fee, no fundraising "coach" taking a cut.</p>
+                </div>
+                <div class="diff-card">
+                    <p class="big">100%</p>
+                    <h3>Transparent</h3>
+                    <p>Live totals on this page, per athlete. What you see raised is what the kids receive.</p>
+                </div>
+                <div class="diff-card">
+                    <p class="big">0</p>
+                    <h3>Middlemen</h3>
+                    <p>Donations land directly in the Godspeed program account through secure Stripe checkout.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Players -->
+    <section class="raise-section">
+        <div class="raise-wrap">
+            <h2 class="section-head">Support a player</h2>
+            <p class="section-sub">Pick an athlete to back directly. Their page, their story, their goal.</p>
+            <div class="player-grid" id="player-grid"></div>
+        </div>
+    </section>
+
+    <!-- Donor wall -->
+    <section class="raise-section alt">
+        <div class="raise-wrap">
+            <h2 class="section-head">Donor wall</h2>
+            <p class="section-sub">The people in our corner.</p>
+            <div class="wall-grid" id="donor-wall"></div>
+            <p id="wall-empty" style="display:none; color: var(--muted); font-size: 14px;">Be the first name on the wall.</p>
+        </div>
+    </section>
+
+    <!-- Donate (team) -->
+    <section class="raise-section" id="donate">
+        <div class="raise-wrap">
+            <h2 class="section-head">Donate to the team</h2>
+            <p class="section-sub">A general gift supports all 12 athletes equally.</p>
+            <div class="donate-card">
+                <form data-donate-form novalidate>
+                    <div class="amount-row">
+                        <button type="button" class="amount-btn" data-amount="25">$25</button>
+                        <button type="button" class="amount-btn amount-active" data-amount="50">$50</button>
+                        <button type="button" class="amount-btn" data-amount="100">$100</button>
+                        <button type="button" class="amount-btn" data-amount="250">$250</button>
+                    </div>
+                    <input class="field" type="number" min="5" step="1" value="50" data-amount-input placeholder="Custom amount" aria-label="Donation amount">
+                    <input class="field" type="text" name="donorName" placeholder="Your name" autocomplete="name" maxlength="120">
+                    <input class="field" type="email" name="donorEmail" placeholder="Email for your receipt" autocomplete="email" maxlength="254">
+                    <input class="field" type="text" name="message" placeholder="Message of support (optional)" maxlength="280">
+                    <label class="anon-row"><input type="checkbox" name="isAnonymous"> Keep my name off the donor wall</label>
+                    <div class="form-error" data-form-error></div>
+                    <button type="submit" class="pill" data-donate-submit style="width: 100%;">Donate securely</button>
+                    <p class="secure-note">Payments are processed by Stripe. Godspeed never sees or stores your card details.</p>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Share -->
+    <section class="raise-section alt">
+        <div class="raise-wrap">
+            <h2 class="section-head">Spread the word</h2>
+            <p class="section-sub">Sharing is worth as much as giving.</p>
+            <div class="share-row" id="share-row">
+                <button class="pill pill-ghost" id="copy-link">Copy link</button>
+                <a class="pill pill-ghost" id="share-sms">Text it</a>
+                <a class="pill pill-ghost" id="share-email">Email it</a>
+                <a class="pill pill-ghost" id="share-x" target="_blank" rel="noopener">Share on X</a>
+                <a class="pill pill-ghost" id="share-fb" target="_blank" rel="noopener">Share on Facebook</a>
+            </div>
+        </div>
+    </section>
+
+    <div id="shared-footer"></div>
+
+    <script src="fundraise.js"></script>
+    <script src="shared-footer.js"></script>
+    <script>
+        (async function () {
+            const R = window.GodspeedRaise;
+            R.thanksBanner();
+            R.wireDonateForm(document);
+
+            const pageUrl = 'https://www.clubgodspeed.com/fundraise.html?c=' + R.campaignSlug;
+            const links = R.shareLinks(pageUrl, null);
+            document.getElementById('share-sms').href = links.sms;
+            document.getElementById('share-email').href = links.email;
+            document.getElementById('share-x').href = links.x;
+            document.getElementById('share-fb').href = links.facebook;
+            document.getElementById('copy-link').addEventListener('click', function () { R.copyLink(pageUrl, this); });
+
+            let data;
+            try { data = await R.fetchCampaign(); } catch (e) { console.error(e); return; }
+            const c = data.campaign;
+            if (!c) {
+                document.getElementById('campaign-title').textContent = 'Campaign coming soon';
+                document.getElementById('campaign-title').classList.remove('skeleton');
+                return;
+            }
+
+            const titleEl = document.getElementById('campaign-title');
+            titleEl.textContent = c.title;
+            titleEl.classList.remove('skeleton');
+            document.getElementById('campaign-subtitle').textContent = c.subtitle || '';
+            document.getElementById('stat-raised').textContent = R.usd(c.raised);
+            document.getElementById('stat-goal').textContent = R.usd(c.goal);
+            document.getElementById('stat-donors').textContent = c.donor_count;
+            document.getElementById('stat-days').textContent = R.daysLeft(c.ends_at);
+            requestAnimationFrame(function () {
+                document.getElementById('hero-bar').style.width = R.pct(c.raised, c.goal) + '%';
+            });
+
+            // Player grid
+            const grid = document.getElementById('player-grid');
+            grid.innerHTML = (data.participants || []).map(function (p) {
+                const initials = p.name.split(/\s+/).map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase();
+                return '<div class="player-card">'
+                    + '<div class="avatar">' + R.esc(initials) + '</div>'
+                    + '<h3>' + R.esc(p.name) + '</h3>'
+                    + '<div class="mini-track"><div class="mini-fill" style="width:' + R.pct(p.raised, p.goal) + '%"></div></div>'
+                    + '<div class="mini-meta"><span>' + R.usd(p.raised) + ' of ' + R.usd(p.goal) + '</span><span>' + p.donors + (p.donors === 1 ? ' donor' : ' donors') + '</span></div>'
+                    + '<a class="card-cta" href="fundraise-player.html?p=' + encodeURIComponent(p.slug) + '&c=' + encodeURIComponent(R.campaignSlug) + '">Support ' + R.esc(p.name.split(' ')[0]) + '</a>'
+                    + '</div>';
+            }).join('');
+
+            // Donor wall
+            const wall = document.getElementById('donor-wall');
+            const donors = data.donor_wall || [];
+            if (donors.length === 0) {
+                document.getElementById('wall-empty').style.display = 'block';
+            } else {
+                wall.innerHTML = donors.map(function (d) {
+                    return '<div class="wall-card">'
+                        + '<div class="top"><span class="name">' + R.esc(d.name) + '</span><span class="amt">' + R.usd(d.amount) + '</span></div>'
+                        + (d.message ? '<p class="msg">' + R.esc(d.message) + '</p>' : '')
+                        + '<div class="meta">' + (d.participant ? 'For ' + R.esc(d.participant) + ' · ' : '') + R.timeAgo(d.at) + '</div>'
+                        + '</div>';
+                }).join('');
+            }
+        })();
+    </script>
+</body>
+
+</html>
