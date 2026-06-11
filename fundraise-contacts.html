@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fundraiser Setup | Godspeed Basketball</title>
+    <meta name="robots" content="noindex">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --blue: #2563eb; --ink: #111111; --muted: #6e6e73; --line: #e5e5ea; --bg-soft: #f5f5f7; }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Helvetica Neue', Helvetica, 'Inter', Arial, sans-serif; color: var(--ink); background: var(--bg-soft); }
+        .wrap { max-width: 720px; margin: 0 auto; padding: 40px 20px 80px; }
+        h1 { font-size: 26px; font-weight: 900; margin: 0 0 4px; }
+        .sub { color: var(--muted); font-size: 14px; margin: 0 0 28px; line-height: 1.6; }
+        .card { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 28px; margin-bottom: 20px; }
+        .card h2 { font-size: 16px; font-weight: 700; margin: 0 0 14px; }
+        .field { width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--line); font-size: 14px; font-family: inherit; margin-bottom: 10px; }
+        .field:focus { outline: none; border-color: var(--blue); }
+        textarea.field { min-height: 140px; resize: vertical; }
+        .pill { display: inline-block; background: var(--blue); color: #fff; border: none; cursor: pointer; padding: 12px 28px; border-radius: 999px; font-weight: 700; font-size: 14px; font-family: inherit; }
+        .pill:disabled { opacity: .5; cursor: default; }
+        .hint { font-size: 12px; color: var(--muted); margin: 6px 0 14px; line-height: 1.5; }
+        .status { font-size: 13px; min-height: 18px; margin-top: 10px; }
+        .status.ok { color: #059669; }
+        .status.err { color: #dc2626; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { text-align: left; padding: 8px 10px; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--line); }
+        td { padding: 8px 10px; border-bottom: 1px solid var(--line); }
+        .action-remove { color: #dc2626; cursor: pointer; text-decoration: none; }
+        .action-remove:hover { opacity: .6; }
+        .chip { display: inline-block; background: #eff6ff; color: var(--blue); border-radius: 6px; padding: 3px 10px; font-size: 12px; font-weight: 600; }
+        .login-card { text-align: center; padding: 48px 28px; }
+        .progress-note { background: #eff6ff; border-radius: 12px; padding: 14px 18px; font-size: 13px; color: #1e40af; line-height: 1.5; margin-bottom: 20px; }
+        #app { display: none; }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <h1>Fundraiser Setup</h1>
+        <p class="sub">Add 30 to 40 people who know your athlete: family, friends, coworkers, neighbors. Our system sends them your athlete's page on a proven schedule. You never have to ask anyone for money directly.</p>
+
+        <div class="card login-card" id="login-gate">
+            <h2>Sign in to continue</h2>
+            <p class="hint">Use the same Google account as your Parent Portal login.</p>
+            <button class="pill" id="login-btn">Sign in with Google</button>
+            <div class="status err" id="login-error"></div>
+        </div>
+
+        <div id="app">
+            <div class="progress-note" id="athlete-note"></div>
+
+            <div class="card">
+                <h2>Add one contact</h2>
+                <input class="field" id="c-name" type="text" placeholder="Full name" maxlength="120">
+                <input class="field" id="c-email" type="email" placeholder="Email" maxlength="254">
+                <input class="field" id="c-phone" type="tel" placeholder="Mobile (optional, for future texting)" maxlength="20">
+                <button class="pill" id="add-one">Add contact</button>
+                <div class="status" id="one-status"></div>
+            </div>
+
+            <div class="card">
+                <h2>Paste a list</h2>
+                <p class="hint">One contact per line: <strong>Name, email</strong> (phone optional as a third item). Example:<br>Maria Lopez, maria@example.com, 555-201-8890</p>
+                <textarea class="field" id="bulk-input" placeholder="Jordan Smith, jordan@example.com&#10;Maria Lopez, maria@example.com, 555-201-8890"></textarea>
+                <button class="pill" id="add-bulk">Add all</button>
+                <div class="status" id="bulk-status"></div>
+            </div>
+
+            <div class="card">
+                <h2>Your contact list <span class="chip" id="contact-count">0</span></h2>
+                <table>
+                    <thead><tr><th>Name</th><th>Email</th><th></th></tr></thead>
+                    <tbody id="contact-rows"></tbody>
+                </table>
+                <p class="hint" id="empty-note" style="margin-top: 12px;">No contacts yet. The goal is 30 to 40.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            'use strict';
+            const SUPABASE_URL = 'https://nnqokhqennuxalamnvps.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis';
+            const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+            let participant = null;
+            const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+            function esc(s) { const d = document.createElement('div'); d.textContent = String(s == null ? '' : s); return d.innerHTML; }
+            function setStatus(id, msg, ok) {
+                const el = document.getElementById(id);
+                el.textContent = msg;
+                el.className = 'status ' + (ok ? 'ok' : 'err');
+            }
+
+            async function init() {
+                const { data: { session } } = await sb.auth.getSession();
+                if (!session) return;
+                // RLS: parents only see their own participant rows
+                const { data: rows, error } = await sb.from('campaign_participants')
+                    .select('id, athlete_name, slug, campaign_id')
+                    .limit(1);
+                if (error || !rows || rows.length === 0) {
+                    document.getElementById('login-gate').innerHTML =
+                        '<h2>No fundraiser found for your account</h2><p class="hint">Your athlete\'s fundraiser page may not be linked yet. Contact Coach Scott and we will connect it.</p>';
+                    return;
+                }
+                participant = rows[0];
+                document.getElementById('login-gate').style.display = 'none';
+                document.getElementById('app').style.display = 'block';
+                document.getElementById('athlete-note').textContent =
+                    'You are building the supporter list for ' + participant.athlete_name + '. Emails go out automatically when the campaign launches, then at 14, 7, and 2 days left. Anyone can unsubscribe with one click.';
+                await refreshList();
+            }
+
+            async function refreshList() {
+                const { data: contacts } = await sb.from('fundraiser_contacts')
+                    .select('id, full_name, email')
+                    .eq('participant_id', participant.id)
+                    .order('created_at', { ascending: true });
+                const rows = contacts || [];
+                document.getElementById('contact-count').textContent = rows.length;
+                document.getElementById('empty-note').style.display = rows.length ? 'none' : 'block';
+                document.getElementById('contact-rows').innerHTML = rows.map(function (r) {
+                    return '<tr><td>' + esc(r.full_name) + '</td><td>' + esc(r.email) + '</td>'
+                        + '<td style="text-align:right;"><a class="action-remove" data-id="' + r.id + '">Remove</a></td></tr>';
+                }).join('');
+                document.querySelectorAll('.action-remove').forEach(function (a) {
+                    a.addEventListener('click', async function () {
+                        await sb.from('fundraiser_contacts').delete().eq('id', a.getAttribute('data-id'));
+                        await refreshList();
+                    });
+                });
+            }
+
+            async function insertContacts(list, statusId) {
+                const valid = list.filter(function (c) { return c.full_name && EMAIL_RE.test(c.email); });
+                const invalid = list.length - valid.length;
+                if (valid.length === 0) { setStatus(statusId, 'No valid contacts found. Each needs a name and a valid email.', false); return; }
+                const rows = valid.map(function (c) {
+                    return { participant_id: participant.id, full_name: c.full_name.slice(0, 120), email: c.email.toLowerCase().slice(0, 254), phone: c.phone ? c.phone.slice(0, 20) : null };
+                });
+                const { error } = await sb.from('fundraiser_contacts').upsert(rows, { onConflict: 'participant_id,email', ignoreDuplicates: true });
+                if (error) { setStatus(statusId, 'Could not save: ' + error.message, false); return; }
+                setStatus(statusId, 'Added ' + valid.length + ' contact' + (valid.length === 1 ? '' : 's') + (invalid ? ' (' + invalid + ' skipped: missing name or invalid email)' : '') + '.', true);
+                await refreshList();
+            }
+
+            document.getElementById('login-btn').addEventListener('click', async function () {
+                const { error } = await sb.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: { redirectTo: window.location.href }
+                });
+                if (error) setStatus('login-error', error.message, false);
+            });
+
+            document.getElementById('add-one').addEventListener('click', function () {
+                insertContacts([{
+                    full_name: document.getElementById('c-name').value.trim(),
+                    email: document.getElementById('c-email').value.trim(),
+                    phone: document.getElementById('c-phone').value.trim()
+                }], 'one-status').then(function () {
+                    document.getElementById('c-name').value = '';
+                    document.getElementById('c-email').value = '';
+                    document.getElementById('c-phone').value = '';
+                });
+            });
+
+            document.getElementById('add-bulk').addEventListener('click', function () {
+                const lines = document.getElementById('bulk-input').value.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+                const parsed = lines.map(function (line) {
+                    const parts = line.split(',').map(function (p) { return p.trim(); });
+                    return { full_name: parts[0] || '', email: parts[1] || '', phone: parts[2] || '' };
+                });
+                insertContacts(parsed, 'bulk-status');
+            });
+
+            sb.auth.onAuthStateChange(function (event) {
+                if (event === 'SIGNED_IN') init();
+            });
+            init();
+        })();
+    </script>
+</body>
+
+</html>

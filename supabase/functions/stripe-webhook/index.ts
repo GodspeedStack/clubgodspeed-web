@@ -45,6 +45,32 @@ Deno.serve(async (req) => {
         })
       }
 
+    } else if (paymentType === 'fundraiser_donation') {
+      // Godspeed Raise: complete pending donation (idempotent on session id).
+      // The donations status trigger feeds fundraising_totals automatically.
+      const { data: donation } = await supabase.from('donations')
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          stripe_payment_intent_id: session.payment_intent as string
+        })
+        .eq('stripe_session_id', session.id)
+        .eq('status', 'pending')
+        .select('id')
+        .single()
+
+      // Instant thank-you + receipt to donor via fundraiser-engine
+      if (donation) {
+        await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/fundraiser-engine`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+          },
+          body: JSON.stringify({ action: 'donation_receipt', donationId: donation.id })
+        })
+      }
+
     } else {
       // Standard AAU payment flow
       await supabase.from('payments').update({
@@ -73,6 +99,17 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({ paymentId, type: 'payment_admin_notify' })
       })
+    }
+  }
+
+  // Godspeed Raise: reflect refunds (decrements fundraising_totals via trigger)
+  if (event.type === 'charge.refunded') {
+    const charge = event.data.object as Stripe.Charge
+    if (charge.payment_intent) {
+      await supabase.from('donations')
+        .update({ status: 'refunded' })
+        .eq('stripe_payment_intent_id', charge.payment_intent as string)
+        .eq('status', 'completed')
     }
   }
 
