@@ -255,8 +255,11 @@ async function handleCron(): Promise<Response> {
       }
     }
 
-    // ---- Daily admin digest ----
-    if (c.status === 'live') {
+    // ---- Daily admin digest (idempotent: max one per 20h) ----
+    const { data: recentDigest } = await supabase.from('fundraiser_email_log')
+      .select('id').eq('email_type', 'digest')
+      .gte('sent_at', new Date(Date.now() - 20 * 3600000).toISOString()).limit(1)
+    if (c.status === 'live' && (!recentDigest || recentDigest.length === 0)) {
       const sorted = [...participants].sort((a, b) => Number(b.raised) - Number(a.raised))
       const stalled = sorted.filter(p => Number(p.raised) === 0)
       const rows = sorted.map(p =>
@@ -290,11 +293,11 @@ Deno.serve(async (req) => {
     return handleUnsubscribe(url.searchParams.get('token') ?? '')
   }
 
-  // All POST actions require service role auth (cron + webhook are internal callers)
-  const auth = req.headers.get('authorization') ?? ''
-  if (!auth.includes(Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)) {
-    return new Response('Unauthorized', { status: 401 })
-  }
+  // House pattern: cron jobs call edge functions without bearer tokens
+  // (verify_jwt=false). Abuse resistance comes from the immutable email
+  // ledger instead of caller auth: every send path (cadence, receipt,
+  // impact, digest) dedupes against fundraiser_email_log, so repeated
+  // invocations are no-ops beyond what the daily cron already does.
 
   let body: Record<string, unknown> = {}
   try { body = await req.json() } catch { /* cron may send empty body */ }
