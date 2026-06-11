@@ -49,6 +49,7 @@
       +         '<ul>'
       +           '<li><a href="training.html">Training</a></li>'
       +           '<li><a href="aau.html">AAU Club</a></li>'
+      +           '<li><a href="fundraise.html">Fundraise</a></li>'
       +         '</ul>'
       +       '</div>'
       +       '<div class="gsf-col">'

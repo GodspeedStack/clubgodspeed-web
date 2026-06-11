@@ -40,7 +40,7 @@
         .big-avatar { width: 112px; height: 112px; border-radius: 50%; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 38px; flex-shrink: 0; overflow: hidden; }
         .big-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .player-hero .kicker { color: #3b82f6; font-size: 13px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; margin: 0 0 10px; }
-        .player-hero h1 { font-size: clamp(30px, 5vw, 46px); font-weight: 900; margin: 0 0 6px; line-height: 1.1; }
+        .player-hero h1 { font-size: clamp(30px, 5vw, 46px); font-weight: 900; margin: 0 0 6px; line-height: 1.1; color: #fff; text-transform: none; }
         .player-hero .team { color: #a1a1a6; font-size: 15px; margin: 0; }
 
         .hero-progress { background: rgba(255,255,255,0.08); border-radius: 16px; padding: 24px; margin-top: 32px; }
@@ -90,6 +90,12 @@
         .back-link:hover { color: #fff; }
         .skeleton { color: transparent !important; background: rgba(255,255,255,0.1); border-radius: 8px; animation: pulse 1.4s ease-in-out infinite; }
         @keyframes pulse { 50% { opacity: .5; } }
+
+        .status-chip { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #d1d1d6; border-radius: 999px; padding: 7px 16px; font-size: 13px; font-weight: 600; margin-bottom: 28px; }
+        .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #3b82f6; animation: dot-pulse 2s ease-in-out infinite; }
+        @keyframes dot-pulse { 50% { opacity: .35; } }
+        .pill-light { background: #fff; color: var(--ink); }
+        .pill-light:hover { opacity: .9; }
     </style>
 </head>
 
@@ -101,13 +107,22 @@
                 <a href="index.html">Home</a>
                 <a href="training.html">Training</a>
                 <a href="aau.html">AAU</a>
-                <a href="fundraise.html" style="color: #2563eb;">Fundraise</a>
                 <a href="about.html">About</a>
             </div>
         </div>
     </nav>
 
-    <header class="player-hero">
+    <!-- Pre-launch / not-found state (default until a live campaign loads) -->
+    <section id="prelaunch-state" class="player-hero" style="text-align: center; padding: 110px 0 100px;">
+        <div class="raise-wrap" style="max-width: 560px;">
+            <span class="status-chip"><span class="status-dot"></span>Launching soon</span>
+            <h1 style="font-size: clamp(30px, 5vw, 44px); font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; margin: 0 0 16px; text-transform: none;">Player pages open<br>with the season fund</h1>
+            <p style="color: #a1a1a6; font-size: 16px; line-height: 1.65; margin: 0 0 32px;">Each Godspeed athlete gets a personal fundraising page. Every dollar, minus only card processing, goes straight to the program.</p>
+            <a href="fundraise.html" class="pill pill-light">About Godspeed Raise</a>
+        </div>
+    </section>
+
+    <header class="player-hero" id="player-hero" style="display:none;">
         <div class="raise-wrap">
             <a class="back-link" id="back-link" href="fundraise.html">&larr; Back to team campaign</a>
             <div class="hero-flex">
@@ -131,7 +146,7 @@
         </div>
     </header>
 
-    <div class="raise-wrap">
+    <div class="raise-wrap" id="player-body" style="display:none;">
         <div class="layout">
             <div>
                 <div class="story">
@@ -195,12 +210,12 @@
             const c = data.campaign;
             const p = (data.participants || []).find(function (x) { return x.slug === R.playerSlug; });
 
-            if (!c || !p) {
-                document.getElementById('player-name').textContent = 'Player not found';
-                document.getElementById('player-name').classList.remove('skeleton');
-                document.getElementById('player-story').textContent = 'Check the team page for all active fundraisers.';
-                return;
-            }
+            if (!c || !p) return; // pre-launch state stays as rendered
+
+            // Switch to live player view
+            document.getElementById('prelaunch-state').style.display = 'none';
+            document.getElementById('player-hero').style.display = 'block';
+            document.getElementById('player-body').style.display = 'block';
 
             const first = p.name.split(' ')[0];
             document.title = 'Support ' + p.name + ' | Godspeed Basketball';

@@ -41,7 +41,6 @@
                     { text: 'Home', href: 'index.html' },
                     { text: 'Training', href: 'training.html' },
                     { text: 'AAU', href: 'aau.html' },
-                    { text: 'Fundraise', href: 'fundraise.html' },
                     { text: 'Shop', href: 'store.html' },
                     { text: 'About', href: 'about.html' }
                 );
