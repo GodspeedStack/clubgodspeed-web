@@ -36,7 +36,7 @@
                 'apikey': SUPABASE_ANON_KEY,
                 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
             },
-            body: JSON.stringify({ p_slug: campaignSlug })
+            body: JSON.stringify({ p_slug: campaignSlug, p_preview: params.get('preview') === '1' })
         });
         if (!res.ok) throw new Error('Campaign fetch failed: ' + res.status);
         return res.json();
@@ -88,7 +88,7 @@
         const message = (form.querySelector('[name=message]') || { value: '' }).value.trim();
         const isAnonymous = form.querySelector('[name=isAnonymous]').checked;
         const errEl = form.querySelector('[data-form-error]');
-        errEl.textContent = '';
+        errEl.textContent = ''; if (window.GodspeedRaise.isPreview) { errEl.textContent = 'Preview mode. Donations open when the campaign launches.'; return; }
 
         if (!donorName) { errEl.textContent = 'Please enter your name.'; return; }
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(donorEmail)) { errEl.textContent = 'Please enter a valid email.'; return; }
@@ -172,6 +172,6 @@
         shareLinks: shareLinks,
         copyLink: copyLink,
         wireDonateForm: wireDonateForm,
-        thanksBanner: thanksBanner
+        thanksBanner: thanksBanner, _preview: (function(){var P=new URLSearchParams(location.search);if(P.get('preview')!=='1')return false;function fix(){document.querySelectorAll('a[href*="fundraise"]').forEach(function(a){try{var u=new URL(a.getAttribute('href'),location.href);if(/fundraise/.test(u.pathname)&&!u.searchParams.get('preview')){u.searchParams.set('preview','1');a.setAttribute('href',u.pathname.split('/').pop()+u.search+u.hash);}}catch(e){}});}var bar=document.createElement('div');bar.textContent='Preview mode. This is what donors will see at launch. Donations are disabled.';bar.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#111;color:#fff;font:600 13px Inter,sans-serif;text-align:center;padding:12px 16px;border-top:1px solid #2563eb;';function init(){document.body.appendChild(bar);fix();new MutationObserver(fix).observe(document.body,{childList:true,subtree:true});}if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}return true;})(), get isPreview(){return this._preview;}
     };
 })();
