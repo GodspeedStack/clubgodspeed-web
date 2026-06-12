@@ -36,10 +36,20 @@
         .raise-wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
 
         /* Hero */
-        .raise-hero { background: var(--ink); color: #fff; padding: 72px 0 64px; }
+        .raise-hero { background: var(--ink); color: #fff; padding: 96px 0 88px; }
         .raise-hero .kicker { color: #3b82f6; font-size: 13px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; margin: 0 0 16px; }
-        .raise-hero h1 { font-size: clamp(32px, 5vw, 52px); font-weight: 900; line-height: 1.08; margin: 0 0 12px; }
-        .raise-hero .sub { color: #a1a1a6; font-size: 18px; margin: 0 0 36px; max-width: 560px; }
+        .raise-hero h1 { font-size: clamp(36px, 5.5vw, 60px); font-weight: 900; line-height: 1.05; letter-spacing: -0.02em; margin: 0 0 20px; text-transform: none; color: #fff; }
+        .raise-hero .sub { color: #a1a1a6; font-size: 17px; line-height: 1.65; margin: 0 0 36px; max-width: 520px; }
+
+        .status-chip { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #d1d1d6; border-radius: 999px; padding: 7px 16px; font-size: 13px; font-weight: 600; margin-bottom: 28px; }
+        .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #3b82f6; animation: dot-pulse 2s ease-in-out infinite; }
+        @keyframes dot-pulse { 50% { opacity: .35; } }
+
+        .pill-light { background: #fff; color: var(--ink); }
+        .pill-light:hover { opacity: .9; }
+
+        .live-only { display: none; }
+        body.is-live .live-only { display: block; }
 
         .hero-progress { background: rgba(255,255,255,0.08); border-radius: 16px; padding: 28px; max-width: 640px; }
         .bar-track { background: rgba(255,255,255,0.15); border-radius: 999px; height: 12px; overflow: hidden; }
@@ -125,7 +135,7 @@
                 <a href="index.html">Home</a>
                 <a href="training.html">Training</a>
                 <a href="aau.html">AAU</a>
-                <a href="fundraise.html" style="color: #2563eb;">Fundraise</a>
+
                 <a href="about.html">About</a>
             </div>
         </div>
@@ -134,22 +144,34 @@
     <!-- Hero -->
     <header class="raise-hero">
         <div class="raise-wrap">
-            <p class="kicker">Godspeed Raise</p>
-            <h1 id="campaign-title" class="skeleton">2026 Season Fund</h1>
-            <p class="sub" id="campaign-subtitle">Zero platform fees. Every dollar goes to the kids.</p>
 
-            <div class="hero-progress">
-                <div class="bar-track"><div class="bar-fill" id="hero-bar"></div></div>
-                <div class="hero-stats">
-                    <div class="hero-stat"><div class="num" id="stat-raised">$0</div><div class="lbl">Raised</div></div>
-                    <div class="hero-stat"><div class="num" id="stat-goal">$0</div><div class="lbl">Goal</div></div>
-                    <div class="hero-stat"><div class="num" id="stat-donors">0</div><div class="lbl">Donors</div></div>
-                    <div class="hero-stat"><div class="num" id="stat-days">0</div><div class="lbl">Days left</div></div>
-                </div>
-                <div style="margin-top: 24px;">
-                    <a href="#donate" class="pill">Donate now</a>
+            <!-- Pre-launch state (default) -->
+            <div id="hero-prelaunch">
+                <span class="status-chip"><span class="status-dot"></span>Launching soon</span>
+                <h1>Every dollar<br>goes to the kids</h1>
+                <p class="sub">Godspeed Raise is our own fundraising platform, built for the 2026 season. No platform fees, no middlemen, no cut for anyone but the program.</p>
+                <a href="aau.html" class="pill pill-light">Meet the team</a>
+            </div>
+
+            <!-- Live state (shown by JS when a campaign is live) -->
+            <div id="hero-live" style="display:none;">
+                <p class="kicker">Godspeed Raise</p>
+                <h1 id="campaign-title"></h1>
+                <p class="sub" id="campaign-subtitle"></p>
+                <div class="hero-progress">
+                    <div class="bar-track"><div class="bar-fill" id="hero-bar"></div></div>
+                    <div class="hero-stats">
+                        <div class="hero-stat"><div class="num" id="stat-raised">$0</div><div class="lbl">Raised</div></div>
+                        <div class="hero-stat"><div class="num" id="stat-goal">$0</div><div class="lbl">Goal</div></div>
+                        <div class="hero-stat"><div class="num" id="stat-donors">0</div><div class="lbl">Donors</div></div>
+                        <div class="hero-stat"><div class="num" id="stat-days">0</div><div class="lbl">Days left</div></div>
+                    </div>
+                    <div style="margin-top: 24px;">
+                        <a href="#donate" class="pill">Donate now</a>
+                    </div>
                 </div>
             </div>
+
             <div class="thanks-banner" data-thanks-banner>Thank you. Your donation went through and a receipt is on its way to your inbox.</div>
         </div>
     </header>
@@ -180,7 +202,7 @@
     </section>
 
     <!-- Players -->
-    <section class="raise-section">
+    <section class="raise-section live-only">
         <div class="raise-wrap">
             <h2 class="section-head">Support a player</h2>
             <p class="section-sub">Pick an athlete to back directly. Their page, their story, their goal.</p>
@@ -189,7 +211,7 @@
     </section>
 
     <!-- Donor wall -->
-    <section class="raise-section alt">
+    <section class="raise-section alt live-only">
         <div class="raise-wrap">
             <h2 class="section-head">Donor wall</h2>
             <p class="section-sub">The people in our corner.</p>
@@ -199,7 +221,7 @@
     </section>
 
     <!-- Donate (team) -->
-    <section class="raise-section" id="donate">
+    <section class="raise-section live-only" id="donate">
         <div class="raise-wrap">
             <h2 class="section-head">Donate to the team</h2>
             <p class="section-sub">A general gift supports all 12 athletes equally.</p>
@@ -225,7 +247,7 @@
     </section>
 
     <!-- Share -->
-    <section class="raise-section alt">
+    <section class="raise-section alt live-only">
         <div class="raise-wrap">
             <h2 class="section-head">Spread the word</h2>
             <p class="section-sub">Sharing is worth as much as giving.</p>
@@ -260,15 +282,14 @@
             let data;
             try { data = await R.fetchCampaign(); } catch (e) { console.error(e); return; }
             const c = data.campaign;
-            if (!c) {
-                document.getElementById('campaign-title').textContent = 'Campaign coming soon';
-                document.getElementById('campaign-title').classList.remove('skeleton');
-                return;
-            }
+            if (!c) return; // pre-launch state stays as rendered
 
-            const titleEl = document.getElementById('campaign-title');
-            titleEl.textContent = c.title;
-            titleEl.classList.remove('skeleton');
+            // Switch to live state
+            document.body.classList.add('is-live');
+            document.getElementById('hero-prelaunch').style.display = 'none';
+            document.getElementById('hero-live').style.display = 'block';
+
+            document.getElementById('campaign-title').textContent = c.title;
             document.getElementById('campaign-subtitle').textContent = c.subtitle || '';
             document.getElementById('stat-raised').textContent = R.usd(c.raised);
             document.getElementById('stat-goal').textContent = R.usd(c.goal);
