@@ -25,6 +25,8 @@
       S + ' .gsf-brand-mark { font-size:1.125rem; font-weight:900; letter-spacing:.04em; color:#fff; margin-bottom:1.25rem; }',
       S + ' .gsf-brand-mark span { color:#2563eb; }',
       S + ' .gsf-brand-tagline { font-size:.6875rem; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:rgba(255,255,255,.35); margin-bottom:1.75rem; line-height:1.8; }',
+      S + ' .gsf-brand-founder { font-size:.8125rem; font-weight:500; color:rgba(255,255,255,.45); margin-bottom:1.5rem; }',
+      S + ' .gsf-brand-founder span { color:rgba(255,255,255,.25); }',
       S + ' .gsf-brand-location { display:flex; align-items:center; gap:.5rem; font-size:.8125rem; color:rgba(255,255,255,.4); }',
       S + ' .gsf-brand-location svg { width:14px; height:14px; flex-shrink:0; stroke:rgba(255,255,255,.4); fill:none; stroke-width:1.5; }',
 
@@ -77,6 +79,7 @@
       +     '<div>'
       +       '<div class="gsf-brand-mark">GODSPEED<span>BASKETBALL</span></div>'
       +       '<p class="gsf-brand-tagline">Brotherhood. Habits. Success.</p>'
+      +       '<p class="gsf-brand-founder">Coach Gene <span>Community Leader &amp; Founder</span></p>'
       +       '<div class="gsf-brand-location">'
       +         pinSVG
       +         '<span>Denver, Colorado</span>'
