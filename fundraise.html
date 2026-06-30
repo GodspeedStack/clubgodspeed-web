@@ -128,6 +128,16 @@
 </head>
 
 <body>
+    <!-- Auth Gate -->
+    <div id="auth-gate" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#fff;font-family:'Inter',-apple-system,sans-serif;">
+        <div style="text-align:center;max-width:400px;padding:40px 24px;">
+            <div style="font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:8px;">GODSPEED<span style="color:#2563eb;">BASKETBALL</span></div>
+            <p style="color:#6e6e73;font-size:15px;margin:0 0 32px;">Sign in to access your team's fundraising page.</p>
+            <a href="parent-portal.html" style="display:inline-block;background:#111;color:#fff;padding:14px 40px;border-radius:999px;font-weight:700;font-size:15px;text-decoration:none;transition:opacity .15s;">Parent Login</a>
+        </div>
+    </div>
+
+    <div id="fundraise-content" style="display:none;">
     <nav class="navbar">
         <div class="logo">GODSPEED<span style="color: #2563eb;">BASKETBALL</span></div>
         <div class="nav-desktop-unified">
@@ -263,6 +273,30 @@
 
     <div id="shared-footer"></div>
 
+    </div><!-- /fundraise-content -->
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script>
+    (function() {
+        var sb = supabase.createClient(
+            'https://nnqokhqennuxalamnvps.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis'
+        );
+        sb.auth.getSession().then(function(res) {
+            var session = res.data && res.data.session;
+            if (session) {
+                document.getElementById('auth-gate').style.display = 'none';
+                document.getElementById('fundraise-content').style.display = 'block';
+            }
+        });
+        sb.auth.onAuthStateChange(function(event) {
+            if (event === 'SIGNED_IN') {
+                document.getElementById('auth-gate').style.display = 'none';
+                document.getElementById('fundraise-content').style.display = 'block';
+            }
+        });
+    })();
+    </script>
     <script src="fundraise.js"></script>
     <script src="shared-footer.js"></script>
     <script>
