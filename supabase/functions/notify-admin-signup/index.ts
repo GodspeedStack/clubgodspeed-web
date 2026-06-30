@@ -240,6 +240,13 @@ Deno.serve(async (req) => {
   }
 
   // ── POST (cron or direct) ── Process pending notifications ──────────
+
+  // Parse body for registration-page enrollment data
+  let body: Record<string, unknown> = {}
+  try {
+    body = await req.json()
+  } catch { /* no body or invalid JSON — that's fine for cron calls */ }
+
   const { data: pending, error: fetchErr } = await supabase
     .from('admin_signup_notifications')
     .select('*')
@@ -247,50 +254,148 @@ Deno.serve(async (req) => {
     .order('created_at', { ascending: true })
     .limit(10)
 
-  if (fetchErr || !pending || pending.length === 0) {
-    return new Response(JSON.stringify({ processed: 0, error: fetchErr?.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
-  }
-
   let sent = 0
   let failed = 0
 
-  for (const item of pending) {
-    try {
-      const approveUrl = `${FUNCTION_URL}?action=approve&token=${item.approval_token}`
+  if (!fetchErr && pending && pending.length > 0) {
+    for (const item of pending) {
+      try {
+        const approveUrl = `${FUNCTION_URL}?action=approve&token=${item.approval_token}`
 
-      const ok = await sendViaResend(
-        ADMIN_EMAIL,
-        `New Signup: ${item.full_name || item.email}`,
-        buildAdminEmail({
-          email: item.email,
-          full_name: item.full_name,
-          phone: item.phone,
-          player_name: item.player_name,
-          grade: item.grade,
-          date_of_birth: item.date_of_birth,
-          created_at: item.created_at,
-        }, approveUrl)
-      )
+        const ok = await sendViaResend(
+          ADMIN_EMAIL,
+          `New Signup: ${item.full_name || item.email}`,
+          buildAdminEmail({
+            email: item.email,
+            full_name: item.full_name,
+            phone: item.phone,
+            player_name: item.player_name,
+            grade: item.grade,
+            date_of_birth: item.date_of_birth,
+            created_at: item.created_at,
+          }, approveUrl)
+        )
 
-      await supabase
-        .from('admin_signup_notifications')
-        .update({ status: ok ? 'sent' : 'failed' })
-        .eq('id', item.id)
+        await supabase
+          .from('admin_signup_notifications')
+          .update({ status: ok ? 'sent' : 'failed' })
+          .eq('id', item.id)
 
-      ok ? sent++ : failed++
-    } catch (err) {
-      console.error(`Exception processing ${item.email}:`, err)
-      await supabase
-        .from('admin_signup_notifications')
-        .update({ status: 'failed' })
-        .eq('id', item.id)
-      failed++
+        ok ? sent++ : failed++
+      } catch (err) {
+        console.error(`Exception processing ${item.email}:`, err)
+        await supabase
+          .from('admin_signup_notifications')
+          .update({ status: 'failed' })
+          .eq('id', item.id)
+        failed++
+      }
     }
   }
 
-  return new Response(JSON.stringify({ processed: pending.length, sent, failed }), {
+  // ── Auto-enroll: create athlete + link + enrollment from registration ──
+  let enrollment: Record<string, unknown> | null = null
+
+  if (body.source === 'registration_page' && body.email) {
+    try {
+      const email = String(body.email).toLowerCase()
+      const fullName = String(body.full_name || '')
+      const athleteName = String(body.athlete_name || '')
+      const teamLabel = String(body.team || '')
+      const duesAmount = Number(body.dues_amount) || 250
+
+      // Parse athlete first/last name
+      const nameParts = athleteName.trim().split(/\s+/)
+      const athleteFirst = nameParts[0] || ''
+      const athleteLast = nameParts.slice(1).join(' ') || ''
+
+      if (!athleteFirst) {
+        console.error('Auto-enroll skipped: no athlete first name')
+      } else {
+        // 1. Look up parent profile (created by handle_new_user trigger)
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', email)
+          .maybeSingle()
+
+        // 2. Create athlete record
+        const { data: athlete, error: athleteErr } = await supabase
+          .from('athletes')
+          .insert({
+            first_name: athleteFirst,
+            last_name: athleteLast,
+            team_name: teamLabel,
+            enrollment_status: 'active',
+            season: 'Summer 2026',
+          })
+          .select('id')
+          .single()
+
+        if (athleteErr) {
+          console.error('Auto-enroll athlete insert failed:', athleteErr)
+        } else {
+          // 3. Link parent to athlete (if profile exists yet)
+          if (profile) {
+            const { error: linkErr } = await supabase.rpc('link_parent_to_athlete', {
+              p_profile_id: profile.id,
+              p_athlete_id: athlete.id,
+              p_relationship: 'guardian',
+              p_is_primary: true,
+            })
+            if (linkErr) console.error('Auto-enroll link failed:', linkErr)
+          }
+
+          // 4. Create enrollment
+          const LATE_SEASON_CONFIG = '3a06d4cb-1d0e-4533-87f9-d88670e19fb8'
+          const LATE_SEASON_PLAN   = '17f26289-195b-4439-8f28-19f28c3241bf'
+
+          const { data: enr, error: enrErr } = await supabase
+            .from('parent_dues_enrollment')
+            .insert({
+              parent_email: email,
+              parent_name: fullName,
+              athlete_name: athleteFirst,
+              dues_config_id: LATE_SEASON_CONFIG,
+              plan_template_id: LATE_SEASON_PLAN,
+              total_owed: duesAmount,
+              total_paid: 0,
+              status: 'active',
+            })
+            .select('id')
+            .single()
+
+          if (enrErr) {
+            console.error('Auto-enroll enrollment insert failed:', enrErr)
+          } else {
+            // 5. Create single installment (due immediately)
+            const { error: instErr } = await supabase
+              .from('dues_installments')
+              .insert({
+                enrollment_id: enr.id,
+                installment_number: 1,
+                amount: duesAmount,
+                due_date: new Date().toISOString().split('T')[0],
+                status: 'pending',
+              })
+
+            if (instErr) console.error('Auto-enroll installment insert failed:', instErr)
+
+            enrollment = { id: enr.id, athlete: athlete.id, amount: duesAmount }
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Auto-enroll exception:', err)
+    }
+  }
+
+  return new Response(JSON.stringify({
+    processed: pending?.length ?? 0,
+    sent,
+    failed,
+    enrollment,
+  }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' }
   })
 })
