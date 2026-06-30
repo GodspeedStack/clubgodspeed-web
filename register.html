@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | Godspeed Basketball</title>
+    <meta name="description" content="Register your athlete for Club Godspeed Basketball. 10U and 11U teams in Denver.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="responsive-nav.css">
+    <link rel="stylesheet" href="nav-unified.css">
+    <style>
+        :root { --blue: #2563eb; --ink: #111; --muted: #6e6e73; --line: #e5e5ea; --bg: #f5f5f7; }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Inter', -apple-system, sans-serif; color: var(--ink); background: #fff; }
+        .reg-hero { background: var(--ink); padding: 64px 0 56px; text-align: center; }
+        .reg-hero .kicker { color: var(--blue); font-size: 13px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; margin: 0 0 12px; }
+        .reg-hero h1 { color: #fff; font-size: clamp(28px, 5vw, 48px); font-weight: 900; margin: 0 0 12px; letter-spacing: -0.02em; }
+        .reg-hero p { color: #a1a1a6; font-size: 15px; margin: 0; }
+        .reg-wrap { max-width: 520px; margin: 0 auto; padding: 48px 24px 80px; }
+        .team-badge { display: inline-flex; align-items: center; gap: 10px; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 14px 20px; margin-bottom: 32px; width: 100%; }
+        .team-badge .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--blue); }
+        .team-badge .label { font-weight: 700; font-size: 15px; flex: 1; }
+        .team-badge .price { font-weight: 900; font-size: 17px; color: var(--blue); }
+        .section-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin: 0 0 16px; }
+        .field-group { margin-bottom: 16px; }
+        .field-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #333; }
+        .field-group input { width: 100%; padding: 13px 16px; border: 1px solid var(--line); border-radius: 10px; font-size: 15px; font-family: inherit; background: #fff; color: var(--ink); transition: border-color .15s; }
+        .field-group input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .divider { height: 1px; background: var(--line); margin: 28px 0; }
+        .btn-submit { width: 100%; padding: 15px; border: none; border-radius: 999px; background: var(--ink); color: #fff; font-size: 16px; font-weight: 700; font-family: inherit; cursor: pointer; transition: background .15s; }
+        .btn-submit:hover { background: var(--blue); }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+        .note { font-size: 13px; color: var(--muted); margin-top: 16px; line-height: 1.55; text-align: center; }
+        .form-msg { padding: 14px 18px; border-radius: 10px; font-size: 14px; font-weight: 600; margin-bottom: 20px; display: none; }
+        .form-msg.error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; display: block; }
+        .form-msg.success { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; display: block; }
+        .pw-req { font-size: 12px; color: var(--muted); margin: 4px 0 0 2px; }
+        @media (max-width: 480px) { .field-row { grid-template-columns: 1fr; } .reg-wrap { padding: 32px 16px 60px; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">GODSPEED<span style="color: #2563eb;">BASKETBALL</span></div>
+        <div class="nav-desktop-unified">
+            <div class="nav-links-unified">
+                <a href="index.html">Home</a>
+                <a href="training.html">Training</a>
+                <a href="aau.html">AAU</a>
+                <a href="about.html">About</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="reg-hero">
+        <p class="kicker">Summer 2026</p>
+        <h1 id="hero-title">Register Your Athlete</h1>
+        <p>Join Club Godspeed. Brotherhood. Habits. Success.</p>
+    </div>
+
+    <div class="reg-wrap">
+        <div class="team-badge">
+            <div class="dot"></div>
+            <span class="label" id="team-label">10U Futures</span>
+            <span class="price">$250</span>
+        </div>
+
+        <div id="form-msg" class="form-msg"></div>
+
+        <form id="register-form" autocomplete="on">
+            <p class="section-label">Parent / Guardian</p>
+            <div class="field-row">
+                <div class="field-group">
+                    <label for="parent-first">First name</label>
+                    <input type="text" id="parent-first" name="given-name" autocomplete="given-name" required>
+                </div>
+                <div class="field-group">
+                    <label for="parent-last">Last name</label>
+                    <input type="text" id="parent-last" name="family-name" autocomplete="family-name" required>
+                </div>
+            </div>
+            <div class="field-group">
+                <label for="parent-email">Email</label>
+                <input type="email" id="parent-email" name="email" autocomplete="email" required>
+            </div>
+            <div class="field-group">
+                <label for="parent-phone">Phone</label>
+                <input type="tel" id="parent-phone" name="tel" autocomplete="tel" placeholder="(720) 555-1234">
+            </div>
+            <div class="field-group">
+                <label for="parent-pw">Create a password</label>
+                <input type="password" id="parent-pw" name="new-password" autocomplete="new-password" minlength="8" required>
+                <p class="pw-req">Minimum 8 characters</p>
+            </div>
+
+            <div class="divider"></div>
+
+            <p class="section-label">Athlete</p>
+            <div class="field-row">
+                <div class="field-group">
+                    <label for="athlete-first">First name</label>
+                    <input type="text" id="athlete-first" required>
+                </div>
+                <div class="field-group">
+                    <label for="athlete-last">Last name</label>
+                    <input type="text" id="athlete-last" required>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <button type="submit" class="btn-submit" id="btn-submit">Register &mdash; $250 Season Dues</button>
+            <p class="note">Late-season rate for remainder of Summer 2026. You will receive an email to confirm your account and payment details.</p>
+        </form>
+
+        <!-- Success state (hidden by default) -->
+        <div id="success-view" style="display:none; text-align:center; padding: 40px 0;">
+            <div style="width:64px;height:64px;border-radius:50%;background:#ecfdf5;display:inline-flex;align-items:center;justify-content:center;margin-bottom:20px;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <h2 style="font-size:24px;font-weight:900;margin:0 0 8px;">You're registered</h2>
+            <p style="color:#6e6e73;font-size:15px;margin:0 0 24px;line-height:1.6;">Check your email to verify your account.<br>Coach Scott will follow up with next steps.</p>
+            <a href="parent-portal.html" style="display:inline-block;background:#111;color:#fff;padding:14px 36px;border-radius:999px;font-weight:700;font-size:15px;text-decoration:none;">Go to Parent Portal</a>
+        </div>
+    </div>
+
+    <div id="shared-footer"></div>
+    <script src="shared-footer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script>
+    (function() {
+        'use strict';
+
+        var SUPABASE_URL = 'https://nnqokhqennuxalamnvps.supabase.co';
+        var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis';
+        var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+        var TEAMS = {
+            '10u': { label: '10U Futures', title: 'Register for 10U Futures' },
+            '11u': { label: '11U Rising', title: 'Register for 11U Rising' }
+        };
+
+        // Read team from URL
+        var params = new URLSearchParams(window.location.search);
+        var teamKey = (params.get('team') || '10u').toLowerCase();
+        var team = TEAMS[teamKey] || TEAMS['10u'];
+
+        document.getElementById('team-label').textContent = team.label;
+        document.getElementById('hero-title').textContent = team.title;
+
+        var form = document.getElementById('register-form');
+        var msgEl = document.getElementById('form-msg');
+        var btnSubmit = document.getElementById('btn-submit');
+
+        function showMsg(text, type) {
+            msgEl.textContent = text;
+            msgEl.className = 'form-msg ' + type;
+        }
+
+        function hideMsg() {
+            msgEl.className = 'form-msg';
+            msgEl.textContent = '';
+        }
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            hideMsg();
+            btnSubmit.disabled = true;
+            btnSubmit.textContent = 'Creating account...';
+
+            var parentFirst = document.getElementById('parent-first').value.trim();
+            var parentLast = document.getElementById('parent-last').value.trim();
+            var email = document.getElementById('parent-email').value.trim().toLowerCase();
+            var phone = document.getElementById('parent-phone').value.trim();
+            var password = document.getElementById('parent-pw').value;
+            var athleteFirst = document.getElementById('athlete-first').value.trim();
+            var athleteLast = document.getElementById('athlete-last').value.trim();
+            var fullName = parentFirst + ' ' + parentLast;
+
+            if (password.length < 8) {
+                showMsg('Password must be at least 8 characters.', 'error');
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = 'Register — $250 Season Dues';
+                return;
+            }
+
+            try {
+                // 1. Create Supabase auth account
+                var signupRes = await sb.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            full_name: fullName,
+                            role: 'parent',
+                            phone: phone,
+                            athlete_name: athleteFirst + ' ' + athleteLast,
+                            team: teamKey
+                        },
+                        emailRedirectTo: 'https://www.clubgodspeed.com/parent-portal.html'
+                    }
+                });
+
+                if (signupRes.error) {
+                    if (signupRes.error.message.includes('already registered')) {
+                        showMsg('An account with this email already exists. Please log in at the Parent Portal.', 'error');
+                    } else {
+                        showMsg(signupRes.error.message, 'error');
+                    }
+                    btnSubmit.disabled = false;
+                    btnSubmit.textContent = 'Register — $250 Season Dues';
+                    return;
+                }
+
+                // 2. Update profile with phone if we have a session
+                if (signupRes.data.session) {
+                    await sb.from('profiles').update({
+                        full_name: fullName,
+                        phone: phone,
+                        role: 'parent'
+                    }).eq('id', signupRes.data.user.id);
+                }
+
+                // 3. Notify admin (fire edge function)
+                try {
+                    await fetch(SUPABASE_URL + '/functions/v1/notify-admin-signup', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_ANON },
+                        body: JSON.stringify({
+                            email: email,
+                            full_name: fullName,
+                            phone: phone,
+                            athlete_name: athleteFirst + ' ' + athleteLast,
+                            team: team.label,
+                            source: 'registration_page',
+                            dues_amount: 250
+                        })
+                    });
+                } catch (notifyErr) {
+                    // Non-critical - admin notification failed but registration succeeded
+                    console.warn('Admin notification failed:', notifyErr);
+                }
+
+                // 4. Show success
+                form.style.display = 'none';
+                document.querySelector('.team-badge').style.display = 'none';
+                document.getElementById('form-msg').style.display = 'none';
+                document.getElementById('success-view').style.display = 'block';
+
+            } catch (err) {
+                showMsg('Something went wrong. Please try again or contact Coach Scott.', 'error');
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = 'Register — $250 Season Dues';
+            }
+        });
+    })();
+    </script>
+</body>
+</html>
