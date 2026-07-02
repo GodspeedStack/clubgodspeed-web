@@ -119,6 +119,7 @@ Deno.serve(async (req) => {
   let sent = 0
   let failed = 0
   let retrying = 0
+  const errors: string[] = []
 
   for (const item of pending) {
     const attempts = (item.attempts || 0) + 1
@@ -142,6 +143,7 @@ Deno.serve(async (req) => {
     } else {
       // Keep 'pending' (so the next cron run retries) until MAX_ATTEMPTS, then give up.
       const giveUp = attempts >= MAX_ATTEMPTS
+      if (errMsg && !errors.includes(errMsg)) errors.push(errMsg)
       console.error(`Welcome email attempt ${attempts}/${MAX_ATTEMPTS} failed for ${item.email}: ${errMsg}`)
       await supabase
         .from('welcome_email_queue')
@@ -151,7 +153,7 @@ Deno.serve(async (req) => {
     }
   }
 
-  return new Response(JSON.stringify({ processed: pending.length, sent, failed, retrying }), {
+  return new Response(JSON.stringify({ processed: pending.length, sent, failed, retrying, errors: errors.slice(0, 3) }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' }
   })
 })
