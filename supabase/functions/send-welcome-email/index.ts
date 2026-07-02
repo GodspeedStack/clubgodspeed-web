@@ -11,7 +11,10 @@ const supabase = createClient(
 )
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
-const FROM_EMAIL = Deno.env.get('RESEND_FROM_EMAIL')!
+// Use the verified sender that the working functions (send-payment-reminders,
+// resend-verification) use. Fall back to it when RESEND_FROM_EMAIL is unset —
+// an empty from address is what Resend was rejecting (sent: 0).
+const FROM_EMAIL = Deno.env.get('RESEND_FROM_EMAIL') || 'Godspeed Basketball <noreply@clubgodspeed.com>'
 const PORTAL_URL = 'https://www.clubgodspeed.com/parent-portal.html'
 
 function welcomeHtml(name: string): string {
