@@ -97,10 +97,13 @@ Deno.serve(async (req) => {
   }
 
   // Queue processing — processes pending rows from welcome_email_queue.
-  // Used by scheduled cron runs.
+  // Used by scheduled cron runs (every 5 min). Retries transient failures
+  // up to MAX_ATTEMPTS before marking a row 'failed', so a single Resend
+  // hiccup or a temporarily-misconfigured key self-heals on the next run.
+  const MAX_ATTEMPTS = 5
   const { data: pending, error: fetchErr } = await supabase
     .from('welcome_email_queue')
-    .select('*')
+    .select('id,email,full_name,attempts')
     .eq('status', 'pending')
     .limit(20)
 
@@ -112,29 +115,40 @@ Deno.serve(async (req) => {
 
   let sent = 0
   let failed = 0
+  let retrying = 0
 
   for (const item of pending) {
+    const attempts = (item.attempts || 0) + 1
+    let ok = false
+    let errMsg: string | undefined
+
     try {
       const result = await sendViaResend(item.email, item.full_name || '')
-      if (result.ok) {
-        await supabase
-          .from('welcome_email_queue')
-          .update({ status: 'sent', sent_at: new Date().toISOString() })
-          .eq('id', item.id)
-        sent++
-      } else {
-        console.error(`Resend error for ${item.email}: ${result.error}`)
-        await supabase.from('welcome_email_queue').update({ status: 'failed' }).eq('id', item.id)
-        failed++
-      }
+      ok = result.ok
+      errMsg = result.error
     } catch (err) {
-      console.error(`Exception sending to ${item.email}:`, err)
-      await supabase.from('welcome_email_queue').update({ status: 'failed' }).eq('id', item.id)
-      failed++
+      errMsg = String((err as Error)?.message || err)
+    }
+
+    if (ok) {
+      await supabase
+        .from('welcome_email_queue')
+        .update({ status: 'sent', sent_at: new Date().toISOString(), attempts, last_error: null, updated_at: new Date().toISOString() })
+        .eq('id', item.id)
+      sent++
+    } else {
+      // Keep 'pending' (so the next cron run retries) until MAX_ATTEMPTS, then give up.
+      const giveUp = attempts >= MAX_ATTEMPTS
+      console.error(`Welcome email attempt ${attempts}/${MAX_ATTEMPTS} failed for ${item.email}: ${errMsg}`)
+      await supabase
+        .from('welcome_email_queue')
+        .update({ status: giveUp ? 'failed' : 'pending', attempts, last_error: errMsg, updated_at: new Date().toISOString() })
+        .eq('id', item.id)
+      if (giveUp) failed++; else retrying++
     }
   }
 
-  return new Response(JSON.stringify({ processed: pending.length, sent, failed }), {
+  return new Response(JSON.stringify({ processed: pending.length, sent, failed, retrying }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' }
   })
 })

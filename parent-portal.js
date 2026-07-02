@@ -367,9 +367,6 @@ async function routeAuthenticatedUser() {
 function showDashboard() {
     const dash = document.getElementById('portal-dashboard');
     if (dash) dash.style.display = 'flex';
-    // Apply per-profile visibility flags (dues-exempt / hide-calendar). Fire-and-forget;
-    // sets window.__duesExempt / window.__hideCalendar and hides gated sections.
-    if (typeof window.applyAccountVisibility === 'function') { window.applyAccountVisibility(); }
     // nav-unified.css forces .navbar { display: flex !important } — must beat it with setProperty
     const nav = document.querySelector('nav.navbar');
     if (nav) nav.style.setProperty('display', 'none', 'important');
@@ -1263,10 +1260,6 @@ window.checkApprovalStatus = async function (silent) {
 // --- Navigation Logic (V3 Side Panel) ---
 
 window.switchPortalView = function (viewName, linkElement) {
-    // Per-profile gating: reroute deep-links to hidden sections back to Documents.
-    if ((viewName === 'aau-billing' || viewName === 'billing') && window.__duesExempt) { viewName = 'documents'; linkElement = null; }
-    if (viewName === 'calendar' && window.__hideCalendar) { viewName = 'documents'; linkElement = null; }
-
     if (window.analytics && window.analytics.trackPageView) window.analytics.trackPageView(viewName);
 
     // Reset scroll to top so section headers are always visible on navigation
@@ -2102,10 +2095,9 @@ window.updateUIForCohort = function() {
         if (ctaBanner) ctaBanner.style.display = 'none';
         aauDocs.forEach(el => el.style.display = 'none');
     } else {
-        // Respect per-profile dues exemption — never re-reveal billing for exempt accounts.
-        if (aauNav) aauNav.style.display = window.__duesExempt ? 'none' : 'flex';
+        if (aauNav) aauNav.style.display = 'flex';
         // CTA is styled as flex, but inline styles in HTML will set it. Reset it back to flex.
-        if (ctaBanner) ctaBanner.style.display = window.__duesExempt ? 'none' : 'flex';
+        if (ctaBanner) ctaBanner.style.display = 'flex';
         aauDocs.forEach(el => el.style.display = 'block'); // or flex depending on original
     }
 }

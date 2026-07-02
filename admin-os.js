@@ -632,14 +632,17 @@ async function approveProfile(id) {
     if (cached) cached.approved = true;
     // Re-render the modal in-place — shows Approved status, hides Approve button
     viewParentProfile(id);
-    // Send welcome email
-    let emailNote = '';
+    // Send welcome email. The approval already enqueued a durable row
+    // (trg_queue_welcome), so even if this direct send fails the 5-min cron
+    // drain will retry. Surface the true outcome instead of assuming success.
+    let emailNote = ' — welcome email queued';
     try {
-      await osSupabase.functions.invoke('send-welcome-email', {
+      const { data: fnData, error: fnErr } = await osSupabase.functions.invoke('send-welcome-email', {
         body: { email: prof.email, full_name: prof.full_name || '' }
       });
-      emailNote = ' — welcome email sent';
-    } catch (e) { console.warn('Welcome email invoke failed:', e); }
+      if (!fnErr && fnData && fnData.sent) emailNote = ' — welcome email sent';
+      else console.warn('Welcome email not sent immediately, left for cron retry:', fnErr || fnData);
+    } catch (e) { console.warn('Welcome email invoke failed (queued for retry):', e); }
     showToast('Profile approved' + emailNote);
     loadPlayers(); // refresh backing table in background
   } catch (e) { showToast('Failed: ' + e.message, 'error'); }
@@ -704,12 +707,16 @@ async function approveReq(id, email) {
     if (!osSupabase) return;
     await osSupabase.rpc('approve_login_request', { request_id: id });
     const { data: prof } = await osSupabase.from('profiles').select('full_name').eq('email', email).maybeSingle();
+    // approve_login_request flipped approved -> true, which enqueued a durable
+    // welcome-email row. This direct send is best-effort; the 5-min cron drain
+    // retries if it fails, so we never silently lose the email.
     try {
-      await osSupabase.functions.invoke('send-welcome-email', {
+      const { data: fnData, error: fnErr } = await osSupabase.functions.invoke('send-welcome-email', {
         body: { email, full_name: prof?.full_name || '' }
       });
-      showToast(`Welcome email sent to ${email}`);
-    } catch (e) { console.warn('Welcome email invoke failed:', e); }
+      if (!fnErr && fnData && fnData.sent) showToast(`Welcome email sent to ${email}`);
+      else { console.warn('Welcome email not sent immediately, queued for cron retry:', fnErr || fnData); showToast(`${email} approved — welcome email queued`); }
+    } catch (e) { console.warn('Welcome email invoke failed (queued for retry):', e); showToast(`${email} approved — welcome email queued`); }
   } catch (e) { console.error(e); showToast('Approve failed: ' + e.message, 'error'); }
 }
 async function denyReq(id, email) {
