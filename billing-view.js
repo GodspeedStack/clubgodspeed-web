@@ -70,6 +70,20 @@ window.renderBilling = async function (email) {
 
         const user = session.user;
 
+        // 0a. Dues-exempt accounts never see billing (defense in depth; nav is also hidden).
+        try {
+            const flags = window.getAccountVisibilityFlags ? await window.getAccountVisibilityFlags() : null;
+            if (flags && flags.is_dues_exempt) {
+                window.__duesExempt = true;
+                const navBilling = document.getElementById('nav-aau-billing');
+                if (navBilling) navBilling.style.setProperty('display', 'none', 'important');
+                if (typeof window.switchPortalView === 'function') {
+                    window.switchPortalView('documents', null);
+                }
+                return;
+            }
+        } catch (e) { console.warn('[billing] exemption check failed:', e && e.message); }
+
         // 0. Resolve actual dues from enrollment table (replaces hardcoded $745)
         const enrollment = await resolveEnrollmentData(supabase, user.id);
         const baseDues = enrollment.totalOwed;
