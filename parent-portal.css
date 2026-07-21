@@ -97,6 +97,79 @@
     transform: translateY(-1px);
 }
 
+/* --- Auth alternatives: Google OAuth + magic link --- */
+.auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0 12px;
+}
+
+.auth-divider span {
+    flex: 1;
+    height: 1px;
+    background: #e5e7eb;
+}
+
+.auth-divider em {
+    font-style: normal;
+    font-size: 0.8rem;
+    color: #86868b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.btn-google {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: #fff;
+    color: #111;
+    border: 1px solid #d2d2d7;
+    padding: 0.75rem 1.5rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-google:hover {
+    background: #f5f5f7;
+    border-color: #b6b6bb;
+    transform: translateY(-1px);
+}
+
+.btn-google:disabled {
+    opacity: 0.6;
+    cursor: default;
+    transform: none;
+}
+
+.btn-magic-link {
+    display: block;
+    background: transparent;
+    color: #2563eb;
+    border: none;
+    padding: 0.6rem 1.5rem;
+    margin-top: 8px;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-magic-link:hover {
+    background: #eff6ff;
+}
+
+.btn-magic-link:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
 .mobile-menu-btn {
     display: none;
     font-size: 1.5rem;
@@ -131,6 +204,13 @@
     padding: 2rem;
     /* Fallback reveal in case JS is blocked or throws before the 50ms setTimeout fires */
     animation: gs-portal-reveal 0s 400ms forwards;
+}
+
+/* While the container is still invisible (inline opacity: 0 before the JS
+   reveal), nothing inside it may receive clicks — invisible links must not
+   be interactive (audit S7). JS reveal sets opacity: 1, re-enabling events. */
+.portal-container[style*="opacity: 0"] {
+    pointer-events: none;
 }
 
 .portal-login-view {
