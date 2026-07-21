@@ -21,19 +21,13 @@
             login: async function (email, password) {
                 // If Supabase auth is available, use it
                 if (originalAuth && originalAuth.login && typeof originalAuth.login === 'function') {
-                    try {
-                        return await originalAuth.login(email, password);
-                    } catch (error) {
-                        console.error('Supabase login failed, using fallback');
-                        // Fall through to fallback
-                    }
+                    return await originalAuth.login(email, password);
                 }
-                
-                // Fallback: localStorage mock (for development/testing)
-                localStorage.setItem(AUTH_KEY, 'valid_token_' + Date.now());
-                localStorage.setItem('gba_user_email', email);
-                updateUI(true);
-                return true;
+
+                // SECURITY: no mock fallback. A failed or unavailable login
+                // must never mark the UI as signed in (previously this set a
+                // fake localStorage token when Supabase login threw).
+                throw new Error('Our login system is temporarily unavailable. Please try again in a few minutes.');
             },
 
             logout: async function () {
