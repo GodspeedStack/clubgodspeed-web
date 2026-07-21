@@ -417,20 +417,8 @@ async function handleLogin() {
         return;
     }
 
-    // Basic password validation (minimum length)
-    if (password.length < 6) {
-        if (errorMsg) {
-            setAlertIcon(errorMsg, 'lock');
-            errorMsg.textContent = "Your password must be 6 characters or more.";
-            errorMsg.style.display = 'block';
-        }
-        if (passwordInput) {
-            passwordInput.style.borderColor = '#ef4444';
-            passwordInput.style.backgroundColor = '#fef2f2';
-            passwordInput.addEventListener('input', function() { this.style.borderColor = ''; this.style.backgroundColor = ''; }, { once: true });
-        }
-        return;
-    }
+    // No client-side length gate at login: existing accounts may predate the
+    // 8-character minimum, and a wrong-length password is just a wrong password.
 
     // Check rate limiting if Security system is available
     if (window.Security && window.Security.RateLimiter) {
@@ -724,10 +712,10 @@ window.handleSignup = async function() {
         return;
     }
 
-    if (password.length < 6) {
+    if (password.length < 8) {
         if (errorMsg) {
             setAlertIcon(errorMsg, 'lock');
-            errorMsg.textContent = "Your password must be 6 characters or more.";
+            errorMsg.textContent = "Your password must be 8 characters or more.";
             errorMsg.style.display = 'block';
         }
         if (passwordInput) {
@@ -993,6 +981,143 @@ window.resendVerificationEmail = async function(email) {
     }
 };
 
+
+/**
+ * Where OAuth / magic-link should drop the user back after they authenticate.
+ * Built from the CURRENT origin (protocol + host) so it works on www,
+ * non-www, and Vercel preview deploys — instead of hardcoding production www
+ * and bouncing everyone there. The path is always the parent portal, because
+ * that's the only page these buttons live on and where routing expects them.
+ * NOTE: every origin this can produce (https://www.clubgodspeed.com,
+ * https://clubgodspeed.com, and each preview URL) must be listed in the
+ * Supabase Auth redirect allowlist, or the provider rejects the return trip.
+ */
+function portalRedirectUrl() {
+    return window.location.origin + '/parent-portal.html';
+}
+
+/**
+ * Google OAuth sign-in. Bypasses email deliverability entirely — the
+ * provider is already enabled in Supabase. Works for both sign-in and
+ * sign-up (handle_new_user trigger creates the profile on first OAuth).
+ */
+window.handleGoogleSignIn = async function () {
+    const visibleAlert =
+        document.querySelector('#portal-login:not([style*="display: none"]) .login-error') ||
+        document.querySelector('#portal-signup:not([style*="display: none"]) .login-error') ||
+        document.querySelector('.login-error');
+    const btns = [document.getElementById('google-signin-btn'), document.getElementById('google-signup-btn')].filter(Boolean);
+
+    btns.forEach(b => { b.disabled = true; });
+
+    try {
+        if (!window.auth || typeof window.auth.signInWithOAuth !== 'function') {
+            throw new Error('auth_unavailable');
+        }
+        const { error } = await window.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: portalRedirectUrl()
+            }
+        });
+        if (error) throw new Error(error.message || 'oauth_failed');
+        // Success: browser is navigating to Google. Leave the button disabled.
+    } catch (e) {
+        console.error('[auth] Google sign-in failed:', e);
+        btns.forEach(b => { b.disabled = false; });
+        if (visibleAlert) {
+            setAlertTone(visibleAlert, null);
+            setAlertIcon(visibleAlert, 'wifi-off');
+            visibleAlert.textContent = 'We could not open Google sign-in. Please check your internet and try again.';
+            visibleAlert.style.display = 'block';
+        }
+    }
+};
+
+/**
+ * Passwordless magic link sign-in (rate limited: 1 per 60 seconds).
+ * shouldCreateUser is false on purpose: accounts must be created through
+ * the signup form so the player/parent metadata reaches handle_new_user.
+ */
+let _lastMagicLinkTime = 0;
+window.handleMagicLink = async function () {
+    const emailInput = document.getElementById('email');
+    const email = emailInput ? emailInput.value.trim() : '';
+    const btn = document.getElementById('magic-link-btn');
+    const visibleAlert = document.querySelector('#portal-login .login-error');
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+        if (visibleAlert) {
+            setAlertTone(visibleAlert, null);
+            setAlertIcon(visibleAlert, 'mail');
+            visibleAlert.textContent = 'Type your email address above first, then tap the link button again.';
+            visibleAlert.style.display = 'block';
+        }
+        if (emailInput) {
+            emailInput.style.borderColor = '#ef4444';
+            emailInput.style.backgroundColor = '#fef2f2';
+            emailInput.addEventListener('input', function () { this.style.borderColor = ''; this.style.backgroundColor = ''; }, { once: true });
+            emailInput.focus();
+        }
+        return;
+    }
+
+    const now = Date.now();
+    if (now - _lastMagicLinkTime < 60000) {
+        const waitSec = Math.ceil((60000 - (now - _lastMagicLinkTime)) / 1000);
+        if (visibleAlert) {
+            setAlertTone(visibleAlert, 'info');
+            setAlertIcon(visibleAlert, 'clock');
+            visibleAlert.textContent = 'Please wait ' + waitSec + ' seconds before asking for another link.';
+            visibleAlert.style.display = 'block';
+        }
+        return;
+    }
+
+    if (btn) { btn.disabled = true; btn.textContent = 'Sending link...'; }
+
+    try {
+        const sb = window.auth && window.auth.getSupabaseClient ? window.auth.getSupabaseClient() : null;
+        if (!sb) throw new Error('Failed to fetch');
+
+        const { error } = await sb.auth.signInWithOtp({
+            email: email,
+            options: {
+                shouldCreateUser: false,
+                emailRedirectTo: portalRedirectUrl()
+            }
+        });
+        if (error) throw error;
+
+        _lastMagicLinkTime = Date.now();
+        if (visibleAlert) {
+            setAlertTone(visibleAlert, 'success');
+            setAlertIcon(visibleAlert, 'mail');
+            visibleAlert.textContent = 'Check your email. We sent you a link that signs you in with one tap. Look in spam if you do not see it.';
+            visibleAlert.style.display = 'block';
+        }
+    } catch (e) {
+        console.error('[auth] magic link failed:', e);
+        if (visibleAlert) {
+            setAlertTone(visibleAlert, null);
+            const msg = (e && e.message) ? e.message.toLowerCase() : '';
+            if (msg.includes('signup') || msg.includes('not allowed') || msg.includes('user not found')) {
+                setAlertIcon(visibleAlert, 'mail');
+                visibleAlert.textContent = 'We could not find an account with that email. Check the spelling, or tap Join below to create one.';
+            } else if (msg.includes('rate') || msg.includes('too many')) {
+                setAlertIcon(visibleAlert, 'clock');
+                visibleAlert.textContent = 'You asked for too many links. Please wait a few minutes and try again.';
+            } else {
+                setAlertIcon(visibleAlert, 'wifi-off');
+                visibleAlert.textContent = 'We could not send the link. Please check your internet and try again.';
+            }
+            visibleAlert.style.display = 'block';
+        }
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Email me a sign-in link'; }
+    }
+};
 
 window.submit2FA = async function () {
     const codeInput = document.getElementById('two-factor-code');
@@ -3550,10 +3675,10 @@ window.handleUpdatePassword = async function () {
     const errorMsg = document.querySelector('#portal-update-password .login-error');
     const successMsg = document.querySelector('#portal-update-password .login-success');
 
-    if (newPassword.length < 6) {
+    if (newPassword.length < 8) {
         if (errorMsg) {
             setAlertIcon(errorMsg, 'lock');
-            errorMsg.textContent = 'Your password must be 6 characters or more.';
+            errorMsg.textContent = 'Your password must be 8 characters or more.';
             errorMsg.style.display = 'block';
         }
         return;
