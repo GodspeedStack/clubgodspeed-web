@@ -27,8 +27,13 @@ auto-commit.log
 
 # Build outputs
 dist/
-build/
+build/*
 .cache/
+# Exception: the dues widget is served statically at /build/ in production
+# (Vercel deploys the repo as-is, buildCommand is empty). Without these
+# committed artifacts the page 503s. Rebuild via `npm run build`.
+!build/dues-widget.js
+!build/style.css
 
 # Netlify
 .netlify/
