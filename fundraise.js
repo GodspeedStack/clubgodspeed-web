@@ -46,6 +46,15 @@
         return Math.max(Math.ceil((new Date(endsAt).getTime() - Date.now()) / 86400000), 0);
     }
 
+    // Display pair for the "Days left" stat so a live-but-final or ended
+    // campaign never shows a misleading "0 / Days left".
+    function daysLeftDisplay(endsAt, status) {
+        if (status === 'ended' || status === 'paid_out') return { num: 'Ended', label: 'Campaign' };
+        var d = daysLeft(endsAt);
+        if (d === 0) return { num: 'Today', label: 'Closes' };
+        return { num: d, label: 'Days left' };
+    }
+
     function timeAgo(iso) {
         if (!iso) return '';
         const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
@@ -168,6 +177,7 @@
         pct: pct,
         esc: esc,
         daysLeft: daysLeft,
+        daysLeftDisplay: daysLeftDisplay,
         timeAgo: timeAgo,
         shareLinks: shareLinks,
         copyLink: copyLink,

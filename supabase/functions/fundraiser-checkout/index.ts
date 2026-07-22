@@ -53,10 +53,24 @@ Deno.serve(async (req) => {
   // ---- Resolve campaign + participant ----
   const { data: campaign } = await supabase
     .from('fundraising_campaigns')
-    .select('id, slug, title, status')
+    .select('id, slug, title, status, ends_at')
     .eq('slug', campaignSlug).single()
   if (!campaign) return bad('Campaign not found', 404)
   if (campaign.status !== 'live') return bad('This campaign is not accepting donations yet', 409)
+  if (campaign.ends_at && new Date(campaign.ends_at).getTime() < Date.now()) {
+    return bad('This campaign has closed', 409)
+  }
+
+  // ---- Lightweight per-email throttle (bounds pending-row / session spam) ----
+  const { count: recentPending } = await supabase
+    .from('donations')
+    .select('id', { count: 'exact', head: true })
+    .eq('donor_email', donorEmail)
+    .eq('status', 'pending')
+    .gte('created_at', new Date(Date.now() - 10 * 60000).toISOString())
+  if ((recentPending ?? 0) >= 8) {
+    return bad('Too many attempts. Please wait a few minutes and try again.', 429)
+  }
 
   let participant: { id: string; athlete_name: string; slug: string } | null = null
   if (participantSlug) {

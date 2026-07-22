@@ -187,16 +187,29 @@
                 const contactCount = {};
                 (contacts || []).forEach(x => { contactCount[x.participant_id] = (contactCount[x.participant_id] || 0) + 1; });
 
-                // Need parent linkage info
-                const { data: parts } = await sb.from('campaign_participants')
-                    .select('id, parent_id, personal_goal').eq('campaign_id', c.id);
+                // Need parent linkage info + the parent roster for the dropdown
+                const [{ data: parts }, { data: parents }] = await Promise.all([
+                    sb.from('campaign_participants').select('id, parent_id, personal_goal').eq('campaign_id', c.id),
+                    sb.rpc('list_parent_profiles')
+                ]);
                 const partById = {};
                 (parts || []).forEach(p => { partById[p.id] = p; });
+                const parentOptions = (parents || []).map(function (pr) {
+                    const label = (pr.full_name && pr.full_name.trim()) ? pr.full_name : pr.email;
+                    return { id: pr.id, label: label };
+                });
+                function parentSelectHtml(participantId, currentParentId) {
+                    const opts = ['<option value="">Not linked</option>'].concat(parentOptions.map(function (o) {
+                        const sel = o.id === currentParentId ? ' selected' : '';
+                        return '<option value="' + o.id + '"' + sel + '>' + esc(o.label) + '</option>';
+                    })).join('');
+                    return '<select class="field parent-link" data-link-for="' + participantId + '" style="padding:6px 8px;font-size:12px;">' + opts + '</select>';
+                }
 
                 document.getElementById('athlete-rows').innerHTML = participants.map(function (p) {
                     const pct = Math.min(Math.round((Number(p.raised) / Number(p.personal_goal || 1)) * 100), 100);
                     const cCount = contactCount[p.participant_id] || 0;
-                    const linked = partById[p.participant_id] && partById[p.participant_id].parent_id;
+                    const currentParent = partById[p.participant_id] && partById[p.participant_id].parent_id;
                     const contactsChip = cCount === 0 ? 'chip-amber' : 'chip-blue';
                     return '<tr>'
                         + '<td><strong>' + esc(p.athlete_name) + '</strong></td>'
@@ -205,7 +218,7 @@
                         + '<td class="num-cell"><input class="field inline-edit" type="number" value="' + Number(p.personal_goal) + '" data-goal-for="' + p.participant_id + '"></td>'
                         + '<td class="num-cell">' + p.donor_count + '</td>'
                         + '<td class="num-cell"><span class="chip ' + contactsChip + '">' + cCount + '</span></td>'
-                        + '<td>' + (linked ? '<span class="chip chip-green">Linked</span>' : '<span class="chip chip-gray">Not linked</span>') + '</td>'
+                        + '<td>' + parentSelectHtml(p.participant_id, currentParent) + ' <span class="link-status" data-link-status="' + p.participant_id + '"></span></td>'
                         + '<td><a class="act act-blue" data-save-goal="' + p.participant_id + '">Save goal</a> · '
                         + '<a class="act act-blue" target="_blank" href="fundraise-player.html?p=' + encodeURIComponent(p.slug) + '&c=' + encodeURIComponent(CAMPAIGN_SLUG) + '">View page</a></td>'
                         + '</tr>';
@@ -219,6 +232,27 @@
                         await sb.from('campaign_participants').update({ personal_goal: val }).eq('id', id);
                         a.textContent = 'Saved';
                         setTimeout(function () { a.textContent = 'Save goal'; }, 1500);
+                    });
+                });
+
+                // Parent linkage: staff-gated RPC (participant.parent_id gates the
+                // parent's contact-upload page and the whole email cadence).
+                document.querySelectorAll('.parent-link').forEach(function (sel) {
+                    sel.addEventListener('change', async function () {
+                        const pid = sel.getAttribute('data-link-for');
+                        const parentId = sel.value || null;
+                        const note = document.querySelector('[data-link-status="' + pid + '"]');
+                        sel.disabled = true;
+                        const { error } = await sb.rpc('link_participant_parent', {
+                            p_participant_id: pid, p_parent_id: parentId
+                        });
+                        sel.disabled = false;
+                        if (note) {
+                            note.textContent = error ? 'Failed' : 'Saved';
+                            note.style.color = error ? 'var(--red)' : 'var(--green)';
+                            if (!error) setTimeout(function () { note.textContent = ''; }, 1500);
+                        }
+                        if (!error && partById[pid]) partById[pid].parent_id = parentId;
                     });
                 });
 
