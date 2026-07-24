@@ -58,9 +58,11 @@ with live keys, a card payment would **not** show the family as paid.
   **Idempotent** — skips if a `dues_payments` row already exists for that `stripe_pi_id`
   (Stripe retries won't double-count).
 
-**Remaining — frontend flip (small, not yet done):** gate `openPaymentModal` in `billing-view.js`
-behind `window.STRIPE_LIVE`. When true → call `create-checkout` with the contract below and
-redirect to `data.url`; when false → current Venmo modal. Venmo stays as fallback.
+**Frontend flip — DONE on this branch.** `billing-view.js` now defaults `window.STRIPE_LIVE = false`.
+`_directCheckout` routes "Pay Now" to `_startStripeDuesCheckout` (Stripe) when the flag is true,
+and to the Venmo modal when false. **Go-live = flip one flag** (in `billing-view.js` or set
+`window.STRIPE_LIVE = true` before the script loads) once Stripe keys are on the functions.
+The checkout only needs `parentEmail` + `amount`; the webhook resolves the family by email.
 
 **Call contract (what the frontend passes to `create-checkout`):**
 ```js
@@ -126,7 +128,7 @@ This is the same one call Scott will use per family / per team going forward —
 - [ ] Denis → $0 via `mark_family_paid_by_email` (needs write access).
 - [x] Dues-aware checkout metadata (Gap A).
 - [x] Webhook dues-cascade branch (Gap B).
-- [ ] `STRIPE_LIVE` frontend flag in `billing-view.js`.
+- [x] `STRIPE_LIVE` frontend flag in `billing-view.js` (default off; flip at go-live).
 - [ ] Admin "Mark family / team paid" buttons.
 - [ ] End-to-end test with a Stripe **test-mode** key before flipping live.
 

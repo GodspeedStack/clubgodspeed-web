@@ -89,26 +89,45 @@ Deno.serve(async (req) => {
         .from('dues_payments').select('id').eq('stripe_pi_id', pi).maybeSingle()
 
       if (!existing) {
-        // 1. Mark installments paid — specific ones, or all outstanding on a full-balance settle.
+        // Resolve the enrollment by id (preferred) or by parent email — same join key
+        // the admin markPaymentConfirmed flow uses to bridge portal + dues tables.
+        let enrQuery = supabase.from('parent_dues_enrollment')
+          .select('id,total_owed,total_paid,status')
+        enrQuery = enrollmentId
+          ? enrQuery.eq('id', enrollmentId)
+          : enrQuery.eq('parent_email', parentEmail)
+        const { data: enr } = await enrQuery.maybeSingle()
+
+        let paidInFull = false
+
+        // 1. Enrollment totals + status (cap at total_owed so it never overshoots).
+        if (enr) {
+          const owed = Number(enr.total_owed || 0)
+          const newPaid = Math.min(Number(enr.total_paid || 0) + amt, owed)
+          paidInFull = newPaid >= owed
+          await supabase.from('parent_dues_enrollment')
+            .update({ total_paid: newPaid, status: paidInFull ? 'paid_in_full' : enr.status })
+            .eq('id', enr.id)
+        }
+
+        // 2. Mark installments paid. Explicit ids win; otherwise mirror markPaymentConfirmed:
+        //    full settle -> all outstanding; partial -> just the earliest outstanding one.
         if (instIds.length) {
           await supabase.from('dues_installments')
             .update({ status: 'paid', paid_at: now }).in('id', instIds)
-        } else if (enrollmentId) {
-          await supabase.from('dues_installments')
-            .update({ status: 'paid', paid_at: now })
-            .eq('enrollment_id', enrollmentId).neq('status', 'paid')
-        }
-
-        // 2. Enrollment totals + status (cap at total_owed so it never overshoots).
-        if (enrollmentId) {
-          const { data: enr } = await supabase.from('parent_dues_enrollment')
-            .select('id,total_owed,total_paid,status').eq('id', enrollmentId).maybeSingle()
-          if (enr) {
-            const owed = Number(enr.total_owed || 0)
-            const newPaid = Math.min(Number(enr.total_paid || 0) + amt, owed)
-            const newStatus = newPaid >= owed ? 'paid_in_full' : enr.status
-            await supabase.from('parent_dues_enrollment')
-              .update({ total_paid: newPaid, status: newStatus }).eq('id', enr.id)
+        } else if (enr) {
+          if (paidInFull) {
+            await supabase.from('dues_installments')
+              .update({ status: 'paid', paid_at: now })
+              .eq('enrollment_id', enr.id).neq('status', 'paid')
+          } else {
+            const { data: nextInst } = await supabase.from('dues_installments')
+              .select('id').eq('enrollment_id', enr.id).neq('status', 'paid')
+              .order('installment_number', { ascending: true }).limit(1).maybeSingle()
+            if (nextInst) {
+              await supabase.from('dues_installments')
+                .update({ status: 'paid', paid_at: now }).eq('id', nextInst.id)
+            }
           }
         }
 
