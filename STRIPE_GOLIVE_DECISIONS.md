@@ -49,12 +49,30 @@ cannot know which family/installment a payment settles.
 `dues_installments` / `dues_payments` — the tables both dashboards actually read. So even
 with live keys, a card payment would **not** show the family as paid.
 
-**Fix (spec, ready to implement once contract approved + live schema confirmed):**
-- Add a `dues-checkout` path that sets `metadata = { paymentType:'aau_dues', enrollmentId, installmentIds, parentEmail, amount }`.
-- Add a webhook branch `paymentType === 'aau_dues'` that runs the **same forward cascade** as
-  `mark_family_paid` (or a partial version for a single installment). Reuse the RPC where possible.
-- Frontend: gate `openPaymentModal` behind `window.STRIPE_LIVE`. When true → redirect to Stripe
-  Checkout; when false → current Venmo modal. One flag flip at go-live, Venmo stays as fallback.
+**Fix — DONE on this branch (both functions `deno check`-clean):**
+- ✅ **Gap A** — `create-checkout` now has an `aau_dues` branch setting
+  `metadata = { paymentType:'aau_dues', enrollmentId, installmentIds, parentEmail, amount }`.
+- ✅ **Gap B** — `stripe-webhook` now has an `aau_dues` branch running the full forward cascade
+  (mirrors the proven `markPaymentConfirmed`): marks `dues_installments` paid, updates
+  `parent_dues_enrollment.total_paid`/status, inserts a completed `dues_payments` receipt row.
+  **Idempotent** — skips if a `dues_payments` row already exists for that `stripe_pi_id`
+  (Stripe retries won't double-count).
+
+**Remaining — frontend flip (small, not yet done):** gate `openPaymentModal` in `billing-view.js`
+behind `window.STRIPE_LIVE`. When true → call `create-checkout` with the contract below and
+redirect to `data.url`; when false → current Venmo modal. Venmo stays as fallback.
+
+**Call contract (what the frontend passes to `create-checkout`):**
+```js
+await supabase.functions.invoke('create-checkout', { body: {
+  paymentType: 'aau_dues',
+  enrollmentId,                 // parent_dues_enrollment.id
+  installmentIds: [...],        // specific dues_installments ids; [] = pay full balance
+  amount,                       // dollars
+  parentEmail, playerName, label
+}});
+// → { url } : redirect the browser to it
+```
 
 ---
 
@@ -106,8 +124,8 @@ This is the same one call Scott will use per family / per team going forward —
 - [x] Scalable settlement RPCs (`v13_01_bulk_mark_paid.sql`).
 - [ ] Apply migration to prod (needs write access).
 - [ ] Denis → $0 via `mark_family_paid_by_email` (needs write access).
-- [ ] Dues-aware checkout metadata (Gap A).
-- [ ] Webhook dues-cascade branch (Gap B).
+- [x] Dues-aware checkout metadata (Gap A).
+- [x] Webhook dues-cascade branch (Gap B).
 - [ ] `STRIPE_LIVE` frontend flag in `billing-view.js`.
 - [ ] Admin "Mark family / team paid" buttons.
 - [ ] End-to-end test with a Stripe **test-mode** key before flipping live.

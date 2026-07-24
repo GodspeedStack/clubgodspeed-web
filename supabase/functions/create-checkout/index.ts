@@ -54,6 +54,45 @@ Deno.serve(async (req) => {
         success_url: successUrl || PORTAL_URL,
         cancel_url: cancelUrl || PORTAL_URL
       }
+    } else if (paymentType === 'aau_dues') {
+      // Dues-aware card checkout. Carries enough metadata for the webhook to run
+      // the full dues cascade (dues_installments + parent_dues_enrollment + dues_payments)
+      // so the parent billing view AND admin tracker auto-update — no manual confirm.
+      //   enrollmentId   — parent_dues_enrollment.id (drives totals + status)
+      //   installmentIds — specific dues_installments being paid (empty = settle full balance)
+      //   amount         — dollars being charged
+      const { amount, enrollmentId, installmentIds, parentEmail, playerName, label } = payload
+
+      if (!amount || amount <= 0) throw new Error('Invalid dues amount')
+
+      // Stripe metadata values are strings ≤500 chars; a family's installment list fits easily.
+      const instCsv = Array.isArray(installmentIds) ? installmentIds.join(',') : (installmentIds || '')
+
+      sessionData = {
+        payment_method_types: ['card'],
+        mode: 'payment',
+        customer_email: parentEmail,
+        line_items: [{
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `Godspeed Basketball — ${playerName || 'Season Dues'}`,
+              description: label || 'AAU Season Dues'
+            },
+            unit_amount: Math.round(amount * 100)
+          },
+          quantity: 1
+        }],
+        metadata: {
+          paymentType: 'aau_dues',
+          enrollmentId: enrollmentId || '',
+          installmentIds: instCsv.slice(0, 490),
+          parentEmail: parentEmail || '',
+          amount: amount.toString()
+        },
+        success_url: `${PORTAL_URL}?payment=success&type=dues`,
+        cancel_url: `${PORTAL_URL}?payment=cancelled`
+      }
     } else {
       const { paymentId, amount, installmentNumber, parentEmail, playerName } = payload
 
@@ -88,8 +127,9 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
   } catch (error) {
-    console.error('Checkout error:', error.message)
-    return new Response(JSON.stringify({ error: error.message }), {
+    const message = error instanceof Error ? error.message : String(error)
+    console.error('Checkout error:', message)
+    return new Response(JSON.stringify({ error: message }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })

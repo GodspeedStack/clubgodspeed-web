@@ -71,6 +71,70 @@ Deno.serve(async (req) => {
         })
       }
 
+    } else if (paymentType === 'aau_dues') {
+      // Dues cascade — mirrors the proven admin markPaymentConfirmed flow so a card
+      // payment shows the family as paid in BOTH the parent billing view and the admin
+      // tracker with zero manual confirmation.
+      const now = new Date().toISOString()
+      const pi = session.payment_intent as string
+      const enrollmentId = metadata.enrollmentId || ''
+      const parentEmail  = metadata.parentEmail || ''
+      const amt          = parseFloat(metadata.amount || '0')
+      const instIds      = (metadata.installmentIds || '').split(',').map((s: string) => s.trim()).filter(Boolean)
+      const receiptId    = 'stripe_' + pi
+
+      // Idempotency: Stripe retries on any non-2xx. If we already recorded this
+      // payment intent, skip the whole cascade so total_paid isn't double-counted.
+      const { data: existing } = await supabase
+        .from('dues_payments').select('id').eq('stripe_pi_id', pi).maybeSingle()
+
+      if (!existing) {
+        // 1. Mark installments paid — specific ones, or all outstanding on a full-balance settle.
+        if (instIds.length) {
+          await supabase.from('dues_installments')
+            .update({ status: 'paid', paid_at: now }).in('id', instIds)
+        } else if (enrollmentId) {
+          await supabase.from('dues_installments')
+            .update({ status: 'paid', paid_at: now })
+            .eq('enrollment_id', enrollmentId).neq('status', 'paid')
+        }
+
+        // 2. Enrollment totals + status (cap at total_owed so it never overshoots).
+        if (enrollmentId) {
+          const { data: enr } = await supabase.from('parent_dues_enrollment')
+            .select('id,total_owed,total_paid,status').eq('id', enrollmentId).maybeSingle()
+          if (enr) {
+            const owed = Number(enr.total_owed || 0)
+            const newPaid = Math.min(Number(enr.total_paid || 0) + amt, owed)
+            const newStatus = newPaid >= owed ? 'paid_in_full' : enr.status
+            await supabase.from('parent_dues_enrollment')
+              .update({ total_paid: newPaid, status: newStatus }).eq('id', enr.id)
+          }
+        }
+
+        // 3. Audit/receipt row (unique on receipt_id = stripe_<pi>).
+        await supabase.from('dues_payments').insert({
+          parent_email: parentEmail,
+          amount: amt,
+          note: 'Card payment via Stripe',
+          receipt_id: receiptId,
+          status: 'completed',
+          stripe_pi_id: pi
+        })
+
+        // 4. Receipt to parent (best-effort; matched by email).
+        if (parentEmail) {
+          await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-email`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+            },
+            body: JSON.stringify({ type: 'dues_receipt', parentEmail, amount: amt, receiptId })
+          }).catch(() => {})
+        }
+      }
+
     } else {
       // Standard AAU payment flow
       await supabase.from('payments').update({
