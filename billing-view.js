@@ -717,7 +717,16 @@ function renderPaymentsTimeline(container, payments, plan, supabase) {
 }
 
 // ---------------------------------------------------------------------------
-// Direct Checkout — opens Venmo payment modal (interim until Stripe live)
+// GO-LIVE SWITCH: card payments vs Venmo.
+// Leave false until the live Stripe account + keys are set on the edge functions.
+// Flip to true (here, or set window.STRIPE_LIVE = true before this script loads)
+// and "Pay Now" routes to Stripe Checkout, which auto-reconciles via stripe-webhook.
+// See STRIPE_GOLIVE_DECISIONS.md.
+// ---------------------------------------------------------------------------
+if (typeof window.STRIPE_LIVE === 'undefined') window.STRIPE_LIVE = false;
+
+// ---------------------------------------------------------------------------
+// Direct Checkout — Stripe card checkout when live, Venmo modal otherwise.
 // ---------------------------------------------------------------------------
 window._directCheckout = function(btn) {
     const amount      = parseFloat(btn.dataset.amount);
@@ -725,6 +734,11 @@ window._directCheckout = function(btn) {
     const label       = btn.dataset.label || 'Payment';
     // Multi-payment (Pay Full Balance) passes comma-separated IDs
     const paymentIds  = btn.dataset.paymentIds || btn.dataset.paymentId;
+
+    if (window.STRIPE_LIVE) {
+        return window._startStripeDuesCheckout(btn, { amount, label });
+    }
+
     openPaymentModal({
         type: 'installment',
         label,
@@ -732,6 +746,42 @@ window._directCheckout = function(btn) {
         paymentId: paymentIds,
         installmentNumber: installment || 0
     });
+}
+
+// ---------------------------------------------------------------------------
+// Stripe dues checkout — invokes create-checkout (aau_dues) and redirects.
+// The webhook resolves the family by parentEmail, so we only need email + amount.
+// ---------------------------------------------------------------------------
+window._startStripeDuesCheckout = async function(btn, opts) {
+    if (!window.auth || !window.auth.isSupabaseAvailable()) {
+        alert('Not connected. Refresh and try again.');
+        return;
+    }
+    const parentEmail = localStorage.getItem('gba_user_email') || '';
+    const playerName  = localStorage.getItem('gba_selected_athlete_name') || 'Athlete';
+    const supabase    = window.auth.getSupabaseClient();
+
+    const origText = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = 'Redirecting…'; }
+
+    try {
+        const { data, error } = await supabase.functions.invoke('create-checkout', {
+            body: {
+                paymentType: 'aau_dues',
+                amount: opts.amount,
+                parentEmail,
+                playerName,
+                label: opts.label || 'AAU Season Dues'
+                // enrollmentId/installmentIds omitted — webhook resolves by parentEmail
+            }
+        });
+        if (error) throw error;
+        if (data && data.url) { window.location.href = data.url; return; }
+        throw new Error('Could not start checkout. Please try again.');
+    } catch (e) {
+        if (btn) { btn.disabled = false; btn.textContent = origText; }
+        alert('Payment error: ' + (e.message || 'Please try again.'));
+    }
 }
 
 // ---------------------------------------------------------------------------

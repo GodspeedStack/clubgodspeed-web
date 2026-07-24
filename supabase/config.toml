@@ -14,3 +14,12 @@ verify_jwt = false
 
 [functions.fundraiser-engine]
 verify_jwt = false
+
+# Stripe calls this with a Stripe signature, not a Supabase JWT — must be public
+# or the gateway rejects it before our signature check runs.
+[functions.stripe-webhook]
+verify_jwt = false
+
+# Invoked client-side to create a Checkout session; matches fundraiser-checkout.
+[functions.create-checkout]
+verify_jwt = false
