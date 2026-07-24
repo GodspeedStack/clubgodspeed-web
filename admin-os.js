@@ -996,8 +996,115 @@ function renderDues() {
     <td>${statusTag(inst.status)}</td><td style="color:var(--muted)">${inst.paid_at ? fmtShort(inst.paid_at) : '--'}</td>
     <td><div style="display:flex;gap:4px">${inst.status !== 'paid' ? `<button class="btn btn-ghost btn-xs" onclick="markInstallmentPaid('${inst.id}')">Mark Paid</button>` : `<button class="btn btn-ghost btn-xs" style="color:#ff453a" onclick="deletePayment('${inst.id}','${(inst.enrollment?.id || '')}','${(inst.enrollment?.parent_email || '').replace(/'/g, "\\'")}',${+inst.amount || 0})">Delete</button>`}</div></td>
   </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px">No installments found</td></tr>';
+  renderFamilyBalances();
 }
 function filterDues(f) { duesFilter = f; renderDues(); }
+
+// ─── FAMILY BALANCES — settle a family / a team / everyone in one click ──────
+// Backed by the mark_family_paid / mark_enrollments_paid RPCs (v13_01 migration).
+// There is no team column on the enrollment, so a "team" = the set of families
+// the director checks off, then hits "Settle selected".
+function renderFamilyBalances() {
+  const panel = document.getElementById('panel-dues');
+  if (!panel) return;
+
+  // One row per enrollment (family); balance from authoritative enrollment totals.
+  const fams = new Map();
+  allInstallments.forEach(i => {
+    const e = i.enrollment;
+    if (!e || !e.id || fams.has(e.id)) return;
+    const owed = +e.total_owed || 0, paid = +e.total_paid || 0;
+    fams.set(e.id, {
+      id: e.id, parent: e.parent_name || e.parent_email || '--',
+      athlete: e.athlete_name || '--', balance: Math.max(owed - paid, 0),
+      status: e.status || (owed - paid <= 0 ? 'paid_in_full' : 'active')
+    });
+  });
+  const families = [...fams.values()].sort((a, b) => b.balance - a.balance);
+  const outstanding = families.filter(f => f.balance > 0);
+
+  let card = document.getElementById('dues-families');
+  if (!card) {
+    card = document.createElement('div');
+    card.className = 'card';
+    card.id = 'dues-families';
+    card.style.marginBottom = '20px';
+    // Insert directly above the installments table card.
+    const anchor = document.getElementById('dues-tbody')?.closest('.card') || panel.firstChild;
+    panel.insertBefore(card, anchor);
+  }
+
+  card.innerHTML = `
+    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div><h2>Family Balances</h2><span style="font-size:12px;color:var(--muted)">Settle a family, a team (select rows), or everyone at once</span></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-xs" onclick="settleSelectedFamilies()">Settle selected</button>
+        <button class="btn btn-primary btn-xs" onclick="settleAllOutstandingFamilies()"${outstanding.length ? '' : ' disabled'}>Settle all outstanding (${outstanding.length})</button>
+      </div>
+    </div>
+    <table>
+      <thead><tr>
+        <th style="width:32px"><input type="checkbox" onclick="toggleAllFamilies(this)" title="Select all outstanding"></th>
+        <th>Family</th><th>Athlete</th><th>Balance</th><th>Status</th><th></th>
+      </tr></thead>
+      <tbody id="fam-tbody">${
+        families.length ? families.map(f => `<tr>
+          <td>${f.balance > 0 ? `<input type="checkbox" class="fam-check" data-enrollment-id="${f.id}">` : ''}</td>
+          <td style="font-weight:600">${f.parent}</td>
+          <td style="color:var(--muted)">${f.athlete}</td>
+          <td style="font-weight:600">$${f.balance.toFixed(0)}</td>
+          <td>${statusTag(f.status)}</td>
+          <td>${f.balance > 0
+            ? `<button class="btn btn-ghost btn-xs" onclick="settleFamilyDues('${f.id}','${f.parent.replace(/'/g, "\\'")}',${f.balance})">Settle family</button>`
+            : '<span style="color:var(--muted);font-size:12px">Paid</span>'}</td>
+        </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">No families enrolled</td></tr>'
+      }</tbody>
+    </table>`;
+}
+
+function toggleAllFamilies(master) {
+  document.querySelectorAll('#fam-tbody .fam-check').forEach(cb => { cb.checked = master.checked; });
+}
+
+function getCheckedFamilyIds() {
+  return [...document.querySelectorAll('#fam-tbody .fam-check:checked')].map(cb => cb.dataset.enrollmentId);
+}
+
+async function settleFamilyDues(enrollmentId, parentName, balance) {
+  if (!confirm(`Mark ${parentName} paid in full? This clears their $${(+balance).toFixed(0)} balance.`)) return;
+  await _runSettle(() => osSupabase.rpc('mark_family_paid', { p_enrollment_id: enrollmentId }), '1 family settled');
+}
+
+async function settleSelectedFamilies() {
+  const ids = getCheckedFamilyIds();
+  if (!ids.length) { showToast('Select at least one family first', 'error'); return; }
+  if (!confirm(`Mark ${ids.length} selected famil${ids.length === 1 ? 'y' : 'ies'} paid in full?`)) return;
+  await _runSettle(() => osSupabase.rpc('mark_enrollments_paid', { p_enrollment_ids: ids }), `${ids.length} families settled`);
+}
+
+async function settleAllOutstandingFamilies() {
+  const ids = [...document.querySelectorAll('#fam-tbody .fam-check')].map(cb => cb.dataset.enrollmentId);
+  if (!ids.length) { showToast('No outstanding families', 'error'); return; }
+  if (!confirm(`Mark ALL ${ids.length} outstanding families paid in full? This settles the whole club.`)) return;
+  await _runSettle(() => osSupabase.rpc('mark_enrollments_paid', { p_enrollment_ids: ids }), `${ids.length} families settled`);
+}
+
+// Shared runner: calls the RPC, surfaces errors (incl. "migration not applied"), reloads.
+async function _runSettle(fn, successMsg) {
+  if (!osSupabase) { showToast('Not connected', 'error'); return; }
+  try {
+    const { data, error } = await fn();
+    if (error) throw error;
+    if (data && data.ok === false) throw new Error(data.error || 'Settlement rejected');
+    showToast(successMsg);
+    loadDues();
+  } catch (e) {
+    const msg = /function .* does not exist/i.test(e.message || '')
+      ? 'Settle RPC missing — apply the v13_01 migration first.'
+      : (e.message || 'Settlement failed');
+    showToast('Error: ' + msg, 'error');
+  }
+}
 async function markInstallmentPaid(id) {
   if (!confirm('Mark this installment as paid?')) return;
   try { if (osSupabase) await osSupabase.from('dues_installments').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', id); }

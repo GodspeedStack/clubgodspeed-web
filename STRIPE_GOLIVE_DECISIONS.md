@@ -129,7 +129,7 @@ This is the same one call Scott will use per family / per team going forward —
 - [x] Dues-aware checkout metadata (Gap A).
 - [x] Webhook dues-cascade branch (Gap B).
 - [x] `STRIPE_LIVE` frontend flag in `billing-view.js` (default off; flip at go-live).
-- [ ] Admin "Mark family / team paid" buttons.
+- [x] Admin "Settle family / selected team / all" buttons (Family Balances card in admin-os).
 - [ ] End-to-end test with a Stripe **test-mode** key before flipping live.
 
 ---
