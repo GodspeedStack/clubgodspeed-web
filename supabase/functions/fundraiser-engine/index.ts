@@ -20,6 +20,11 @@ const ADMIN_EMAIL = Deno.env.get('ADMIN_EMAIL') || 'jewellsco@gmail.com'
 const SITE = 'https://www.clubgodspeed.com'
 const MAX_SENDS_PER_RUN = 200
 const RATE_LIMIT_HOURS = 48
+const PENDING_TTL_HOURS = 24         // abandoned pending donations expire after this
+// Optional shared secret. When CRON_SECRET is set, the write actions
+// (cron / donation_receipt) require a matching x-cron-secret header.
+// Leaving it unset preserves the original open-but-ledger-guarded behavior.
+const CRON_SECRET = Deno.env.get('CRON_SECRET') || ''
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -162,7 +167,16 @@ async function handleUnsubscribe(token: string): Promise<Response> {
 }
 
 async function handleCron(): Promise<Response> {
-  const summary = { cadence_sent: 0, impact_sent: 0, skipped: 0, errors: 0 }
+  const summary = { cadence_sent: 0, impact_sent: 0, skipped: 0, errors: 0, pending_expired: 0 }
+
+  // ---- Clean up abandoned pending donations (never reached Stripe success) ----
+  // Completed/refunded rows are untouched; only stale 'pending' rows are removed.
+  const { data: expired } = await supabase.from('donations')
+    .delete()
+    .eq('status', 'pending')
+    .lt('created_at', new Date(Date.now() - PENDING_TTL_HOURS * 3600000).toISOString())
+    .select('id')
+  summary.pending_expired = expired?.length ?? 0
 
   // ---- Live campaigns ----
   const { data: campaigns } = await supabase
@@ -255,9 +269,9 @@ async function handleCron(): Promise<Response> {
       }
     }
 
-    // ---- Daily admin digest (idempotent: max one per 20h) ----
+    // ---- Daily admin digest (idempotent per campaign: max one per 20h) ----
     const { data: recentDigest } = await supabase.from('fundraiser_email_log')
-      .select('id').eq('email_type', 'digest')
+      .select('id').eq('email_type', 'digest').eq('campaign_id', c.id)
       .gte('sent_at', new Date(Date.now() - 20 * 3600000).toISOString()).limit(1)
     if (c.status === 'live' && (!recentDigest || recentDigest.length === 0)) {
       const sorted = [...participants].sort((a, b) => Number(b.raised) - Number(a.raised))
@@ -277,7 +291,7 @@ async function handleCron(): Promise<Response> {
         <p style="margin-top:16px;font-size:13px;color:#6e6e73;">Cadence sent today: ${summary.cadence_sent}. Skipped (rate limit/donors): ${summary.skipped}.</p>
       `)
       const resendId = await sendEmail(ADMIN_EMAIL, `Raise digest: ${usd(campaignRaised)} of ${usd(Number(c.goal_amount))} (${c.title})`, html)
-      await logEmail({ email_type: 'digest', recipient: ADMIN_EMAIL, resend_id: resendId })
+      await logEmail({ campaign_id: c.id, email_type: 'digest', recipient: ADMIN_EMAIL, resend_id: resendId })
     }
   }
 
@@ -298,6 +312,11 @@ Deno.serve(async (req) => {
   // ledger instead of caller auth: every send path (cadence, receipt,
   // impact, digest) dedupes against fundraiser_email_log, so repeated
   // invocations are no-ops beyond what the daily cron already does.
+
+  // When a shared secret is configured, the write actions require it.
+  if (CRON_SECRET && req.headers.get('x-cron-secret') !== CRON_SECRET) {
+    return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: corsHeaders })
+  }
 
   let body: Record<string, unknown> = {}
   try { body = await req.json() } catch { /* cron may send empty body */ }

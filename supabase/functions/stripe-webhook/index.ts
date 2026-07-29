@@ -61,12 +61,16 @@ Deno.serve(async (req) => {
 
       // Instant thank-you + receipt to donor via fundraiser-engine
       if (donation) {
+        const receiptHeaders: Record<string, string> = {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+        }
+        // Forward the shared secret when configured (engine enforces it).
+        const cronSecret = Deno.env.get('CRON_SECRET')
+        if (cronSecret) receiptHeaders['x-cron-secret'] = cronSecret
         await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/fundraiser-engine`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
-          },
+          headers: receiptHeaders,
           body: JSON.stringify({ action: 'donation_receipt', donationId: donation.id })
         })
       }
@@ -185,10 +189,13 @@ Deno.serve(async (req) => {
     }
   }
 
-  // Godspeed Raise: reflect refunds (decrements fundraising_totals via trigger)
+  // Godspeed Raise: reflect refunds (decrements fundraising_totals via trigger).
+  // Only a FULL refund flips the donation to 'refunded' — the totals trigger
+  // subtracts the whole amount, so a partial refund must not trigger it.
   if (event.type === 'charge.refunded') {
     const charge = event.data.object as Stripe.Charge
-    if (charge.payment_intent) {
+    const fullyRefunded = charge.amount_refunded >= charge.amount
+    if (charge.payment_intent && fullyRefunded) {
       await supabase.from('donations')
         .update({ status: 'refunded' })
         .eq('stripe_payment_intent_id', charge.payment_intent as string)

@@ -140,7 +140,7 @@
                     <div class="hero-stat"><div class="num" id="stat-raised">$0</div><div class="lbl">Raised</div></div>
                     <div class="hero-stat"><div class="num" id="stat-goal">$0</div><div class="lbl">Goal</div></div>
                     <div class="hero-stat"><div class="num" id="stat-donors">0</div><div class="lbl">Donors</div></div>
-                    <div class="hero-stat"><div class="num" id="stat-days">0</div><div class="lbl">Days left</div></div>
+                    <div class="hero-stat"><div class="num" id="stat-days">0</div><div class="lbl" id="stat-days-label">Days left</div></div>
                 </div>
             </div>
             <div class="thanks-banner" data-thanks-banner>Thank you. Your donation went through and a receipt is on its way to your inbox.</div>
@@ -240,13 +240,19 @@
             document.getElementById('stat-raised').textContent = R.usd(p.raised);
             document.getElementById('stat-goal').textContent = R.usd(p.goal);
             document.getElementById('stat-donors').textContent = p.donors;
-            document.getElementById('stat-days').textContent = R.daysLeft(c.ends_at);
+            var dd = R.daysLeftDisplay(c.ends_at, c.status);
+            document.getElementById('stat-days').textContent = dd.num;
+            document.getElementById('stat-days-label').textContent = dd.label;
             requestAnimationFrame(function () {
                 document.getElementById('hero-bar').style.width = R.pct(p.raised, p.goal) + '%';
             });
 
-            // Supporters for this player only
-            const mine = (data.donor_wall || []).filter(function (d) { return d.participant === p.name; });
+            // Supporters for this player only. Prefer the per-participant list
+            // from the RPC (keyed by id, not name, and not truncated by the
+            // global 50-row donor wall); fall back to the wall for old payloads.
+            const mine = (p.supporters && p.supporters.length)
+                ? p.supporters
+                : (data.donor_wall || []).filter(function (d) { return d.participant_slug === p.slug || d.participant === p.name; });
             if (mine.length === 0) {
                 document.getElementById('sup-empty').style.display = 'block';
             } else {
