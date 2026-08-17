@@ -42,11 +42,19 @@
 -- STEP 2: Backstop — if the trigger failed and left no profile row,
 -- build one from the auth user.
 -- ------------------------------------------------------------
+-- NOTE: 'coach' is deliberately left uncast. The migration history has two
+-- conflicting definitions of profiles.role -- an app_role enum
+-- (v2_01_profiles.sql: director|coach|parent) and a varchar with a CHECK
+-- constraint (011_unified_auth_roles.sql: admin|coach|parent|athlete|guest) --
+-- and the repo has no dump showing which one is actually deployed. An
+-- unadorned literal coerces to whichever type the column really is; an
+-- explicit ::public.app_role cast would fail outright on the varchar schema.
+-- 'coach' is valid under both.
 INSERT INTO public.profiles (id, email, full_name, role, approved)
 SELECT u.id,
        u.email,
        'Brandon Wash',
-       'coach'::public.app_role,
+       'coach',
        true
   FROM auth.users u
  WHERE lower(u.email) = 'brandonwash14@gmail.com'
@@ -57,7 +65,7 @@ ON CONFLICT (id) DO NOTHING;
 -- Keeps an existing full_name if one is already set.
 -- ------------------------------------------------------------
 UPDATE public.profiles
-   SET role      = 'coach'::public.app_role,
+   SET role      = 'coach',
        approved  = true,
        full_name = COALESCE(NULLIF(full_name, ''), 'Brandon Wash')
  WHERE lower(email) = 'brandonwash14@gmail.com';
