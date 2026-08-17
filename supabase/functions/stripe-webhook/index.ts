@@ -95,12 +95,27 @@ Deno.serve(async (req) => {
       if (!existing) {
         // Resolve the enrollment by id (preferred) or by parent email — same join key
         // the admin markPaymentConfirmed flow uses to bridge portal + dues tables.
+        // create-checkout now always stamps enrollmentId, so the email path only
+        // covers sessions created before that change.
+        //
+        // limit(1), not maybeSingle(): maybeSingle() errors out when a family somehow
+        // has two enrollment rows, and that error used to skip the whole cascade
+        // silently — money in, balance untouched, nobody told.
         let enrQuery = supabase.from('parent_dues_enrollment')
           .select('id,total_owed,total_paid,status')
         enrQuery = enrollmentId
           ? enrQuery.eq('id', enrollmentId)
           : enrQuery.eq('parent_email', parentEmail)
-        const { data: enr } = await enrQuery.maybeSingle()
+        const { data: enrRows } = await enrQuery
+          .order('total_paid', { ascending: false }).limit(1)
+        const enr = enrRows && enrRows.length ? enrRows[0] : null
+
+        if (!enr) {
+          console.error(
+            `[stripe-webhook] UNRECONCILED dues payment ${pi}: no enrollment for ` +
+            `id="${enrollmentId}" email="${parentEmail}". Receipt row flagged for admin.`
+          )
+        }
 
         let paidInFull = false
 
@@ -136,10 +151,14 @@ Deno.serve(async (req) => {
         }
 
         // 3. Audit/receipt row (unique on receipt_id = stripe_<pi>).
+        // When no enrollment matched, the money still arrived — say so loudly in the
+        // note so it shows up in the admin payments list instead of vanishing.
         await supabase.from('dues_payments').insert({
           parent_email: parentEmail,
           amount: amt,
-          note: 'Card payment via Stripe',
+          note: enr
+            ? 'Card payment via Stripe'
+            : 'Card payment via Stripe — NOT auto-applied (no matching enrollment). Apply manually.',
           receipt_id: receiptId,
           status: 'completed',
           stripe_pi_id: pi
