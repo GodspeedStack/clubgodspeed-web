@@ -457,6 +457,10 @@
     const RBAC = {
         roles: {
             ADMIN: 'admin',
+            // 'director' is the top role in the profiles.app_role enum
+            // (supabase/migrations/v2_01_profiles.sql). setRole() rejects any
+            // role missing from this map, so it must be listed here.
+            DIRECTOR: 'director',
             COACH: 'coach',
             PARENT: 'parent',
             ATHLETE: 'athlete',
@@ -467,11 +471,27 @@
             // Admin permissions
             admin: [
                 'view_all_portals',
+                'view_coach_portal',
                 'manage_users',
                 'manage_programs',
                 'view_all_reports',
                 'manage_settings',
                 'view_analytics'
+            ],
+            // Director permissions (club director: admin rights + coach portal)
+            director: [
+                'view_all_portals',
+                'view_coach_portal',
+                'manage_users',
+                'manage_programs',
+                'view_all_reports',
+                'manage_settings',
+                'view_analytics',
+                'manage_athletes',
+                'create_reports',
+                'view_schedules',
+                'send_messages',
+                'manage_practices'
             ],
             // Coach permissions
             coach: [

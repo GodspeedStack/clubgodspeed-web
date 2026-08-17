@@ -88,148 +88,79 @@ document.addEventListener('DOMContentLoaded', () => {
 // Global State for Analytics
 window.currentRosterState = { data: [] };
 
-// 1. Auth Logic - Enhanced with Supabase Auth support
-window.handleCoachLogin = async function () {
-    console.log("Login Attempt Started - handleCoachLogin called");
+// 1. Auth Logic
+// Coaches sign in with their own Supabase account so auth.uid() is populated.
+// Every RLS policy in the app (comms center, rosters, grades) keys off auth.uid(),
+// so a session-less login leaves those screens silently empty.
 
+// Roles allowed into the coach portal. Mirrors the app_role enum in
+// supabase/migrations/v2_01_profiles.sql ('director', 'coach', 'parent').
+const COACH_PORTAL_ROLES = ['coach', 'director'];
+
+// LEGACY: shared access codes. These grant a role without creating a Supabase
+// session, so every RLS-backed screen comes back empty. Kept only so existing
+// staff aren't locked out mid-season. Remove this map, toggleLegacyLogin(), and
+// the #coach-legacy-fields markup once every coach has their own account.
+const LEGACY_ACCESS_CODES = {
+    '96573e41fd926dedacbafea45e6c34a1ae3492e415d7ac1febd6cfb9166b98f6': 'director',
+    '3dd49e099ff05b4287bcfeb3d4cd34908f4671b92824080231e552988a86c66e': 'coach'
+};
+
+function showLoginError(message) {
+    const box = document.getElementById('coach-login-error');
+    if (!box) {
+        godspeedAlert(message, 'GODSPEED BASKETBALL');
+        return;
+    }
+    box.textContent = message;
+    box.style.display = 'block';
+}
+
+function clearLoginError() {
+    const box = document.getElementById('coach-login-error');
+    if (box) {
+        box.textContent = '';
+        box.style.display = 'none';
+    }
+}
+
+// Toggle between per-account sign-in and the legacy shared access code.
+window.toggleLegacyLogin = function () {
+    const accountFields = document.getElementById('coach-account-fields');
+    const legacyFields = document.getElementById('coach-legacy-fields');
+    const toggle = document.getElementById('coach-mode-toggle');
+    const twoFactorGroup = document.getElementById('coach-2fa-group');
+    if (!accountFields || !legacyFields) return;
+
+    const useLegacy = legacyFields.style.display === 'none';
+    legacyFields.style.display = useLegacy ? 'block' : 'none';
+    accountFields.style.display = useLegacy ? 'none' : 'block';
+    if (twoFactorGroup) twoFactorGroup.style.display = 'none';
+
+    // Keep `required` on the visible fields only, or the browser blocks submit
+    // on a hidden input.
+    const emailInput = document.getElementById('coach-email');
+    const passwordInput = document.getElementById('coach-password');
     const codeInput = document.getElementById('coach-code');
-    const code = codeInput ? codeInput.value.trim() : '';
+    if (emailInput) emailInput.required = !useLegacy;
+    if (passwordInput) passwordInput.required = !useLegacy;
+    if (codeInput) codeInput.required = useLegacy;
 
-    if (!code) {
-        godspeedAlert("Please type in an access code.", "GODSPEED BASKETBALL");
-        return;
+    if (toggle) {
+        toggle.textContent = useLegacy ? 'Sign in with your email instead' : 'Use access code instead';
     }
+    clearLoginError();
+};
 
-    // Check rate limiting
-    if (window.Security && window.Security.RateLimiter) {
-        const identifier = code || 'unknown';
-        const rateCheck = window.Security.RateLimiter.check('coach_login', identifier);
-        if (!rateCheck.allowed) {
-            godspeedAlert(rateCheck.message || "You've tried too many times! Please wait a little bit and try again.", "GODSPEED BASKETBALL");
-            return;
-        }
-        window.Security.RateLimiter.recordAttempt('coach_login', identifier);
-    }
-
-    // Try Supabase Auth first (if available and code looks like email)
-    const isEmailFormat = code.includes('@');
-    if (isEmailFormat && window.auth && window.auth.isSupabaseAvailable && window.auth.isSupabaseAvailable()) {
-        try {
-            // For Supabase, we need email + password
-            // If code is email, prompt for password
-            const password = prompt('Enter your password:');
-            if (!password) {
-                if (window.Security && window.Security.RateLimiter) {
-                    window.Security.RateLimiter.reset('coach_login', code);
-                }
-                return;
-            }
-
-            // Use SecureAuth if available
-            let result;
-            if (window.Security && window.Security.SecureAuth) {
-                result = await window.Security.SecureAuth.login(code, password);
-            } else {
-                const success = await window.auth.login(code, password);
-                result = { success };
-            }
-
-            if (result.requires2FA) {
-                const twoFactorCode = prompt('Enter 6-digit 2FA code:');
-                if (twoFactorCode) {
-                    result = await window.Security.SecureAuth.login(code, password, twoFactorCode);
-                } else {
-                    throw new Error('2FA code required');
-                }
-            }
-
-            if (result.success) {
-                // Get user role
-                const user = await window.auth.getCurrentUser();
-                const role = user?.user_metadata?.role || 'coach';
-
-                // Verify role is coach or admin
-                if (role !== 'coach' && role !== 'admin') {
-                    await window.auth.logout();
-                    throw new Error('Access denied. Coach or admin role required.');
-                }
-
-                // Store role
-                if (window.Security && window.Security.RBAC) {
-                    window.Security.RBAC.setRole(role);
-                } else {
-                    localStorage.setItem('gba_user_role', role);
-                }
-                localStorage.setItem('isCoachLoggedIn', 'true');
-                localStorage.setItem('gba_user_email', code);
-                localStorage.setItem('gba_user_id', user?.id || '');
-
-                // Reset rate limit
-                if (window.Security && window.Security.RateLimiter) {
-                    window.Security.RateLimiter.reset('coach_login', code);
-                }
-
-                // Show dashboard
-                const loginView = document.getElementById('coach-login');
-                const dashboardView = document.getElementById('coach-dashboard');
-                if (loginView && dashboardView) {
-                    loginView.style.display = 'none';
-                    dashboardView.style.display = 'flex';
-                    initDashboard();
-                }
-                return;
-            }
-        } catch (error) {
-            console.error('Supabase auth failed, trying fallback:', error);
-            // Fall through to hash-based fallback
-        }
-    }
-
-    // Fallback: Hash-based authentication (backward compatibility)
-    async function sha256(message) {
-        const msgBuffer = new TextEncoder().encode(message);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    }
-
-    const adminHash = "96573e41fd926dedacbafea45e6c34a1ae3492e415d7ac1febd6cfb9166b98f6";
-    const coachHash = "3dd49e099ff05b4287bcfeb3d4cd34908f4671b92824080231e552988a86c66e";
-
-    let hash = "";
-    try {
-        hash = await sha256(code);
-    } catch(e) {
-        console.warn("Hash calc failed");
-    }
-
-    let role = null;
-
-    if (hash === adminHash) {
-        role = 'admin';
-    } else if (hash === coachHash) {
-        role = 'coach';
-    } else {
-        godspeedAlert("That code doesn't match our records. Please try again.", "GODSPEED BASKETBALL");
-        if (codeInput) {
-            codeInput.value = '';
-            codeInput.focus();
-        }
-        return;
-    }
-
-    // Store Role with RBAC
+// Shared success path for both sign-in modes.
+function enterPortal(role) {
     if (window.Security && window.Security.RBAC) {
         window.Security.RBAC.setRole(role);
-    } else {
-        localStorage.setItem('gba_user_role', role);
     }
+    // setRole() silently rejects a role missing from its map, so write directly
+    // as well -- initDashboard() reads this key.
+    localStorage.setItem('gba_user_role', role);
     localStorage.setItem('isCoachLoggedIn', 'true');
-
-    // Reset rate limit on success
-    if (window.Security && window.Security.RateLimiter) {
-        window.Security.RateLimiter.reset('coach_login', code);
-    }
 
     const loginView = document.getElementById('coach-login');
     const dashboardView = document.getElementById('coach-dashboard');
@@ -239,8 +170,155 @@ window.handleCoachLogin = async function () {
         dashboardView.style.display = 'flex';
         initDashboard();
     } else {
-        godspeedAlert("Our system hit a small bump. Please reload the page and try again.", "Error");
+        godspeedAlert('Our system hit a small bump. Please reload the page and try again.', 'Error');
     }
+}
+
+window.handleCoachLogin = async function () {
+    clearLoginError();
+
+    const legacyFields = document.getElementById('coach-legacy-fields');
+    if (legacyFields && legacyFields.style.display !== 'none') {
+        await handleLegacyCodeLogin();
+        return;
+    }
+
+    const emailInput = document.getElementById('coach-email');
+    const passwordInput = document.getElementById('coach-password');
+    const twoFactorInput = document.getElementById('coach-2fa');
+    const email = emailInput ? emailInput.value.trim() : '';
+    const password = passwordInput ? passwordInput.value : '';
+    const twoFactorCode = twoFactorInput ? twoFactorInput.value.trim() : '';
+
+    if (!email || !password) {
+        showLoginError('Please enter your email and password.');
+        return;
+    }
+
+    if (window.Security && window.Security.RateLimiter) {
+        const rateCheck = window.Security.RateLimiter.check('coach_login', email);
+        if (!rateCheck.allowed) {
+            showLoginError(rateCheck.message || "You've tried too many times. Please wait a little bit and try again.");
+            return;
+        }
+        window.Security.RateLimiter.recordAttempt('coach_login', email);
+    }
+
+    if (!(window.auth && window.auth.isSupabaseAvailable && window.auth.isSupabaseAvailable())) {
+        showLoginError("We can't reach the login service right now. Please try again in a moment.");
+        return;
+    }
+
+    const button = document.getElementById('coach-login-btn');
+    if (button) {
+        button.disabled = true;
+        button.textContent = 'Signing in...';
+    }
+
+    try {
+        let result;
+        if (window.Security && window.Security.SecureAuth) {
+            result = await window.Security.SecureAuth.login(email, password, twoFactorCode || null);
+        } else {
+            const success = await window.auth.login(email, password);
+            result = { success };
+        }
+
+        if (result && result.requires2FA) {
+            const twoFactorGroup = document.getElementById('coach-2fa-group');
+            if (twoFactorGroup) twoFactorGroup.style.display = 'block';
+            if (twoFactorInput) twoFactorInput.focus();
+            showLoginError('Enter the 6-digit code from your authenticator app.');
+            return;
+        }
+
+        if (!result || !result.success) {
+            showLoginError('That email and password did not match. Please try again.');
+            return;
+        }
+
+        // Read the role from the profiles table -- that is the source of truth.
+        // user_metadata can drift from it, and it is not what RLS policies check.
+        const user = await window.auth.getCurrentUser();
+        const profile = user && window.auth.getProfile ? await window.auth.getProfile(user.id) : null;
+
+        if (!profile) {
+            await window.auth.logout();
+            showLoginError("We couldn't load your staff profile. Please contact Coach Scott.");
+            return;
+        }
+
+        if (!COACH_PORTAL_ROLES.includes(profile.role)) {
+            await window.auth.logout();
+            showLoginError('This account is not set up as a coach. Please contact Coach Scott.');
+            return;
+        }
+
+        if (profile.approved === false) {
+            await window.auth.logout();
+            showLoginError('Your coach account is still waiting to be approved. Please contact Coach Scott.');
+            return;
+        }
+
+        if (window.Security && window.Security.RateLimiter) {
+            window.Security.RateLimiter.reset('coach_login', email);
+        }
+        localStorage.setItem('gba_user_email', user.email || email);
+        localStorage.setItem('gba_user_id', user.id || '');
+        enterPortal(profile.role);
+    } catch (error) {
+        console.error('[coach-portal] login failed:', error);
+        showLoginError(error && error.message ? error.message : 'Login failed. Please try again.');
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.textContent = 'Enter Portal';
+        }
+    }
+};
+
+// LEGACY: shared access code path -- see LEGACY_ACCESS_CODES above.
+async function handleLegacyCodeLogin() {
+    const codeInput = document.getElementById('coach-code');
+    const code = codeInput ? codeInput.value.trim() : '';
+
+    if (!code) {
+        showLoginError('Please type in an access code.');
+        return;
+    }
+
+    if (window.Security && window.Security.RateLimiter) {
+        const rateCheck = window.Security.RateLimiter.check('coach_login', code);
+        if (!rateCheck.allowed) {
+            showLoginError(rateCheck.message || "You've tried too many times. Please wait a little bit and try again.");
+            return;
+        }
+        window.Security.RateLimiter.recordAttempt('coach_login', code);
+    }
+
+    let hash = '';
+    try {
+        const msgBuffer = new TextEncoder().encode(code);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        hash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch (e) {
+        console.warn('Hash calc failed', e);
+    }
+
+    const role = LEGACY_ACCESS_CODES[hash];
+    if (!role) {
+        showLoginError("That code doesn't match our records. Please try again.");
+        if (codeInput) {
+            codeInput.value = '';
+            codeInput.focus();
+        }
+        return;
+    }
+
+    if (window.Security && window.Security.RateLimiter) {
+        window.Security.RateLimiter.reset('coach_login', code);
+    }
+    enterPortal(role);
 }
 
 async function logoutCoach() {
