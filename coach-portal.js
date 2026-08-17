@@ -204,7 +204,7 @@ window.handleCoachLogin = async function () {
         window.Security.RateLimiter.recordAttempt('coach_login', email);
     }
 
-    if (!(window.auth && window.auth.isSupabaseAvailable && window.auth.isSupabaseAvailable())) {
+    if (!window.auth) {
         showLoginError("We can't reach the login service right now. Please try again in a moment.");
         return;
     }
@@ -216,6 +216,14 @@ window.handleCoachLogin = async function () {
     }
 
     try {
+        // supabase-js is loaded lazily, so isSupabaseAvailable() is false until
+        // something triggers the load. Trigger it here and check the result --
+        // gating on isSupabaseAvailable() beforehand blocks every login.
+        if (window.auth.ensureClient && !(await window.auth.ensureClient())) {
+            showLoginError("We can't reach the login service right now. Please try again in a moment.");
+            return;
+        }
+
         let result;
         if (window.Security && window.Security.SecureAuth) {
             result = await window.Security.SecureAuth.login(email, password, twoFactorCode || null);

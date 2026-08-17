@@ -430,11 +430,35 @@
         },
 
         /**
-         * Check if Supabase is available
+         * Check if Supabase is available.
+         *
+         * NOTE: supabase-js is loaded lazily -- the CDN script is only injected
+         * on the first call that needs it. So this returns false on a fresh
+         * page load even when Supabase is perfectly reachable. Do NOT use it as
+         * a pre-flight gate before calling login(); use ensureClient() for that,
+         * or isSupabaseConfigured() to ask whether Supabase is set up at all.
          * @returns {boolean}
          */
         isSupabaseAvailable: function () {
             return isSupabaseAvailable;
+        },
+
+        /**
+         * Whether Supabase credentials are configured, regardless of whether
+         * the client has been lazily instantiated yet. Safe to call at any time.
+         * @returns {boolean}
+         */
+        isSupabaseConfigured: function () {
+            return !!(SUPABASE_CONFIG.url && SUPABASE_CONFIG.anonKey);
+        },
+
+        /**
+         * Load and initialize the Supabase client if it isn't already.
+         * Resolves true once the client is usable.
+         * @returns {Promise<boolean>}
+         */
+        ensureClient: async function () {
+            return await ensureSupabaseClient();
         },
 
         /**
