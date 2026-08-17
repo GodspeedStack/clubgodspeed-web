@@ -218,6 +218,16 @@
                 return true;
             }
 
+            // When Supabase is handling auth it is the authority on email
+            // confirmation: signInWithPassword refuses an unconfirmed address
+            // and auth-supabase.js surfaces that as "Email not confirmed".
+            // The checks below only read localStorage, so on a browser that has
+            // never verified here (a new hire's own laptop) they return false
+            // and block the login before it ever reaches Supabase. Defer.
+            if (window.auth && window.auth.isSupabaseAvailable && window.auth.isSupabaseAvailable()) {
+                return true;
+            }
+
             const verifications = this.getVerifications();
             const verification = verifications[email];
 
