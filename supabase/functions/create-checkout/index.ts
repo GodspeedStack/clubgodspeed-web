@@ -50,48 +50,100 @@ class PublicError extends Error {
 
 const round2 = (n: number) => Math.round(n * 100) / 100
 
+const ENROLLMENT_COLS = 'id,total_owed,total_paid,status,parent_email,athlete_id'
+
+/** Athlete ids this parent is linked to. The basis for every ownership check below. */
+async function linkedAthleteIds(admin: any, userId: string): Promise<string[]> {
+  const { data } = await admin
+    .from('parent_player_links')
+    .select('athlete_id')
+    .eq('profile_id', userId)
+  return (data || []).map((l: any) => l.athlete_id).filter(Boolean)
+}
+
 /**
- * Find the dues enrollment this signed-in parent is actually paying against.
+ * Find the dues enrollment this signed-in parent is paying against.
  *
- * Resolved server-side on purpose. The old version took enrollmentId, amount and
- * parentEmail straight from the request body, so anyone could aim a $1 charge at
- * another family's enrollment. Now the browser only asks "charge me N dollars" and
- * the server decides which row that lands on.
+ * The portal now names a target (a family with two athletes has two bills and the
+ * parent picks one), but naming is not the same as being allowed: every target is
+ * checked against this parent's own athletes before a single cent is charged. An
+ * unverified enrollmentId is exactly the hole the old version had — anyone could
+ * aim a $1 charge at another family's row.
  *
- * parent_email is the canonical key (it is what admin-os and stripe-webhook join on),
- * so it is tried first; the athlete link is the fallback for enrollments created
- * before the email was set.
+ * With no target named, falls back to the single-enrollment lookup: parent_email
+ * first (the key admin-os and stripe-webhook join on), then the athlete link.
  */
 async function resolveEnrollment(
   admin: any,
   userId: string,
   email: string,
-  rawEmail: string
+  rawEmail: string,
+  target: { enrollmentId?: string; athleteId?: string }
 ) {
+  const owns = (row: any, athleteIds: string[]) => {
+    const byEmail = !!row.parent_email && String(row.parent_email).toLowerCase() === email
+    const byLink = !!row.athlete_id && athleteIds.includes(row.athlete_id)
+    return byEmail || byLink
+  }
+
+  // ── Explicit enrollment ────────────────────────────────────────────────
+  if (target.enrollmentId) {
+    const { data } = await admin
+      .from('parent_dues_enrollment')
+      .select(ENROLLMENT_COLS)
+      .eq('id', target.enrollmentId)
+      .limit(1)
+    const row = data && data.length ? data[0] : null
+    if (!row) {
+      throw new PublicError('We could not find that bill, so we did not charge you.', 'NO_ENROLLMENT')
+    }
+    if (!owns(row, await linkedAthleteIds(admin, userId))) {
+      throw new PublicError('That bill is not on your account.', 'NOT_YOUR_ENROLLMENT', 403)
+    }
+    return row
+  }
+
+  // ── Explicit athlete ───────────────────────────────────────────────────
+  if (target.athleteId) {
+    const athleteIds = await linkedAthleteIds(admin, userId)
+    if (!athleteIds.includes(target.athleteId)) {
+      throw new PublicError('That athlete is not on your account.', 'NOT_YOUR_ATHLETE', 403)
+    }
+    const { data } = await admin
+      .from('parent_dues_enrollment')
+      .select(ENROLLMENT_COLS)
+      .eq('athlete_id', target.athleteId)
+      .order('total_paid', { ascending: false })
+      .limit(1)
+    if (!data || !data.length) {
+      throw new PublicError(
+        "We could not find a dues account for that athlete, so we did not charge you. Please contact Coach Scott and he'll get it set up.",
+        'NO_ENROLLMENT'
+      )
+    }
+    return data[0]
+  }
+
+  // ── No target named (older page, or a single-athlete family) ───────────
   // Try the normalised address, then the address exactly as the account stores it —
   // enrollments typed in by hand are not reliably lower-cased. Deliberately not
-  // ilike(): `_` is a wildcard there and a real wildcard in plenty of addresses.
+  // ilike(): `_` is a wildcard there and a real character in plenty of addresses.
   for (const candidate of [...new Set([email, rawEmail].filter(Boolean))]) {
     const { data } = await admin
       .from('parent_dues_enrollment')
-      .select('id,total_owed,total_paid,status')
+      .select(ENROLLMENT_COLS)
       .eq('parent_email', candidate)
       .order('total_paid', { ascending: false })
       .limit(1)
     if (data && data.length) return data[0]
   }
 
-  // Fallback: enrollment attached to an athlete this parent is linked to.
-  const { data: links } = await admin
-    .from('parent_player_links')
-    .select('athlete_id')
-    .eq('profile_id', userId)
-  const athleteIds = (links || []).map((l: any) => l.athlete_id).filter(Boolean)
+  const athleteIds = await linkedAthleteIds(admin, userId)
   if (!athleteIds.length) return null
 
   const { data } = await admin
     .from('parent_dues_enrollment')
-    .select('id,total_owed,total_paid,status')
+    .select(ENROLLMENT_COLS)
     .in('athlete_id', athleteIds)
     .order('total_paid', { ascending: false })
     .limit(1)
@@ -200,7 +252,10 @@ Deno.serve(async (req) => {
       // Dues-aware card checkout. The webhook runs the full cascade
       // (dues_installments + parent_dues_enrollment + dues_payments) off this
       // metadata, so everything in it is server-derived.
-      const enrollment = await resolveEnrollment(admin, user.id, userEmail, user.email || '')
+      const enrollment = await resolveEnrollment(admin, user.id, userEmail, user.email || '', {
+        enrollmentId: typeof payload.enrollmentId === 'string' ? payload.enrollmentId : undefined,
+        athleteId: typeof payload.athleteId === 'string' ? payload.athleteId : undefined,
+      })
       if (!enrollment) {
         // Failing here is deliberate: a charge we cannot attribute to an enrollment
         // would take a parent's money and settle nothing. Venmo still works meanwhile.

@@ -6,36 +6,148 @@
 (function () {
 'use strict';
 
-/**
- * Resolve enrollment data: total_owed and total_paid from parent_dues_enrollment.
- * Falls back to hardcoded $745 / $0 if no enrollment record exists.
- */
-async function resolveEnrollmentData(supabase, userId) {
-  var result = { totalOwed: 745, totalPaid: 0 };
-  try {
-    var resp = await supabase
-      .from('parent_player_links')
-      .select('athlete_id')
-      .eq('profile_id', userId)
-      .limit(1);
-    var links = resp.data;
-    if (!links || !links.length) return result;
+// ---------------------------------------------------------------------------
+// Multi-athlete billing.
+//
+// Everything below is scoped to ONE athlete at a time. Before this, the portal
+// read links[0] and plans[0], so a family with two kids saw a single bill and had
+// no way to reach the other one. Now the parent picks a kid and the whole tab --
+// balance, plan, installments, fundraising credit, Pay Now -- follows that choice.
+// ---------------------------------------------------------------------------
 
+const SELECTED_ATHLETE_KEY = 'gba_selected_athlete_id';
+
+/**
+ * Athletes this parent is linked to, oldest link first so the order is stable
+ * across reloads. A picker that reshuffles itself is worse than no picker.
+ */
+async function loadParentAthletes(supabase, userId) {
+  try {
+    const { data } = await supabase
+      .from('parent_player_links')
+      .select('athlete_id, created_at, athletes(first_name, display_name)')
+      .eq('profile_id', userId)
+      .order('created_at', { ascending: true });
+    return (data || [])
+      .filter(l => l && l.athlete_id)
+      .map(l => {
+        const a = l.athletes || {};
+        const name = a.display_name || a.first_name || 'Your Athlete';
+        return { id: l.athlete_id, name: name, firstName: name.split(' ')[0] };
+      });
+  } catch (e) {
+    console.warn('[billing] athlete lookup failed:', e);
+    return [];
+  }
+}
+
+/** The remembered choice, or the first athlete. Ignores a stale saved id. */
+function pickSelectedAthlete(athletes) {
+  if (!athletes.length) return null;
+  const savedId = localStorage.getItem(SELECTED_ATHLETE_KEY);
+  return athletes.find(a => a.id === savedId) || athletes[0];
+}
+
+/**
+ * Segmented control listing each athlete. Hidden for single-athlete families --
+ * one locked-in tab is noise, not a choice.
+ */
+function renderAthletePicker(athletes, selected, email) {
+  const host = document.getElementById('billing-athlete-picker');
+  if (!host) return;
+
+  if (athletes.length < 2) {
+    host.style.display = 'none';
+    host.innerHTML = '';
+    return;
+  }
+
+  host.style.display = 'block';
+  host.innerHTML = `
+    <div style="background:white;border-radius:12px;padding:14px 20px;box-shadow:0 2px 10px rgba(0,0,0,0.05);">
+      <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#999;margin-bottom:10px;">Paying for</div>
+      <div id="billing-athlete-tabs" role="tablist" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+    </div>`;
+
+  const tabs = host.querySelector('#billing-athlete-tabs');
+  athletes.forEach(a => {
+    const isActive = selected && a.id === selected.id;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.setAttribute('role', 'tab');
+    btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    // textContent, not innerHTML: an athlete's name is user data.
+    btn.textContent = a.name;
+    btn.style.cssText =
+      'padding:9px 18px;border-radius:999px;font-size:0.9rem;font-weight:700;cursor:pointer;' +
+      'transition:all 0.15s;border:2px solid ' + (isActive ? '#0071e3' : '#e5e7eb') + ';' +
+      'background:' + (isActive ? '#0071e3' : 'white') + ';color:' + (isActive ? 'white' : '#374151') + ';';
+    // Listener rather than an inline onclick: names and emails would need JS-string
+    // escaping inside an attribute, and that is an easy thing to get subtly wrong.
+    btn.addEventListener('click', () => {
+      if (isActive) return;
+      localStorage.setItem(SELECTED_ATHLETE_KEY, a.id);
+      window.renderBilling(email);
+    });
+    tabs.appendChild(btn);
+  });
+}
+
+/**
+ * Dues enrollment for one athlete: id, total_owed and total_paid.
+ * Falls back to $745 / $0 when the athlete has no enrollment row yet.
+ * The id matters -- Pay Now sends it so the server settles this exact athlete's
+ * bill instead of guessing from the parent's email.
+ */
+async function resolveEnrollmentData(supabase, athlete) {
+  var result = { id: null, totalOwed: 745, totalPaid: 0 };
+  if (!athlete) return result;
+  try {
     var enr = await supabase
       .from('parent_dues_enrollment')
-      .select('total_owed, total_paid')
-      .eq('athlete_id', links[0].athlete_id)
+      .select('id, total_owed, total_paid')
+      .eq('athlete_id', athlete.id)
       .order('total_paid', { ascending: false })
       .limit(1);
-    if (enr.data && enr.data.length) {
-      enr.data = enr.data[0];
-    }
-    if (enr.data) {
-      result.totalOwed = parseFloat(enr.data.total_owed) || 745;
-      result.totalPaid = parseFloat(enr.data.total_paid) || 0;
+    var row = (enr.data && enr.data.length) ? enr.data[0] : null;
+    if (row) {
+      result.id = row.id;
+      result.totalOwed = parseFloat(row.total_owed) || 745;
+      result.totalPaid = parseFloat(row.total_paid) || 0;
     }
   } catch (e) { console.warn('Enrollment lookup:', e); }
   return result;
+}
+
+/**
+ * The payment plan billing this athlete, newest first.
+ * Plans created before the v10_01 migration have no athlete_id; one of those is
+ * only safe to adopt when the parent has a single athlete, because otherwise
+ * there is no way to tell whose bill it is.
+ */
+async function loadPlanForAthlete(supabase, userId, athlete, athleteCount) {
+  if (!athlete) return null;
+
+  const { data: scoped } = await supabase
+    .from('payment_plans')
+    .select('*')
+    .eq('parent_id', userId)
+    .eq('athlete_id', athlete.id)
+    .order('created_at', { ascending: false })
+    .limit(1);
+  if (scoped && scoped.length) return scoped[0];
+
+  if (athleteCount === 1) {
+    const { data: legacy } = await supabase
+      .from('payment_plans')
+      .select('*')
+      .eq('parent_id', userId)
+      .is('athlete_id', null)
+      .order('created_at', { ascending: false })
+      .limit(1);
+    if (legacy && legacy.length) return legacy[0];
+  }
+  return null;
 }
 
 /**
@@ -84,36 +196,40 @@ window.renderBilling = async function (email) {
             }
         } catch (e) { console.warn('[billing] exemption check failed:', e && e.message); }
 
+        // 0b. Work out which athlete this tab is showing, and let the parent switch.
+        const athletes = await loadParentAthletes(supabase, user.id);
+        const athlete  = pickSelectedAthlete(athletes);
+        renderAthletePicker(athletes, athlete, email);
+        if (athlete) {
+            localStorage.setItem(SELECTED_ATHLETE_KEY, athlete.id);
+            // openPaymentModal and the Stripe line item both read this name.
+            localStorage.setItem('gba_selected_athlete_name', athlete.name);
+        }
+
         // 0. Resolve actual dues from enrollment table (replaces hardcoded $745)
-        const enrollment = await resolveEnrollmentData(supabase, user.id);
+        const enrollment = await resolveEnrollmentData(supabase, athlete);
         const baseDues = enrollment.totalOwed;
         const paidSoFar = enrollment.totalPaid;
 
-        // 1. Fetch Payment Plan
-        const { data: plans, error: plansError } = await supabase
-            .from('payment_plans')
-            .select('*')
-            .eq('parent_id', user.id);
-
-        if (plansError) throw plansError;
+        // 1. Fetch the payment plan for THIS athlete
+        const currentPlan = await loadPlanForAthlete(supabase, user.id, athlete, athletes.length);
 
         // Helper: update the section header label above billing-invoices-list
         const sectionHeaderEl = document.querySelector('#view-aau-billing h3');
 
-        if (!plans || plans.length === 0) {
-            // No plan selected yet — show plan selection UI
+        if (!currentPlan) {
+            // No plan for this athlete yet — show plan selection UI
             statusTextEl.textContent = 'Action Required';
             statusTextEl.style.color = '#ef4444';
             statusCard.style.borderLeftColor = '#ef4444';
             if (sectionHeaderEl) sectionHeaderEl.textContent = 'Payment Plan';
-            await renderPlanSelectionUI(container, user.id, supabase, email, baseDues, paidSoFar);
+            await renderPlanSelectionUI(container, user.id, supabase, email, baseDues, paidSoFar, athlete);
             if (totalDueEl) totalDueEl.textContent = '$' + Math.max(baseDues - paidSoFar, 0).toFixed(2);
-            loadFundraisingCredit(supabase, user.id, baseDues, paidSoFar);
+            loadFundraisingCredit(supabase, baseDues, paidSoFar, athlete);
             return;
         }
 
         // 2. Fetch Payments for the Plan
-        const currentPlan = plans[0];
         const { data: payments, error: paymentsError } = await supabase
             .from('payments')
             .select('*')
@@ -130,7 +246,7 @@ window.renderBilling = async function (email) {
         }
 
         // Always render the payments timeline — parents can pay early at any time
-        renderPaymentsTimeline(container, payments, currentPlan, supabase);
+        renderPaymentsTimeline(container, payments, currentPlan, supabase, enrollment, athlete);
 
         // Update status card
         const pendingPayments = payments.filter(p => p.status !== 'confirmed');
@@ -152,7 +268,7 @@ window.renderBilling = async function (email) {
 
         // Load fundraising credit — pass real base dues and payments so the
         // breakdown and header reflect the actual remaining balance.
-        loadFundraisingCredit(supabase, user.id, baseDues, paidSoFar);
+        loadFundraisingCredit(supabase, baseDues, paidSoFar, athlete);
 
     } catch (e) {
         console.error("Billing Error:", e);
@@ -175,27 +291,38 @@ function handleDemoBilling(container, totalDueEl, statusTextEl, statusCard) {
 }
 
 // ─── FUNDRAISING CREDIT (parent billing view) ──────────────
-async function loadFundraisingCredit(supabase, userId, totalDue, totalPaid) {
+async function loadFundraisingCredit(supabase, totalDue, totalPaid, athlete) {
   const card = document.getElementById('billing-fundraising-card');
   if (!card) return;
+  // Hide first: this card is per-athlete, so a stale one left over from the
+  // previously selected kid would credit the wrong child's fundraising.
+  card.style.display = 'none';
   try {
-    // 1. Get athlete name(s) linked to this parent
-    const { data: links } = await supabase
-      .from('parent_player_links')
-      .select('athlete_id, athletes(display_name, first_name)')
-      .eq('profile_id', userId);
-    if (!links || !links.length) return;
-
-    const athleteFirstName = (links[0].athletes?.first_name || links[0].athletes?.display_name || '').split(' ')[0];
-    const athleteDisplay = links[0].athletes?.display_name || athleteFirstName;
+    if (!athlete) return;
+    const athleteFirstName = athlete.firstName;
+    const athleteDisplay = athlete.name;
     if (!athleteFirstName) return;
 
-    // 2. Find matching fundraising record
-    const { data: frRows } = await supabase
+    // 2. Find matching fundraising record. Full name first: with siblings, a
+    // first-name prefix can land on the wrong kid (Jordan vs Jordana), and
+    // crediting one child's fundraising against the other's dues is a real error.
+    let frRows = null;
+    const exact = await supabase
       .from('fundraising_totals')
       .select('total_raised, athlete_name')
-      .ilike('athlete_name', athleteFirstName + '%')
+      .ilike('athlete_name', athleteDisplay)
       .limit(1);
+    if (exact.data && exact.data.length) {
+      frRows = exact.data;
+    } else {
+      const prefix = await supabase
+        .from('fundraising_totals')
+        .select('total_raised, athlete_name')
+        .ilike('athlete_name', athleteFirstName + '%')
+        .limit(2);
+      // Two hits means the prefix is ambiguous — skip rather than credit a guess.
+      if (prefix.data && prefix.data.length === 1) frRows = prefix.data;
+    }
     if (!frRows || !frRows.length || !frRows[0].total_raised) return;
 
     const raised = parseFloat(frRows[0].total_raised);
@@ -401,28 +528,19 @@ async function loadBillingTrainingSchedule() {
   } catch (e) { console.error('Training schedule load:', e); }
 }
 
-async function renderPlanSelectionUI(container, parentId, supabase, email, enrolledOwed, enrolledPaid) {
+async function renderPlanSelectionUI(container, parentId, supabase, email, enrolledOwed, enrolledPaid, athlete) {
     // Resolve fundraising credit to calculate adjusted total
     const BASE_DUES = enrolledOwed || 745;
     let fundraisingCredit = 0;
-    let athleteName = '';
+    const athleteName = athlete ? athlete.name : '';
     try {
-        const { data: links } = await supabase
-            .from('parent_player_links')
-            .select('athlete_id, athletes(display_name, first_name)')
-            .eq('profile_id', parentId);
-        if (links && links.length) {
-            const firstName = (links[0].athletes?.first_name || links[0].athletes?.display_name || '').split(' ')[0];
-            athleteName = links[0].athletes?.display_name || firstName;
-            if (firstName) {
-                const { data: ft } = await supabase
-                    .from('fundraising_totals')
-                    .select('total_raised')
-                    .ilike('athlete_name', firstName + '%')
-                    .limit(1)
-                    .single();
-                if (ft) fundraisingCredit = parseFloat(ft.total_raised) || 0;
-            }
+        if (athlete && athlete.firstName) {
+            const { data: ft } = await supabase
+                .from('fundraising_totals')
+                .select('total_raised')
+                .ilike('athlete_name', athlete.firstName + '%')
+                .limit(1);
+            if (ft && ft.length) fundraisingCredit = parseFloat(ft[0].total_raised) || 0;
         }
     } catch (e) { console.warn('Fundraising lookup in plan selection:', e); }
 
@@ -437,10 +555,17 @@ async function renderPlanSelectionUI(container, parentId, supabase, email, enrol
     // Store adjusted total on window for selectPaymentPlan to use
     window._gsAdjustedDues = adjustedTotal;
     window._gsAthleteName = athleteName;
+    window._gsAthleteId = athlete ? athlete.id : null;
+
+    // Name the athlete in the heading -- with siblings, "your plan" is ambiguous
+    // and a parent could easily enroll the wrong kid.
+    const planHeading = athleteName
+        ? `Select ${escapeHTML(athleteName)}'s Spring/Summer 2026 Payment Plan`
+        : 'Select your Spring/Summer 2026 Payment Plan';
 
     container.innerHTML = `
         <div style="background: white; border-radius: 12px; padding: 20px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-            <h4 style="margin: 0 0 16px 0; font-size: 1.1rem; color: #111;">Select your Spring/Summer 2026 Payment Plan</h4>
+            <h4 style="margin: 0 0 16px 0; font-size: 1.1rem; color: #111;">${planHeading}</h4>
             <p style="font-size: 0.9rem; color: #666; margin-bottom: 24px;">Godspeed Basketball offers multiple ways to handle your player's AAU tuition. Select the plan that works best for your family.</p>
             ${creditNote}
 
@@ -584,10 +709,17 @@ async function renderPlanSelectionUI(container, parentId, supabase, email, enrol
 
                 const totalAmount = installmentsArray.reduce((sum, i) => sum + i.amount, 0);
 
-                // Step 1 — create plan record
+                // Step 1 — create plan record. athlete_id is what scopes this plan to
+                // one kid; player_name stays for the admin views that display it.
                 const { data: insertedPlan, error: planError } = await supabase
                     .from('payment_plans')
-                    .insert({ parent_id: parentId, player_name: athleteName, plan_type: planType, total_amount: totalAmount })
+                    .insert({
+                        parent_id: parentId,
+                        athlete_id: window._gsAthleteId || null,
+                        player_name: athleteName,
+                        plan_type: planType,
+                        total_amount: totalAmount
+                    })
                     .select()
                     .single();
                 if (planError) throw planError;
@@ -631,8 +763,15 @@ async function renderPlanSelectionUI(container, parentId, supabase, email, enrol
     };
 }
 
-function renderPaymentsTimeline(container, payments, plan, supabase) {
+function renderPaymentsTimeline(container, payments, plan, supabase, enrollment, athlete) {
     const isFullPay = plan && plan.plan_type === 'full';
+
+    // Ride along on every Pay button so checkout settles THIS athlete's bill rather
+    // than resolving one from the parent's email — which, for a two-athlete family,
+    // is a coin flip between the siblings.
+    const payTarget =
+        ` data-enrollment-id="${escapeHTML(String((enrollment && enrollment.id) || ''))}"` +
+        ` data-athlete-id="${escapeHTML(String((athlete && athlete.id) || ''))}"`;
 
     // Inject spinner keyframe once
     if (!document.getElementById('gs-pay-spinner-style')) {
@@ -659,7 +798,7 @@ function renderPaymentsTimeline(container, payments, plan, supabase) {
                 </div>
                 <div style="display:flex;align-items:center;gap:14px;">
                     <div style="font-size:1.1rem;font-weight:800;color:#111;">$${remainingBalance.toFixed(2)}</div>
-                    <button class="btn-primary" style="padding:8px 18px;font-size:0.85rem;background:#0a0a0a;color:#fff;font-weight:700;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;min-width:100px;justify-content:center;" data-amount="${remainingBalance}" data-label="Full Balance" data-payment-ids="${unpaidIds.join(',')}" onclick="window._directCheckout(this)">Pay Now</button>
+                    <button class="btn-primary" style="padding:8px 18px;font-size:0.85rem;background:#0a0a0a;color:#fff;font-weight:700;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;min-width:100px;justify-content:center;" data-amount="${remainingBalance}" data-label="Full Balance" data-payment-ids="${unpaidIds.join(',')}"${payTarget} onclick="window._directCheckout(this)">Pay Now</button>
                 </div>
             </div>`;
     }
@@ -681,13 +820,13 @@ function renderPaymentsTimeline(container, payments, plan, supabase) {
         } else if (isOverdue) {
             statusBadge = `<span style="background:#fee2e2;color:#ef4444;padding:3px 8px;border-radius:4px;font-size:0.7rem;font-weight:700;text-transform:uppercase;">Overdue</span>`;
             borderColor = '#ef4444';
-            actionBtn   = `<button id="${btnId}" class="btn-primary" style="padding:8px 18px;font-size:0.85rem;background:#0a0a0a;color:#fff;font-weight:700;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;min-width:100px;justify-content:center;" data-payment-id="${payment.id}" data-amount="${payment.amount}" data-installment="${payment.installment_number}" data-label="${rowLabel}" onclick="window._directCheckout(this)">Pay Now</button>`;
+            actionBtn   = `<button id="${btnId}" class="btn-primary" style="padding:8px 18px;font-size:0.85rem;background:#0a0a0a;color:#fff;font-weight:700;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;min-width:100px;justify-content:center;" data-payment-id="${payment.id}" data-amount="${payment.amount}" data-installment="${payment.installment_number}" data-label="${rowLabel}"${payTarget} onclick="window._directCheckout(this)">Pay Now</button>`;
         } else {
             statusBadge = `<span style="background:#fef3c7;color:#d97706;padding:3px 8px;border-radius:4px;font-size:0.7rem;font-weight:700;text-transform:uppercase;">Upcoming</span>`;
             borderColor = '#f59e0b';
             const btnBg = isFullPay ? '#0a0a0a' : '#6b7280';
             const btnLabel = isFullPay ? 'Pay Now' : 'Pay Early';
-            actionBtn = `<button id="${btnId}" class="btn-primary" style="padding:8px 18px;font-size:0.85rem;background:${btnBg};color:#fff;font-weight:700;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;min-width:100px;justify-content:center;" data-payment-id="${payment.id}" data-amount="${payment.amount}" data-installment="${payment.installment_number}" data-label="${rowLabel}" onclick="window._directCheckout(this)">${btnLabel}</button>`;
+            actionBtn = `<button id="${btnId}" class="btn-primary" style="padding:8px 18px;font-size:0.85rem;background:${btnBg};color:#fff;font-weight:700;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;min-width:100px;justify-content:center;" data-payment-id="${payment.id}" data-amount="${payment.amount}" data-installment="${payment.installment_number}" data-label="${rowLabel}"${payTarget} onclick="window._directCheckout(this)">${btnLabel}</button>`;
         }
 
         // Block later installments until prior ones are paid
@@ -734,9 +873,12 @@ window._directCheckout = function(btn) {
     const label       = btn.dataset.label || 'Payment';
     // Multi-payment (Pay Full Balance) passes comma-separated IDs
     const paymentIds  = btn.dataset.paymentIds || btn.dataset.paymentId;
+    // Which athlete's bill this button belongs to (see renderPaymentsTimeline).
+    const enrollmentId = btn.dataset.enrollmentId || '';
+    const athleteId    = btn.dataset.athleteId || '';
 
     if (window.STRIPE_LIVE) {
-        return window._startStripeDuesCheckout(btn, { amount, label });
+        return window._startStripeDuesCheckout(btn, { amount, label, enrollmentId, athleteId });
     }
 
     openPaymentModal({
@@ -796,9 +938,13 @@ window._startStripeDuesCheckout = async function(btn, opts) {
                 paymentType: 'aau_dues',
                 amount: opts.amount,
                 playerName,
-                label: opts.label || 'AAU Season Dues'
-                // No enrollmentId/parentEmail: the function derives both from the
-                // signed-in user so a tampered request cannot aim at another family.
+                label: opts.label || 'AAU Season Dues',
+                // Which athlete's bill to settle. The function still verifies this
+                // parent is linked to it before charging anything, so naming a
+                // sibling -- or another family's row -- gets rejected, not honoured.
+                enrollmentId: opts.enrollmentId || undefined,
+                athleteId: opts.athleteId || undefined
+                // No parentEmail: identity comes from the signed-in session.
             }
         });
         if (error) throw new Error(await readFunctionError(error));

@@ -193,6 +193,14 @@ console.log(data, error);
 - [ ] **A paid-up account can't be charged again.** After Step 6 leaves the test enrollment
       paid in full, click Pay Now again → expect the message "Your dues are already paid in
       full", no Stripe redirect.
+- [ ] **You cannot pay for someone else's kid.** Repeat the call with an `athleteId` that
+      belongs to another family → expect `403` with `"code":"NOT_YOUR_ATHLETE"`.
+
+**Multi-athlete families** (only if your test parent has two linked athletes):
+- [ ] The dues tab shows a **"Paying for"** picker; switching tabs changes the balance,
+      the installment list and the status card to that athlete's.
+- [ ] Pay Now while athlete B is selected settles **B's** enrollment — re-run the Step 6
+      queries against B's `<ENR_ID>` and confirm A's row is untouched.
 
 ---
 
