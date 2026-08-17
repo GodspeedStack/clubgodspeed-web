@@ -750,16 +750,42 @@ window._directCheckout = function(btn) {
 
 // ---------------------------------------------------------------------------
 // Stripe dues checkout — invokes create-checkout (aau_dues) and redirects.
-// The webhook resolves the family by parentEmail, so we only need email + amount.
+// We send only the amount we want to pay. The function verifies who is signed in,
+// looks up their enrollment itself, and caps the charge at the real balance, so
+// nothing here needs to be trusted for money.
 // ---------------------------------------------------------------------------
+
+/**
+ * Pull the human-readable message out of a failed functions.invoke().
+ * supabase-js wraps non-2xx responses in a FunctionsHttpError whose message is
+ * just "Edge Function returned a non-2xx status code" — the useful text is in
+ * the un-read response body on error.context.
+ */
+async function readFunctionError(error) {
+    try {
+        if (error && error.context && typeof error.context.json === 'function') {
+            const body = await error.context.json();
+            if (body && body.error) return body.error;
+        }
+    } catch (e) { /* body already consumed or not JSON — fall through */ }
+    return (error && error.message) || 'Please try again.';
+}
+
 window._startStripeDuesCheckout = async function(btn, opts) {
     if (!window.auth || !window.auth.isSupabaseAvailable()) {
-        alert('Not connected. Refresh and try again.');
+        alert('We cannot reach the payment system right now. Please refresh and try again.');
         return;
     }
-    const parentEmail = localStorage.getItem('gba_user_email') || '';
-    const playerName  = localStorage.getItem('gba_selected_athlete_name') || 'Athlete';
-    const supabase    = window.auth.getSupabaseClient();
+    const playerName = localStorage.getItem('gba_selected_athlete_name') || 'Athlete';
+    const supabase   = window.auth.getSupabaseClient();
+
+    // A signed-out tab would get a 401 from the function; catch it here with a
+    // message that actually tells the parent what to do.
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData || !sessionData.session) {
+        alert('Your sign-in expired. Please sign in again, then tap Pay Now.');
+        return;
+    }
 
     const origText = btn ? btn.textContent : '';
     if (btn) { btn.disabled = true; btn.textContent = 'Redirecting…'; }
@@ -769,18 +795,18 @@ window._startStripeDuesCheckout = async function(btn, opts) {
             body: {
                 paymentType: 'aau_dues',
                 amount: opts.amount,
-                parentEmail,
                 playerName,
                 label: opts.label || 'AAU Season Dues'
-                // enrollmentId/installmentIds omitted — webhook resolves by parentEmail
+                // No enrollmentId/parentEmail: the function derives both from the
+                // signed-in user so a tampered request cannot aim at another family.
             }
         });
-        if (error) throw error;
+        if (error) throw new Error(await readFunctionError(error));
         if (data && data.url) { window.location.href = data.url; return; }
         throw new Error('Could not start checkout. Please try again.');
     } catch (e) {
         if (btn) { btn.disabled = false; btn.textContent = origText; }
-        alert('Payment error: ' + (e.message || 'Please try again.'));
+        alert(e.message || 'Payment error. Please try again.');
     }
 }
 

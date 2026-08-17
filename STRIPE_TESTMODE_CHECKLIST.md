@@ -59,7 +59,11 @@ supabase functions deploy create-checkout stripe-webhook --project-ref nnqokhqen
 
 ## 3. Create a throwaway TEST enrollment (protects real data)
 
-Run in the Supabase SQL editor. Use a fake email you control so the webhook resolves by it.
+Run in the Supabase SQL editor. **Use an email you can actually sign in to the portal with**
+— `create-checkout` reads the email off your login session, not off the page, and refuses to
+charge you at all if it can't find an enrollment for that email. Create the parent account
+first (or use an existing throwaway one), then set `parent_email` to match it exactly.
+
 **Validate column names against the live table first** (repo has no migration for these tables).
 
 - [ ] Inspect the table shape:
@@ -159,6 +163,39 @@ from dues_payments where stripe_pi_id = '<pi_...>';
 
 ---
 
+## 8b. Verify the checkout guardrails (nobody can charge the wrong amount)
+
+`create-checkout` verifies your login, looks up your own enrollment, and caps the charge at
+what you actually owe. Prove all three still hold. Run these from the DevTools console **on
+the parent portal while signed in as the test parent**.
+
+- [ ] **Signed-out calls are refused.** In a private window (not signed in):
+```bash
+curl -s -X POST https://nnqokhqennuxalamnvps.supabase.co/functions/v1/create-checkout \
+  -H 'Content-Type: application/json' \
+  -d '{"paymentType":"aau_dues","amount":1}'
+```
+      Expect `401` with `"code":"AUTH_REQUIRED"` — **not** a Stripe URL. (A Stripe URL here
+      means anyone on the internet can create charges on our account.)
+- [ ] **An inflated amount gets capped, not honoured.** Signed in as the test parent with a
+      $20 balance, ask for $2,000:
+```js
+const sb = window.auth.getSupabaseClient();
+const { data, error } = await sb.functions.invoke('create-checkout',
+  { body: { paymentType: 'aau_dues', amount: 2000 } });
+console.log(data, error);
+```
+      Open the returned URL → Stripe must show **$20.00**, the real balance.
+- [ ] **You cannot aim a payment at another family.** Repeat the call with
+      `enrollmentId: '<some other family id>'` and `parentEmail: 'someoneelse@x.com'` in the
+      body. Those fields are ignored — the charge must still land on YOUR test enrollment
+      (re-verify with the Step 6 queries).
+- [ ] **A paid-up account can't be charged again.** After Step 6 leaves the test enrollment
+      paid in full, click Pay Now again → expect the message "Your dues are already paid in
+      full", no Stripe redirect.
+
+---
+
 ## 9. Clean up test data (leave prod pristine)
 
 - [ ] Delete the throwaway rows (child tables first — FK order):
@@ -177,6 +214,8 @@ delete from parent_dues_enrollment where id = '<ENR_ID>';
 - [ ] Success card → all three tables settled (Step 6) ✅
 - [ ] Webhook resend → no double-count (Step 7) ✅
 - [ ] Decline card → no settlement (Step 8) ✅
+- [ ] Checkout guardrails hold: signed-out refused, inflated amount capped, other-family
+      targeting ignored, paid-up account blocked (Step 8b) ✅
 - [ ] Test data cleaned up (Step 9) ✅
 - [ ] EIN obtained + **live** Stripe account active
 - [ ] **Live** `sk_live_...` + `whsec_...` set on the functions (repeat Steps 1–2 with live values)

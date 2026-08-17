@@ -91,31 +91,40 @@ window.TrainingCart = {
 
         try {
             const sbClient = window.auth?.getSupabaseClient?.();
-            if (!sbClient) throw new Error('Not authenticated. Please log in first.');
+            if (!sbClient) throw new Error('We cannot reach the payment system. Please refresh and try again.');
 
-            let user = null;
-            const { data: userData, error: authError } = await sbClient.auth.getUser();
-            if (userData && userData.user) user = userData.user;
-            if (!user) user = { id: 'anonymous' };
+            // create-checkout requires a real signed-in user — it prices the cart and
+            // records the purchase against whoever the token says you are. No session,
+            // no checkout (this used to fall back to a fake "anonymous" user).
+            const { data: sessionData } = await sbClient.auth.getSession();
+            if (!sessionData || !sessionData.session) {
+                throw new Error('Your sign-in expired. Please sign in again, then check out.');
+            }
 
             // Attempt to get selected athlete
             const athleteSelect = document.getElementById('training-athlete-select');
             const athleteId = (athleteSelect && athleteSelect.value) ? athleteSelect.value : null;
-            const email = localStorage.getItem('gba_user_email') || user.email;
 
             const { data, error } = await sbClient.functions.invoke('create-checkout', {
                 body: {
                     paymentType: 'training_package',
-                    items: this.items,
-                    parentEmail: email,
-                    userId: user.id,
-                    athleteId: athleteId,
-                    successUrl: `${window.location.origin}/parent-portal.html?payment=success&type=training`,
-                    cancelUrl: `${window.location.origin}/parent-portal.html?payment=cancelled`
+                    // Only ids + quantities matter: the function prices every item
+                    // from its own catalog, so a tampered price is ignored.
+                    items: this.items.map(i => ({ id: i.id, quantity: i.quantity })),
+                    athleteId: athleteId
                 }
             });
 
-            if (error) throw error;
+            if (error) {
+                let msg = error.message;
+                try {
+                    if (error.context && typeof error.context.json === 'function') {
+                        const body = await error.context.json();
+                        if (body && body.error) msg = body.error;
+                    }
+                } catch (_) { /* body not JSON — keep the generic message */ }
+                throw new Error(msg);
+            }
             
             if (data && data.url) {
                 window.location.href = data.url;
