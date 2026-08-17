@@ -120,6 +120,18 @@ async function resolveEnrollmentData(supabase, athlete) {
 }
 
 /**
+ * True when a query failed only because payment_plans.athlete_id is not there yet.
+ * Migrations on this project are applied by hand, so the frontend can genuinely go
+ * out before v10_01 does. Postgres 42703 = undefined_column.
+ */
+function isMissingAthleteColumn(error) {
+  if (!error) return false;
+  const code = String(error.code || '');
+  const msg = String(error.message || '').toLowerCase();
+  return code === '42703' || (msg.includes('athlete_id') && msg.includes('does not exist'));
+}
+
+/**
  * The payment plan billing this athlete, newest first.
  * Plans created before the v10_01 migration have no athlete_id; one of those is
  * only safe to adopt when the parent has a single athlete, because otherwise
@@ -128,13 +140,29 @@ async function resolveEnrollmentData(supabase, athlete) {
 async function loadPlanForAthlete(supabase, userId, athlete, athleteCount) {
   if (!athlete) return null;
 
-  const { data: scoped } = await supabase
+  const { data: scoped, error: scopedErr } = await supabase
     .from('payment_plans')
     .select('*')
     .eq('parent_id', userId)
     .eq('athlete_id', athlete.id)
     .order('created_at', { ascending: false })
     .limit(1);
+
+  // Frontend deployed ahead of the migration: fall back to the old parent-wide
+  // lookup so every family still sees their bill. They lose per-athlete scoping
+  // until v10_01 lands -- which is exactly where they were before this feature,
+  // and far better than showing everyone an empty "pick a plan" screen.
+  if (isMissingAthleteColumn(scopedErr)) {
+    console.warn('[billing] payment_plans.athlete_id missing — run migration v10_01. Falling back to parent-wide plan lookup.');
+    const { data: preMigration } = await supabase
+      .from('payment_plans')
+      .select('*')
+      .eq('parent_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1);
+    return (preMigration && preMigration.length) ? preMigration[0] : null;
+  }
+
   if (scoped && scoped.length) return scoped[0];
 
   if (athleteCount === 1) {
@@ -711,17 +739,24 @@ async function renderPlanSelectionUI(container, parentId, supabase, email, enrol
 
                 // Step 1 — create plan record. athlete_id is what scopes this plan to
                 // one kid; player_name stays for the admin views that display it.
-                const { data: insertedPlan, error: planError } = await supabase
-                    .from('payment_plans')
-                    .insert({
-                        parent_id: parentId,
-                        athlete_id: window._gsAthleteId || null,
-                        player_name: athleteName,
-                        plan_type: planType,
-                        total_amount: totalAmount
-                    })
-                    .select()
-                    .single();
+                const planRow = {
+                    parent_id: parentId,
+                    athlete_id: window._gsAthleteId || null,
+                    player_name: athleteName,
+                    plan_type: planType,
+                    total_amount: totalAmount
+                };
+                let { data: insertedPlan, error: planError } = await supabase
+                    .from('payment_plans').insert(planRow).select().single();
+
+                // Migration v10_01 not applied yet — retry without athlete_id rather
+                // than dead-ending a parent who is trying to enroll.
+                if (isMissingAthleteColumn(planError)) {
+                    console.warn('[billing] payment_plans.athlete_id missing — run migration v10_01. Enrolling without it.');
+                    delete planRow.athlete_id;
+                    ({ data: insertedPlan, error: planError } = await supabase
+                        .from('payment_plans').insert(planRow).select().single());
+                }
                 if (planError) throw planError;
                 setStep(1, 'done');
 
