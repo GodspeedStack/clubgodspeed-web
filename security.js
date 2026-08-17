@@ -224,7 +224,11 @@
             // The checks below only read localStorage, so on a browser that has
             // never verified here (a new hire's own laptop) they return false
             // and block the login before it ever reaches Supabase. Defer.
-            if (window.auth && window.auth.isSupabaseAvailable && window.auth.isSupabaseAvailable()) {
+            // Ask whether Supabase is *configured*, not whether its client has
+            // been instantiated yet: supabase-js loads lazily, and this check
+            // runs inside SecureAuth.login() before the load is triggered, so
+            // isSupabaseAvailable() is still false here on a fresh page load.
+            if (window.auth && window.auth.isSupabaseConfigured && window.auth.isSupabaseConfigured()) {
                 return true;
             }
 
