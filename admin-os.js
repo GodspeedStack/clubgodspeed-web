@@ -1343,7 +1343,7 @@ async function quickRecordPayment() {
     // 4. Update enrollment total_paid + status
     qpFeedback('Step 4/6: Updating enrollment...', '');
     const { data: enr, error: enrErr } = await osSupabase.from('parent_dues_enrollment')
-      .select('total_paid,total_owed,status')
+      .select('total_paid,total_owed,status,athlete_id')
       .eq('id', enrollmentId).single();
     if (enrErr) console.warn('Step 4 enrollment read:', enrErr.message);
     if (enr) {
@@ -1362,18 +1362,65 @@ async function quickRecordPayment() {
         const { data: prof } = await osSupabase.from('profiles')
           .select('id').eq('email', parentEmail).maybeSingle();
         if (prof) {
-          let { data: pp, error: ppErr } = await osSupabase.from('payment_plans')
-            .select('id,total_amount').eq('parent_id', prof.id).maybeSingle();
-          if (ppErr) console.warn('Step 5 plan lookup:', ppErr.message);
+          // Scope the plan to this enrollment's athlete. maybeSingle() on parent_id
+          // alone used to ERROR for any family with two athletes (two plans), which
+          // silently skipped the whole portal sync -- the parent's portal kept showing
+          // a balance the admin had already settled.
+          const enrAthleteId = enr && enr.athlete_id ? enr.athlete_id : null;
+          let pp = null;
+          // Set when payment_plans.athlete_id does not exist yet (migration v10_01
+          // applied by hand, so the app can genuinely run ahead of it).
+          let noAthleteCol = false;
+
+          if (enrAthleteId) {
+            const { data: scoped, error: ppErr } = await osSupabase.from('payment_plans')
+              .select('id,total_amount')
+              .eq('parent_id', prof.id).eq('athlete_id', enrAthleteId)
+              .order('created_at', { ascending: false }).limit(1);
+            if (ppErr) {
+              noAthleteCol = String(ppErr.code || '') === '42703' ||
+                (String(ppErr.message || '').toLowerCase().includes('athlete_id') &&
+                 String(ppErr.message || '').toLowerCase().includes('does not exist'));
+              console.warn('Step 5 plan lookup:', ppErr.message);
+            }
+            if (scoped && scoped.length) pp = scoped[0];
+          }
+
+          // Pre-migration: fall back to the parent-wide lookup (limit(1), never
+          // maybeSingle(), so a two-plan family does not error the sync away).
+          if (!pp && noAthleteCol) {
+            const { data: preMigration } = await osSupabase.from('payment_plans')
+              .select('id,total_amount').eq('parent_id', prof.id)
+              .order('created_at', { ascending: false }).limit(1);
+            if (preMigration && preMigration.length) pp = preMigration[0];
+          }
+
+          // Legacy plans predate athlete_id (migration v10_01). Only adopt one when
+          // this parent has a single athlete -- otherwise we cannot tell whose it is.
+          if (!pp && !noAthleteCol) {
+            const { data: linked } = await osSupabase.from('parent_player_links')
+              .select('athlete_id').eq('profile_id', prof.id);
+            if (linked && linked.length === 1) {
+              const { data: legacy } = await osSupabase.from('payment_plans')
+                .select('id,total_amount')
+                .eq('parent_id', prof.id).is('athlete_id', null)
+                .order('created_at', { ascending: false }).limit(1);
+              if (legacy && legacy.length) pp = legacy[0];
+            }
+          }
+
           if (!pp) {
+            const newPlanRow = {
+              parent_id: prof.id,
+              athlete_id: enrAthleteId,
+              player_name: athleteName || '--',
+              plan_type: 'full',
+              total_amount: enr ? parseFloat(enr.total_owed) || 745 : 745,
+              status: 'active'
+            };
+            if (noAthleteCol) delete newPlanRow.athlete_id;
             const { data: newPlan, error: planErr } = await osSupabase.from('payment_plans')
-              .insert({
-                parent_id: prof.id,
-                player_name: athleteName || '--',
-                plan_type: 'full',
-                total_amount: enr ? parseFloat(enr.total_owed) || 745 : 745,
-                status: 'active'
-              }).select('id,total_amount').single();
+              .insert(newPlanRow).select('id,total_amount').single();
             if (planErr) console.warn('Step 5 plan create:', planErr.message);
             else pp = newPlan;
           }
