@@ -413,6 +413,27 @@ const OB = (() => {
                 });
                 if (error) throw error;
 
+                // Existing account: Supabase returns a user with an EMPTY identities
+                // array instead of an error when the email is already registered.
+                // Without this check the parent believes a new account was created.
+                if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+                    if (!isLoginMode) toggleLoginMode();
+                    showFieldError('ob-email', 'ob-email-error', 'An account with this email already exists. Sign in with your original password.');
+                    btn.disabled = false;
+                    btn.textContent = 'Sign In';
+                    return;
+                }
+
+                // Confirmation required: signUp succeeds but returns NO session until
+                // the parent clicks the emailed confirmation link. Never treat this
+                // state as signed in.
+                if (data.user && !data.session) {
+                    showConfirmEmailNotice(email);
+                    btn.disabled = false;
+                    btn.textContent = 'Create Account';
+                    return;
+                }
+
                 userEmail = email;
                 parentName = pName;
                 athleteName = aName;
@@ -435,7 +456,16 @@ const OB = (() => {
             updateUI();
 
         } catch (err) {
-            alert(err.message || 'Authentication failed. Please try again.');
+            const msg = (err && err.message) || '';
+            if (/email not confirmed/i.test(msg)) {
+                // Account exists but the confirmation link was never clicked
+                // (or never delivered). Give the parent a self-serve resend.
+                showConfirmEmailNotice(email);
+            } else if (/invalid login credentials/i.test(msg)) {
+                showFieldError('ob-password', 'ob-password-error', 'Email or password is incorrect. Check both, or use the password you chose when you first created the account.');
+            } else {
+                alert(msg || 'Authentication failed. Please try again.');
+            }
             btn.disabled = false;
             btn.textContent = isLoginMode ? 'Sign In' : 'Create Account';
         }
@@ -477,6 +507,42 @@ const OB = (() => {
             if (nameEl) nameEl.textContent = parentName || '';
             if (emailEl) emailEl.textContent = userEmail || '';
         }
+    }
+
+    let pendingConfirmEmail = null;
+
+    function showConfirmEmailNotice(email) {
+        pendingConfirmEmail = email;
+        let box = document.getElementById('ob-confirm-notice');
+        if (!box) {
+            box = document.createElement('div');
+            box.id = 'ob-confirm-notice';
+            box.style.cssText = 'margin-top:14px;padding:14px 16px;background:#F4F6FA;border-left:4px solid #1A3A8F;font-size:0.92rem;line-height:1.5;';
+            const form = document.getElementById('email-auth-form');
+            if (form && form.parentNode) form.parentNode.insertBefore(box, form.nextSibling);
+        }
+        box.innerHTML = '<strong>One more step.</strong> We sent a confirmation link to <strong>' + escapeHtml(email) + '</strong>. Open that email, click the link, then return here and sign in. Check your spam folder if you do not see it.' +
+            '<div style="margin-top:10px;"><button type="button" class="ob-btn" id="ob-resend-confirm" style="font-size:0.85rem;padding:8px 14px;">Resend confirmation email</button>' +
+            '<span id="ob-resend-status" style="margin-left:10px;font-size:0.85rem;color:#555555;"></span></div>';
+        box.hidden = false;
+        const rb = document.getElementById('ob-resend-confirm');
+        if (rb) rb.addEventListener('click', resendConfirmation);
+    }
+
+    async function resendConfirmation() {
+        if (!supabase || !pendingConfirmEmail) return;
+        const statusEl = document.getElementById('ob-resend-status');
+        if (statusEl) statusEl.textContent = 'Sending...';
+        try {
+            const { error } = await supabase.auth.resend({ type: 'signup', email: pendingConfirmEmail });
+            if (statusEl) statusEl.textContent = error ? ('Could not resend: ' + error.message) : 'Sent. Check your inbox and spam folder.';
+        } catch (e) {
+            if (statusEl) statusEl.textContent = 'Could not resend. Please try again in a minute.';
+        }
+    }
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     }
 
     function populateNameFields() {
