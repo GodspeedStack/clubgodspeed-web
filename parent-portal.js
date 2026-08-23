@@ -2432,60 +2432,51 @@ async function renderTrainingDashboard() {
 /**
  * Calculate and display remaining training hours
  */
-async function calculateRemainingHours(parentEmail) {
-    const supabase = window.auth?.getSupabaseClient?.();
-    const db = getDB();
+let __trainingSummaryPromise = null;
 
-    let totalPurchased = 0;
-    let totalUsed = 0;
-
-    // Check Supabase first
-   if (supabase && window.auth?.isSupabaseAvailable?.()) {
+/**
+ * Fetch the training summary RPC exactly once per page load.
+ * Identity is derived server-side from the caller's JWT -- the client
+ * sends nothing and no local/mock state is ever consulted.
+ */
+function fetchTrainingSummary(force = false) {
+    if (!force && __trainingSummaryPromise) return __trainingSummaryPromise;
+    __trainingSummaryPromise = (async () => {
+        const supabase = window.auth?.getSupabaseClient?.();
+        if (!supabase) return { ok: false, error: 'auth-client-unavailable' };
         try {
-            // Resolve athlete IDs for this parent from roster
-            const athletes = (db.roster || []).filter(a => a.parentId === parentEmail);
-            const athleteIds = athletes.map(a => a.athleteId);
-
-            if (athleteIds.length > 0) {
-                // Query training_hours_summary (view) -- already aggregates per package
-                const { data: summaries, error: summaryError } = await supabase
-                    .from('training_hours_summary')
-                    .select('hours_purchased, hours_used, hours_remaining')
-                    .in('athlete_id', athleteIds);
-
-                if (summaryError) {
-                    console.error('Error fetching training hours summary:', summaryError);
-                    // Fall through to mock data
-                } else if (summaries && summaries.length > 0) {
-                    totalPurchased = summaries.reduce((sum, s) => sum + (parseFloat(s.hours_purchased) || 0), 0);
-                    totalUsed = summaries.reduce((sum, s) => sum + (parseFloat(s.hours_used) || 0), 0);
-                }
-            }
+            const { data, error } = await supabase.rpc('get_my_training_summary');
+            if (error) return { ok: false, error: error.message };
+            if (!data || data.ok !== true) return { ok: false, error: (data && data.error) || 'empty-response' };
+            return data;
         } catch (e) {
-            console.error('Error calculating remaining hours:', e);
-            // Fall through to mock data
+            return { ok: false, error: String((e && e.message) || e) };
         }
+    })();
+    return __trainingSummaryPromise;
+}
+
+async function calculateRemainingHours(parentEmail) {
+    const s = await fetchTrainingSummary();
+    if (!s.ok) {
+        // Honest failure: the UI shows an explicit unavailable state.
+        // We never substitute placeholder or mock numbers.
+        return { ok: false, error: s.error, purchased: 0, used: 0, remaining: 0, progressPercent: 0, sessionsCompleted: 0, upcoming: 0, sessions: [] };
     }
-
-    // Fallback to Mock Data from trainingRecords
-    if (totalPurchased === 0) {
-        const rawUserRecords = db.trainingRecords ? db.trainingRecords[parentEmail] : null;
-        const userRecords = getLedgerProfile(rawUserRecords);
-        if (userRecords && userRecords.hours) {
-            totalPurchased = userRecords.hours.totalPurchased;
-           // UI relies on active progress
-            totalUsed = userRecords.hours.totalPurchased - userRecords.hours.remaining; 
-        }
-    }
-
-  const remaining = totalPurchased - totalUsed;
-    const progressPercent = totalPurchased > 0 ? (totalUsed / totalPurchased) * 100 : 0;
-
+    const purchased = Number(s.hours_purchased) || 0;
+    const used = Number(s.hours_used) || 0;
+    const remaining = (s.hours_remaining !== undefined && s.hours_remaining !== null) ? Number(s.hours_remaining) : (purchased - used);
     return {
-        purchased: totalPurchased,
-        used: totalUsed,
+        ok: true,
+        purchased: purchased,
+        used: used,
         remaining: remaining,
-        progressPercent: progressPercent
+        progressPercent: purchased > 0 ? Math.min(100, (used / purchased) * 100) : 0,
+        sessionsCompleted: Number(s.sessions_completed) || 0,
+        upcoming: Number(s.upcoming_sessions) || 0,
+        sessions: Array.isArray(s.sessions) ? s.sessions : [],
+        billing: (s.billing && typeof s.billing === 'object') ? s.billing : null,
+        currentPackage: (s.current_package && typeof s.current_package === 'object') ? s.current_package : null
     };
 }
 
@@ -2495,268 +2486,268 @@ async function calculateRemainingHours(parentEmail) {
 async function loadTrainingHours(parentEmail) {
     const hoursData = await calculateRemainingHours(parentEmail);
 
-    // Update hours display
     const hoursPurchasedEl = document.getElementById('hours-purchased');
-    const hoursUsedEl = document.getElementById('hours-used');
+    const remainingEl = document.getElementById('training-hours-display');
+    const usedEl = document.getElementById('training-utilized-display');
     const progressFillEl = document.getElementById('hours-progress-fill');
 
-    // --- User-Specific Usage & Purchase History ---
-    const db = getDB();
-    const rawUserRecords = db.trainingRecords ? db.trainingRecords[parentEmail] : null;
-    const userRecords = getLedgerProfile(rawUserRecords);
-
-    if (userRecords) {
-        // Set purchased hours
-      if (hoursPurchasedEl) {
-            hoursPurchasedEl.textContent = userRecords.hours.totalPurchased;
-        }
-
-        // Update the main dashboard display elements
-        const trainingHoursDisplay = document.getElementById('training-hours-display');
-        if (trainingHoursDisplay) {
-           trainingHoursDisplay.textContent = userRecords.hours.remaining.toFixed(1);
-        }
-
-        const utilizedDisplay = document.getElementById('training-utilized-display');
-        if (utilizedDisplay) {
-            utilizedDisplay.textContent = userRecords.hours.used.toFixed(1);
-        }
-
-       // Create Log Container if not exists (Training View)
-        // Use existing container or append a new one
-        /* Assuming we are in 'training' view context or similar elements exist */
-
-        // We'll append usage logs to 'training-calendar-container' used as a placeholder or create a new div if feasible
-        // Actually, let's create a dedicated section dynamically
-        const calendarContainer = document.getElementById('training-calendar-container');
-        if (calendarContainer && !document.getElementById('user-usage-log')) {
-            const logDiv = document.createElement('div');
-            logDiv.id = 'user-usage-log';
-            logDiv.style.marginTop = '20px';
-            const header = document.createElement('h4');
-            header.style.marginBottom = '10px';
-            header.style.fontSize = '14px';
-            header.style.color = '#444';
-            header.textContent = 'Session History';
-            logDiv.appendChild(header);
-
-            userRecords.logs.forEach(log => {
-                const safeActivity = escapeHTML(log.activity || '');
-                const safeDate = escapeHTML(log.date || '');
-                const safeTime = escapeHTML(log.time || '');
-
-                const logItem = document.createElement('div');
-                logItem.style.display = 'flex';
-                logItem.style.alignItems = 'center'; // Align icon with text
-                logItem.style.justifyContent = 'space-between';
-                logItem.style.padding = '12px';
-                logItem.style.background = '#fff';
-              logItem.style.border = '1px solid #eee';
-                logItem.style.borderRadius = '8px';
-                logItem.style.marginBottom = '8px';
-
-                // Left Side Container (Icon + Text)
-                const leftContainer = document.createElement('div');
-                leftContainer.style.display = 'flex';
-              leftContainer.style.alignItems = 'center';
-                leftContainer.style.gap = '10px';
-
-               // Subtle Checkmark Icon
-                const iconDiv = document.createElement('div');
-                iconDiv.innerHTML = `
-                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                  `;
-                iconDiv.style.display = 'flex';
-              iconDiv.style.alignItems = 'center';
-
-                const textDiv = document.createElement('div');
-              const activityDiv = document.createElement('div');
-              activityDiv.style.fontWeight = '600';
-                activityDiv.style.fontSize = '13px';
-                activityDiv.style.color = '#1f2937';
-              activityDiv.textContent = safeActivity;
-
-                const dateDiv = document.createElement('div');
-                dateDiv.style.fontSize = '11px';
-                dateDiv.style.color = '#6b7280';
-              dateDiv.textContent = safeDate;
-
-                textDiv.appendChild(activityDiv);
-                textDiv.appendChild(dateDiv);
-
-                leftContainer.appendChild(iconDiv);
-                leftContainer.appendChild(textDiv);
-
-                const timeDiv = document.createElement('div');
-                timeDiv.style.fontWeight = '500';
-                timeDiv.style.fontSize = '12px';
-                timeDiv.style.color = '#4b5563';
-                timeDiv.textContent = safeTime;
-
-                logItem.appendChild(leftContainer);
-                logItem.appendChild(timeDiv);
-                logDiv.appendChild(logItem);
-            });
-            calendarContainer.parentNode.insertBefore(logDiv, calendarContainer.nextSibling);
-        }
-
-        // Receipts
-        const docsContainer = document.getElementById('training-documents-list');
-        if (docsContainer && userRecords.purchases) {
-            userRecords.purchases.forEach(p => {
-                // Sanitize purchase data
-                const safeItem = escapeHTML(p.item || '');
-                const safeDate = escapeHTML(p.date || '');
-                const safeAmount = escapeHTML(p.amount || '');
-                const safeStatus = escapeHTML(p.status || '');
-                const safeLink = validateURL(p.link) || '#';
-
-                const purchaseDiv = document.createElement('div');
-                purchaseDiv.className = 'doc-item';
-                purchaseDiv.style.display = 'flex';
-                purchaseDiv.style.alignItems = 'center';
-                purchaseDiv.style.gap = '12px';
-                purchaseDiv.style.padding = '12px';
-                purchaseDiv.style.borderBottom = '1px solid #f0f0f0';
-                purchaseDiv.style.background = '#f9fafb';
-
-                const iconDiv = document.createElement('div');
-                iconDiv.style.background = '#dcfce7';
-                iconDiv.style.color = '#166534';
-                iconDiv.style.width = '32px';
-                iconDiv.style.height = '32px';
-                iconDiv.style.display = 'flex';
-                iconDiv.style.alignItems = 'center';
-                iconDiv.style.justifyContent = 'center';
-                iconDiv.style.borderRadius = '6px';
-                iconDiv.style.fontSize = '14px';
-                iconDiv.style.fontWeight = '700';
-                iconDiv.textContent = '$';
-
-                const contentDiv = document.createElement('div');
-                contentDiv.style.flex = '1';
-                const itemDiv = document.createElement('div');
-                itemDiv.style.fontSize = '13px';
-                itemDiv.style.fontWeight = '600';
-                itemDiv.textContent = `Receipt: ${safeItem}`;
-                const detailsDiv = document.createElement('div');
-                detailsDiv.style.fontSize = '11px';
-                detailsDiv.style.color = '#888';
-                detailsDiv.textContent = `${safeDate} • ${safeAmount} • ${safeStatus}`;
-                contentDiv.appendChild(itemDiv);
-                contentDiv.appendChild(detailsDiv);
-
-                const linkEl = document.createElement('a');
-                linkEl.href = safeLink;
-                linkEl.style.fontSize = '11px';
-                linkEl.style.color = '#0071e3';
-                linkEl.style.fontWeight = '600';
-                linkEl.style.textDecoration = 'none';
-                linkEl.textContent = 'View PDF';
-                linkEl.target = '_blank';
-                linkEl.rel = 'noopener';
-                // If the link is a direct PDF URL, let the browser open it.
-                // Otherwise fall back to the receipt modal view.
-                if (!safeLink || safeLink === '#') {
-                    linkEl.onclick = (e) => {
-                        e.preventDefault();
-                        viewReceiptDetail(safeItem); // fallback to modal view using receipt ID
-                    };
-                }
-
-                purchaseDiv.appendChild(iconDiv);
-                purchaseDiv.appendChild(contentDiv);
-                purchaseDiv.appendChild(linkEl);
-                docsContainer.insertBefore(purchaseDiv, docsContainer.firstChild);
-            });
-        }
+    if (!hoursData.ok) {
+        if (hoursPurchasedEl) hoursPurchasedEl.textContent = '--';
+        if (remainingEl) remainingEl.textContent = '--';
+        if (usedEl) usedEl.textContent = '--';
+        if (progressFillEl) progressFillEl.style.width = '0%';
+        console.error('[training] summary unavailable:', hoursData.error);
+        renderTrainingBilling(null);
+        renderSessionHistory(null);
+        return;
     }
 
-    // Set progress bar
-    if (progressFillEl) {
-        progressFillEl.style.width = `${hoursData.progressPercent}%`;
+    const cp = hoursData.currentPackage;
+    // Big number = remaining on the CURRENT package
+    if (remainingEl) remainingEl.textContent = hoursData.remaining.toFixed(1);
+    // Current-package secondary stats
+    const nameEl = document.getElementById('cur-pkg-name');
+    const usageEl = document.getElementById('cur-pkg-usage');
+    const labelEl = document.getElementById('cur-pkg-label');
+    if (cp) {
+        const total = Number(cp.total_hours) || 0;
+        const delivered = Number(cp.delivered) || 0;
+        if (nameEl) nameEl.textContent = cp.ordinal ? `Package ${cp.ordinal}` : `${total} hr package`;
+        if (usageEl) usageEl.textContent = `${delivered.toFixed(1)} / ${total.toFixed(0)} hrs`;
+        if (labelEl) labelEl.textContent = cp.ordinal ? `· Package ${cp.ordinal}` : '';
+        if (progressFillEl) progressFillEl.style.width = `${total > 0 ? Math.min(100, (delivered/total)*100) : 0}%`;
+    } else {
+        if (nameEl) nameEl.textContent = '--';
+        if (usageEl) usageEl.textContent = '--';
+        if (progressFillEl) progressFillEl.style.width = '0%';
     }
+    // keep hidden lifetime holders populated (compatibility, not shown)
+    if (hoursPurchasedEl) hoursPurchasedEl.textContent = String(hoursData.purchased);
+    if (usedEl) usedEl.textContent = hoursData.used.toFixed(1);
+
+    renderTrainingBilling(hoursData.billing);
+    renderSessionHistory(hoursData.sessions);
+    loadUpcomingTraining();
+}
+
+/**
+ * Render the Training Billing card (invoices, paid-in-full, payer, method)
+ * from the RPC's billing payload. RLS-scoped: only the caller's own data.
+ * Pass null to clear it (error/unavailable).
+ */
+function renderTrainingBilling(billing) {
+    const host = document.getElementById('training-billing-card');
+    if (!host) return;
+    if (!billing || !Array.isArray(billing.invoices) || billing.invoices.length === 0) {
+        host.innerHTML = '';
+        host.style.display = 'none';
+        return;
+    }
+    host.style.display = 'block';
+    const money = n => '$' + (Number(n)||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const outstanding = Number(billing.outstanding) || 0;
+
+    const rows = billing.invoices.map(inv => {
+        const d = inv.purchase_date ? new Date(inv.purchase_date + 'T00:00:00') : null;
+        const dateStr = d ? d.toLocaleDateString('en-US', {year:'numeric', month:'short', day:'numeric'}) : '';
+        return `<tr>
+            <td style="padding:10px 12px;border-bottom:1px solid #E5E7EB;font-weight:600;color:#0A0A0A;">${esc(inv.invoice_no)}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #E5E7EB;color:#0A0A0A;">${esc(dateStr)}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #E5E7EB;color:#0A0A0A;">${(Number(inv.hours)||0)} hrs</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #E5E7EB;text-align:right;color:#0A0A0A;">${money(inv.amount)}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #E5E7EB;text-align:right;"><span style="display:inline-block;padding:2px 10px;border-radius:9999px;background:#E7F4EC;color:#0A7D3C;font-weight:700;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px;">${esc(inv.status)}</span></td>
+        </tr>`;
+    }).join('');
+
+    host.innerHTML = `
+      <div style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:16px;overflow:hidden;margin-top:24px;">
+        <div style="background:#1A3A8F;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+          <div style="color:#FFFFFF;font-weight:800;font-size:1.05rem;letter-spacing:0.3px;text-transform:uppercase;">Training Billing</div>
+          <div style="display:inline-block;padding:4px 14px;border-radius:9999px;background:${outstanding>0?'#FF5722':'#0A7D3C'};color:#FFFFFF;font-weight:700;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.5px;">${outstanding>0?('Balance '+money(outstanding)):'Paid in Full'}</div>
+        </div>
+        <div style="padding:16px 20px;display:flex;gap:28px;flex-wrap:wrap;border-bottom:1px solid #E5E7EB;">
+          <div><div style="font-size:0.72rem;color:#555;text-transform:uppercase;letter-spacing:0.5px;">Total Invoiced</div><div style="font-size:1.4rem;font-weight:800;color:#0A0A0A;">${money(billing.total_invoiced)}</div></div>
+          <div><div style="font-size:0.72rem;color:#555;text-transform:uppercase;letter-spacing:0.5px;">Total Paid</div><div style="font-size:1.4rem;font-weight:800;color:#0A7D3C;">${money(billing.total_paid)}</div></div>
+          <div><div style="font-size:0.72rem;color:#555;text-transform:uppercase;letter-spacing:0.5px;">Outstanding</div><div style="font-size:1.4rem;font-weight:800;color:${outstanding>0?'#FF5722':'#0A0A0A'};">${money(outstanding)}</div></div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:0.88rem;font-family:'Barlow',Helvetica,Arial,sans-serif;">
+            <thead><tr style="background:#F4F6FA;">
+              <th style="padding:10px 12px;text-align:left;color:#555;font-weight:700;text-transform:uppercase;font-size:0.7rem;letter-spacing:0.5px;">Invoice</th>
+              <th style="padding:10px 12px;text-align:left;color:#555;font-weight:700;text-transform:uppercase;font-size:0.7rem;letter-spacing:0.5px;">Date</th>
+              <th style="padding:10px 12px;text-align:left;color:#555;font-weight:700;text-transform:uppercase;font-size:0.7rem;letter-spacing:0.5px;">Hours</th>
+              <th style="padding:10px 12px;text-align:right;color:#555;font-weight:700;text-transform:uppercase;font-size:0.7rem;letter-spacing:0.5px;">Amount</th>
+              <th style="padding:10px 12px;text-align:right;color:#555;font-weight:700;text-transform:uppercase;font-size:0.7rem;letter-spacing:0.5px;">Status</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        <div style="padding:14px 20px;background:#F4F6FA;font-size:0.82rem;color:#555;">
+          ${billing.payer ? ('Paid by <strong style="color:#0A0A0A;">'+esc(billing.payer)+'</strong> ') : ''}${billing.method ? ('via <strong style="color:#0A0A0A;">'+esc(billing.method)+'</strong>') : ''}
+        </div>
+      </div>`;
+}
+
+/**
+ * Training scheduling (coach-sets-open-slots model). All data via SECURITY DEFINER
+ * RPCs, scoped to the caller. Booking auto-confirms an open slot.
+ */
+function _sb() { return window.auth && window.auth.getSupabaseClient ? window.auth.getSupabaseClient() : null; }
+function _esc(x){return String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function _fmtDate(d){ if(!d) return ''; const dt=new Date(d+'T00:00:00'); return dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}); }
+
+async function loadUpcomingTraining() {
+    const host = document.getElementById('upcoming-training-card');
+    if (!host) return;
+    const sb = _sb(); if (!sb) { host.style.display='none'; return; }
+    let data=null;
+    try { const r = await sb.rpc('get_my_upcoming_training'); data = r.data; } catch(e){}
+    const list = (data && data.ok && Array.isArray(data.sessions)) ? data.sessions : [];
+    if (list.length === 0) { host.style.display='none'; host.innerHTML=''; return; }
+    host.style.display='block';
+    const rows = list.map(x => `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #E5E7EB;">
+        <div><div style="font-weight:700;color:#0A0A0A;">${_esc(_fmtDate(x.date))}</div>
+        <div style="font-size:0.82rem;color:#555;">${_esc(x.start_time)}${x.end_time?(' - '+_esc(x.end_time)):''}${x.location?(' &bull; '+_esc(x.location)):''}</div></div>
+        <span style="font-size:0.72rem;font-weight:700;color:#0A7D3C;text-transform:uppercase;letter-spacing:0.5px;">Confirmed</span></div>`).join('');
+    host.innerHTML = `<div style="background:#fff;border:1px solid #E5E7EB;border-radius:16px;margin-top:24px;overflow:hidden;">
+        <div style="background:#1A3A8F;padding:16px 20px;color:#fff;font-weight:800;text-transform:uppercase;letter-spacing:0.3px;">Upcoming Training</div>
+        <div style="padding:6px 20px 14px;">${rows}</div></div>`;
+}
+
+let _myAthletes = null;
+async function openScheduleModal() {
+    const modal = document.getElementById('schedule-modal');
+    const body = document.getElementById('schedule-modal-body');
+    if (!modal || !body) return;
+    modal.style.display='flex';
+    body.innerHTML = '<div style="text-align:center;color:#555;padding:20px;">Loading open times...</div>';
+    const sb = _sb(); if (!sb) { body.innerHTML='<div style="color:#b00;">Connection unavailable. Please refresh.</div>'; return; }
+    try {
+        if (!_myAthletes) { const a = await sb.rpc('get_my_booking_athletes'); _myAthletes = (a.data && a.data.ok) ? a.data.athletes : []; }
+        const r = await sb.rpc('get_open_training_slots');
+        const slots = (r.data && r.data.ok && Array.isArray(r.data.slots)) ? r.data.slots : [];
+        if (slots.length === 0) { body.innerHTML='<div style="color:#555;padding:12px 0;">No open training times right now. Coach Scott will post new availability soon. Check back shortly.</div>'; return; }
+        const athletePicker = (_myAthletes && _myAthletes.length > 1)
+          ? `<label style="display:block;font-size:0.8rem;color:#555;margin-bottom:6px;">Athlete</label>
+             <select id="sched-athlete" style="width:100%;padding:10px;border:1px solid #E5E7EB;border-radius:8px;margin-bottom:16px;">
+             ${_myAthletes.map(a=>`<option value="${_esc(a.athlete_id)}">${_esc(a.name)}</option>`).join('')}</select>`
+          : (_myAthletes && _myAthletes.length===1 ? `<input type="hidden" id="sched-athlete" value="${_esc(_myAthletes[0].athlete_id)}">` : '');
+        const rows = slots.map(x=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #E5E7EB;gap:12px;">
+            <div><div style="font-weight:700;color:#0A0A0A;">${_esc(_fmtDate(x.date))}</div>
+            <div style="font-size:0.82rem;color:#555;">${_esc(x.start_time)} - ${_esc(x.end_time)}${x.location?(' &bull; '+_esc(x.location)):''}</div></div>
+            <button onclick="bookSlot('${_esc(x.slot_id)}', this)" style="background:#1A3A8F;color:#fff;border:none;border-radius:9999px;padding:8px 18px;font-weight:700;font-size:0.85rem;cursor:pointer;white-space:nowrap;">Book</button></div>`).join('');
+        body.innerHTML = (athletePicker || '') + rows;
+        if (_myAthletes && _myAthletes.length===0) body.innerHTML = '<div style="color:#b00;">No athlete is linked to your account yet. Contact Coach Scott.</div>';
+    } catch(e) { body.innerHTML='<div style="color:#b00;">Could not load times. Please try again.</div>'; }
+}
+
+function closeScheduleModal(){ const m=document.getElementById('schedule-modal'); if(m) m.style.display='none'; }
+
+async function bookSlot(slotId, btn) {
+    const sb = _sb(); if (!sb) return;
+    const athEl = document.getElementById('sched-athlete');
+    const athleteId = athEl ? athEl.value : null;
+    if (!athleteId) { alert('No athlete selected.'); return; }
+    if (btn){ btn.disabled=true; btn.textContent='Booking...'; }
+    try {
+        const r = await sb.rpc('book_training_slot', { p_slot_id: slotId, p_athlete_id: athleteId });
+        const d = r.data;
+        if (d && d.ok) {
+            closeScheduleModal();
+            if (typeof showToast==='function') showToast('Session booked and confirmed. See you there.', 'success');
+            loadUpcomingTraining();
+        } else {
+            if (btn){ btn.disabled=false; btn.textContent='Book'; }
+            alert((d && d.error) || 'Could not book that slot. Please try another.');
+            if (d && /just taken/i.test(d.error||'')) openScheduleModal();
+        }
+    } catch(e) { if (btn){ btn.disabled=false; btn.textContent='Book'; } alert('Booking failed. Please try again.'); }
+}
+
+/**
+ * Render the real session history (from training_attendance via the RPC).
+ * Pass null for an error state, [] for an authenticated-but-empty state.
+ */
+function renderSessionHistory(sessions) {
+    const calendarContainer = document.getElementById('training-calendar-container');
+    if (!calendarContainer) return;
+
+    const existing = document.getElementById('user-usage-log');
+    if (existing) existing.remove();
+
+    const logDiv = document.createElement('div');
+    logDiv.id = 'user-usage-log';
+    logDiv.style.marginTop = '20px';
+
+    const header = document.createElement('h4');
+    header.style.cssText = 'margin-bottom:10px;font-size:14px;color:#444;';
+    header.textContent = 'Session History';
+    logDiv.appendChild(header);
+
+    if (!sessions || sessions.length === 0) {
+        const empty = document.createElement('div');
+        empty.style.cssText = 'padding:12px;background:#fff;border:1px solid #eee;border-radius:8px;font-size:13px;color:#6b7280;';
+        empty.textContent = sessions === null
+            ? 'Session history is temporarily unavailable.'
+            : 'No completed sessions yet.';
+        logDiv.appendChild(empty);
+        calendarContainer.appendChild(logDiv);
+        return;
+    }
+
+    sessions.forEach(s => {
+        const logItem = document.createElement('div');
+        logItem.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px;background:#fff;border:1px solid #eee;border-radius:8px;margin-bottom:8px;';
+
+        const leftContainer = document.createElement('div');
+        leftContainer.style.cssText = 'display:flex;align-items:center;gap:10px;';
+
+        const iconDiv = document.createElement('div');
+        iconDiv.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>`;
+        iconDiv.style.cssText = 'display:flex;align-items:center;';
+
+        const textDiv = document.createElement('div');
+        const activityDiv = document.createElement('div');
+        activityDiv.style.cssText = 'font-weight:600;font-size:13px;color:#1f2937;';
+        activityDiv.textContent = s.activity || 'Training session';
+        const dateDiv = document.createElement('div');
+        dateDiv.style.cssText = 'font-size:11px;color:#6b7280;';
+        dateDiv.textContent = s.date || '';
+        textDiv.appendChild(activityDiv);
+        textDiv.appendChild(dateDiv);
+
+        leftContainer.appendChild(iconDiv);
+        leftContainer.appendChild(textDiv);
+
+        const timeDiv = document.createElement('div');
+        timeDiv.style.cssText = 'font-weight:500;font-size:12px;color:#4b5563;';
+        timeDiv.textContent = s.minutes ? `${s.minutes} min` : '';
+
+        logItem.appendChild(leftContainer);
+        logItem.appendChild(timeDiv);
+        logDiv.appendChild(logItem);
+    });
+
+    calendarContainer.appendChild(logDiv);
 }
 
 /**
  * Load session counts (completed and upcoming)
  */
 async function loadSessionCounts(parentEmail) {
-    try {
-        const supabase = window.auth?.getSupabaseClient?.();
-        const db = getDB();
+    const completedEl = document.getElementById('sessions-completed');
+    const upcomingEl = document.getElementById('sessions-upcoming');
+    const activeProgramsEl = document.getElementById('active-programs');
 
-        const athletes = (db.roster || []).filter(a => a.parentId === parentEmail);
-        let completedCount = 0;
-        let upcomingCount = 0;
+    const data = await calculateRemainingHours(parentEmail);
 
-        if (supabase && window.auth?.isSupabaseAvailable?.()) {
-            try {
-                const athleteIds = athletes.map(a => a.athleteId);
-
-                if (athleteIds.length > 0) {
-                    // Completed: count attendance records for this parent's athletes
-                    const { data: attendance, error: attendError } = await supabase
-                        .from('training_attendance')
-                        .select('id')
-                        .in('athlete_id', athleteIds)
-                        .eq('status', 'present');
-
-                    if (attendError) {
-                        console.error('Error fetching attendance:', attendError);
-                    } else {
-                        completedCount = attendance ? attendance.length : 0;
-                    }
-
-                    // Upcoming: future scheduled sessions
-                    const today = new Date().toISOString().split('T')[0];
-                    const { data: upcoming, error: upcomingError } = await supabase
-                        .from('training_sessions')
-                        .select('id')
-                        .gte('session_date', today)
-                        .eq('session_type', 'individual_workout');
-
-                    if (upcomingError) {
-                        console.error('Error fetching upcoming sessions:', upcomingError);
-                    } else {
-                        upcomingCount = upcoming ? upcoming.length : 0;
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading session counts:', error);
-                // Fall through to use default counts
-            }
-        }
-
-        // 1. Update Top Stats
-        const completedEl = document.getElementById('sessions-completed');
-        const upcomingEl = document.getElementById('sessions-upcoming');
-        const activeProgramsEl = document.getElementById('active-programs');
-
-        // Get user record for completed count
-        // Reuse existing db instance
-        // const db = getDB(); // Already declared above
-        const userRecord = db.trainingRecords ? db.trainingRecords[parentEmail] : null;
-
-        if (completedEl) completedEl.textContent = (userRecord && userRecord.logs) ? userRecord.logs.length : completedCount;
-        if (upcomingEl) upcomingEl.textContent = upcomingCount;
-
-        // Active Programs count - count programs with status 'Active' for this user
-        if (activeProgramsEl) {
-            const activePrograms = db.training && db.training.programs ?
-                db.training.programs.filter(p => p.status === 'Active').length : 0;
-            activeProgramsEl.textContent = activePrograms;
-        }
-    } catch (error) {
-        console.error('Error in loadSessionCounts:', error);
-        // Set default values on error
-        const completedEl = document.getElementById('sessions-completed');
-        const upcomingEl = document.getElementById('sessions-upcoming');
-        if (completedEl) completedEl.textContent = '0';
-        if (upcomingEl) upcomingEl.textContent = '0';
-    }
+    if (completedEl) completedEl.textContent = data.ok ? String(data.sessionsCompleted) : '--';
+    if (upcomingEl) upcomingEl.textContent = data.ok ? String(data.upcoming) : '--';
+    if (activeProgramsEl) activeProgramsEl.textContent = (data.ok && data.remaining > 0) ? '1' : '0';
 }
 
 /**
