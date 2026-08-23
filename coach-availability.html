@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Training Availability | Godspeed Basketball</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--blue:#1A3A8F;--black:#0A0A0A;--orange:#FF5722;--ice:#F4F6FA;--border:#E5E7EB;--muted:#555;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ice);font-family:'Barlow',Helvetica,Arial,sans-serif;color:var(--black);}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 16px 60px;}
+  .hero{background:var(--blue);border-radius:16px;padding:26px 24px;color:#fff;margin-bottom:22px;}
+  .hero h1{font-family:'Oswald',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin:0;font-size:1.7rem;}
+  .hero p{margin:6px 0 0;opacity:.9;font-size:.95rem;}
+  .card{background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:22px;}
+  .card h2{font-family:'Oswald',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.5px;font-size:1.05rem;color:#fff;background:var(--blue);margin:0;padding:14px 20px;}
+  .card .body{padding:20px;}
+  label{display:block;font-size:.8rem;color:var(--muted);margin:12px 0 4px;font-weight:600;}
+  input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:1rem;font-family:inherit;}
+  .row{display:flex;gap:12px;flex-wrap:wrap;}
+  .row>div{flex:1;min-width:120px;}
+  .btn{background:var(--orange);color:#fff;border:none;border-radius:9999px;padding:12px 26px;font-family:'Oswald',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px;font-size:.9rem;cursor:pointer;margin-top:16px;}
+  .btn:disabled{opacity:.6;cursor:default;}
+  .slot{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--border);gap:12px;}
+  .slot:last-child{border-bottom:none;}
+  .slot .when{font-weight:700;}
+  .slot .sub{font-size:.82rem;color:var(--muted);}
+  .pill{display:inline-block;padding:2px 10px;border-radius:9999px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+  .pill.open{background:#E7F4EC;color:#0A7D3C;}
+  .pill.booked{background:#FDECE6;color:#C23B12;}
+  .cancel{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:9999px;padding:6px 14px;font-size:.8rem;font-weight:600;cursor:pointer;}
+  .msg{padding:10px 14px;border-radius:8px;font-size:.9rem;margin-top:12px;display:none;}
+  .msg.ok{background:#E7F4EC;color:#0A7D3C;display:block;}
+  .msg.err{background:#FDECE6;color:#C23B12;display:block;}
+  .empty{color:var(--muted);padding:8px 0;}
+  .foot{font-size:.78rem;color:var(--muted);text-align:center;margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>Training Availability</h1>
+    <p>Open time slots for individual training. Parents book these; booking auto-confirms.</p>
+  </div>
+
+  <div class="card">
+    <h2>Add an Open Slot</h2>
+    <div class="body">
+      <div class="row">
+        <div><label for="f-date">Date</label><input type="date" id="f-date"></div>
+        <div><label for="f-start">Start</label><input type="time" id="f-start" value="17:00"></div>
+        <div><label for="f-end">End</label><input type="time" id="f-end" value="18:00"></div>
+      </div>
+      <label for="f-loc">Location</label><input type="text" id="f-loc" placeholder="Main Gym" value="Main Gym">
+      <button class="btn" id="add-btn" onclick="addSlot()">Add Slot</button>
+      <div class="msg" id="add-msg"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Upcoming Slots</h2>
+    <div class="body"><div id="slot-list"><div class="empty">Loading...</div></div></div>
+  </div>
+  <div class="foot">BROTHERHOOD. HABITS.</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="module" src="src/lib/env-injector.js"></script>
+<script>
+let sb = null;
+function esc(x){return String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function fmtDate(d){ if(!d) return ''; const dt=new Date(d+'T00:00:00'); return dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}); }
+function showMsg(id, text, ok){ const el=document.getElementById(id); el.textContent=text; el.className='msg '+(ok?'ok':'err'); }
+
+async function initClient(tries){
+  tries = tries || 0;
+  const cfg = window.SUPABASE_CONFIG;
+  if (cfg && cfg.url && cfg.anonKey && window.supabase && window.supabase.createClient) {
+    sb = window.supabase.createClient(cfg.url, cfg.anonKey, { auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true, storage: window.localStorage } });
+    return true;
+  }
+  if (tries > 40) return false;
+  await new Promise(r=>setTimeout(r,150));
+  return initClient(tries+1);
+}
+
+async function loadSlots(){
+  const host = document.getElementById('slot-list');
+  if (!sb){ host.innerHTML='<div class="empty">Connection unavailable. Refresh the page.</div>'; return; }
+  let data=null;
+  try { const r = await sb.rpc('get_coach_training_slots'); data=r.data; if(r.error) throw r.error; } catch(e){ host.innerHTML='<div class="empty">Could not load slots. Make sure you are signed in as a coach.</div>'; return; }
+  if (!data || !data.ok){ host.innerHTML='<div class="empty">'+esc((data&&data.error)||'Not authorized. Sign in as coach or director.')+'</div>'; return; }
+  const slots = Array.isArray(data.slots)?data.slots:[];
+  if (slots.length===0){ host.innerHTML='<div class="empty">No upcoming slots yet. Add one above.</div>'; return; }
+  host.innerHTML = slots.map(s=>{
+    const booked = s.status==='booked';
+    const sub = booked
+      ? ('Booked'+(s.booked_athlete?(' by '+esc(s.booked_athlete)):'')+(s.location?(' &bull; '+esc(s.location)):''))
+      : ((s.location?esc(s.location):'')+' ');
+    return `<div class="slot">
+      <div><div class="when">${esc(fmtDate(s.date))} &middot; ${esc(s.start_time)} - ${esc(s.end_time)}</div>
+      <div class="sub">${sub}</div></div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="pill ${booked?'booked':'open'}">${booked?'Booked':'Open'}</span>
+        <button class="cancel" onclick="cancelSlot('${esc(s.slot_id)}', this)">Cancel</button>
+      </div></div>`;
+  }).join('');
+}
+
+async function addSlot(){
+  const btn=document.getElementById('add-btn');
+  const date=document.getElementById('f-date').value;
+  const start=document.getElementById('f-start').value;
+  const end=document.getElementById('f-end').value;
+  const loc=document.getElementById('f-loc').value.trim();
+  if(!date||!start||!end){ showMsg('add-msg','Date, start and end are required.',false); return; }
+  if(end<=start){ showMsg('add-msg','End time must be after start time.',false); return; }
+  btn.disabled=true; btn.textContent='Adding...';
+  try{
+    const r = await sb.rpc('add_training_slot', { p_date:date, p_start:start, p_end:end, p_location:loc||null });
+    const d=r.data;
+    if(d&&d.ok){ showMsg('add-msg','Slot added.',true); loadSlots(); }
+    else { showMsg('add-msg',(d&&d.error)||'Could not add slot.',false); }
+  }catch(e){ showMsg('add-msg','Could not add slot. Are you signed in as a coach?',false); }
+  btn.disabled=false; btn.textContent='Add Slot';
+}
+
+async function cancelSlot(id, btn){
+  if(btn){ btn.disabled=true; btn.textContent='...'; }
+  try{
+    const r = await sb.rpc('cancel_training_slot', { p_slot_id:id });
+    if(r.data&&r.data.ok){ loadSlots(); }
+    else { alert((r.data&&r.data.error)||'Could not cancel.'); if(btn){btn.disabled=false;btn.textContent='Cancel';} }
+  }catch(e){ alert('Could not cancel.'); if(btn){btn.disabled=false;btn.textContent='Cancel';} }
+}
+
+(async ()=>{
+  const el=document.getElementById('f-date'); if(el){ const t=new Date(Date.now()+86400000); el.value=t.toISOString().slice(0,10); }
+  const ok = await initClient();
+  if(!ok){ document.getElementById('slot-list').innerHTML='<div class="empty">Could not initialize. Refresh the page.</div>'; return; }
+  loadSlots();
+})();
+</script>
+</body>
+</html>
