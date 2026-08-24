@@ -942,23 +942,31 @@ function renderDuesPaymentsFeed(payments) {
 }
 async function markDuesPaymentPaid(id) {
   if (!confirm('Mark this payment as completed?')) return;
-  try { if (osSupabase) await osSupabase.from('dues_payments').update({ status: 'manual' }).eq('id', id); }
-  catch (e) { showToast('Error: ' + e.message, 'error'); return; }
-  showToast('Payment marked as completed'); loadDues();
+  if (!osSupabase) { showToast('Not connected -- nothing was changed.', 'error'); return; }
+  try {
+    // Verify the write actually changed a row before confirming.
+    const { data, error } = await osSupabase.from('dues_payments').update({ status: 'manual' }).eq('id', id).select('id');
+    if (error) throw error;
+    if (!data || data.length === 0) { showToast('That payment was not found -- nothing was changed.', 'error'); return; }
+    showToast('Payment marked as completed'); loadDues();
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
 }
 async function confirmVenmoPayment(paymentId, amount, parentEmail, playerName) {
   if (!confirm(`Confirm Venmo payment of $${amount} from ${parentEmail || playerName}?`)) return;
   try {
-    if (!osSupabase) return;
-    // 1. Mark dues_payments row as completed
-    await osSupabase.from('dues_payments').update({ status: 'completed' }).eq('id', paymentId);
+    if (!osSupabase) { showToast('Not connected -- nothing was changed.', 'error'); return; }
+    // 1. Mark dues_payments row as completed -- verify a row actually changed.
+    const { data: paidRows, error: paidErr } = await osSupabase.from('dues_payments').update({ status: 'completed' }).eq('id', paymentId).select('id');
+    if (paidErr) throw paidErr;
+    if (!paidRows || paidRows.length === 0) { showToast('That payment was not found -- nothing was confirmed.', 'error'); return; }
     // 2. Find enrollment and update total_paid
     if (parentEmail) {
       const { data: enr } = await osSupabase.from('parent_dues_enrollment').select('id,total_paid,total_owed,status').eq('parent_email', parentEmail).maybeSingle();
       if (enr) {
         const newPaid = parseFloat(enr.total_paid || 0) + parseFloat(amount);
         const newStatus = newPaid >= parseFloat(enr.total_owed) ? 'paid_in_full' : enr.status;
-        await osSupabase.from('parent_dues_enrollment').update({ total_paid: newPaid, status: newStatus }).eq('id', enr.id);
+        const { error: enrErr } = await osSupabase.from('parent_dues_enrollment').update({ total_paid: newPaid, status: newStatus }).eq('id', enr.id).select('id');
+        if (enrErr) throw enrErr;
       }
     }
     // 3. Find next unpaid installment and mark it paid

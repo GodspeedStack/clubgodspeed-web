@@ -1982,17 +1982,9 @@ function loadPerformance(parentEmail) {
 })();
 
 // --- Settings Logic ---
-function loadSettings(email) {
-    // 1. Load DB
-    const db = JSON.parse(localStorage.getItem('gba_db')) || window.GODSPEED_DATA;
-    if (!db) return;
-
-    // 2. Find Linked Parent & Athlete
-    // Check if we have a roster entry for this parent email
-    const linkedAthlete = db.roster.find(r => r.parentId && r.parentId.toLowerCase() === email.toLowerCase());
-
-    // 3. Populate Form
-    // Parent Info (LocalStorage mostly, as we don't have a separate 'users' table in this mock)
+async function loadSettings(email) {
+    // Reads the real record from Supabase (get_my_settings), never a local mock.
+    const sb = (window.auth && window.auth.getSupabaseClient) ? window.auth.getSupabaseClient() : null;
     const parentNameEl = document.getElementById('settings-parent-name');
     const parentEmailEl = document.getElementById('settings-parent-email');
     const parentPhoneEl = document.getElementById('settings-parent-phone');
@@ -2000,103 +1992,106 @@ function loadSettings(email) {
     const athleteTeamEl = document.getElementById('settings-athlete-team');
     const athleteDobEl = document.getElementById('settings-athlete-dob');
 
-    if (parentNameEl) parentNameEl.value = localStorage.getItem('gba_parent_name') || '';
     if (parentEmailEl) parentEmailEl.value = email || '';
-    if (parentPhoneEl) parentPhoneEl.value = localStorage.getItem('gba_parent_phone') || '';
+    // Team assignment is managed by coaches (roster tool); don't offer a fake edit here.
+    if (athleteTeamEl) { athleteTeamEl.disabled = true; athleteTeamEl.title = 'Team is set by your coach'; }
 
-    // Athlete Info (From DB if linked, else LocalStorage fallback)
-    if (linkedAthlete) {
-        if (athleteNameEl) athleteNameEl.value = linkedAthlete.name || '';
-        if (athleteTeamEl) athleteTeamEl.value = linkedAthlete.teamId || '';
-        if (athleteDobEl) athleteDobEl.value = linkedAthlete.dob || '';
-    } else {
-        if (athleteNameEl) athleteNameEl.value = localStorage.getItem('gba_child_name') || '';
-        if (athleteTeamEl) athleteTeamEl.value = localStorage.getItem('gba_child_team') || '';
-        if (athleteDobEl) athleteDobEl.value = localStorage.getItem('gba_child_dob') || '';
+    if (!sb) return;
+    try {
+        const { data, error } = await sb.rpc('get_my_settings');
+        if (error) throw error;
+        const prof = (data && data.profile) || {};
+        const ath = (data && data.athletes && data.athletes[0]) || null;
+        if (parentNameEl) parentNameEl.value = prof.full_name || '';
+        if (parentPhoneEl) parentPhoneEl.value = prof.phone || '';
+        window._gsSettingsAthleteId = ath ? ath.id : null;
+        if (ath) {
+            const nm = ath.display_name || ((ath.first_name || '') + (ath.last_name ? (' ' + ath.last_name) : '')).trim();
+            if (athleteNameEl) athleteNameEl.value = nm;
+            if (athleteDobEl) athleteDobEl.value = ath.date_of_birth || '';
+        }
+    } catch (e) {
+        console.error('loadSettings failed:', e);
     }
 }
 
-window.handleSettingsSave = function() {
-    const email = document.getElementById('settings-parent-email')?.value || '';
-    const pName = document.getElementById('settings-parent-name')?.value || '';
-    const pPhone = document.getElementById('settings-parent-phone')?.value || '';
+window.handleSettingsSave = async function() {
+    // Real, verified persistence. Success is shown only after the write is proven
+    // by a returned row. Any failure surfaces an honest error and leaves the form
+    // dirty -- nothing is ever claimed saved that wasn't.
+    const sb = (window.auth && window.auth.getSupabaseClient) ? window.auth.getSupabaseClient() : null;
+    const btn = document.querySelector('#settings-form button[type="submit"]');
+    const originalText = btn ? btn.innerText : 'Save Changes';
 
-    // Athlete Inputs
+    const pName = (document.getElementById('settings-parent-name')?.value || '').trim();
+    const pPhone = (document.getElementById('settings-parent-phone')?.value || '').trim();
     const cName = (document.getElementById('settings-athlete-name')?.value || '').trim();
-    const cTeam = document.getElementById('settings-athlete-team')?.value || '';
-    const cDob = document.getElementById('settings-athlete-dob')?.value || '';
+    const cDob  = (document.getElementById('settings-athlete-dob')?.value || '').trim();
+    const athleteId = window._gsSettingsAthleteId || null;
 
-    if (!email) {
-        godspeedAlert("We couldn't find your email address. Please sign in again.", 'Error');
+    if (!sb || !window.auth) {
+        godspeedAlert("You appear to be offline. Reconnect and try again -- nothing was saved.", 'Not saved');
         return;
     }
 
-    // 1. Update LocalStorage (Parent Profile)
-    if (pName) {
-        localStorage.setItem('gba_parent_name', pName);
-        const dashboardName = document.getElementById('dashboard-user-name');
-        if (dashboardName) dashboardName.textContent = pName;
-        const sidebarName = document.querySelector('.user-name');
-        if (sidebarName) sidebarName.textContent = pName;
-    }
-    if (pPhone) localStorage.setItem('gba_parent_phone', pPhone);
+    const setBusy = (b) => { if (btn) { btn.disabled = b; btn.innerText = b ? 'Saving...' : originalText; } };
+    setBusy(true);
 
-    // 2. BACKEND LOGIC: Data Linking (Parent <-> Athlete)
-    let db = JSON.parse(localStorage.getItem('gba_db')) || window.GODSPEED_DATA;
+    try {
+        const { data: sess } = await sb.auth.getSession();
+        const uid = sess && sess.session && sess.session.user && sess.session.user.id;
+        if (!uid) throw new Error('Your session expired. Please sign in again -- nothing was saved.');
 
-    if (db && cName) {
-        // A. Find Athlete (Try to link to existing data first)
-        let athleteIndex = db.roster.findIndex(r => r.name.toLowerCase() === cName.toLowerCase());
+        // 1) Parent profile -- parent may update their own row. Prove it with a returned row.
+        const { data: pRows, error: pErr } = await sb.from('profiles')
+            .update({ full_name: pName || null, phone: pPhone || null, updated_at: new Date().toISOString() })
+            .eq('id', uid)
+            .select('full_name, phone');
+        if (pErr) throw new Error(pErr.message);
+        if (!pRows || pRows.length === 0) throw new Error('Your profile did not save. Please try again.');
 
-        if (athleteIndex === -1) {
-            // New Athlete: Create Entry
-            const newId = 'GBA-NEW-' + Date.now(); // Simple ID gen
-            db.roster.push({
-                athleteId: newId,
-                name: cName,
-                teamId: cTeam || 'UNASSIGNED',
-                parentId: email, // LINK ESTABLISHED
-                dob: cDob
+        // 2) Athlete name / DOB via RPC (parents cannot update athletes directly). RPC returns the persisted row.
+        let athOut = null;
+        if (athleteId && (cName || cDob)) {
+            const parts = cName ? cName.split(/\s+/) : [];
+            const first = parts.length ? parts.shift() : null;
+            const last  = parts.length ? parts.join(' ') : (cName ? '' : null);
+            const { data: aData, error: aErr } = await sb.rpc('update_my_athlete', {
+                p_athlete_id: athleteId,
+                p_first_name: cName ? first : null,
+                p_last_name:  cName ? last : null,
+                p_date_of_birth: cDob || null
             });
-            console.log('Created new athlete link:', cName, newId);
-        } else {
-            // Existing Athlete: Claim & Update
-            // This allows the parent to "claim" the athlete by name
-            db.roster[athleteIndex].parentId = email; // LINK ESTABLISHED
-            if (cTeam) db.roster[athleteIndex].teamId = cTeam;
-            if (cDob) db.roster[athleteIndex].dob = cDob;
-            console.log('Linked to existing athlete:', cName);
+            if (aErr) throw new Error(aErr.message);
+            athOut = aData;
+            if (!athOut || !athOut.id) throw new Error('Your athlete details did not save. Please try again.');
         }
 
-        // B. Save DB
-        localStorage.setItem('gba_db', JSON.stringify(db));
+        // 3) Repaint the UI from the CONFIRMED server values (not from the inputs).
+        const savedName = (pRows[0] && pRows[0].full_name) || pName;
+        if (savedName) {
+            localStorage.setItem('gba_parent_name', savedName);
+            const dashName = document.getElementById('dashboard-user-name');
+            if (dashName) dashName.textContent = savedName;
+            document.querySelectorAll('.user-name').forEach(el => { el.textContent = savedName; });
+        }
+        localStorage.setItem('gba_parent_phone', (pRows[0] && pRows[0].phone) || '');
+        if (athOut) {
+            const nameEl = document.getElementById('settings-athlete-name');
+            const dobEl = document.getElementById('settings-athlete-dob');
+            if (nameEl) nameEl.value = athOut.display_name || cName;
+            if (dobEl) dobEl.value = athOut.date_of_birth || cDob;
+        }
+
+        if (btn) btn.innerText = 'Saved ✓';
+        if (typeof showToast === 'function') showToast('Your changes are saved.', 'success');
+        setTimeout(() => { if (btn) { btn.innerText = originalText; btn.disabled = false; } }, 1400);
+    } catch (e) {
+        console.error('Settings save failed:', e);
+        setBusy(false);
+        godspeedAlert((e && e.message) ? e.message : 'We could not save your changes. Please try again.', 'Not saved');
+        // No success state is shown; the form stays as the user left it.
     }
-
-    // Fallback saves for non-DB generic display
-    if (cName) localStorage.setItem('gba_child_name', cName);
-    if (cTeam) localStorage.setItem('gba_child_team', cTeam);
-    if (cDob) localStorage.setItem('gba_child_dob', cDob);
-
-    // 3. Visual Feedback
-    const btn = document.querySelector('#settings-form button[type="submit"]');
-    const originalText = btn.innerText;
-
-    btn.innerText = 'Profile Linked & Saved ✓';
-    btn.disabled = true;
-
-    setTimeout(() => {
-        btn.innerText = originalText;
-        btn.disabled = false;
-        
-        // Redirect user back to documents view as requested
-        const docsNav = document.querySelector('.nav-item[onclick*="documents"]');
-        if (docsNav) {
-            switchPortalView('documents', docsNav);
-        } else {
-            // Fallback if nav item not found
-            switchPortalView('documents', document.querySelector('.nav-item'));
-        }
-    }, 1200);
 }
 // --- Gear & Uniform Logic ---
 
