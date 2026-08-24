@@ -4000,6 +4000,7 @@ input[type="password"]:focus {
     overflow-y: auto;
     padding: 2.5rem 3rem;
     height: 100vh;
+    background: #F2F2F7; /* fill content area to top, sidebar edge, and right edge on every screen */
 }
 
 .mobile-header {

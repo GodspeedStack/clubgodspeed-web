@@ -889,6 +889,7 @@ async function loadDues() {
   } catch (e) { console.error('Dues load:', e); }
   renderDues();
   loadQuickPayParents();
+  loadDuesReviewRequests();
 
   // Realtime: push toast when a parent submits a new payment
   if (osSupabase && !window._duesPaymentsChannel) {
@@ -4098,3 +4099,59 @@ function timeAgo(date) {
 }
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+
+// ── Dues Review Requests (parent "Already Paid Dues" button) ──────────────
+async function loadDuesReviewRequests() {
+  if (!osSupabase) return;
+  let rows = [];
+  try {
+    const { data } = await osSupabase.from('dues_review_requests')
+      .select('id,parent_email,athlete_id,note,status,created_at')
+      .eq('status', 'pending').order('created_at', { ascending: true });
+    rows = data || [];
+  } catch (e) { return; }
+  renderDuesReviewFeed(rows);
+  if (!window._duesReviewChannel) {
+    window._duesReviewChannel = osSupabase
+      .channel('admin-dues-review')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'dues_review_requests' }, function (payload) {
+        try { showToast('🧾 Dues review requested: ' + ((payload.new && payload.new.parent_email) || 'a parent')); } catch (e) {}
+        loadDuesReviewRequests();
+      }).subscribe();
+  }
+}
+
+function renderDuesReviewFeed(rows) {
+  let el = document.getElementById('dues-review-feed');
+  if (!el) {
+    const panel = document.getElementById('panel-dues');
+    if (!panel) return;
+    el = document.createElement('div');
+    el.className = 'card';
+    el.id = 'dues-review-feed';
+    el.style.marginBottom = '20px';
+    panel.insertBefore(el, panel.firstChild);
+  }
+  const n = rows.length;
+  el.innerHTML = '<div class="card-header"><h2>Already Paid Dues Requests</h2><span style="font-size:12px;color:var(--muted)">' + n + ' pending</span></div>' +
+    (n
+      ? '<table><thead><tr><th>Parent</th><th>Submitted</th><th></th></tr></thead><tbody>' +
+        rows.map(function (r) {
+          return '<tr><td style="font-weight:600">' + (r.parent_email || '--') + '</td>' +
+                 '<td style="color:var(--muted);font-size:12px">' + fmt(r.created_at) + '</td>' +
+                 '<td><button class="btn btn-ghost btn-xs" style="color:#34c759" onclick="resolveDuesReview(\'' + r.id + '\')">Mark Resolved</button></td></tr>';
+        }).join('') +
+        '</tbody></table>'
+      : '<div style="padding:16px;color:var(--muted);font-size:13px">No pending requests.</div>');
+}
+
+async function resolveDuesReview(id) {
+  if (!osSupabase) return;
+  try {
+    await osSupabase.from('dues_review_requests')
+      .update({ status: 'resolved', resolved_at: new Date().toISOString() }).eq('id', id);
+  } catch (e) {}
+  loadDuesReviewRequests();
+}
+window.resolveDuesReview = resolveDuesReview;
