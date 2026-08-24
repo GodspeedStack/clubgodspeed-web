@@ -114,9 +114,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const email = localStorage.getItem('gba_user_email');
                 const billingNav = document.querySelector('[data-view="aau-billing"], [onclick*="aau-billing"]');
                 if (billingNav) billingNav.click();
-                if (typeof showToast === 'function') {
-                    showToast('Venmo payment recorded. Coach Scott will confirm within 24 hours.', 'success');
-                }
+                // (Removed a false "payment recorded" toast that fired on a URL param with no write.
+                //  The real Venmo record happens in billing-view.js submitVenmoConfirmation.)
                 if (email && typeof window.renderBilling === 'function') {
                     setTimeout(() => window.renderBilling(email), 800);
                 }
@@ -355,6 +354,7 @@ async function routeAuthenticatedUser() {
         if (loginView) loginView.style.display = 'none';
         showDashboard();
         updateDashboardProfile(savedEmail);
+        loadMyDocuments();
     } else {
         // Not yet approved -- show waiting room
         if (loginView) loginView.style.display = 'none';
@@ -1629,18 +1629,57 @@ const DOCUMENT_TEMPLATE = {
     `
 };
 
+window._gsAgreements = null;
+function showComplianceBanner(unsigned){
+    var host = document.getElementById('view-documents');
+    var id = 'gs-doc-compliance-banner';
+    var el = document.getElementById(id);
+    if(!unsigned || unsigned.length === 0){ if(el) el.remove(); return; }
+    if(!el && host){
+        el = document.createElement('div');
+        el.id = id;
+        el.style.cssText = 'background:#fdecea;border:1px solid #f5c6c0;color:#8f2318;border-radius:12px;padding:14px 16px;margin:0 0 16px;font-family:\'Helvetica Neue\',Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;';
+        host.insertBefore(el, host.firstChild);
+    }
+    if(el){
+        el.innerHTML = '<strong>Action required.</strong> You must sign ' + unsigned.length + ' player document' + (unsigned.length===1?'':'s') + ' before your player can play, practice, or train. Please sign each document below.';
+    }
+}
+async function loadMyDocuments() {
+    const sb = (window.auth && window.auth.getSupabaseClient) ? window.auth.getSupabaseClient() : null;
+    if (!sb) return;
+    try {
+        const { data, error } = await sb.rpc('get_my_documents');
+        if (error) { console.error('loadMyDocuments failed:', error); return; }
+        const map = {};
+        (data || []).forEach(function (a) {
+            const cur = map[a.slug];
+            if (!cur || (cur.status === 'signed' && a.status !== 'signed')) map[a.slug] = a;
+        });
+        window._gsAgreements = map;
+        ['athletic','medical','practice','conduct','media'].forEach(function (slug) {
+            if (map[slug] && map[slug].status === 'signed') markDocumentSigned(slug);
+        });
+        try { showComplianceBanner((data || []).filter(function(a){ return a.status !== 'signed'; })); } catch(e){}
+    } catch (e) { console.error('loadMyDocuments error:', e); }
+}
+window.loadMyDocuments = loadMyDocuments;
+
 let currentDocType = null;
 
-window.openDocModal = function (type) {
+window.openDocModal = async function (type) {
     currentDocType = type;
     const modalTitle = document.getElementById('modal-title');
     if (modalTitle) modalTitle.textContent = getTitleFromType(type);
 
-    // Inject Dynamic Data
-    const pName = localStorage.getItem('gba_parent_name') || 'Parent Name';
-    const cName = localStorage.getItem('gba_child_name') || 'Athlete Name';
+    // Load the parent's real agreements (with server content) if not already loaded.
+    if (!window._gsAgreements) { try { await loadMyDocuments(); } catch (e) {} }
+    const ag = window._gsAgreements && window._gsAgreements[type];
 
-    let content = DOCUMENT_TEMPLATE[type];
+    const pName = (ag && ag.parent_name) || localStorage.getItem('gba_parent_name') || 'Parent Name';
+    const cName = (ag && ag.athlete_name) || localStorage.getItem('gba_child_name') || 'Athlete Name';
+
+    let content = (ag && ag.content_html) || DOCUMENT_TEMPLATE[type] || '';
     content = content.replace(/{parent_name}/g, pName).replace(/{child_name}/g, cName);
 
     const modalContent = document.getElementById('modal-content');
@@ -1817,57 +1856,39 @@ function initSignaturePad() {
 
     if (submitBtn) {
         submitBtn.addEventListener('click', async () => {
-            submitBtn.innerHTML = 'Signing...';
-            
-            // Generate Data URL for the signature
-            const signatureDataUrl = canvas.toDataURL('image/png');
-            
-            // Save to LocalStorage (Mock Backend)
-            const parentEmail = localStorage.getItem('gba_user_email') || window.location.hash.split('=')[1] || 'demo@godspeed.com';
-            const docsKey = 'gba_signed_docs_' + parentEmail;
-            
-            let signedDocs = JSON.parse(localStorage.getItem(docsKey) || '{}');
-            
-            const signaturePayload = {
-                signedAt: new Date().toISOString(),
-                signatureImage: signatureDataUrl,
-                parentName: localStorage.getItem('gba_parent_name') || 'Demo Parent',
-                childName: localStorage.getItem('gba_child_name') || 'Demo Athlete',
-                documentType: currentDocType,
-                email: parentEmail
-            };
+            const sb = (window.auth && window.auth.getSupabaseClient) ? window.auth.getSupabaseClient() : null;
+            const ag = window._gsAgreements && window._gsAgreements[currentDocType];
+            const signatureValue = canvas.toDataURL('image/png');
 
-            signedDocs[currentDocType] = signaturePayload;
-            localStorage.setItem(docsKey, JSON.stringify(signedDocs));
-
-            // Production Backend: Send to Supabase DB if available
-            if (window.auth && window.auth.isSupabaseAvailable()) {
-                try {
-                    console.log('Sending signature to Supabase...');
-                    const supabaseClient = window.auth.getSupabaseClient();
-                    // In production, this table should exist with RLS policies allowing parent inserts
-                    const { data, error } = await supabaseClient
-                        .from('signatures')
-                        .insert([signaturePayload]);
-
-                    if (error) {
-                        console.error('Failed to save signature to Supabase:', error);
-                    } else {
-                        console.log('Signature saved to Supabase successfully.');
-                    }
-                } catch (e) {
-                    console.warn('Supabase not fully configured for signatures yet:', e);
-                }
+            if (!sb || !ag || !ag.agreement_id) {
+                submitBtn.innerHTML = 'Sign & Accept';
+                godspeedAlert('We could not record your signature right now. Please refresh and try again. Nothing was signed.', 'Not signed');
+                return;
             }
 
-            setTimeout(() => {
+            submitBtn.innerHTML = 'Signing...';
+            submitBtn.disabled = true;
+            try {
+                const { data, error } = await sb.rpc('record_document_signature', {
+                    p_agreement_id: ag.agreement_id,
+                    p_signature_value: signatureValue,
+                    p_user_agent: navigator.userAgent
+                });
+                if (error) throw new Error(error.message);
+                if (data && data.error) throw new Error(data.error);
+
+                // Persisted. Update state from the confirmed result and confirm honestly.
+                ag.status = 'signed';
                 markDocumentSigned(currentDocType);
                 closeDocModal();
-
-                // Check if all are signed
                 checkAllDocumentsSigned();
-                godspeedAlert(getTitleFromType(currentDocType) + ' Signed Successfully!', 'Success');
-            }, 1000); // Fake delay for realism
+                godspeedAlert(getTitleFromType(currentDocType) + ' signed and recorded.', 'Signed');
+            } catch (e) {
+                console.error('Signature failed:', e);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Sign & Accept';
+                godspeedAlert('We could not record your signature: ' + (e.message || 'please try again') + '. Nothing was signed.', 'Not signed');
+            }
         });
     }
 }
@@ -2095,107 +2116,12 @@ window.handleSettingsSave = async function() {
 }
 // --- Gear & Uniform Logic ---
 
-window.submitGearOrder = async function () {
-    const email = document.getElementById('settings-parent-email').value || localStorage.getItem('gba_user_email');
-    if (!email) {
-        godspeedAlert("Please sign in to your account to submit an order.", "GODSPEED BASKETBALL");
-        return;
-    }
-
-    // 1. Collect Data
-    // Black Jersey
-    const jerseyBlackSize = document.querySelector('#view-gear .gear-item:nth-child(2) select').value;
-    const jerseyBlackQty = document.querySelector('#view-gear .gear-item:nth-child(2) input[type="number"]').value;
-
-    // White Jersey
-    const jerseyWhiteSize = document.querySelector('#view-gear .gear-item:nth-child(3) select').value;
-    const jerseyWhiteQty = document.querySelector('#view-gear .gear-item:nth-child(3) input[type="number"]').value;
-
-    // Orange Shorts
-    const shortsOrangeSize = document.querySelector('#view-gear .gear-item:nth-child(4) select').value;
-    const shortsOrangeQty = document.querySelector('#view-gear .gear-item:nth-child(4) input[type="number"]').value;
-
-    // Blue Shorts
-    const shortsBlueSize = document.querySelector('#view-gear .gear-item:nth-child(5) select').value;
-    const shortsBlueQty = document.querySelector('#view-gear .gear-item:nth-child(5) input[type="number"]').value;
-
-    // Warmup Shirt
-    const shirtSize = document.querySelector('#view-gear .gear-item:nth-child(6) select').value;
-    const shirtQty = document.querySelector('#view-gear .gear-item:nth-child(6) input[type="number"]').value;
-
-    // Backpack
-    const backpackName = document.querySelector('#view-gear .gear-item:nth-child(7) input[type="text"]').value;
-    const backpackChecked = document.querySelector('#view-gear .gear-item:nth-child(7) input[type="checkbox"]').checked;
-
-    // 2. Create Order Object
-    const order = {
-        orderId: 'ORD-' + Date.now(),
-        parentId: email,
-        date: new Date().toISOString(),
-        items: [
-            { id: 'jersey_black', name: 'Game Jersey (Black)', size: jerseyBlackSize, qty: jerseyBlackQty },
-            { id: 'jersey_white', name: 'Game Jersey (White)', size: jerseyWhiteSize, qty: jerseyWhiteQty },
-            { id: 'shorts_orange', name: 'Game Shorts (Orange)', size: shortsOrangeSize, qty: shortsOrangeQty },
-            { id: 'shorts_blue', name: 'Game Shorts (Blue)', size: shortsBlueSize, qty: shortsBlueQty },
-            { id: 'warmup', name: 'Warmup Shirt', size: shirtSize, qty: shirtQty }
-        ]
-    };
-
-    if (backpackChecked) {
-        order.items.push({
-            id: 'backpack',
-            name: 'Team Backpack',
-            customName: backpackName || 'No Name',
-            qty: 1
-        });
-    }
-
-    console.log('Processing Order:', order);
-
-    // 3. Save to DB (Simulated Backend)
-    const db = JSON.parse(localStorage.getItem('gba_db')) || window.GODSPEED_DATA;
-    if (!db.orders) db.orders = []; // Init if missing
-    db.orders.push(order);
-    localStorage.setItem('gba_db', JSON.stringify(db));
-
-    // Send Email Notification via Edge Function
-    try {
-        const authEmail = localStorage.getItem('gba_user_email');
-        if (window.auth && window.auth.isSupabaseAvailable()) {
-            const supabase = window.auth.getSupabaseClient();
-            await supabase.functions.invoke('send-email', {
-                body: {
-                    type: 'gear_order',
-                    emailTo: 'coach@clubgodspeed.com',
-                    orderObj: order
-                }
-            });
-            console.log('Gear order email dispatched to Coach.');
-        } else {
-            console.log('Mock Mode: Simulate sending gear order email:', order);
-        }
-    } catch (err) {
-        console.error('Failed to dispatch gear order email:', err);
-    }
-
-    // 4. UI Feedback
-    const btn = document.querySelector('#view-gear button');
-    const originalText = btn.innerText;
-
-    btn.innerText = 'Order Request Sent ✓';
-    btn.style.background = '#34C759'; // Success Green
-    btn.disabled = true;
-
-    // Sanitize email before displaying in alert
-    const safeEmail = escapeHTML(email || '');
-    godspeedAlert(`Order for ${safeEmail} has been submitted to the team admin.`, 'Order Submitted');
-
-    setTimeout(() => {
-        btn.innerText = originalText;
-        btn.style.background = '#0071e3';
-        btn.disabled = false;
-        // Optionally reset form here
-    }, 3000);
+window.submitGearOrder = function () {
+    // The real, verified ordering flow lives on order-uniform.html (live number
+    // availability + checkout, writes a real uniform_orders row). This legacy
+    // in-portal form only ever wrote to localStorage and faked a confirmation,
+    // so it now routes to the real flow instead of lying about an order.
+    window.location.href = 'order-uniform.html';
 }
 
 // --- Training Dashboard Logic ---
@@ -2646,7 +2572,7 @@ async function bookSlot(slotId, btn) {
     if (!athleteId) { alert('No athlete selected.'); return; }
     if (btn){ btn.disabled=true; btn.textContent='Booking...'; }
     try {
-        const r = await sb.rpc('book_training_slot', { p_slot_id: slotId, p_athlete_id: athleteId });
+        const r = await sb.rpc('book_training_slot_guarded', { p_slot_id: slotId, p_athlete_id: athleteId });
         const d = r.data;
         if (d && d.ok) {
             closeScheduleModal();

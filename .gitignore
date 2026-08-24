@@ -53,6 +53,9 @@ _current_backup_before_reset/
 .~lock.*
 
 # PII / Private data (never commit)
+# Confidential financial/training records -- agents read locally, never version-controlled or deployed
+private/
+Godspeed_TrainingInvoices_*
 godspeed-parent-contacts.xlsx
 *parent-contacts*.xlsx
 *parent_contacts*.xlsx

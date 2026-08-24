@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uniform Orders &middot; Godspeed Admin</title>
+<style>
+  :root{ --navy:#1A3A8F; --ink:#0A0A0A; --orange:#FF5722; --line:#e6e8ee; --muted:#6b7280;
+    --bg:#f5f6f8; --card:#fff; --ok:#1B7F3B; --warn:#B45309; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;line-height:1.5}
+  .wrap{max-width:1160px;margin:0 auto;padding:22px 18px 60px}
+  header.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+  .brand{font-weight:800;font-size:17px}.brand .b{color:var(--navy)}
+  .back{font-size:13px;color:var(--muted);text-decoration:none}
+  h1{font-size:23px;font-weight:800;letter-spacing:-.4px;margin:0 0 2px}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 20px}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+  @media(max-width:680px){.kpis{grid-template-columns:repeat(2,1fr)}}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 16px}
+  .kpi .n{font-size:26px;font-weight:800;letter-spacing:-.5px}
+  .kpi .l{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:2px}
+  .bar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+  .filters{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{border:1.5px solid var(--line);background:#fff;border-radius:20px;padding:7px 14px;font:inherit;font-size:13px;
+    font-weight:600;cursor:pointer;color:var(--muted)}
+  .chip.sel{border-color:var(--navy);background:var(--navy);color:#fff}
+  .spacer{flex:1}
+  .btn{border:1.5px solid var(--line);background:#fff;border-radius:9px;padding:8px 14px;font:inherit;font-weight:700;
+    font-size:13px;cursor:pointer;color:var(--ink)}
+  .btn:hover{border-color:var(--navy)}
+  table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);text-align:left;
+    padding:12px 14px;border-bottom:1px solid var(--line);font-weight:800;background:#fafbfc}
+  td{padding:12px 14px;border-bottom:1px solid #f2f3f6;font-size:14px;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  .num-badge{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 8px;
+    background:var(--navy);color:#fff;border-radius:8px;font-weight:800;font-size:14px}
+  .tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700}
+  .tag.pending{background:#fff4e5;color:var(--warn)}
+  .tag.paid{background:#e9f7ef;color:var(--ok)}
+  .tag.cancelled{background:#f1f2f4;color:var(--muted)}
+  .mini{font-size:12px;color:var(--muted)}
+  .mail{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+  .mail.sent{color:var(--ok)} .mail.pending{color:var(--warn)} .mail.failed{color:#b3261e}
+  .act{border:1.5px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;font:inherit;font-size:12px;
+    font-weight:700;cursor:pointer}
+  .act.pay{border-color:var(--ok);color:var(--ok)}
+  .act:hover{filter:brightness(.97)}
+  .center{text-align:center;padding:48px 0;color:var(--muted)}
+  .spin{width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--navy);border-radius:50%;
+    animation:sp .8s linear infinite;margin:0 auto 12px}@keyframes sp{to{transform:rotate(360deg)}}
+  .banner{padding:13px 15px;border-radius:11px;font-size:14px;margin-bottom:14px;display:none}
+  .banner.err{background:#fdecea;color:#8f2318;border:1px solid #f5c6c0;display:block}
+  .banner.ok{background:#e9f7ef;color:#12602e;border:1px solid #b7e3c6;display:block}
+  .hide{display:none !important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">GODSPEED<span class="b">BASKETBALL</span></div>
+    <a class="back" href="admin-team-rosters.html">Team rosters &rarr;</a>
+  </header>
+  <h1>Uniform orders</h1>
+  <p class="sub">Every parent uniform order, live. Number, sizes, payment, and email-delivery status.</p>
+
+  <div id="banner" class="banner"></div>
+  <div id="loading" class="center"><div class="spin"></div>Loading orders&hellip;</div>
+
+  <div id="app" class="hide">
+    <div class="kpis">
+      <div class="kpi"><div class="n" id="kTotal">0</div><div class="l">Total orders</div></div>
+      <div class="kpi"><div class="n" id="kPending">0</div><div class="l">Pending payment</div></div>
+      <div class="kpi"><div class="n" id="kPaid">0</div><div class="l">Paid</div></div>
+      <div class="kpi"><div class="n" id="kRev">$0</div><div class="l">Revenue (paid)</div></div>
+    </div>
+
+    <div class="bar">
+      <div class="filters" id="filters">
+        <button class="chip sel" data-f="all">All</button>
+        <button class="chip" data-f="pending_payment">Pending</button>
+        <button class="chip" data-f="paid">Paid</button>
+        <button class="chip" data-f="cancelled">Cancelled</button>
+      </div>
+      <div class="spacer"></div>
+      <button class="btn" id="refreshBtn">Refresh</button>
+      <button class="btn" id="csvBtn">Export CSV</button>
+    </div>
+
+    <table>
+      <thead><tr>
+        <th>Order</th><th>Player</th><th>#</th><th>Jersey</th><th>Shorts</th>
+        <th>Amount</th><th>Payment</th><th>Parent</th><th>Email sent</th><th>Placed</th><th></th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <p class="mini" id="empty" style="margin-top:14px;"></p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  'use strict';
+  const SUPABASE_URL='https://nnqokhqennuxalamnvps.supabase.co';
+  const SUPABASE_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis';
+  const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON);
+  const $=(id)=>document.getElementById(id);
+  const banner=(m,k)=>{const b=$('banner');b.textContent=m;b.className='banner '+k;};
+  const money=(n)=>'$'+Number(n||0).toFixed(2);
+  const dt=(s)=>new Date(s).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+  const esc=(s)=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  let all=[], notifMap={}, filter='all';
+
+  async function init(){
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session){ $('loading').innerHTML='Please <a href="parent-portal.html">sign in</a> with a coach/director account.'; return; }
+    const {data:prof}=await sb.from('profiles').select('role').eq('id',session.user.id).single();
+    if(!prof || !['director','coach','founder'].includes(prof.role)){
+      $('loading').innerHTML='This dashboard is for coaches and directors only.'; return;
+    }
+    await load();
+  }
+
+  async function load(){
+    const [{data:orders,error},{data:notifs}]=await Promise.all([
+      sb.from('uniform_orders').select('*').order('created_at',{ascending:false}),
+      sb.from('uniform_order_notifications').select('order_id,status,attempts')
+    ]);
+    if(error){ banner('Could not load orders: '+error.message,'err'); $('loading').classList.add('hide'); return; }
+    all=orders||[];
+    notifMap={}; (notifs||[]).forEach(n=>{ notifMap[n.order_id]=n; });
+    $('loading').classList.add('hide'); $('app').classList.remove('hide');
+    renderKpis(); renderRows();
+  }
+
+  function renderKpis(){
+    const paid=all.filter(o=>o.status==='paid');
+    $('kTotal').textContent=all.length;
+    $('kPending').textContent=all.filter(o=>o.status==='pending_payment').length;
+    $('kPaid').textContent=paid.length;
+    $('kRev').textContent=money(paid.reduce((s,o)=>s+Number(o.total_amount||0),0));
+  }
+
+  function statusTag(s){
+    const cls=s==='paid'?'paid':s==='pending_payment'?'pending':'cancelled';
+    const txt=s==='pending_payment'?'Pending':s.charAt(0).toUpperCase()+s.slice(1);
+    return `<span class="tag ${cls}">${txt}</span>`;
+  }
+  function mailTag(id){
+    const n=notifMap[id]; if(!n) return '<span class="mail pending">—</span>';
+    return `<span class="mail ${n.status}">${n.status}</span>`;
+  }
+
+  function renderRows(){
+    const list=filter==='all'?all:all.filter(o=>o.status===filter);
+    const rows=$('rows'); rows.innerHTML='';
+    list.forEach(o=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=
+        `<td class="mini">${esc(o.order_number)}</td>`+
+        `<td><b>${esc(o.player_name)}</b></td>`+
+        `<td><span class="num-badge">${o.jersey_number}</span></td>`+
+        `<td>${esc(o.jersey_size)}</td><td>${esc(o.shorts_size)}</td>`+
+        `<td><b>${money(o.total_amount)}</b></td>`+
+        `<td>${statusTag(o.status)}</td>`+
+        `<td class="mini">${esc(o.customer_name||'—')}<br>${esc(o.customer_email||'')}</td>`+
+        `<td>${mailTag(o.id)}</td>`+
+        `<td class="mini">${dt(o.created_at)}</td>`+
+        `<td>${o.status==='pending_payment'?`<button class="act pay" data-id="${o.id}">Mark paid</button>`:''}</td>`;
+      rows.appendChild(tr);
+    });
+    $('empty').textContent = list.length ? '' : 'No orders in this view yet.';
+    rows.querySelectorAll('.act.pay').forEach(b=>b.onclick=()=>markPaid(b.dataset.id));
+  }
+
+  async function markPaid(id){
+    if(!confirm('Mark this order as paid? Use this when payment was collected outside Stripe (e.g. Venmo).')) return;
+    const {error}=await sb.from('uniform_orders')
+      .update({status:'paid',paid_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq('id',id);
+    if(error){ banner('Update failed: '+error.message,'err'); return; }
+    banner('Order marked paid.','ok'); await load();
+  }
+
+  function toCsv(){
+    const cols=['order_number','player_name','jersey_number','jersey_size','shorts_size','total_amount','status','customer_name','customer_email','customer_phone','created_at','paid_at'];
+    const head=cols.join(',');
+    const body=all.map(o=>cols.map(c=>{
+      const v=o[c]==null?'':String(o[c]).replace(/"/g,'""');
+      return /[",\n]/.test(v)?`"${v}"`:v;
+    }).join(',')).join('\n');
+    const blob=new Blob([head+'\n'+body],{type:'text/csv'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download='godspeed-uniform-orders-'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
+  }
+
+  document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+    document.querySelectorAll('.chip').forEach(x=>x.classList.remove('sel'));
+    c.classList.add('sel'); filter=c.dataset.f; renderRows();
+  });
+  $('refreshBtn').onclick=load;
+  $('csvBtn').onclick=toCsv;
+  init().catch(e=>{ $('loading').textContent='Error loading dashboard.'; console.error(e); });
+})();
+</script>
+</body>
+</html>

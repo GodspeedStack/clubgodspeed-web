@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order Uniform &middot; Godspeed Basketball</title>
+<link rel="preconnect" href="https://nnqokhqennuxalamnvps.supabase.co">
+<style>
+  :root{
+    --navy:#1A3A8F; --navy-700:#14306f; --ink:#0A0A0A; --orange:#FF5722;
+    --line:#e6e8ee; --muted:#6b7280; --bg:#f5f6f8; --card:#ffffff;
+    --taken:#eceef2; --taken-ink:#aab0bb; --ok:#1B7F3B;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
+  a{color:var(--navy)}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 18px 64px}
+  header.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+  .brand{font-weight:800;letter-spacing:-0.3px;font-size:18px}
+  .brand .b{color:var(--navy)}
+  .back{font-size:13px;color:var(--muted);text-decoration:none}
+  h1{font-size:24px;font-weight:800;letter-spacing:-0.4px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 22px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px}
+  .card h2{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin:0 0 14px}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .player-btn,.size-btn{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:10px 14px;
+    font:inherit;font-weight:600;cursor:pointer;transition:all .12s}
+  .player-btn:hover,.size-btn:hover{border-color:var(--navy)}
+  .player-btn.sel,.size-btn.sel{border-color:var(--navy);background:var(--navy);color:#fff}
+  .grid{display:grid;grid-template-columns:repeat(10,1fr);gap:8px}
+  @media(max-width:560px){.grid{grid-template-columns:repeat(6,1fr)}}
+  .num{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-radius:10px;
+    border:1.5px solid var(--line);background:#fff;font-weight:700;font-size:15px;cursor:pointer;
+    transition:all .1s;user-select:none;position:relative}
+  .num:hover:not(.taken):not(.sel){border-color:var(--navy);transform:translateY(-1px)}
+  .num.taken{background:var(--taken);color:var(--taken-ink);cursor:not-allowed;border-color:var(--taken)}
+  .num.sel{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .num.own{border-color:var(--orange);border-style:dashed}
+  .num.own::after{content:'now';position:absolute;bottom:2px;font-size:8px;font-weight:700;color:var(--orange);
+    text-transform:uppercase;letter-spacing:.04em}
+  .num.own.sel::after{color:#fff}
+  .legend{display:flex;gap:16px;margin-top:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .swatch{width:13px;height:13px;border-radius:4px;border:1.5px solid var(--line)}
+  .swatch.a{background:#fff}.swatch.t{background:var(--taken);border-color:var(--taken)}
+  .swatch.s{background:var(--navy);border-color:var(--navy)}.swatch.o{border-color:var(--orange);border-style:dashed}
+  .sizes{display:flex;gap:22px;flex-wrap:wrap}
+  .sizes > div{flex:1;min-width:220px}
+  .lbl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px}
+  .summary{position:sticky;bottom:0;background:#fff;border:1px solid var(--line);border-radius:14px;
+    padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:14px;
+    box-shadow:0 -6px 24px rgba(10,10,10,.06);margin-top:4px}
+  .summary .detail{font-size:13px;color:var(--muted)}
+  .summary .detail b{color:var(--ink)}
+  .price{font-size:22px;font-weight:800}
+  .cta{background:var(--orange);color:#fff;border:none;border-radius:11px;padding:14px 26px;font:inherit;
+    font-weight:800;font-size:15px;cursor:pointer;letter-spacing:.02em;transition:filter .12s}
+  .cta:hover{filter:brightness(1.05)}
+  .cta:disabled{background:#cfd3da;cursor:not-allowed}
+  .note{font-size:12px;color:var(--muted);margin-top:10px}
+  .banner{padding:14px 16px;border-radius:12px;font-size:14px;margin-bottom:16px;display:none}
+  .banner.err{background:#fdecea;color:#8f2318;border:1px solid #f5c6c0;display:block}
+  .banner.ok{background:#e9f7ef;color:#12602e;border:1px solid #b7e3c6;display:block}
+  .center{text-align:center;padding:40px 0;color:var(--muted)}
+  .spin{width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--navy);border-radius:50%;
+    animation:sp .8s linear infinite;margin:0 auto 12px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .hide{display:none !important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">GODSPEED<span class="b">BASKETBALL</span></div>
+    <a class="back" href="parent-portal.html">&larr; Back to portal</a>
+  </header>
+
+  <h1>Order your player's uniform</h1>
+  <p class="sub">Pick an available number and sizes. Numbers already taken are greyed out.</p>
+
+  <div id="banner" class="banner"></div>
+
+  <div id="loading" class="center"><div class="spin"></div>Loading&hellip;</div>
+
+  <div id="app" class="hide">
+    <!-- Player -->
+    <div class="card" id="playerCard">
+      <h2>Player</h2>
+      <div class="row" id="playerRow"></div>
+    </div>
+
+    <!-- Number -->
+    <div class="card">
+      <h2>Jersey number</h2>
+      <div id="scopeNote" style="font-size:13px;color:var(--muted);margin:-6px 0 14px;"></div>
+      <div class="grid" id="numGrid"></div>
+      <div class="legend">
+        <span><i class="swatch a"></i> Available</span>
+        <span><i class="swatch t"></i> Taken</span>
+        <span><i class="swatch o"></i> Current number</span>
+        <span><i class="swatch s"></i> Selected</span>
+      </div>
+    </div>
+
+    <!-- Sizes -->
+    <div class="card">
+      <h2 id="prodName">Sizes</h2>
+      <div class="sizes">
+        <div>
+          <div class="lbl">Jersey size</div>
+          <div class="row" id="jerseySizes"></div>
+        </div>
+        <div>
+          <div class="lbl">Shorts size</div>
+          <div class="row" id="shortsSizes"></div>
+        </div>
+      </div>
+      <div class="note">Youth sizes YS&ndash;YL, adult AS&ndash;AXL. Not sure? Order one size up for growing players.</div>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary">
+      <div>
+        <div class="detail" id="sumDetail">Select a number and sizes</div>
+        <div class="price" id="sumPrice">$&mdash;</div>
+        <div id="priceBreak" style="font-size:11px;color:var(--muted);margin-top:2px;"></div>
+      </div>
+      <button class="cta" id="submitBtn" disabled>Place order</button>
+    </div>
+    <p class="note">You'll be taken to secure checkout to pay. Your number is reserved the moment you place the order.</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  'use strict';
+  const SUPABASE_URL = 'https://nnqokhqennuxalamnvps.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis';
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  const $ = (id) => document.getElementById(id);
+  const banner = (msg, kind) => { const b=$('banner'); b.textContent=msg; b.className='banner '+kind; };
+  const money = (n) => '$'+Number(n).toFixed(2);
+
+  const state = { athletes:[], athlete:null, cfg:null, number:null, jersey:null, shorts:null, customer:{} };
+
+  async function init(){
+    const { data:{ session } } = await sb.auth.getSession();
+    if(!session){
+      $('loading').innerHTML = 'Please <a href="parent-portal.html">sign in to the parent portal</a> to order a uniform.';
+      return;
+    }
+    state.customer = {
+      name: session.user.user_metadata?.full_name || null,
+      email: session.user.email || null
+    };
+    // Athletes visible to this parent (RLS scopes to their own players).
+    const { data:aths, error } = await sb.from('athletes')
+      .select('id,first_name,last_name,display_name,jersey_number,enrollment_status')
+      .order('first_name');
+    if(error){ banner('Could not load your players: '+error.message,'err'); $('loading').classList.add('hide'); return; }
+    state.athletes = (aths||[]).filter(a=>a.enrollment_status!=='inactive');
+    if(state.athletes.length===0){
+      $('loading').innerHTML='No players are linked to your account yet. Please contact your coach.';
+      return;
+    }
+    renderPlayers();
+    await selectAthlete(state.athletes[0]);
+    $('loading').classList.add('hide');
+    $('app').classList.remove('hide');
+  }
+
+  function label(a){ return a.display_name || (a.first_name+' '+(a.last_name?a.last_name[0]+'.':'')); }
+
+  function renderPlayers(){
+    const row=$('playerRow'); row.innerHTML='';
+    if(state.athletes.length===1){ $('playerCard').classList.add('hide'); }
+    state.athletes.forEach(a=>{
+      const b=document.createElement('button');
+      b.className='player-btn'; b.textContent=label(a);
+      b.onclick=()=>{ selectAthlete(a); [...row.children].forEach(c=>c.classList.remove('sel')); b.classList.add('sel'); };
+      row.appendChild(b);
+    });
+    if(row.firstChild) row.firstChild.classList.add('sel');
+  }
+
+  async function selectAthlete(a){
+    state.athlete=a; state.number=null;
+    const { data, error } = await sb.rpc('get_uniform_availability', { p_athlete_id: a.id });
+    if(error){ banner('Could not load availability: '+error.message,'err'); return; }
+    state.cfg = data;
+    $('prodName').textContent = data.product_name || 'Sizes';
+    const teams = data.team_names || [];
+    const note = $('scopeNote');
+    if (teams.length > 1) {
+      note.innerHTML = `${label(a)} is a swing player. Numbers must be open on <b>both</b> teams: ${teams.join(' and ')}.`;
+    } else if (teams.length === 1) {
+      note.innerHTML = `Checked against the <b>${teams[0]}</b> roster.`;
+    } else {
+      note.textContent = '';
+    }
+    if (data.needs_uniform === false) {
+      note.innerHTML = (note.innerHTML ? note.innerHTML + '<br>' : '') +
+        '<span style="color:var(--ink);">This player already has a uniform, so a new order is optional.</span>';
+    }
+    renderNumbers(); renderSizes(); updateSummary();
+  }
+
+  function renderNumbers(){
+    const grid=$('numGrid'); grid.innerHTML='';
+    const taken=new Set(state.cfg.taken||[]);
+    const own=state.cfg.own_number;
+    for(let n=state.cfg.number_min; n<=state.cfg.number_max; n++){
+      const c=document.createElement('div');
+      c.className='num'; c.textContent=n;
+      const isTaken = taken.has(n) && n!==own;
+      if(isTaken){ c.classList.add('taken'); c.title='Taken'; }
+      else {
+        if(n===own){ c.classList.add('own'); c.title='Your player’s current number'; }
+        c.onclick=()=>{
+          state.number=n;
+          [...grid.children].forEach(x=>x.classList.remove('sel'));
+          c.classList.add('sel'); updateSummary();
+        };
+      }
+      grid.appendChild(c);
+    }
+  }
+
+  function sizeButtons(containerId, key){
+    const wrap=$(containerId); wrap.innerHTML='';
+    (state.cfg[key==='jersey'?'jersey_sizes':'shorts_sizes']||[]).forEach(sz=>{
+      const b=document.createElement('button');
+      b.className='size-btn'; b.textContent=sz;
+      b.onclick=()=>{ state[key]=sz; [...wrap.children].forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); updateSummary(); };
+      wrap.appendChild(b);
+    });
+  }
+  function renderSizes(){ state.jersey=null; state.shorts=null; sizeButtons('jerseySizes','jersey'); sizeButtons('shortsSizes','shorts'); }
+
+  function updateSummary(){
+    const ready = state.number!=null && state.jersey && state.shorts;
+    $('submitBtn').disabled = !ready;
+    $('sumPrice').textContent = money(state.cfg.set_price);
+    const jp=state.cfg.jersey_price, sp=state.cfg.shorts_price;
+    $('priceBreak').textContent = (jp!=null && sp!=null) ? ('1 jersey ' + money(jp) + ' + 2 shorts ' + money(sp)) : '';
+    if(ready){
+      $('sumDetail').innerHTML = `<b>${label(state.athlete)}</b> &middot; #${state.number} &middot; Jersey ${state.jersey} / Shorts ${state.shorts}`;
+    } else {
+      $('sumDetail').textContent = 'Select a number and sizes';
+    }
+  }
+
+  async function placeOrder(){
+    const btn=$('submitBtn'); btn.disabled=true; btn.textContent='Placing…';
+    banner('','');
+    try{
+      const { data, error } = await sb.rpc('create_uniform_order', {
+        p_athlete_id: state.athlete.id,
+        p_jersey_number: state.number,
+        p_jersey_size: state.jersey,
+        p_shorts_size: state.shorts,
+        p_customer_name: state.customer.name,
+        p_customer_email: state.customer.email,
+        p_customer_phone: null
+      });
+      if(error) throw error;
+      const order = data;
+
+      // Fire the admin notification immediately (durable + retried server-side too).
+      try{
+        await sb.functions.invoke('send-uniform-order-notification', { body:{ order_id: order.order_id } });
+      }catch(_){ /* queue + cron will still deliver it */ }
+
+      // Try to open Stripe checkout. If checkout isn't live yet, the order is still
+      // safely placed and the number is reserved.
+      let checkoutUrl=null;
+      try{
+        const { data:co } = await sb.functions.invoke('create-uniform-checkout', { body:{ order_id: order.order_id } });
+        checkoutUrl = co && co.url;
+      }catch(_){ /* fall through to reserved-confirmation */ }
+
+      if(checkoutUrl){ window.location.href = checkoutUrl; return; }
+
+      banner(`Order ${order.order_number} placed. Number #${order.number} for ${order.player_name} is reserved. We'll follow up with payment details.`,'ok');
+      btn.textContent='Order placed';
+      window.scrollTo({top:0,behavior:'smooth'});
+    }catch(e){
+      const map={
+        NUMBER_TAKEN:'That number was just taken. Please pick another.',
+        NOT_YOUR_ATHLETE:'That player is not linked to your account.',
+        ORDERING_CLOSED:'Uniform ordering is currently closed.',
+        NUMBER_OUT_OF_RANGE:'That number is out of range.'
+      };
+      const key=(e.message||'').match(/[A-Z_]{5,}/);
+      banner(map[key&&key[0]] || ('Could not place the order: '+(e.message||'unknown error')), 'err');
+      btn.textContent='Place order'; btn.disabled=false;
+      if(key && key[0]==='NUMBER_TAKEN'){ await selectAthlete(state.athlete); } // refresh grid
+    }
+  }
+
+  $('submitBtn').onclick = placeOrder;
+  init().catch(e=>{ $('loading').textContent='Something went wrong loading this page.'; console.error(e); });
+})();
+</script>
+</body>
+</html>

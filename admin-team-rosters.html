@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team Rosters &middot; Godspeed Admin</title>
+<style>
+  :root{ --navy:#1A3A8F; --ink:#0A0A0A; --orange:#FF5722; --line:#e6e8ee; --muted:#6b7280; --bg:#f5f6f8; --ok:#1B7F3B; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;line-height:1.5}
+  .wrap{max-width:900px;margin:0 auto;padding:22px 18px 60px}
+  header.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px}
+  .brand{font-weight:800;font-size:17px}.brand .b{color:var(--navy)}
+  .back{font-size:13px;color:var(--muted);text-decoration:none}
+  h1{font-size:23px;font-weight:800;letter-spacing:-.4px;margin:0 0 2px}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 20px}
+  table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);font-weight:800;background:#fafbfc}
+  th.team,td.team{text-align:center;width:120px}
+  td{padding:11px 14px;border-bottom:1px solid #f2f3f6;font-size:14px}
+  tr:last-child td{border-bottom:none}
+  .pname{font-weight:600}
+  .cur{font-size:12px;color:var(--muted);margin-left:6px}
+  .swing{display:inline-block;margin-left:8px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--orange);border:1px solid var(--orange);border-radius:20px;padding:1px 8px}
+  input[type=checkbox]{width:20px;height:20px;cursor:pointer;accent-color:var(--navy)}
+  .bar{display:flex;gap:10px;align-items:center;margin:16px 0;flex-wrap:wrap}
+  .btn{border:1.5px solid var(--line);background:#fff;border-radius:9px;padding:9px 16px;font:inherit;font-weight:700;font-size:14px;cursor:pointer}
+  .btn.save{border:none;background:var(--orange);color:#fff}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .spacer{flex:1}
+  .center{text-align:center;padding:48px 0;color:var(--muted)}
+  .spin{width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--navy);border-radius:50%;animation:sp .8s linear infinite;margin:0 auto 12px}@keyframes sp{to{transform:rotate(360deg)}}
+  .banner{padding:13px 15px;border-radius:11px;font-size:14px;margin-bottom:14px;display:none}
+  .banner.err{background:#fdecea;color:#8f2318;border:1px solid #f5c6c0;display:block}
+  .banner.ok{background:#e9f7ef;color:#12602e;border:1px solid #b7e3c6;display:block}
+  .hide{display:none!important}
+  .note{font-size:13px;color:var(--muted);margin-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">GODSPEED<span class="b">BASKETBALL</span></div>
+    <a class="back" href="admin-player-details.html">Player details &rarr;</a>
+  </header>
+  <h1>Team rosters</h1>
+  <p class="sub">Assign each player to a team. Check two teams for a swing player — their jersey number must then be free on both.</p>
+
+  <div id="banner" class="banner"></div>
+  <div id="loading" class="center"><div class="spin"></div>Loading roster&hellip;</div>
+
+  <div id="app" class="hide">
+    <table>
+      <thead><tr id="head"><th>Player</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="bar">
+      <div class="spacer"></div>
+      <button class="btn" id="resetBtn">Reset changes</button>
+      <button class="btn save" id="saveBtn" disabled>Save changes</button>
+    </div>
+    <p class="note">Changes take effect immediately once saved: the parent uniform-order page reads these rosters live to decide which numbers are available.</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  'use strict';
+  const URL='https://nnqokhqennuxalamnvps.supabase.co';
+  const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis';
+  const sb=window.supabase.createClient(URL,ANON);
+  const $=(id)=>document.getElementById(id);
+  const banner=(m,k)=>{const b=$('banner');b.textContent=m;b.className='banner '+k;};
+
+  let teams=[], athletes=[], state={}, orig={};
+
+  async function init(){
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session){ $('loading').innerHTML='Please <a href="parent-portal.html">sign in</a> with a coach/director account.'; return; }
+    const {data,error}=await sb.rpc('get_uniform_roster_overview');
+    if(error){ $('loading').textContent = error.message.includes('ADMIN_ONLY')?'This tool is for coaches and directors only.':('Could not load: '+error.message); return; }
+    teams=data.teams||[]; athletes=data.athletes||[];
+    state={}; orig={};
+    athletes.forEach(a=>{ const set=new Set((a.team_ids||[])); state[a.id]=set; orig[a.id]=new Set(set); });
+    render(); $('loading').classList.add('hide'); $('app').classList.remove('hide');
+  }
+
+  function render(){
+    const head=$('head');
+    teams.forEach(t=>{ const th=document.createElement('th'); th.className='team'; th.textContent=t.name.replace('Godspeed ',''); head.appendChild(th); });
+    const rows=$('rows'); rows.innerHTML='';
+    athletes.forEach(a=>{
+      const tr=document.createElement('tr');
+      const td=document.createElement('td');
+      td.innerHTML=`<span class="pname">${esc(a.name)}</span>`+(a.number!=null?`<span class="cur">#${a.number}</span>`:'')+`<span class="swing hide" data-swing="${a.id}">Swing</span>`;
+      tr.appendChild(td);
+      teams.forEach(t=>{
+        const cell=document.createElement('td'); cell.className='team';
+        const cb=document.createElement('input'); cb.type='checkbox';
+        cb.checked=state[a.id].has(t.id);
+        cb.onchange=()=>{ cb.checked?state[a.id].add(t.id):state[a.id].delete(t.id); updateSwing(a.id); dirty(); };
+        cell.appendChild(cb); tr.appendChild(cell);
+      });
+      rows.appendChild(tr);
+      updateSwing(a.id);
+    });
+    dirty();
+  }
+
+  function updateSwing(aid){
+    const el=document.querySelector(`[data-swing="${aid}"]`);
+    if(el) el.classList.toggle('hide', state[aid].size<2);
+  }
+  function changed(){
+    return athletes.some(a=>{
+      const s=state[a.id], o=orig[a.id];
+      if(s.size!==o.size) return true;
+      for(const x of s) if(!o.has(x)) return true;
+      return false;
+    });
+  }
+  function dirty(){ $('saveBtn').disabled=!changed(); }
+
+  async function save(){
+    $('saveBtn').disabled=true; banner('','');
+    const changedAthletes=athletes.filter(a=>{
+      const s=state[a.id], o=orig[a.id];
+      if(s.size!==o.size) return true;
+      for(const x of s) if(!o.has(x)) return true;
+      return false;
+    });
+    let ok=0, fail=0;
+    for(const a of changedAthletes){
+      const {error}=await sb.rpc('set_athlete_teams',{p_athlete_id:a.id, p_team_ids:[...state[a.id]]});
+      if(error){ fail++; } else { ok++; orig[a.id]=new Set(state[a.id]); }
+    }
+    if(fail){ banner(`Saved ${ok}, ${fail} failed. Try again.`,'err'); }
+    else { banner(`Saved ${ok} player${ok===1?'':'s'}.`,'ok'); }
+    dirty();
+  }
+
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+  $('saveBtn').onclick=save;
+  $('resetBtn').onclick=()=>{ athletes.forEach(a=>state[a.id]=new Set(orig[a.id])); document.querySelectorAll('#rows').forEach(n=>n.remove()); const tb=document.createElement('tbody'); tb.id='rows'; document.querySelector('table').appendChild(tb); render(); };
+  init().catch(e=>{ $('loading').textContent='Error loading.'; console.error(e); });
+})();
+</script>
+</body>
+</html>

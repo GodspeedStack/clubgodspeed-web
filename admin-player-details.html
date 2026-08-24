@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Player Details &middot; Godspeed Admin</title>
+<style>
+  :root{ --navy:#1A3A8F; --ink:#0A0A0A; --orange:#FF5722; --line:#e6e8ee; --muted:#6b7280; --bg:#f5f6f8; --ok:#1B7F3B; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;line-height:1.5}
+  .wrap{max-width:1200px;margin:0 auto;padding:22px 18px 60px}
+  header.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px}
+  .brand{font-weight:800;font-size:17px}.brand .b{color:var(--navy)}
+  .back{font-size:13px;color:var(--muted);text-decoration:none}
+  h1{font-size:23px;font-weight:800;letter-spacing:-.4px;margin:0 0 2px}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 20px}
+  table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left;padding:10px 10px;border-bottom:1px solid var(--line);font-weight:800;background:#fafbfc}
+  td{padding:8px 10px;border-bottom:1px solid #f2f3f6;font-size:13px;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  .pname{font-weight:700;white-space:nowrap}
+  .cur{color:var(--muted);font-weight:400}
+  input,select{font:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;width:100%;background:#fff}
+  input:focus,select:focus{outline:none;border-color:var(--navy)}
+  input.dirty,select.dirty{border-color:var(--orange);background:#fff8f5}
+  td.age{text-align:center;font-weight:700;color:var(--navy)}
+  .save{border:none;background:var(--orange);color:#fff;border-radius:8px;padding:7px 12px;font:inherit;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap}
+  .save:disabled{background:#cfd3da;cursor:not-allowed}
+  .bar{display:flex;gap:10px;align-items:center;margin:14px 0;flex-wrap:wrap}
+  .btn{border:1.5px solid var(--line);background:#fff;border-radius:9px;padding:9px 16px;font:inherit;font-weight:700;font-size:14px;cursor:pointer}
+  .spacer{flex:1}
+  .center{text-align:center;padding:48px 0;color:var(--muted)}
+  .spin{width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--navy);border-radius:50%;animation:sp .8s linear infinite;margin:0 auto 12px}@keyframes sp{to{transform:rotate(360deg)}}
+  .banner{padding:13px 15px;border-radius:11px;font-size:14px;margin-bottom:14px;display:none}
+  .banner.err{background:#fdecea;color:#8f2318;border:1px solid #f5c6c0;display:block}
+  .banner.ok{background:#e9f7ef;color:#12602e;border:1px solid #b7e3c6;display:block}
+  .hide{display:none!important}
+  .wide{min-width:150px}
+  .note{font-size:13px;color:var(--muted);margin-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">GODSPEED<span class="b">BASKETBALL</span></div>
+    <a class="back" href="admin-team-rosters.html">&larr; Team rosters</a>
+  </header>
+  <h1>Player details</h1>
+  <p class="sub">Birthdays, sizes, allergies, and emergency contacts. Saved here, these flow into the master roster and reports. Sizes also fill in automatically when a parent orders a uniform.</p>
+
+  <div id="banner" class="banner"></div>
+  <div id="loading" class="center"><div class="spin"></div>Loading players&hellip;</div>
+
+  <div id="app" class="hide">
+    <div class="bar">
+      <div class="spacer"></div>
+      <button class="btn" id="saveAll">Save all changes</button>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Player</th><th>Birthday</th><th>Age</th><th>Jersey</th><th>Shorts</th>
+        <th>Allergies / medical</th><th>Emergency contact</th><th>Emergency phone</th><th></th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <p class="note">Age is calculated from the birthday. Jersey and shorts sizes: YS, YM, YL, AS, AM, AL, AXL.</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  'use strict';
+  const URL='https://nnqokhqennuxalamnvps.supabase.co';
+  const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis';
+  const sb=window.supabase.createClient(URL,ANON);
+  const $=(id)=>document.getElementById(id);
+  const banner=(m,k)=>{const b=$('banner');b.textContent=m;b.className='banner '+k;};
+  const SIZES=['','YS','YM','YL','AS','AM','AL','AXL'];
+  const esc=(s)=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  let players=[];
+
+  function age(dob){ if(!dob) return ''; const d=new Date(dob); if(isNaN(d)) return ''; const n=new Date(); let a=n.getFullYear()-d.getFullYear(); const m=n.getMonth()-d.getMonth(); if(m<0||(m===0&&n.getDate()<d.getDate())) a--; return a>=0&&a<100?a:''; }
+
+  async function init(){
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session){ $('loading').innerHTML='Please <a href="parent-portal.html">sign in</a> with a coach/director account.'; return; }
+    const {data,error}=await sb.rpc('get_athlete_profiles');
+    if(error){ $('loading').textContent=error.message.includes('ADMIN_ONLY')?'This page is for coaches and directors only.':('Could not load: '+error.message); return; }
+    players=data||[];
+    render(); $('loading').classList.add('hide'); $('app').classList.remove('hide');
+  }
+
+  function sizeSel(val,cls){
+    return `<select class="${cls}">`+SIZES.map(s=>`<option ${s===(val||'')?'selected':''}>${s}</option>`).join('')+`</select>`;
+  }
+
+  function render(){
+    const rows=$('rows'); rows.innerHTML='';
+    players.forEach((p,i)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=
+        `<td class="pname">${esc(p.name)} <span class="cur">${p.number!=null?'#'+p.number:''} &middot; ${esc(p.teams)}</span></td>`+
+        `<td><input type="date" data-f="date_of_birth" value="${p.date_of_birth||''}"></td>`+
+        `<td class="age" data-age>${age(p.date_of_birth)}</td>`+
+        `<td>${sizeSel(p.jersey_size,'jz')}</td>`+
+        `<td>${sizeSel(p.shorts_size,'sz')}</td>`+
+        `<td class="wide"><input type="text" data-f="allergies" value="${esc(p.allergies)}"></td>`+
+        `<td class="wide"><input type="text" data-f="emergency_contact" value="${esc(p.emergency_contact)}"></td>`+
+        `<td><input type="text" data-f="emergency_phone" value="${esc(p.emergency_phone)}"></td>`+
+        `<td><button class="save" disabled>Save</button></td>`;
+      rows.appendChild(tr);
+      wire(tr,i);
+    });
+  }
+
+  function wire(tr,i){
+    const btn=tr.querySelector('.save');
+    const mark=()=>{ btn.disabled=false; };
+    tr.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',()=>{
+      el.classList.add('dirty'); mark();
+      if(el.dataset.f==='date_of_birth') tr.querySelector('[data-age]').textContent=age(el.value);
+    }));
+    btn.onclick=()=>saveRow(tr,i,btn);
+  }
+
+  async function saveRow(tr,i,btn){
+    btn.disabled=true; btn.textContent='Saving';
+    const p=players[i];
+    const args={ p_athlete_id:p.id,
+      p_date_of_birth: tr.querySelector('[data-f=date_of_birth]').value||null,
+      p_jersey_size: tr.querySelector('.jz').value,
+      p_shorts_size: tr.querySelector('.sz').value,
+      p_allergies: tr.querySelector('[data-f=allergies]').value,
+      p_medical_notes: null,
+      p_emergency_contact: tr.querySelector('[data-f=emergency_contact]').value,
+      p_emergency_phone: tr.querySelector('[data-f=emergency_phone]').value };
+    const {error}=await sb.rpc('set_athlete_profile',args);
+    btn.textContent='Save';
+    if(error){ banner('Save failed for '+p.name+': '+error.message,'err'); btn.disabled=false; return; }
+    tr.querySelectorAll('.dirty').forEach(e=>e.classList.remove('dirty'));
+    banner('Saved '+p.name+'.','ok');
+  }
+
+  async function saveAll(){
+    const rows=[...$('rows').children];
+    let n=0;
+    for(let i=0;i<rows.length;i++){
+      if(rows[i].querySelector('.dirty')){ await saveRow(rows[i],i,rows[i].querySelector('.save')); n++; }
+    }
+    banner(n?('Saved '+n+' player'+(n===1?'':'s')+'.'):'No changes to save.','ok');
+  }
+
+  $('saveAll').onclick=saveAll;
+  init().catch(e=>{ $('loading').textContent='Error loading.'; console.error(e); });
+})();
+</script>
+</body>
+</html>

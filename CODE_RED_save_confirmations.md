@@ -43,11 +43,38 @@ silent no-op corrupted financial state under a green toast. Now each update uses
 `.select('id')`, aborts with an honest error if zero rows changed, and only then
 confirms. `node --check admin-os.js` OK.
 
+### #3 Parent document signing — FIXED, verified (legal/PII)
+The signing had NO backend: the `signatures` table did not exist, `documents`
+and `user_agreements` were empty, and "Signed Successfully!" fired on a timer
+regardless — no signature was ever recorded. Built the full compliance flow:
+seeded the 5 documents + current versions (content from the portal's
+`DOCUMENT_TEMPLATE`), added `get_my_documents()` (auto-assigns each mandatory doc
+to every linked parent x athlete, returns real agreements + content), and rewired
+the portal to load real agreements, render DB content, and record signatures via
+`record_document_signature` gated on its result (honest error, nothing marked
+signed on failure). Migration `v13_06` (applied). Verified by SQL jwt-impersonation
+of a real parent: get_my_documents returned 5 assigned docs; record_document_signature
+set status=signed with the value stored (read-back), rolled back. `node --check` OK.
+Note: signatures are captured as a drawn image (`signature_type='drawn'`); a
+multi-athlete parent currently signs one athlete's copy per card (per-athlete cards
+are a follow-up).
+
 ---
 
 ## Prioritized remaining fixes (exact, from the full audit)
 
-### P1 — parent legal signature (Class C, legal/PII) — `parent-portal.js` ~1851
+### P1 — parent legal signature — BLOCKED ON BACKEND (legal) — `parent-portal.js` ~1851
+INVESTIGATED 2026-08-23: there is NO signing backend. The `signatures` table the
+portal inserts into **does not exist**; `documents` is empty; `user_agreements`
+has 0 rows. So every "Signed Successfully!" has been false and no parent signature
+has ever been recorded anywhere but localStorage. `record_document_signature`
+exists but needs an `agreement_id` that does not exist. "Wiring the RPC" is
+therefore not possible without first BUILDING the compliance system: (1) create
+the 5 `documents` rows with Scott's real legal text, (2) assign to parents
+(`assign_document_to_roster`), (3) load real agreements in the portal, (4) sign
+via `record_document_signature` gated on `{success}`. This needs Scott's actual
+document content + go-ahead (legal). DO NOT fabricate legal document text. Until
+then the "Signed Successfully" copy is a live lie and should be made honest.
 "…Signed Successfully!" fires on a `setTimeout` regardless of the DB write, and
 the `signatures` insert error is only `console.error`'d — parent signatures may
 never reach the system of record. **Fix:** wire to the proven RPC
