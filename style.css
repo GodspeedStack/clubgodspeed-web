@@ -4003,6 +4003,12 @@ input[type="password"]:focus {
     background: #F2F2F7; /* fill content area to top, sidebar edge, and right edge on every screen */
 }
 
+/* Player Cards (Vault): black bleeds to every edge, no light frame */
+.vault-mode .portal-main-v3 {
+    background: #050505;
+    padding: 0;
+}
+
 .mobile-header {
     display: none;
     /* Desktop default */
