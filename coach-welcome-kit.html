@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Coach Welcome Kit | Godspeed</title>
+    <!--
+      Coach welcome kit: "Your first two weeks at Godspeed".
+      Staff only (checked client-side; every number here is also readable by
+      any coach through the portal, nothing private lives on this page).
+      Printable: File > Print gives a clean one-pager.
+      Coach-facing copy: short words, short sentences, no jargon, no em dashes.
+    -->
+    <style>
+        :root { --blue: #0071E3; --ink: #1d1d1f; --mute: #6e6e73; --line: #e5e5ea; --bg: #F2F2F7; }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; }
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: var(--ink); background: var(--bg); -webkit-font-smoothing: antialiased; }
+        .kit { max-width: 760px; margin: 0 auto; padding: 32px 20px 60px; }
+        .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 20px; }
+        .brand { font-weight: 800; font-size: 15px; letter-spacing: .02em; }
+        .brand span { color: var(--blue); }
+        .actions { display: flex; gap: 8px; }
+        .btn { border: none; border-radius: 10px; padding: 9px 14px; font: 600 14px inherit; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; }
+        .btn-blue { background: var(--blue); color: #fff; }
+        .btn-grey { background: rgba(0,0,0,.06); color: var(--ink); }
+        .sheet { background: #fff; border-radius: 20px; padding: 36px 36px 28px; box-shadow: 0 12px 30px rgba(0,0,0,.06); }
+        h1 { font-size: 28px; letter-spacing: -.02em; margin: 0 0 6px; }
+        .lead { color: var(--mute); font-size: 16px; margin: 0 0 26px; line-height: 1.5; }
+        h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .08em; color: var(--blue); margin: 26px 0 10px; }
+        p, li { font-size: 15px; line-height: 1.6; }
+        ul { padding-left: 20px; margin: 6px 0; }
+        table { width: 100%; border-collapse: collapse; font-size: 15px; }
+        th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+        th { font-size: 12px; color: var(--mute); text-transform: uppercase; letter-spacing: .06em; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .card { border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+        .card strong { display: block; margin-bottom: 4px; }
+        .gate { display: none; text-align: center; padding: 60px 20px; color: var(--mute); }
+        .fine { color: var(--mute); font-size: 12px; margin-top: 28px; text-align: center; }
+        @media (max-width: 600px) { .sheet { padding: 24px 18px; } .grid { grid-template-columns: 1fr; } h1 { font-size: 24px; } }
+        @media print {
+            body { background: #fff; }
+            .kit { padding: 0; max-width: none; }
+            .top, .fine { display: none; }
+            .sheet { box-shadow: none; border-radius: 0; padding: 0; }
+            h2 { break-after: avoid; }
+            .card, tr { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="kit">
+        <div class="top">
+            <div class="brand">GODSPEED<span>BASKETBALL</span></div>
+            <div class="actions">
+                <a class="btn btn-grey" href="coach-portal.html">Back to portal</a>
+                <button class="btn btn-blue" type="button" onclick="window.print()">Print</button>
+            </div>
+        </div>
+
+        <div class="gate" id="gate">Sign in to the Coach Portal to read the welcome kit.</div>
+
+        <article class="sheet" id="sheet" style="display:none">
+            <h1>Your first two weeks at Godspeed</h1>
+            <p class="lead">Everything a new coach needs to walk into the gym ready. Read it once, keep it on your phone.</p>
+
+            <h2>What we are building</h2>
+            <p>Godspeed develops young athletes, ages 10 to 15, through three words: <strong>Brotherhood. Habits. Success.</strong> Wins come from habits. Habits come from how we run every practice. You are here to teach habits first and basketball second.</p>
+
+            <h2>Week one</h2>
+            <table>
+                <thead><tr><th>Day</th><th>Do this</th></tr></thead>
+                <tbody>
+                    <tr><td>Day 1</td><td>Finish setup in the portal (you did this). Read the Code of Conduct again. Text Coach Scott your first practice date.</td></tr>
+                    <tr><td>Day 2</td><td>Open your team in the portal. Learn every player's name and jersey number before you meet them.</td></tr>
+                    <tr><td>Day 3</td><td>Check each athlete's medical notes and emergency contact in the portal. Know who has an inhaler or an allergy.</td></tr>
+                    <tr><td>First practice</td><td>Arrive 15 minutes early. Walk the gym. Find the AED and the exits. Start on time, end on time.</td></tr>
+                    <tr><td>After practice</td><td>Grade every player in the portal within 24 hours: Focus, Hustle, Skill, IQ. Parents see it.</td></tr>
+                </tbody>
+            </table>
+
+            <h2>Week two</h2>
+            <ul>
+                <li>Run one full practice on your own with a director watching.</li>
+                <li>Finish the free concussion course (CDC HEADS UP) and send the certificate to a director.</li>
+                <li>Introduce yourself to every parent in person, one sentence each: who you are, what you coach.</li>
+            </ul>
+
+            <h2>Where and when</h2>
+            <div class="grid">
+                <div class="card"><strong>Team practice</strong>Monday, Tuesday, Thursday. Doors at 5:00 pm, practice 6:00 to 8:00 pm. Denver Public Schools gym, CGK8 main gym.</div>
+                <div class="card"><strong>Small group and 1 on 1</strong>Wednesday and Friday, one hour, outdoors or at a rec center. Set by Coach Scott.</div>
+                <div class="card"><strong>Gym rules</strong>No outside shoes on the floor. Water only on the floor. We leave the gym cleaner than we found it. Custodian time is paid by the hour, so we are out by 8:00 sharp.</div>
+                <div class="card"><strong>Weather</strong>Outdoor sessions move to the rec center. Directors send the call by 2:00 pm.</div>
+            </div>
+
+            <h2>How grading works</h2>
+            <p>After every practice and game, each player gets four scores from 1 to 10: <strong>Focus, Hustle, Skill, IQ</strong>. Be honest and consistent. A 7 means solid. A 10 is rare. Add one sentence of notes when something stood out, good or bad. Grades roll into each player's report, and parents read them the same night, so write what you would say to their face.</p>
+
+            <h2>Who to contact</h2>
+            <table>
+                <tbody>
+                    <tr><td><strong>Anything about a player or a parent</strong></td><td>Coach Scott (director). Text first, call if urgent.</td></tr>
+                    <tr><td><strong>Practice plans and drills</strong></td><td>Coach Gene (co-coach).</td></tr>
+                    <tr><td><strong>Injury or safety</strong></td><td>911 if serious, then the parent, then a director. Same day.</td></tr>
+                    <tr><td><strong>Portal problems</strong></td><td>Coach Scott. Send a screenshot.</td></tr>
+                </tbody>
+            </table>
+            <p id="contact-note" style="color:var(--mute);font-size:13px">Director phone numbers are in the Coach Portal under Staff. They are not printed here.</p>
+
+            <h2>Three rules that never bend</h2>
+            <ul>
+                <li><strong>Two adults, always.</strong> Never alone with one athlete in private.</li>
+                <li><strong>When in doubt, sit them out.</strong> Any head hit, they are done for the day.</li>
+                <li><strong>No money, no gear, no DMs.</strong> Families pay through the portal. You do not message athletes privately.</li>
+            </ul>
+
+            <p class="fine">Godspeed Basketball. Brotherhood. Habits. Success.</p>
+        </article>
+    </div>
+
+    <script src="src/lib/env-injector.js"></script>
+    <script src="auth-supabase.js?v=20260405d"></script>
+    <script>
+        // Staff gate. The kit has no private data, but it is written for staff
+        // and we keep it behind the same door as the portal.
+        document.addEventListener('DOMContentLoaded', async function () {
+            const sheet = document.getElementById('sheet');
+            const gate = document.getElementById('gate');
+            try {
+                if (!window.auth || !window.auth.ensureClient || !(await window.auth.ensureClient())) throw new Error('offline');
+                const user = await window.auth.getCurrentUser();
+                const profile = user ? await window.auth.getProfile(user.id) : null;
+                if (profile && ['coach', 'director', 'founder'].includes(profile.role) && profile.approved !== false) {
+                    sheet.style.display = 'block';
+                    return;
+                }
+            } catch (e) { /* fall through to the gate */ }
+            gate.style.display = 'block';
+        });
+    </script>
+</body>
+</html>
