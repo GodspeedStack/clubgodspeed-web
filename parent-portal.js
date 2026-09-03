@@ -235,6 +235,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // One-tap email links that expired or were already used arrive as
+    // #error=access_denied&error_code=otp_expired. Show a designed recovery
+    // instead of a bare login form, and keep ?doc=... so the next sign-in
+    // still opens the right document.
+    handleExpiredEmailLink();
+
     // Check for existing session and route based on approval status
     if (window.auth && window.auth.isLoggedIn()) {
         routeAuthenticatedUser();
@@ -992,8 +998,56 @@ window.resendVerificationEmail = async function(email) {
  * https://clubgodspeed.com, and each preview URL) must be listed in the
  * Supabase Auth redirect allowlist, or the provider rejects the return trip.
  */
+/**
+ * Where Google / magic-link sign-in should land. Keeps the document deep link
+ * (?tab=documents&doc=...&aid=...) so a parent who came from an email still
+ * lands on that document after signing in. Only whitelisted keys survive.
+ */
 function portalRedirectUrl() {
-    return window.location.origin + '/parent-portal.html';
+    const base = window.location.origin + '/parent-portal.html';
+    const src = new URLSearchParams(window.location.search);
+    const keep = new URLSearchParams();
+    ['tab', 'doc', 'aid'].forEach(function (k) {
+        const v = src.get(k);
+        if (v && /^[A-Za-z0-9-]{1,64}$/.test(v)) keep.set(k, v);
+    });
+    const qs = keep.toString();
+    return qs ? base + '?' + qs : base;
+}
+
+/**
+ * A one-tap link from a document email that expired or was already used lands
+ * here as #error=access_denied&error_code=otp_expired (Supabase implicit flow).
+ * Show the login view with a clear next step and pre-focus the email box so
+ * "Email me a sign-in link" is one tap away. Never leaves the error in the URL.
+ */
+function handleExpiredEmailLink() {
+    const raw = (window.location.hash || '').replace(/^#/, '');
+    if (!raw || raw.indexOf('error') === -1) return;
+    const h = new URLSearchParams(raw);
+    const code = h.get('error_code') || '';
+    const err = h.get('error') || '';
+    if (!code && !err) return;
+
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+
+    const alertEl = document.querySelector('#portal-login .login-error');
+    const emailInput = document.getElementById('email');
+    if (!alertEl) return;
+
+    setAlertTone(alertEl, 'info');
+    if (code === 'otp_expired' || err === 'access_denied') {
+        setAlertIcon(alertEl, 'clock');
+        alertEl.textContent = 'That sign-in link has expired or was already used. Type your email below and tap "Email me a sign-in link" to get a fresh one.';
+    } else {
+        setAlertIcon(alertEl, 'wifi-off');
+        alertEl.textContent = 'We could not sign you in from that link. Type your email below and tap "Email me a sign-in link".';
+    }
+    alertEl.style.display = 'block';
+    if (emailInput) {
+        try { emailInput.focus(); } catch (e) { /* no-op */ }
+    }
+    console.warn('[auth] email link rejected:', code || err);
 }
 
 /**
@@ -1879,6 +1933,13 @@ function initSignaturePad() {
 
                 // Persisted. Update state from the confirmed result and confirm honestly.
                 ag.status = 'signed';
+                // Confirmation email (non-blocking). The function never mints a
+                // sign-in link for confirmations, so nothing sensitive goes out.
+                try {
+                    sb.functions.invoke('send-document-notification', {
+                        body: { agreement_ids: [ag.agreement_id], type: 'confirmation' }
+                    }).catch(function () { /* email is best-effort */ });
+                } catch (e2) { /* email is best-effort */ }
                 markDocumentSigned(currentDocType);
                 closeDocModal();
                 checkAllDocumentsSigned();

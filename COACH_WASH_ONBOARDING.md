@@ -1,3 +1,5 @@
+> STALE (2026-09-03): Brandon Wash did not join. No account was created. Use COACH_ONBOARDING_RUNBOOK.md for the next coach (Steven, 5th/4th grade).
+
 # Onboarding Coach Wash — click-by-click
 
 **Goal:** Brandon Wash (`brandonwash14@gmail.com`) can log into the coach portal by Sept 1.

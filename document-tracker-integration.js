@@ -5,7 +5,7 @@
  *
  * HOW IT WORKS:
  *   1. Monkey-patches window.openDocModal to track document views
- *   2. Monkey-patches markDocumentSigned to track legally-binding signatures
+ *   2. Signing itself lives in parent-portal.js (record_document_signature)
  *   3. Hooks download buttons to track PDF downloads
  *   4. Reads URL params (?doc=&aid=) for email click-through tracking
  *   5. All events are sent to Supabase via RPC functions
@@ -27,13 +27,18 @@
   'use strict';
 
   // ── Config ──────────────────────────────────────────────
+  // Portal doc type -> documents.slug in Supabase. These are identical today
+  // (documents.slug is 'athletic', 'medical', ...). The old '*-2026' values
+  // never matched a real slug, so email deep links never auto-opened and
+  // view/sign tracking never found an agreement. Keep the map so a future
+  // slug rename is a one-line change here.
   const DOC_SLUG_MAP = {
-    'athletic':       'athletic-waiver-2026',
-    'medical':        'medical-release-2026',
-    'practice':       'practice-commitment-2026',
-    'conduct':        'code-of-conduct-2026',
-    'media':          'photo-video-release-2026',
-    'parent-guide':   'parent-guide-2026',
+    'athletic':       'athletic',
+    'medical':        'medical',
+    'practice':       'practice',
+    'conduct':        'conduct',
+    'media':          'media',
+    'parent-guide':   'parent-guide',
   };
 
   let _supabase = null;
@@ -60,9 +65,17 @@
         console.log('[doc-tracker] No authenticated user yet. Will init after login.');
         // Listen for auth state change
         _supabase.auth.onAuthStateChange((event, session) => {
-          if (event === 'SIGNED_IN' && session?.user) {
+          if (event === 'SIGNED_IN' && session?.user && !_initialized) {
             _userId = session.user.id;
-            loadAgreements();
+            // Same sequence as a warm session: load, then honor the email deep
+            // link (?doc=&aid=) so a one-tap sign-in opens the document, then
+            // patch the portal functions for view/sign tracking.
+            loadAgreements().then(() => {
+              handleEmailDeepLink();
+              patchPortalFunctions();
+              _initialized = true;
+              console.log('[doc-tracker] Initialized after sign-in. Tracking active.');
+            });
           }
         });
         return;
@@ -162,25 +175,11 @@
       return; // Don't continue patching until openDocModal exists
     }
 
-    // 2. Patch markDocumentSigned → track legally-binding signature
-    const _originalMarkSigned = window.markDocumentSigned;
-    if (typeof _originalMarkSigned === 'function') {
-      window.markDocumentSigned = function (type) {
-        // Call original (updates the card UI)
-        _originalMarkSigned.call(this, type);
-
-        // Track the signature
-        const slug = DOC_SLUG_MAP[type];
-        const agreement = slug ? _agreements[slug] : null;
-        if (agreement && agreement.id) {
-          const parentName = localStorage.getItem('gba_parent_name')
-            || localStorage.getItem('gba_user_email')
-            || 'Parent';
-          trackSignature(agreement.id, parentName);
-        }
-      };
-      console.log('[doc-tracker] Patched markDocumentSigned for signature tracking.');
-    }
+    // 2. Signatures are NOT patched here. parent-portal.js owns the signing
+    //    path: it calls record_document_signature with the drawn signature and
+    //    only then calls markDocumentSigned (which also runs on page load for
+    //    already-signed docs). Patching it would fire a duplicate RPC with a
+    //    text stand-in for the signature on every load.
 
     // 3. Hook download buttons (PDF downloads in documents section)
     hookDownloadButtons();
@@ -256,34 +255,6 @@
       console.log('[doc-tracker] Download tracked:', agreementId);
     } catch (err) {
       console.warn('[doc-tracker] Download tracking failed:', err.message);
-    }
-  }
-
-  async function trackSignature(agreementId, signatureValue) {
-    if (!_supabase) return;
-    try {
-      const { data, error } = await _supabase.rpc('record_document_signature', {
-        p_agreement_id: agreementId,
-        p_signature_value: signatureValue,
-        p_user_agent: navigator.userAgent,
-      });
-
-      if (error) throw error;
-
-      if (data?.error) {
-        console.warn('[doc-tracker] Signature RPC error:', data.error);
-        return;
-      }
-
-      console.log('[doc-tracker] Signature recorded:', agreementId, data);
-
-      // Fire confirmation email (non-blocking)
-      _supabase.functions.invoke('send-document-notification', {
-        body: { agreement_ids: [agreementId], type: 'confirmation' },
-      }).catch(() => {});
-
-    } catch (err) {
-      console.warn('[doc-tracker] Signature tracking failed:', err.message);
     }
   }
 
