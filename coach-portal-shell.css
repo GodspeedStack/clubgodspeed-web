@@ -163,6 +163,7 @@ body.gs-portal-app #coach-dashboard {
   overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -ms-overflow-style: none;
 }
 #coach-dashboard .view-tabs::-webkit-scrollbar { display: none; }
+#coach-dashboard .view-tabs[style*="none"] { display: none !important; }
 #coach-dashboard .segment-btn {
   width: auto !important; min-width: 0 !important; min-height: 32px !important;
   padding: 6px 14px !important; border-radius: 8px !important;

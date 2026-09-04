@@ -108,6 +108,24 @@
     if (b) { b.setAttribute('aria-expanded', 'false'); b.setAttribute('aria-label', 'Open menu'); }
   }
 
+  // Tabs out of the header into their own row; the sidebar Sign Out moves to the top bar.
+  function restructure(dash) {
+    var tabs = el('view-tabs');
+    var main = dash.querySelector('.dashboard-main');
+    var header = main && main.querySelector('.dashboard-header');
+    if (tabs && header && !el('dashboard-toolbar')) {
+      tabs.removeAttribute('style');
+      tabs.setAttribute('role', 'tablist'); tabs.setAttribute('aria-label', 'Team views');
+      var bar = document.createElement('div'); bar.className = 'dashboard-toolbar'; bar.id = 'dashboard-toolbar';
+      bar.appendChild(tabs);
+      header.parentNode.insertBefore(bar, header.nextSibling);
+    }
+    var side = dash.querySelector('.dashboard-sidebar');
+    if (side) side.querySelectorAll('button').forEach(function (b) {
+      if (/sign out/i.test(b.textContent) && b.getAttribute('onclick') === 'logoutCoach()') { var box = b.parentNode; (box && box.children.length === 1 ? box : b).remove(); }
+    });
+  }
+
   // Replace the plain "Select a team" text with a designed empty state, once.
   function dressEmptyState() {
     var box = el('roster-table-container');
@@ -138,7 +156,7 @@
     var dash = el('coach-dashboard');
     var on = isShown(dash);
     document.body.classList.toggle('gs-portal-app', !!on);
-    if (on) { mountBar(dash); dressEmptyState(); dressTeamList(); } else { closeDrawer(); }
+    if (on) { restructure(dash); mountBar(dash); dressEmptyState(); dressTeamList(); } else { closeDrawer(); }
   }
 
   document.addEventListener('DOMContentLoaded', function () {
