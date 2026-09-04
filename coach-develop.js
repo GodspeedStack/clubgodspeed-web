@@ -65,7 +65,61 @@
     ]]
   ];
 
+
+  // ---------- How we practice: finishing, bumping, reads, pace ----------
+  var PRACTICE_LEAD = {
+    title: 'Practice how we play.',
+    text: 'Our kids learn by playing, so practice is built from live reps with a read in every one of them. Two kinds of blocks: a competition block has a winner and a loser, simple. A guided block uses dummy defenders who give a read without stealing the ball, so we can teach even with two coaches and nine kids. Start every rep with an advantage already built in, and start with the end of the possession in mind: paint touch, then layup, corner three, or free throws.'
+  };
+  var PRACTICE = [
+    ['Spacing, again', 'Six spots. Every player can be held to this.', [
+      ['Deep corner', 'All the way to the corner, not most of the way. One step short is the difference between an open shot and a contested one.'],
+      ['Twelve to fifteen feet', 'Corners, wings or slots, and the top. Every spot is twelve to fifteen feet from the next one. If two players are closer than that, the spacing is wrong; fix it before anything else.'],
+      ['Paint touches win', 'A possession that touches the paint is worth about a third more than one that does not. The first thing we teach is driving, because the paint opens everything else.']
+    ]],
+    ['Finishing', 'Win the bump. Two feet. Through contact.', [
+      ['Ball in the air, feet in the air', 'Never catch flat-footed. As the pass is in the air your feet are moving: hop or slide into the catch so you can attack the closeout on the first dribble.'],
+      ['Win the bump', 'Drive your line and do not let the defender knock you off it. Shoulder into his chest, off two feet, finish through the contact. No extended arm; that is a foul at every level.'],
+      ['One-two, two feet', 'Every finish and every paint pass comes off two feet. One-footers are where kids fall down and give up a layup the other way.'],
+      ['A missed layup is a bucket for them', 'Miss at the rim and it is usually two points the other way. Finish the rep. We do not walk off a missed layup.'],
+      ['Corner finish', 'Catch on the move in the corner, rip through to the middle or rocker step, win the bump, finish. Same three pieces every time.']
+    ], 'numbered'],
+    ['Closeout defense', 'Guard two dribbles and you are a real defender.', [
+      ['Square, up to touch', 'Close out square, all the way up to touch. Keep the ball in front. Guard the first dribble with your chest.'],
+      ['The eagle', 'Off the ball, down in a stance with your arms all the way out, ready to help. The low man reads whether the on-ball defender recovers; if he does not, the low man helps and the offense reads the skip.']
+    ]],
+    ['Reads', 'Decide in half a second: shoot, pass, or drive.', [
+      ['First-touch decision', 'The choice is made before the ball arrives. Catch and hold is the one thing we do not allow.'],
+      ['Closeout read', 'Most shots come off a closeout. Closeout runs at you: attack the front foot. Closeout stops short: shoot. Help comes from the corner: kick. Help comes from the top: hit the fill behind you.'],
+      ['Hand-off read', 'Off the hand-off: defender plays low, turn the corner and finish. Defender jumps high with his numbers above you, back cut every time.'],
+      ['Stampede', 'Catch the ball-screen pass with momentum and go right by the help. Screen defender comes up high: back cut. Start one step higher and you buy yourself a step of runway.'],
+      ['Two on one', 'Make the one defender commit. If he does not stop you, score. If he does, that is the pass. One pass, maximum.'],
+      ['Drive, kick, swing', 'Do not re-drive a drive. Kick it, then swing it one more to the corner. The extra swing stretches the rotation and somebody forgets whose man it is.']
+    ], 'numbered'],
+    ['Paint automatics', 'Three rules every player on the floor follows when the ball is driven.', [
+      ['Piece of the paint', 'As the ball drives, get a piece of the paint. Ball comes toward you, slide. Ball pulls away, fill behind.'],
+      ['Get out and re-space', 'Out of the paint as fast as you got in, ball side, jump stop and relocate. A clogged lane kills the drive.'],
+      ['Flow behind the ball', 'Off a ball screen, take one more dribble and flow behind so the handler always has a read behind him if he gets stopped. Any pop into a crowd becomes a slot cut.']
+    ], 'numbered'],
+    ['Pace', 'Easy points are the ones nobody guards.', [
+      ['Nearest man inbounds', 'They score, we go. Nearest man takes it out, the big runs ahead, the guard catches above the free-throw line moving downhill.'],
+      ['Wings run', 'To play fast the wings have to run. Advance pass first, dribble second.'],
+      ['Count the quick scores', 'A score inside a few seconds of their make is a point we track all year. Six of those in a game is a great night.']
+    ]],
+    ['How a practice is built', 'Layer it, then let them play.', [
+      ['Start with an advantage', 'Shoulder to chest, start behind the defender, or a screen. The read has to happen every rep, so give the offense an edge to start.'],
+      ['Swing, swing, live', 'On the skip the defense is dead until the closeout touches the top of the square. Then the next skip is live and the offense has a small advantage to play out.'],
+      ['Two on two, then four on four', 'Closeout reads two on two. Then four on four with a take-two defender who splits and takes the first pass either way, and the group scrambles.'],
+      ['Five on four to finish', 'Play until a shot; whoever shoots or turns it over touches the coach under the rim while the other end converts a five on four. Protect the basket, stop the ball, then help to the weak side.'],
+      ['Set, run, run', 'Run the set, then run it again without stopping. Coach while they play. Stopping the drill every ten seconds is how you lose a 12 year old.']
+    ]]
+  ];
+
   var CSS = '\
+#develop-view .dv-tabs{display:inline-flex;gap:2px;padding:3px;background:rgba(118,118,128,.12);border-radius:11px;margin:0 0 18px}\
+#develop-view .dv-tabs button{border:none;background:transparent;color:#6E6E73;font:600 13px inherit;font-family:inherit;font-size:13px;font-weight:600;padding:6px 14px;border-radius:8px;cursor:pointer;min-height:32px;min-width:0;text-transform:none}\
+#develop-view .dv-tabs button.active{background:#fff;color:#1D1D1F;box-shadow:0 1px 3px rgba(0,0,0,.1)}\
+#develop-view .dv-tabs button:focus-visible{outline:2px solid #0071E3;outline-offset:2px}\
 #develop-view .dv-lead{background:#0A0A0A;color:#fff;border-radius:16px;padding:22px 24px;margin:0 0 20px;display:flex;gap:18px;align-items:flex-start}\
 #develop-view .dv-lead .n{font-size:34px;font-weight:800;color:#FF5722;line-height:1;flex:0 0 auto}\
 #develop-view .dv-lead h4{margin:0 0 6px;font-size:18px;font-weight:700;letter-spacing:-.01em;color:#fff;text-transform:none}\
@@ -88,10 +142,11 @@
 
   function injectCss() { if (el('coach-develop-css')) return; var s = document.createElement('style'); s.id = 'coach-develop-css'; s.textContent = CSS; document.head.appendChild(s); }
 
-  function html() {
-    var h = '<div class="dv-lead"><div class="n">1</div><div><h4>' + esc(LEAD.title) + '</h4><p>' + esc(LEAD.text) + '</p></div></div>';
+  var current = 'principles';
+  function block(lead, sections) {
+    var h = '<div class="dv-lead"><div class="n">1</div><div><h4>' + esc(lead.title) + '</h4><p>' + esc(lead.text) + '</p></div></div>';
     h += '<div class="dv-grid">';
-    SECTIONS.forEach(function (sec) {
+    sections.forEach(function (sec) {
       var style = sec[3] || '';
       h += '<section class="dv-card ' + style + (style === 'timeline' ? ' wide' : '') + '"><h4>' + esc(sec[0]) + '</h4><p class="in">' + esc(sec[1]) + '</p><ol class="dv-list">';
       sec[2].forEach(function (it, i) {
@@ -100,15 +155,29 @@
       });
       h += '</ol></section>';
     });
-    h += '</div>';
-    return h;
+    return h + '</div>';
+  }
+  function html() {
+    return '<div class="dv-tabs" role="tablist">' +
+      '<button type="button" role="tab" data-tab="principles"' + (current === 'principles' ? ' class="active"' : '') + '>Principles</button>' +
+      '<button type="button" role="tab" data-tab="practice"' + (current === 'practice' ? ' class="active"' : '') + '>How we practice</button></div>' +
+      '<div id="dv-body">' + (current === 'practice' ? block(PRACTICE_LEAD, PRACTICE) : block(LEAD, SECTIONS)) + '</div>';
+  }
+  function paint(v) {
+    v.innerHTML = html();
+    v.querySelectorAll('.dv-tabs button').forEach(function (b) { b.addEventListener('click', function () { current = b.getAttribute('data-tab'); try { localStorage.setItem('gs_develop_tab', current); } catch (e) { /* optional */ } paint(v); setSub(); }); });
+  }
+  function setSub() {
+    var s = document.querySelector('#coach-dashboard .dashboard-header .text-sub');
+    if (s) s.textContent = current === 'practice' ? 'Finishing, bumping, reads, pace. How every practice is built.' : 'Program-wide. How we get every player better.';
   }
 
   function ensureView() {
     var v = el('develop-view'); if (v) return v;
     var main = document.querySelector('.dashboard-main'); if (!main) return null;
     v = document.createElement('div'); v.id = 'develop-view'; v.style.display = 'none';
-    v.innerHTML = html();
+    try { current = localStorage.getItem('gs_develop_tab') || current; } catch (e) { /* optional */ }
+    paint(v);
     var after = main.querySelector('.dashboard-toolbar') || main.querySelector('.dashboard-header');
     if (after && after.nextSibling) main.insertBefore(v, after.nextSibling); else main.appendChild(v);
     return v;
@@ -122,7 +191,7 @@
     var item = el('develop-nav-item'); if (item) item.classList.add('active');
     var tabs = el('view-tabs'); if (tabs) tabs.style.display = 'none';
     var t = el('view-title'); if (t) t.textContent = 'Player development';
-    var s = document.querySelector('#coach-dashboard .dashboard-header .text-sub'); if (s) s.textContent = 'Program-wide. How we get every player better.';
+    setSub();
     v.style.display = 'block';
     if (window.CoachPortalShell) window.CoachPortalShell.closeDrawer();
   }
@@ -150,6 +219,6 @@
       if (d && d.style.display && d.style.display !== 'none') mountNav();
       if (el('develop-nav-item')) clearInterval(timer);
     }, 700);
-    window.CoachDevelop = { open: open, mountNav: mountNav };
+    window.CoachDevelop = { open: open, mountNav: mountNav, show: function (tab) { current = tab; var v = ensureView(); if (v) paint(v); open(); } };
   });
 })();

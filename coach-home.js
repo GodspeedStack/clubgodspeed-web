@@ -28,7 +28,7 @@
   function esc(s) { return (s == null ? '' : String(s)).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 
   // Team practice days and times are program facts (Scott, 2026-09-04).
-  var PRACTICE = { days: [1, 2, 4], doors: '5:55 pm', start: '6:00 pm', end: '8:00 pm' };
+  var PRACTICE = { days: [2, 4], doors: '5:55 pm', start: '6:00 pm', end: '8:00 pm' };
 
   var state = { loading: false, loaded: false, error: null, raw: null, loadedAt: null };
 
@@ -60,7 +60,7 @@
     var r = await Promise.all([
       c.from('teams').select('id,name,age_group,head_coach,season').order('name'),
       c.from('team_rosters').select('team_id,athlete_id,role,left_at'),
-      c.from('athletes').select('id,first_name,last_name,jersey_number,enrollment_status,notes,team_name'),
+      c.from('athletes').select('id,first_name,last_name,jersey_number,enrollment_status,notes,team_name,grade,date_of_birth'),
       c.from('training_sessions').select('id,session_date,session_type,title,team_id,start_time,location').order('session_date', { ascending: false }).limit(60),
       c.from('training_attendance').select('id,session_id,athlete_id,effort_rating,skill_ratings,coach_notes,created_at').order('created_at', { ascending: false }).limit(200),
       c.from('player_evaluations').select('athlete_id,evaluation_date,overall_rating').order('evaluation_date', { ascending: false }).limit(300),
@@ -100,7 +100,9 @@
         avg_grade: ev.length ? ev[0] : 0,
         trend: ev.length ? trendFor(ev) : trendFor(attBy[a.id]),
         notes: a.notes || '',
-        status: a.enrollment_status || 'active'
+        status: a.enrollment_status || 'active',
+        grade: a.grade || '',
+        dob: a.date_of_birth || ''
       });
     });
     return { teams: teams, roster: roster };
@@ -182,7 +184,7 @@
       var label = i === 0 ? 'Tonight' : i === 1 ? 'Tomorrow' : d.toLocaleDateString(undefined, { weekday: 'long' });
       return { label: label, date: d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }), isToday: i === 0 };
     }
-    return { label: 'Monday', date: '', isToday: false };
+    return { label: 'Tuesday', date: '', isToday: false };
   }
 
   function fmtDate(iso) { if (!iso) return ''; var d = new Date(iso + (iso.length === 10 ? 'T12:00:00' : '')); return isNaN(d) ? iso : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
