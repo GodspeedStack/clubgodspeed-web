@@ -115,6 +115,30 @@
     ]]
   ];
 
+  // ---------- Tuesday and Thursday shape (mirrors program_content.planner-practice-shape) ----------
+  var SHAPE_LEAD = {
+    title: 'Tuesday and Thursday, 6:00 to 8:00.',
+    text: 'Doors 5:55. Two hours, seven blocks. Individual work ends at 6:30; every block after that is a read, run as either a guided block (dummy defenders who give a read but do not steal) or a competition block (winner, loser, simple). Say which one it is before the whistle. Every rep starts with an advantage: shoulder to chest, start behind, or a screen.'
+  };
+  var SHAPE = [
+    ['The two hours', 'Out by 8:00 sharp.', [
+      ['6:00  Start routine, 15', 'Ball-handling warmup, form shooting, dynamic stretch, get a partner. Same every practice; kids run it without a coach.'],
+      ['6:15  Power-ups, 15', 'Position stations: Big, Wing, Guard. One coach per two stations, rotate at five minutes. Individual work ends here.'],
+      ['6:30  Finishing bridge, 15', 'Closeout catch into win the bump into a two-foot finish. Corner version. Then two on one: make him commit, one pass max. A missed layup costs the rep.'],
+      ['6:45  Guided reads, 20', 'The one read of the week: closeout read, hand-off read, or stampede. Two on two with the eagle and the low man. Dummy defenders from the extra kids. Nobody steals.'],
+      ['7:05  Competition, 25', 'Swing-swing-live closeouts, then four on four with the take-two defender. Score, keep the ball. Drive, kick, swing. Winner and loser announced. Break routine at 7:17.'],
+      ['7:30  Live conversion, 20', 'Five on four continuous from a shoulder-to-chest start. Play to a shot; shooter or turnover touches the coach under the rim while the other end converts. Set, run, run. Basket, ball, then weak side.'],
+      ['7:50  Close, 10', 'Quick-strike inbounds off makes, nearest man takes it out. Free throws with the game on the line. Say-it-back: every kid names the one thing.']
+    ], 'timeline'],
+    ['Rules that hold the shape', 'Five things that make the two hours work with two coaches.', [
+      ['One read per week', 'Power-ups feed it, the guided block teaches it, the competition block tests it, live play proves it.'],
+      ['Name the block', 'Guided or competition. Kids play differently when they know which one it is.'],
+      ['Nobody watches', 'Extra kids are dummy defenders or on the Utility station: strength, core. Standing still is not a station.'],
+      ['Two feet, no arm', 'Two feet on every finish and every paint pass. Shoulder into the chest is fine; an extended arm is a foul at every level.'],
+      ['Clock discipline', 'Seven blocks means the coach owns the clock. If a block runs long, live conversion gives up the minutes, never the finishing bridge.']
+    ]]
+  ];
+
   var CSS = '\
 #develop-view .dv-tabs{display:inline-flex;gap:2px;padding:3px;background:rgba(118,118,128,.12);border-radius:11px;margin:0 0 18px}\
 #develop-view .dv-tabs button{border:none;background:transparent;color:#6E6E73;font:600 13px inherit;font-family:inherit;font-size:13px;font-weight:600;padding:6px 14px;border-radius:8px;cursor:pointer;min-height:32px;min-width:0;text-transform:none}\
@@ -160,8 +184,9 @@
   function html() {
     return '<div class="dv-tabs" role="tablist">' +
       '<button type="button" role="tab" data-tab="principles"' + (current === 'principles' ? ' class="active"' : '') + '>Principles</button>' +
-      '<button type="button" role="tab" data-tab="practice"' + (current === 'practice' ? ' class="active"' : '') + '>How we practice</button></div>' +
-      '<div id="dv-body">' + (current === 'practice' ? block(PRACTICE_LEAD, PRACTICE) : block(LEAD, SECTIONS)) + '</div>';
+      '<button type="button" role="tab" data-tab="practice"' + (current === 'practice' ? ' class="active"' : '') + '>How we practice</button>' +
+      '<button type="button" role="tab" data-tab="shape"' + (current === 'shape' ? ' class="active"' : '') + '>Tuesday and Thursday</button></div>' +
+      '<div id="dv-body">' + (current === 'shape' ? block(SHAPE_LEAD, SHAPE) : current === 'practice' ? block(PRACTICE_LEAD, PRACTICE) : block(LEAD, SECTIONS)) + '</div>';
   }
   function paint(v) {
     v.innerHTML = html();
@@ -169,7 +194,7 @@
   }
   function setSub() {
     var s = document.querySelector('#coach-dashboard .dashboard-header .text-sub');
-    if (s) s.textContent = current === 'practice' ? 'Finishing, bumping, reads, pace. How every practice is built.' : 'Program-wide. How we get every player better.';
+    if (s) s.textContent = current === 'shape' ? 'Doors 5:55. Seven blocks. Every block after power-ups is a read.' : current === 'practice' ? 'Finishing, bumping, reads, pace. How every practice is built.' : 'Program-wide. How we get every player better.';
   }
 
   function ensureView() {
