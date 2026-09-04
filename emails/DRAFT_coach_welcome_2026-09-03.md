@@ -18,7 +18,7 @@ Glad to have you with us. You are coaching {team_name}. First practice is {first
 
 Two things to do today, about five minutes total:
 
-1. Check your inbox for an email from Godspeed Basketball with a link that says "Accept the invite". Tap it. It signs you in and walks you through setup: a password, a short bio and photo, four coach documents to read and sign, and your team.
+1. Check your inbox for an email from Godspeed Basketball with a link that says "Accept the invite". Tap it. It signs you in and walks you through setup: a password, a short bio and photo, six coach documents to read and sign, and your team. After setup, the 5th White Playbook is in the left sidebar under My Learning. Start with Spacing first.
 2. When you land in the portal, open the Welcome Kit in the left sidebar. It is a one page guide to your first two weeks: schedule, gym rules, how grading works, and who to text for what.
 
 If the link does not work, reply to this email and I will send a fresh one. Links expire after 24 hours.

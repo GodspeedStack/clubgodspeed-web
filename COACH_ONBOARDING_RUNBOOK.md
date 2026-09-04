@@ -62,12 +62,12 @@ Send Version A from `emails/DRAFT_coach_welcome_2026-09-03.md` with `{coach_firs
 ## What happens on his side
 
 1. He taps **Accept the invite**. It signs him in and opens the setup wizard.
-2. Password, then profile (name, phone, headshot, bio), then four documents to read and sign, then teams (he picks 5th Black, 5th White, 4th), then done.
+2. Password, then profile (name, phone, headshot, bio), then six documents to read and sign (the two new ones are the Confidentiality Agreement and the 5th Grade White Team Commitment), then teams (he picks 5th Black, 5th White, 4th), then done.
 3. He lands in the Coach Portal with the Welcome Kit in the sidebar.
 
 ## How you know it worked
 
-Coach Portal, left sidebar, **Staff**, **Staff Onboarding**. Steven's row shows a green check in every column and 4/4 documents. If a column is still "Open" after two days, text him; the invite link dies after 24 hours and "Email me a sign-in link" on the Staff Login gets him a fresh one.
+Coach Portal, left sidebar, **Staff**, **Staff Onboarding**. Steven's row shows a green check in every column and 6/6 documents. If a column is still "Open" after two days, text him; the invite link dies after 24 hours and "Email me a sign-in link" on the Staff Login gets him a fresh one.
 
 ## If it fails
 

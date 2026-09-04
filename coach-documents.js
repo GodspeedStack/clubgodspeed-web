@@ -150,6 +150,66 @@
         <p>By signing, I confirm I understand my role as described.</p>
       `,
     },
+
+    {
+      id: 'coach-confidentiality-nda',
+      version: '2026.1',
+      title: 'Confidentiality and Non-Disclosure Agreement',
+      summary: 'What counts as private program information and how you protect it, now and after you leave.',
+      required: true,
+      html: `
+        <h3>Confidentiality and Non-Disclosure Agreement</h3>
+        <p class="doc-meta">Godspeed Basketball. Version 2026.1</p>
+        <p>I, <strong>{coach_name}</strong>, will have access to private Godspeed information while I coach. I agree to the following.</p>
+
+        <h4>1. What is confidential</h4>
+        <p>Confidential information includes rosters and family contact details, player evaluations, medical and payment information, the playbook and development system, business plans, pricing, and any program material that is not public.</p>
+
+        <h4>2. How I use it</h4>
+        <p>I use confidential information only to do my coaching job. I do not share it with anyone outside the program without permission from a director. I do not post it online or forward it by text or email.</p>
+
+        <h4>3. No use against Godspeed</h4>
+        <p>I will not use confidential information to compete with Godspeed or to help another program.</p>
+
+        <h4>4. When I leave</h4>
+        <p>When I leave the staff, I return or delete all confidential materials I have. My duty to protect player and family privacy never ends.</p>
+
+        <h4>5. Why this matters</h4>
+        <p>This protects our players, their families, and the program we are building together.</p>
+
+        <p>By signing, I confirm I have read this and I will follow it.</p>
+      `,
+    },
+
+    {
+      id: 'coach-5th-white-team-commitment',
+      version: '2026.1',
+      title: '5th Grade White Team Commitment',
+      summary: 'How we coach this team: spacing first, the system, and the commitment we ask of every coach.',
+      required: true,
+      html: `
+        <h3>5th Grade White Team Commitment</h3>
+        <p class="doc-meta">Godspeed Basketball. Version 2026.1</p>
+        <p>I, <strong>{coach_name}</strong>, am joining the 5th Grade White coaching staff. I understand and agree to the following.</p>
+
+        <h4>1. Spacing comes first</h4>
+        <p>Spacing is the number one thing with this team. Before any set or play, I will teach how we want the floor spaced. I will reinforce spacing in every drill, every scrimmage, and every game.</p>
+
+        <h4>2. Our system</h4>
+        <p>I will coach the Godspeed system as it is written in the 5th Grade White Playbook in the Coach Portal: the Square, the fill cut, beating the press, man to man defense, and special situations. I will not bring in outside plays or sets without talking to a director first.</p>
+
+        <h4>3. My commitment</h4>
+        <p>I will help run practices, develop players, coach games, and uphold the Godspeed standard, working under the Program Director and head coach. I commit to scheduled practice nights, games, and reasonable preparation time. I tell a director about conflicts in advance.</p>
+
+        <h4>4. Development over winning</h4>
+        <p>At this age we grow players. Every player on the roster gets coached and gets meaningful playing time. I measure success by how much better our players get, not by the scoreboard.</p>
+
+        <h4>5. Program rules</h4>
+        <p>I will follow all program policies, including the Code of Conduct, the Safety Acknowledgment, and the Confidentiality Agreement.</p>
+
+        <p>I am signing on because I believe in building complete players and a real brotherhood.</p>
+      `,
+    },
   ];
 
   window.COACH_DOCUMENTS = DOCS;
