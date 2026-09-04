@@ -1,0 +1,247 @@
+/* GODSPEED BASKETBALL. Coach Portal shell.
+   Loaded last on coach-portal.html. Gives the staff tool its own app chrome
+   (no marketing navbar, no store bottom nav), one calm type scale, a segmented
+   control that never wraps, a real sidebar drawer on phones.
+   No emojis. No em dashes. Everything scoped to #coach-dashboard / .gs-portal-app. */
+
+:root {
+  --gs-blue: #1A3A8F;
+  --gs-black: #0A0A0A;
+  --gs-fire: #FF5722;
+  --gs-bg: #F5F5F7;
+  --gs-card: #FFFFFF;
+  --gs-text: #1D1D1F;
+  --gs-text-2: #6E6E73;
+  --gs-text-3: #A1A1A6;
+  --gs-line: rgba(60, 60, 67, 0.12);
+  --gs-line-soft: rgba(60, 60, 67, 0.07);
+  --gs-accent: #0071E3;
+  --gs-accent-soft: rgba(0, 113, 227, 0.10);
+  --gs-bar-h: 56px;
+  --gs-side-w: 256px;
+  --gs-radius-l: 18px;
+  --gs-radius-m: 12px;
+  --gs-radius-s: 8px;
+  --gs-shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
+/* ---------- app mode: the portal owns the whole viewport ---------- */
+body.gs-portal-app { overflow: hidden; background: var(--gs-bg); }
+body.gs-portal-app .navbar,
+body.gs-portal-app .mobile-bottom-nav,
+body.gs-portal-app .mobile-menu-overlay,
+body.gs-portal-app .mobile-menu,
+body.gs-portal-app footer { display: none !important; }
+
+body.gs-portal-app #coach-dashboard {
+  display: flex !important;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  width: 100%;
+}
+#coach-dashboard .dashboard-wrapper {
+  padding-top: 0 !important;
+  height: auto !important;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100% !important;
+}
+
+/* ---------- top bar ---------- */
+.gs-portal-bar {
+  height: var(--gs-bar-h);
+  flex: 0 0 var(--gs-bar-h);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 20px;
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--gs-line);
+  position: relative;
+  z-index: 200;
+}
+.gs-portal-bar .gs-menu-btn {
+  display: none;
+  width: 36px; height: 36px; min-width: 36px; min-height: 36px;
+  border: none; border-radius: 10px; background: transparent; color: var(--gs-text);
+  align-items: center; justify-content: center; cursor: pointer;
+}
+.gs-portal-bar .gs-menu-btn:hover { background: rgba(0, 0, 0, 0.05); }
+.gs-portal-bar .gs-brand {
+  display: flex; align-items: center; gap: 10px;
+  font-weight: 800; font-size: 15px; letter-spacing: -0.01em; color: var(--gs-black);
+  text-decoration: none; white-space: nowrap;
+}
+.gs-portal-bar .gs-brand b { color: var(--gs-accent); font-weight: 800; }
+.gs-portal-bar .gs-brand-sep { width: 1px; height: 18px; background: var(--gs-line); }
+.gs-portal-bar .gs-brand-app { font-size: 14px; font-weight: 600; color: var(--gs-text-2); }
+.gs-portal-bar .gs-spacer { flex: 1; }
+.gs-portal-bar .gs-user {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--gs-text-2); max-width: 260px; overflow: hidden;
+}
+.gs-portal-bar .gs-user .gs-avatar {
+  width: 28px; height: 28px; border-radius: 50%; flex: 0 0 28px;
+  background: var(--gs-blue); color: #fff; font-size: 12px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center; text-transform: uppercase;
+}
+.gs-portal-bar .gs-user span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gs-portal-bar .gs-user .gs-role {
+  font-size: 11px; font-weight: 600; color: var(--gs-text-2);
+  background: rgba(0, 0, 0, 0.05); border-radius: 999px; padding: 3px 8px; line-height: 1;
+}
+.gs-portal-bar .gs-link {
+  font-size: 13px; font-weight: 500; color: var(--gs-text-2); text-decoration: none;
+  padding: 6px 10px; border-radius: 8px; min-height: 0; min-width: 0;
+}
+.gs-portal-bar .gs-link:hover { color: var(--gs-text); background: rgba(0, 0, 0, 0.05); }
+.gs-portal-bar .gs-signout {
+  white-space: nowrap;
+  font-size: 13px; font-weight: 600; color: var(--gs-text); background: rgba(0, 0, 0, 0.05);
+  border: none; border-radius: 999px; padding: 7px 14px; cursor: pointer;
+  min-height: 0; min-width: 0; transition: background 0.15s;
+}
+.gs-portal-bar .gs-signout:hover { background: rgba(0, 0, 0, 0.09); }
+
+/* ---------- sidebar ---------- */
+#coach-dashboard .dashboard-sidebar {
+  width: var(--gs-side-w) !important;
+  padding: 16px 12px 20px !important;
+  background: #FAFAFB !important;
+  border-right: 1px solid var(--gs-line) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  height: auto !important;
+  z-index: 150 !important;
+}
+#coach-dashboard .sidebar-title {
+  font-size: 11px !important; font-weight: 700 !important; letter-spacing: 0.06em !important;
+  color: var(--gs-text-3) !important; padding: 0 12px !important; margin-bottom: 6px !important;
+}
+#coach-dashboard .sidebar-title:not(:first-child) { margin-top: 22px !important; }
+#coach-dashboard #academy-nav .team-nav-item.is-sub { padding-left: 42px !important; font-size: 13px !important; min-height: 34px; }
+#coach-dashboard .gs-team-empty { padding: 6px 12px 2px; font-size: 13px; color: var(--gs-text-3); }
+#coach-dashboard .sidebar-title + div { margin-bottom: 0; }
+#coach-dashboard .team-nav-item {
+  min-height: 38px; padding: 8px 12px !important; margin: 1px 0 !important;
+  font-size: 14px !important; font-weight: 500; border-radius: 10px !important; gap: 10px !important;
+}
+#coach-dashboard .team-nav-item:hover { transform: none !important; background: rgba(0, 0, 0, 0.045) !important; }
+#coach-dashboard .team-nav-item.active { background: var(--gs-accent-soft) !important; color: var(--gs-accent) !important; font-weight: 600 !important; }
+#coach-dashboard .team-nav-item svg { flex: 0 0 auto; }
+#coach-dashboard .team-count-badge { font-size: 11px !important; padding: 2px 7px !important; }
+
+/* ---------- main column ---------- */
+#coach-dashboard .dashboard-main { padding: 28px 36px 48px !important; }
+#coach-dashboard .dashboard-header {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 16px;
+  margin: 0 0 16px !important; padding: 0 !important;
+}
+#coach-dashboard .dashboard-header .header-actions { display: flex; gap: 10px; align-items: center; }
+#coach-dashboard .dashboard-header .header-actions:empty { display: none; }
+#coach-dashboard .dashboard-toolbar { margin: 0 0 22px; max-width: 100%; }
+
+/* ---------- typography: calm, no shouting ---------- */
+#coach-dashboard h1, #coach-dashboard h2, #coach-dashboard h3, #coach-dashboard h4,
+#coach-dashboard button, #coach-dashboard .text-xl, #coach-dashboard .segment-btn,
+#coach-dashboard .btn-ios-primary, #coach-dashboard .btn-ios-secondary {
+  text-transform: none !important; letter-spacing: normal;
+}
+#coach-dashboard h1, #coach-dashboard h2, #coach-dashboard h3, #coach-dashboard h4 { color: var(--gs-text); margin-bottom: 0; }
+#coach-dashboard .text-xl { font-size: 28px !important; font-weight: 700 !important; letter-spacing: -0.02em !important; line-height: 1.15; }
+#coach-dashboard .text-sub { font-size: 14px !important; color: var(--gs-text-2) !important; margin-top: 3px; }
+#coach-dashboard .text-l { font-size: 20px !important; font-weight: 600 !important; letter-spacing: -0.01em !important; }
+
+/* ---------- segmented control: one line, scrolls if it must ---------- */
+#coach-dashboard .view-tabs {
+  display: inline-flex !important; gap: 2px; padding: 3px !important;
+  background: rgba(118, 118, 128, 0.12) !important; border-radius: 11px !important;
+  max-width: 100%; width: auto !important; margin: 0 !important;
+  overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -ms-overflow-style: none;
+}
+#coach-dashboard .view-tabs::-webkit-scrollbar { display: none; }
+#coach-dashboard .segment-btn {
+  width: auto !important; min-width: 0 !important; min-height: 32px !important;
+  padding: 6px 14px !important; border-radius: 8px !important;
+  font-size: 13px !important; font-weight: 600 !important; color: var(--gs-text-2) !important;
+  white-space: nowrap; line-height: 1.2; display: inline-flex; align-items: center; justify-content: center;
+}
+#coach-dashboard .segment-btn:hover { color: var(--gs-text) !important; }
+#coach-dashboard .segment-btn.active { background: #fff !important; color: var(--gs-text) !important; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.10), 0 0 0 0.5px rgba(0, 0, 0, 0.04) !important; }
+
+/* ---------- buttons ---------- */
+#coach-dashboard .btn-ios-primary, #coach-dashboard .btn-ios-secondary { min-height: 34px !important; min-width: 0 !important; font-size: 13.5px !important; }
+#coach-dashboard .btn-ios-primary { background: var(--gs-accent) !important; box-shadow: none !important; }
+#coach-dashboard .btn-ios-primary:hover { transform: none !important; background: #0062c4 !important; box-shadow: none !important; }
+
+/* ---------- cards, tables ---------- */
+#coach-dashboard .roster-table-container { border: 1px solid var(--gs-line-soft) !important; box-shadow: var(--gs-shadow-card) !important; border-radius: var(--gs-radius-l) !important; }
+#coach-dashboard .roster-table th { font-size: 11px !important; letter-spacing: 0.05em !important; color: var(--gs-text-3) !important; background: #FAFAFB !important; }
+#coach-dashboard .roster-table td { font-size: 14px !important; padding: 13px 20px !important; }
+#coach-dashboard .editable-field:hover::after { content: none !important; }
+
+/* Empty state */
+.gs-empty { padding: 56px 24px; text-align: center; color: var(--gs-text-2); }
+.gs-empty svg { width: 36px; height: 36px; color: var(--gs-text-3); margin: 0 auto 14px; display: block; }
+.gs-empty .gs-empty-title { font-size: 16px; font-weight: 600; color: var(--gs-text); margin-bottom: 4px; }
+.gs-empty .gs-empty-sub { font-size: 14px; color: var(--gs-text-2); max-width: 360px; margin: 0 auto; line-height: 1.5; }
+
+/* ---------- playbook inside the shell ---------- */
+#playbook-view .pb-team, #playbook-view .pb-head { display: none !important; }
+#playbook-view .pb-sub { display: none !important; }
+#playbook-view .pb-tabs { margin: 0 0 20px !important; border-radius: 11px !important; padding: 3px !important; }
+#playbook-view .pb-tabs button { text-transform: none !important; font-size: 13px !important; padding: 6px 14px !important; border-radius: 8px !important; min-height: 32px; min-width: 0; }
+#playbook-view .filter-row button { text-transform: none !important; min-height: 30px; min-width: 0; font-size: 12.5px !important; padding: 6px 12px !important; }
+#playbook-view .filter-row button.active { background: var(--gs-text) !important; border-color: var(--gs-text) !important; }
+#playbook-view .iq-cat { color: var(--gs-text-3) !important; letter-spacing: 0.06em !important; font-size: 11px !important; margin: 22px 2px 8px !important; }
+#playbook-view .spacing-banner { border-radius: var(--gs-radius-m) !important; }
+#playbook-view .iq-card, #playbook-view .principle { border: 1px solid var(--gs-line-soft) !important; box-shadow: var(--gs-shadow-card) !important; }
+#playbook-view .iq-card .iq-top::after {
+  content: ''; width: 8px; height: 8px; margin-left: auto; flex: 0 0 8px; align-self: center;
+  border-right: 1.5px solid var(--gs-text-3); border-bottom: 1.5px solid var(--gs-text-3);
+  transform: rotate(45deg); transition: transform 0.18s ease;
+}
+#playbook-view .iq-card:has(.iq-body.open) .iq-top::after { transform: rotate(-135deg); }
+#playbook-view .iq-card:hover { border-color: var(--gs-line) !important; }
+#playbook-view .iq-card:focus-visible { outline: 2px solid var(--gs-accent); outline-offset: 2px; }
+
+/* ---------- login card: same calm voice ---------- */
+#coach-login h1, #coach-login h2, #coach-login h3 { text-transform: none !important; letter-spacing: -0.02em !important; color: var(--gs-text) !important; }
+#coach-login #coach-mode-toggle, #coach-login a, #coach-login .login-toggle { text-transform: none !important; letter-spacing: normal !important; font-weight: 500; }
+#coach-login .btn-login { text-transform: none !important; letter-spacing: normal !important; font-weight: 600 !important; }
+
+/* ---------- drawer overlay (phones and small tablets) ---------- */
+.gs-drawer-overlay {
+  display: none; position: fixed; inset: var(--gs-bar-h) 0 0 0; background: rgba(0, 0, 0, 0.32); z-index: 140;
+}
+body.gs-drawer-open .gs-drawer-overlay { display: block; }
+
+@media (max-width: 960px) {
+  .gs-portal-bar { padding: 0 12px; gap: 10px; }
+  .gs-portal-bar .gs-menu-btn { display: inline-flex; }
+  .gs-portal-bar .gs-brand-app, .gs-portal-bar .gs-brand-sep, .gs-portal-bar .gs-user span, .gs-portal-bar .gs-user .gs-role, .gs-portal-bar .gs-link { display: none; }
+  .gs-portal-bar .gs-brand { font-size: 14px; }
+  #coach-dashboard .dashboard-wrapper { position: relative; }
+  #coach-dashboard .dashboard-sidebar {
+    position: fixed !important; top: var(--gs-bar-h); bottom: 0; left: 0;
+    height: auto !important; width: min(300px, 84vw) !important;
+    transform: translateX(-102%); transition: transform 0.22s cubic-bezier(.2,.8,.2,1);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18); background: #fff !important;
+  }
+  body.gs-drawer-open #coach-dashboard .dashboard-sidebar { transform: translateX(0); }
+  #coach-dashboard .team-nav-item { min-height: 44px; font-size: 15px !important; }
+  #coach-dashboard .dashboard-main { padding: 18px 16px 40px !important; }
+  #coach-dashboard .text-xl { font-size: 24px !important; }
+  #coach-dashboard .dashboard-header { flex-direction: column; align-items: stretch; gap: 10px; }
+  #coach-dashboard .view-tabs { display: flex !important; width: 100% !important; }
+  #coach-dashboard .segment-btn { flex: 0 0 auto; }
+  #coach-dashboard .roster-table-container { overflow-x: auto; }
+  #coach-dashboard .insights-grid { grid-template-columns: 1fr !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #coach-dashboard .dashboard-sidebar { transition: none; }
+}

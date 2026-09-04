@@ -10,8 +10,9 @@
  *                                      .dashboard-main) and show it
  *   Tabs: spacing (default, spacing is the number one thing with this team),
  *         system (Square, Fill cut, Beating the press, Man to man, Special
- *         situations). Coaching IQ and Reading list are parked under Coach
- *         Academy as "Coming" (see markAcademyComing).
+ *         situations), develop (Player Development: program-wide, how we get
+ *         every player better). Coaching IQ and Reading list are parked under
+ *         Coach Academy as "Coming" (see markAcademyComing).
  *   Staff only: it lives behind the Coach Portal login and the onboarding gate.
  *   No network calls. No emojis. No em dashes in copy.
  */
@@ -24,6 +25,7 @@
   const TABS = [
     { key: 'spacing', label: 'Spacing first', title: 'Spacing first', sub: 'Number one with this team. Teach it before any set or play.' },
     { key: 'system',  label: 'The System',    title: 'Our system, pared down', sub: 'Square, Fill cut, Beating the press, Man to man, Special situations.' },
+    { key: 'develop', label: 'Player Development', title: 'Player development, the Godspeed way', sub: 'Program-wide. Build the player first, then the tactics. The results follow.' },
   ];
   // Coaching IQ and the Reading list are staged under Coach Academy and shown as
   // "Coming" until Scott turns them on. Their renderers stay in this file untouched.
@@ -65,11 +67,12 @@
       <div class="pb-tabs" role="tablist">${TABS.map(t => `<button type="button" role="tab" data-tab="${t.key}">${t.label}</button>`).join('')}</div>
       <div class="pb-pane" data-pane="spacing"><div id="spacing-list"></div></div>
       <div class="pb-pane" data-pane="system"><div id="sys-list"></div></div>
+      <div class="pb-pane" data-pane="develop"><div id="dev-list"></div></div>
 `;
     const header = main.querySelector('.dashboard-header');
     if (header && header.nextSibling) main.insertBefore(view, header.nextSibling); else main.appendChild(view);
     view.querySelectorAll('.pb-tabs button').forEach(b => b.addEventListener('click', () => showTab(b.getAttribute('data-tab'))));
-    try { renderSpacing(); renderSystem(); } catch (e) { console.warn('[playbook] render failed:', e.message); }
+    try { renderSpacing(); renderSystem(); renderDevelop(); } catch (e) { console.warn('[playbook] render failed:', e.message); }
     return view;
   }
 
@@ -79,6 +82,7 @@
     document.querySelectorAll('#playbook-view .pb-pane').forEach(p => p.classList.toggle('active', p.getAttribute('data-pane') === t.key));
     const h = el('pb-title'); if (h) h.textContent = t.title;
     const s = el('pb-sub'); if (s) s.textContent = t.sub;
+    const hs = document.querySelector('#coach-dashboard .dashboard-header .text-sub'); if (hs) hs.textContent = '5th Grade White. ' + t.sub;
     try { localStorage.setItem('gs_playbook_tab', t.key); } catch (e) { /* optional */ }
   }
 
@@ -134,7 +138,7 @@
     // Any team view chosen later should hide the playbook and restore the tabs.
     const orig = window.switchTeamView;
     if (typeof orig === 'function' && !orig.__pbWrapped) {
-      const wrapped = function () { const v = el('playbook-view'); if (v) v.style.display = 'none'; const t = el('view-tabs'); if (t) t.style.display = ''; a.classList.remove('active'); return orig.apply(this, arguments); };
+      const wrapped = function () { const v = el('playbook-view'); if (v) v.style.display = 'none'; const t = el('view-tabs'); if (t) t.style.display = ''; const hs = document.querySelector('#coach-dashboard .dashboard-header .text-sub'); if (hs) hs.textContent = 'Godspeed Coach Portal'; const vt = el('view-title'); if (vt) vt.textContent = 'Dashboard'; a.classList.remove('active'); return orig.apply(this, arguments); };
       wrapped.__pbWrapped = true; window.switchTeamView = wrapped;
     }
   }
@@ -256,6 +260,66 @@ function renderSystem(){
     h+='</div></div></div></div>';
   });
   document.getElementById('sys-list').innerHTML=h;
+}
+
+/* ---------- player development (program-wide) ---------- */
+// [category, title, body]. Written in our own words for coaches of 10 to 15
+// year olds. Order is the order we think: the program, the plan, the person,
+// the ball, game day, buy-in.
+var DEV_INTRO='Anyone can pull a hundred drills off the internet. That is not the job. The job is the program: a vision for each player, a plan for every day, and the care to see the whole kid. Get the player better first. Tactics come second. Results come last, and they come on their own.';
+var DEV=[
+  ['The Program, Not the Drill','Build a program, not a drill list','A drill is one rep. A program is the vision, the plan, the teaching and the care wrapped around every rep. If a coach can only describe what drills he ran, he does not have a program yet. Start from a small basket of fundamentals and adapt everything to the kids in front of you. Never copy and paste another team.'],
+  ['The Program, Not the Drill','Player first, then tactics, then results','Most coaches run it backwards: chase the result, bolt on tactics, think about the player last. We reverse it. Make the player better and the tactics become possible. Make the tactics possible and the wins show up. Better players win more, not the other way around.'],
+  ['The Program, Not the Drill','Team over highlight','Development is education, not just skill work. Every practice teaches how to form a team and how to play for a team: sacrifice, process, the extra pass. Our kids live in a highlight culture. We re-teach team every single day, and we say "we" when we talk about the group.'],
+  ['The Program, Not the Drill','Fundamentals are the message','The simple work is not a warm-up before the real coaching. It is the real coaching. Footwork, balance, two feet, chin on the ball, spacing. The deeper any game goes, the more it comes down to execution and the simple things. Make players believe the fundamentals are what changes them.'],
+
+  ['Plan and Vision','A vision for every player','Before the first practice, write one sentence for each kid: where does he need to go this season, and what does this team need from him? Every workout traces back to that sentence. A coach without a vision for a player is just supervising.'],
+  ['Plan and Vision','Season, week, day. No improvising.','The season vision breaks into weekly focuses, and each week breaks into a written plan for the day. Pre-practice, practice, post-practice, all planned. Showing up to figure it out on the floor wastes the only thing we cannot get back, which is gym time.'],
+  ['Plan and Vision','One thing at a time','Work on twenty things and you master none, like learning five languages at once. Pick the one thing for the week and put real reps on it. Add a second only when the first one holds up in a live game. Three or four things over a whole season is plenty.'],
+  ['Plan and Vision','The player must know what he worked on','If a kid leaves the gym with a good sweat and no idea what he got better at, that is on the coach, not the kid. Name the focus at the start, cue it during, and ask him to say it back at the end.'],
+  ['Plan and Vision','Teach the what, the why and the how','Most coaches give the what and the why and skip the how. The how is the footwork, the hand, the angle, the exact moment. The how is what makes the difference, so slow down and show it.'],
+
+  ['See the Whole Person','Do not typecast by size','The tallest kid is not automatically the center. Watch the skill set: can he pass, can he see, can he handle? Put him where his potential is biggest, not where his height says. Some of the best bigs in the world grew up as point guards and looked slow doing it.'],
+  ['See the Whole Person','The other twenty hours','We get a kid for three or four hours a day at most. Sleep, food, who is around him, what home looks like right now, all of it shows up on the floor. Know who the player is off the court. That is part of development, not separate from it.'],
+  ['See the Whole Person','Sometimes they just need someone to listen','Not every conversation is a correction. Some days the most important coaching is standing next to a kid and hearing him out. Listening is a skill we practice too.'],
+
+  ['Guard the Ball','The man on the ball is the most important defender','Everything on defense starts on the ball. Help defenders matter, but a soft on-ball defender makes every help rotation late. Build the on-ball habit first and the rest of the defense gets easier.'],
+  ['Guard the Ball','Activate on the catch','Do not sit back and wait. On the catch, break the offense\'s rhythm: arm\'s length from the ball, active hands, make him protect the ball instead of running his offense. Offense acts, defense reacts, so make him react to you first.'],
+  ['Guard the Ball','Chin on the ball','Keep your chin on the same line as the ball at all times. It buys you half a step, so the drive goes into your chest instead of past your hip. Never open the stance. Never give the easy line to the rim. On a hand-off, send him sideline to sideline, never toward the arc.'],
+  ['Guard the Ball','Beat him to the spot','On a middle drive, get to the spot first and hold it instead of trailing the ball. On a shot fake, stay down. Do not jump. Then two hands to the ball.'],
+  ['Guard the Ball','Hand high, strike on contact','When the ballhandler already has a step, ride his hip with the high arm and, at the moment of contact, go for the ball or change the shot. Force the ugly, off-balance layup. Never reach low and never swipe every time, because good scorers bait that foul.'],
+  ['Guard the Ball','Make them feel like they are playing against six','Be the aggressor. Pressure that never lets the other team run its offense is physically and mentally exhausting for them. If the other bench thinks the game looks ugly, we are doing it right.'],
+  ['Guard the Ball','Attack the spin','On a crossover, go with the ball and slide across, chin still on the ball. If you get beat, sprint, recover, get back in front. On a spin move, sit in an even position and jump the spin for the steal. Teach it in the full court so it carries into the half court.'],
+
+  ['Game Day Is a Development Day','Every rep develops somebody','Game day is not only about the opponent. Skipping development on game day throws away a practice. The pregame is planned against each player\'s season goals just like a Tuesday would be.'],
+  ['Game Day Is a Development Day','Prepare the body and the person first','Sleep the night before, when he eats, a real warm-up. Start the on-court time by greeting each kid by name and making him feel welcome before a single ball goes up. Then form shooting for touch, balance and base, made competitive: a make that touches the rim does not count.'],
+  ['Game Day Is a Development Day','Cue words','Each player gets one or two short words tied to his fix, like "right hip" or "snap down." The cue carries the whole relationship: he hears it from the bench and knows exactly what you mean.'],
+  ['Game Day Is a Development Day','Stampede to a two-foot finish','Start high above the arc, run downhill through the ball at game speed and land a controlled two-foot finish every time. Two feet means balance, and balance means options: pump fake, step-through, or the next pass. Layer in reverse finishes and finish packages on the same base. A coach can stand in as the extra defender.'],
+  ['Game Day Is a Development Day','Spray and follow','Once the finish holds, add the read: stampede, punch two feet in the paint, spray to the corner shooter, follow your pass. Same base, one more decision. Feeds straight into "Reads when you get stopped" on the Spacing tab.'],
+  ['Game Day Is a Development Day','Rehearse tonight\'s coverage','Tailor the last part of the pregame to what the other team will do to our ball screens: hard hedge, deep drop, or trap. Against a drop, get on the defender\'s hip and go downhill. Against a trap, see it over the top and take one step to the open man. Give the kids their number one look for tonight.'],
+  ['Game Day Is a Development Day','The screener arrives alone','If the screener and his defender walk into the same space, the defense keeps the advantage. Teach the screener to push his man off, get both feet to the hips of the ballhandler\'s defender, and arrive alone with good timing. Work it the day before in practice, then again pregame.'],
+  ['Game Day Is a Development Day','Organize the minutes','Fifteen minutes of court time is only fifteen minutes if every kid knows where he is. Stagger the groups: two players finish at the rim while two do movement work while two stretch, then rotate. Whoever plans the time is the one actually maximizing development.'],
+  ['Game Day Is a Development Day','Movement minute','A short block, court optional, where a player mirrors the coach: slides, hands, stabs, close the gap, chin on the ball, freeze. One minute, a few times. Done before every game across a season, that one defensive rep compounds into a real defender.'],
+
+  ['Buy-In','Pillars in the first seven days','Decide your three most important things before the season and lock them in on day one. Within a week every player should be able to recite what this team is about, even half asleep. Godspeed\'s answer starts with spacing, attacking, and guarding the ball.'],
+  ['Buy-In','Let your best player set the standard','Buy-in can take a long time. It happens fast when the best player is the hardest worker, picks up full court and does the boring work daily. When the star does it, everyone falls in line. Coach that player accordingly.'],
+  ['Buy-In','No gimmicks','No two-ball dribbling, no tennis balls, no drills built for a highlight reel. Nobody dribbles two basketballs in a game. Let the game and the film tell you what a kid needs to work on, then work on that.'],
+  ['Buy-In','Film first, then borrow, then come back to who we are','Solve it from your own head first: you know these kids and your vision for them. When you are stuck, learn from someone else, take what fits, and come back to our philosophy. Never coach for entertainment.'],
+  ['Buy-In','Sell the boring work','Kids will think the simple stuff is beneath them at first. Your job is to make the simple work exciting and to prove, through their own games, that it is what changed them. Improve what they actually do in games. That is player development.']
+];
+function renderDevelop(){
+  var h='<div class="spacing-banner" style="margin:0 0 16px;"><div class="n1">1</div><div><div class="st">Player first. Tactics second. Results last.</div><div class="sd">'+esc(DEV_INTRO)+'</div></div></div>';
+  var byCat={},order=[];
+  DEV.forEach(function(d){if(!byCat[d[0]]){byCat[d[0]]=[];order.push(d[0]);}byCat[d[0]].push(d);});
+  order.forEach(function(cat){
+    h+='<div class="iq-cat">'+esc(cat)+'</div>';
+    byCat[cat].forEach(function(d){
+      h+='<div class="iq-card" role="button" tabindex="0" onclick="this.querySelector(\'.iq-body\').classList.toggle(\'open\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click();}">'+
+         '<div class="iq-top"><span class="iq-title">'+esc(d[1])+'</span></div>'+
+         '<div class="iq-body">'+esc(d[2])+'</div></div>';
+    });
+  });
+  var box=document.getElementById('dev-list'); if(box) box.innerHTML=h;
 }
 
 /* ---------- coaching iq ---------- */

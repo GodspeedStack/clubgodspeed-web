@@ -1037,6 +1037,7 @@
     </style>
     <link rel="stylesheet" href="mobile-fixes.css">
     <link rel="stylesheet" href="nav-unified.css">
+    <link rel="stylesheet" href="coach-portal-shell.css?v=1">
 </head>
 
 <body>
@@ -1186,12 +1187,6 @@
                     </div>
                 </div>
 
-                <div style="margin-top: auto; padding-top: 2rem;">
-                    <button onclick="logoutCoach()" class="btn-ios-secondary"
-                        style="width: 100%; color: #FF3B30; background: rgba(255, 59, 48, 0.1);">
-                        Sign Out
-                    </button>
-                </div>
             </aside>
 
             <!-- MAIN CONTENT -->
@@ -1201,10 +1196,10 @@
                         <h2 class="text-xl" id="view-title">Dashboard</h2>
                         <p class="text-sub">Godspeed Coach Portal</p>
                     </div>
-                    <div class="header-actions">
-                        <!-- Replaces "View War Room" button -->
-                        <div class="view-tabs" id="view-tabs"
-                            style="display: grid; grid-template-columns: repeat(6, 1fr); padding: 2px; background: #e9e9eb; border-radius: 9px; width: 100%; max-width: 800px; margin: 0 auto;">
+                    <div class="header-actions" id="header-actions"></div>
+                </header>
+                <div class="dashboard-toolbar">
+                    <div class="view-tabs" id="view-tabs" role="tablist" aria-label="Team views">
                             <button class="segment-btn active" onclick="switchTeamView('roster', this)"
                                 id="btn-view-roster">Roster</button>
                             <button class="segment-btn" onclick="switchTeamView('analytics', this)"
@@ -1218,8 +1213,7 @@
                             <button class="segment-btn" onclick="switchTeamView('tracking', this)"
                                 id="btn-view-tracking">Parent Tracking</button>
                         </div>
-                    </div>
-                </header>
+                </div>
 
                 <!-- ROSTER TABLE -->
                 <div id="roster-view">
@@ -1779,7 +1773,8 @@
     <script src="coach-documents.js?v=2"></script>
     <script src="coach-portal.js?v=2"></script>
     <script src="coach-onboarding.js?v=1"></script>
-    <script src="coach-playbook.js?v=2"></script>
+    <script src="coach-playbook.js?v=3"></script>
+    <script src="coach-portal-shell.js?v=1"></script>
     <script src="src/components/MobileBottomNav.js"></script>
     <script src="nav-security.js"></script>
     <script src="mobile-menu.js"></script>
