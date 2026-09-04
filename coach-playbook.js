@@ -59,7 +59,7 @@
     view.id = 'playbook-view';
     view.style.display = 'none';
     view.innerHTML = `
-      <div class="pb-team"><i></i>5th Grade White</div>
+      <div class="pb-team"><i></i>5th Grade</div>
       <h3 class="pb-head" id="pb-title"></h3>
       <p class="pb-sub" id="pb-sub"></p>
       <div class="pb-tabs" role="tablist">${TABS.map(t => `<button type="button" role="tab" data-tab="${t.key}">${t.label}</button>`).join('')}</div>
@@ -91,7 +91,7 @@
     document.querySelectorAll('.team-nav-item.active, .segment-btn.active').forEach(n => n.classList.remove('active'));
     const item = el('playbook-nav-item'); if (item) item.classList.add('active');
     const tabs = el('view-tabs'); if (tabs) tabs.style.display = 'none';
-    const title = el('view-title'); if (title) title.textContent = '5th Grade White Playbook';
+    const title = el('view-title'); if (title) title.textContent = '5th Grade Playbook';
     view.style.display = 'block';
     let saved = null; try { saved = localStorage.getItem('gs_playbook_tab'); } catch (e) { /* optional */ }
     showTab(tab || saved || 'spacing');
@@ -128,7 +128,7 @@
     a.className = 'team-nav-item';
     a.id = 'playbook-nav-item';
     a.style.cssText = 'display:flex;align-items:center;gap:12px;';
-    a.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.7" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"></path></svg><span>5th White Playbook</span>';
+    a.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.7" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"></path></svg><span>5th Grade Playbook</span>';
     a.onclick = () => open();
     anchor.appendChild(a);
     // Any team view chosen later should hide the playbook and restore the tabs.
