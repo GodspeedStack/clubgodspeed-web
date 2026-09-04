@@ -159,7 +159,9 @@ var SPACING=[
   ['Setup','Space the floor to five spots','Two in the corners, two on the wings or slots, one at the top. Even, wide spacing forces the defense to guard the whole floor and opens driving lanes.'],
   ['Movement','One pass, one spot away','Cutters and screeners return to open space. Never let two players stand in the same area. Crowded offense is easy to guard.'],
   ['Movement','Fill behind the drive','When a teammate drives, everyone else relocates to keep the floor spaced. The Fill cut (in the System tab) is how we do it.'],
+  ['Attack','Attack first','More than anything, we want guys to attack. Catch it, face up, and go. Spacing exists so there is somewhere to attack. A player who hesitates lets the defense reset.'],
   ['Attack','Drive gaps, not bodies','Attack the space between two defenders. Good spacing creates gaps. If there is no gap, the spacing is wrong, fix it first.'],
+  ['Attack','Reads when you get stopped','The second thing we teach after attacking. Getting stopped is fine, freezing is not. Read who helped: if the corner defender helped, kick to the corner. If the top defender helped, hit the fill behind you. If nobody helped, keep going. If the ball is in trouble, retreat dribble to open space and start over. Everyone else holds their spot so the read is easy.'],
   ['Pressure','Spacing beats pressure','Against the press and the trap, spread out so traps have to travel and there is always an open outlet. Never put two players in one trap.'],
   ['Habits','Space is a habit, not a play','We coach spacing every drill, every scrimmage, every day. When in doubt at practice, fix the spacing before anything else.']
 ];
