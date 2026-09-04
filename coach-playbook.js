@@ -10,7 +10,8 @@
  *                                      .dashboard-main) and show it
  *   Tabs: spacing (default, spacing is the number one thing with this team),
  *         system (Square, Fill cut, Beating the press, Man to man, Special
- *         situations), iq (Coaching IQ library), reading (Reading list)
+ *         situations). Coaching IQ and Reading list are parked under Coach
+ *         Academy as "Coming" (see markAcademyComing).
  *   Staff only: it lives behind the Coach Portal login and the onboarding gate.
  *   No network calls. No emojis. No em dashes in copy.
  */
@@ -23,9 +24,10 @@
   const TABS = [
     { key: 'spacing', label: 'Spacing first', title: 'Spacing first', sub: 'Number one with this team. Teach it before any set or play.' },
     { key: 'system',  label: 'The System',    title: 'Our system, pared down', sub: 'Square, Fill cut, Beating the press, Man to man, Special situations.' },
-    { key: 'iq',      label: 'Coaching IQ',   title: 'Coaching IQ library', sub: 'Short lessons from coaches worth stealing from. Tap one to open it.' },
-    { key: 'reading', label: 'Reading list',  title: 'Reading list', sub: 'A little every week compounds over a season.' },
   ];
+  // Coaching IQ and the Reading list are staged under Coach Academy and shown as
+  // "Coming" until Scott turns them on. Their renderers stay in this file untouched.
+  const ACADEMY_COMING = ['Coaching IQ', 'Reading list'];
 
   const CSS = `
 #playbook-view{--bg:#F5F5F7;--card:#FFFFFF;--text:#1D1D1F;--text-soft:#6E6E73;--text-faint:#A1A1A6;--accent:#0071E3;--accent-dark:#0060C0;--accent-soft:#EAF3FF;--border:#E4E4E8;--border-light:#ECECF0;--radius-l:18px;--radius-m:12px;--radius-s:8px;--shadow-card:0 1px 3px rgba(15,23,42,.06),0 8px 24px rgba(15,23,42,.05);--font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-family:var(--font);color:var(--text);max-width:880px}
@@ -40,6 +42,10 @@
 #playbook-view .pb-pane{display:none}#playbook-view .pb-pane.active{display:block}
 #playbook-view h4,#playbook-view .sys-name,#playbook-view .iq-title,#playbook-view .b-title{text-transform:none;letter-spacing:normal}
 #playbook-view ul{margin:0;padding:0}
+#academy-nav .team-nav-item.is-coming{opacity:.55;cursor:default;pointer-events:none}
+#academy-nav .team-nav-item.is-coming span{white-space:nowrap}
+#academy-nav .team-nav-item.is-sub{padding-left:44px;font-size:13px}
+#academy-nav .nav-coming{margin-left:auto;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6E6E73;background:#E9E9EB;border-radius:999px;padding:3px 8px;line-height:1}
 ` + "#playbook-view .spacing-banner{margin-top:16px;background:#0A0A0A;color:#fff;border-radius:var(--radius-m);padding:16px 20px;display:flex;align-items:center;gap:14px;}\n#playbook-view .spacing-banner .n1{font-size:34px;font-weight:800;color:#FF5722;line-height:1;}\n#playbook-view .spacing-banner .st{font-size:14px;font-weight:600;}\n#playbook-view .spacing-banner .sd{font-size:12px;color:#c9c9cf;margin-top:2px;line-height:1.4;}\n#playbook-view .sec-title{font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-faint);margin:6px 2px 12px;}\n#playbook-view .principle{background:var(--card);border:1px solid var(--border-light);border-left:3px solid var(--accent);border-radius:var(--radius-m);padding:16px 18px;margin-bottom:12px;box-shadow:var(--shadow-card);}\n#playbook-view .principle h4{font-size:15px;font-weight:700;margin-bottom:5px;}\n#playbook-view .principle p{font-size:13.5px;color:var(--text-soft);line-height:1.55;}\n#playbook-view .sys-block{background:var(--card);border:1px solid var(--border-light);border-radius:var(--radius-m);box-shadow:var(--shadow-card);margin-bottom:14px;overflow:hidden;}\n#playbook-view .sys-head{display:flex;align-items:center;gap:12px;padding:16px 20px;cursor:pointer;}\n#playbook-view .sys-ico{width:38px;height:38px;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;}\n#playbook-view .sys-ico svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;}\n#playbook-view .sys-name{font-size:16px;font-weight:700;}\n#playbook-view .sys-maps{font-size:12px;color:var(--text-soft);margin-top:1px;}\n#playbook-view .sys-chev{margin-left:auto;color:var(--text-faint);font-size:20px;transition:transform .2s;}\n#playbook-view .sys-block.open .sys-chev{transform:rotate(90deg);}\n#playbook-view .sys-body{display:none;padding:0 20px 20px;border-top:1px solid var(--border-light);}\n#playbook-view .sys-block.open .sys-body{display:block;}\n#playbook-view .sys-layout{display:flex;gap:20px;padding-top:16px;flex-wrap:wrap;}\n#playbook-view .sys-diagram{flex:0 0 240px;max-width:100%;}\n#playbook-view .sys-diagram svg{width:100%;height:auto;background:var(--bg);border-radius:var(--radius-s);border:1px solid var(--border-light);}\n#playbook-view .sys-content{flex:1;min-width:260px;}\n#playbook-view .sys-sub{font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-faint);margin:14px 0 6px;}\n#playbook-view .sys-sub:first-child{margin-top:0;}\n#playbook-view .sys-intro{font-size:13.5px;line-height:1.55;color:var(--text);}\n#playbook-view .sys-list{list-style:none;}\n#playbook-view .sys-list li{font-size:13px;line-height:1.5;color:var(--text-soft);padding:4px 0 4px 16px;position:relative;}\n#playbook-view .sys-list li:before{content:\"\";position:absolute;left:0;top:11px;width:5px;height:5px;border-radius:50%;background:var(--accent);}\n#playbook-view .sys-setup-row{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--border-light);}\n#playbook-view .sys-setup-row:last-child{border-bottom:none;}\n#playbook-view .sys-setup-lbl{flex:0 0 118px;font-size:12.5px;font-weight:700;}\n#playbook-view .sys-setup-txt{flex:1;font-size:12.5px;color:var(--text-soft);line-height:1.45;}\n#playbook-view .rule-tag{display:inline-block;background:#0A0A0A;color:#fff;font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;margin:4px 6px 0 0;}\n#playbook-view .sys-court-line{fill:none;stroke:#c3c3cb;stroke-width:2;}\n#playbook-view .sys-court-dot{fill:var(--accent);}\n#playbook-view .sys-court-x{fill:none;stroke:#0A0A0A;stroke-width:3;stroke-linecap:round;}\n#playbook-view .sys-court-num{fill:#fff;font-weight:700;font-family:var(--font);}\n#playbook-view .filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}\n#playbook-view .filter-row button{border:1px solid var(--border);background:var(--card);color:var(--text-soft);font-size:12px;font-weight:600;padding:7px 13px;border-radius:999px;cursor:pointer;}\n#playbook-view .filter-row button.active{background:var(--accent);color:#fff;border-color:var(--accent);}\n#playbook-view .iq-cat{font-size:12px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--accent);margin:18px 2px 8px;}\n#playbook-view .iq-card{background:var(--card);border:1px solid var(--border-light);border-radius:var(--radius-m);box-shadow:var(--shadow-card);padding:15px 18px;margin-bottom:10px;cursor:pointer;}\n#playbook-view .iq-card .iq-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;}\n#playbook-view .iq-title{font-size:15px;font-weight:700;}\n#playbook-view .iq-src{font-size:11px;color:var(--text-faint);white-space:nowrap;}\n#playbook-view .iq-body{display:none;font-size:13.5px;line-height:1.62;color:var(--text-soft);margin-top:10px;}\n#playbook-view .iq-body.open{display:block;}\n#playbook-view .iq-quote{margin-top:10px;padding:10px 14px;background:var(--bg);border-left:3px solid var(--accent);border-radius:6px;font-style:italic;color:var(--text);font-size:13px;}\n#playbook-view .book{background:var(--card);border:1px solid var(--border-light);border-radius:var(--radius-m);box-shadow:var(--shadow-card);padding:14px 18px;margin-bottom:9px;cursor:pointer;}\n#playbook-view .book .b-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;}\n#playbook-view .book .b-title{font-size:14.5px;font-weight:700;}\n#playbook-view .book .b-author{font-size:11px;color:var(--text-faint);white-space:nowrap;}\n#playbook-view .book .b-why{display:none;font-size:13px;line-height:1.55;color:var(--text-soft);margin-top:8px;}\n#playbook-view .book .b-why.open{display:block;}\n#playbook-view .book .b-links{display:flex;gap:8px;margin-top:10px;}\n#playbook-view .book .b-links a{font-size:11px;font-weight:700;color:var(--accent);text-decoration:none;padding:4px 11px;border:1px solid var(--accent);border-radius:6px;}\n@media (max-width:640px){\n#playbook-view .sys-diagram{flex:0 0 100%;}\n}";
 
   function injectStyles(){ if(el('coach-playbook-css')) return; const s=document.createElement('style'); s.id='coach-playbook-css'; s.textContent=CSS; document.head.appendChild(s); }
@@ -59,12 +65,11 @@
       <div class="pb-tabs" role="tablist">${TABS.map(t => `<button type="button" role="tab" data-tab="${t.key}">${t.label}</button>`).join('')}</div>
       <div class="pb-pane" data-pane="spacing"><div id="spacing-list"></div></div>
       <div class="pb-pane" data-pane="system"><div id="sys-list"></div></div>
-      <div class="pb-pane" data-pane="iq"><div class="filter-row" id="iq-filter"></div><div id="iq-list"></div></div>
-      <div class="pb-pane" data-pane="reading"><div id="reading-list"></div></div>`;
+`;
     const header = main.querySelector('.dashboard-header');
     if (header && header.nextSibling) main.insertBefore(view, header.nextSibling); else main.appendChild(view);
     view.querySelectorAll('.pb-tabs button').forEach(b => b.addEventListener('click', () => showTab(b.getAttribute('data-tab'))));
-    try { renderSpacing(); renderSystem(); renderIQ(); renderReading(); } catch (e) { console.warn('[playbook] render failed:', e.message); }
+    try { renderSpacing(); renderSystem(); } catch (e) { console.warn('[playbook] render failed:', e.message); }
     return view;
   }
 
@@ -92,10 +97,33 @@
     showTab(tab || saved || 'spacing');
   }
 
+  function comingPill(){ const p = document.createElement('span'); p.className = 'nav-coming'; p.textContent = 'Coming'; return p; }
+
+  // Coach Academy is not live yet: keep the item, take away the click, tag it
+  // "Coming", and list Coaching IQ and Reading list under it the same way.
+  function markAcademyComing(anchor){
+    const academy = anchor.querySelector('.team-nav-item');
+    if (!academy || academy.classList.contains('is-coming')) return;
+    academy.removeAttribute('onclick'); academy.onclick = null;
+    academy.classList.remove('active'); academy.classList.add('is-coming');
+    academy.setAttribute('aria-disabled', 'true');
+    academy.appendChild(comingPill());
+    let after = academy;
+    ACADEMY_COMING.forEach(label => {
+      const d = document.createElement('div');
+      d.className = 'team-nav-item is-coming is-sub';
+      d.setAttribute('aria-disabled', 'true');
+      d.style.cssText = 'display:flex;align-items:center;gap:12px;';
+      const t = document.createElement('span'); t.textContent = label; d.appendChild(t); d.appendChild(comingPill());
+      anchor.insertBefore(d, after.nextSibling); after = d;
+    });
+  }
+
   function mountNav(){
     if (el('playbook-nav-item')) return;
     const anchor = el('academy-nav');
     if (!anchor) return;
+    markAcademyComing(anchor);
     const a = document.createElement('div');
     a.className = 'team-nav-item';
     a.id = 'playbook-nav-item';
