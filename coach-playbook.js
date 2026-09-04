@@ -151,18 +151,33 @@
   });
 
   // ── content (verbatim from the 5th Grade White onboarding page) ──
+// [category, title, tip]. Categories are the order a coach teaches them:
+// where players stand, how they move, how they attack, how they beat pressure,
+// and how it becomes a habit.
+var SPACING_CATS=['Setup','Movement','Attack','Pressure','Habits'];
 var SPACING=[
-  ['Space the floor to five spots','Two in the corners, two on the wings or slots, one at the top. Even, wide spacing forces the defense to guard the whole floor and opens driving lanes.'],
-  ['One pass, one spot away','Cutters and screeners return to open space. Never let two players stand in the same area. Crowded offense is easy to guard.'],
-  ['Fill behind the drive','When a teammate drives, everyone else relocates to keep the floor spaced. The Fill cut (in the System tab) is how we do it.'],
-  ['Drive gaps, not bodies','Attack the space between two defenders. Good spacing creates gaps. If there is no gap, the spacing is wrong, fix it first.'],
-  ['Spacing beats pressure','Against the press and the trap, spread out so traps have to travel and there is always an open outlet. Never put two players in one trap.'],
-  ['Space is a habit, not a play','We coach spacing every drill, every scrimmage, every day. When in doubt at practice, fix the spacing before anything else.']
+  ['Setup','Space the floor to five spots','Two in the corners, two on the wings or slots, one at the top. Even, wide spacing forces the defense to guard the whole floor and opens driving lanes.'],
+  ['Movement','One pass, one spot away','Cutters and screeners return to open space. Never let two players stand in the same area. Crowded offense is easy to guard.'],
+  ['Movement','Fill behind the drive','When a teammate drives, everyone else relocates to keep the floor spaced. The Fill cut (in the System tab) is how we do it.'],
+  ['Attack','Drive gaps, not bodies','Attack the space between two defenders. Good spacing creates gaps. If there is no gap, the spacing is wrong, fix it first.'],
+  ['Pressure','Spacing beats pressure','Against the press and the trap, spread out so traps have to travel and there is always an open outlet. Never put two players in one trap.'],
+  ['Habits','Space is a habit, not a play','We coach spacing every drill, every scrimmage, every day. When in doubt at practice, fix the spacing before anything else.']
 ];
+var spacingFilter='All';
+function setSpacing(c){spacingFilter=c;renderSpacing();}
 function renderSpacing(){
   var h='<div class="spacing-banner" style="margin:0 0 16px;"><div class="n1">1</div><div><div class="st">Why spacing is number one</div><div class="sd">Everything we run depends on the floor being spaced. Cuts, drives, and the Square offense only work with room to operate. Teach spacing first and the rest follows.</div></div></div>';
-  SPACING.forEach(function(p){h+='<div class="principle"><h4>'+esc(p[0])+'</h4><p>'+esc(p[1])+'</p></div>';});
-  document.getElementById('spacing-list').innerHTML=h;
+  h+='<div class="filter-row" role="group" aria-label="Spacing categories">'+['All'].concat(SPACING_CATS).map(function(c){return '<button type="button" data-cat="'+esc(c)+'"'+(c===spacingFilter?' class="active"':'')+'>'+esc(c)+'</button>';}).join('')+'</div>';
+  SPACING_CATS.forEach(function(cat){
+    if(spacingFilter!=='All'&&spacingFilter!==cat) return;
+    var tips=SPACING.filter(function(p){return p[0]===cat;});
+    if(!tips.length) return;
+    h+='<div class="iq-cat">'+esc(cat)+'</div>';
+    tips.forEach(function(p){h+='<div class="principle"><h4>'+esc(p[1])+'</h4><p>'+esc(p[2])+'</p></div>';});
+  });
+  var root=document.getElementById('spacing-list'); if(!root) return;
+  root.innerHTML=h;
+  root.querySelectorAll('.filter-row button').forEach(function(b){b.addEventListener('click',function(){setSpacing(b.getAttribute('data-cat'));});});
 }
 
 /* ---------- system (pared to 5) ---------- */
