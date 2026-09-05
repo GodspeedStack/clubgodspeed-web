@@ -204,7 +204,7 @@
   }
   function setSub() {
     var s = document.querySelector('#coach-dashboard .dashboard-header .text-sub');
-    if (s) s.textContent = tab(current)[1] + '. Everything on one page, in our words.';
+    if (s) s.textContent = '';
   }
   function ensureView() {
     var v = el('iq-view'); if (v) return v;
