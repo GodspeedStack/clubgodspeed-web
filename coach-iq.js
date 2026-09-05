@@ -112,12 +112,12 @@
       text: 'Four things every day: get better, have fun, make every play count, play to win. Players can never be afraid to lose or make a mistake. Coaches stick up for coaches. Respect the game. Develop your assistants. If someone is hurting the program, he is removed.'
     }, [
       ['Seven fundamental keys', 'Coaching is not plays, it is playing.', [
-        ['See', 'Games are like darting taxis. Eyes up, always.'],
+        ['See', 'Eyes up on every catch, every dribble, every pass. The floor changes every second, so look before you decide.'],
         ['Talk', 'A quiet team is a losing team.'],
         ['Have an act', 'Fake a cut before the real one.'],
         ['Down and balanced', 'Low is powerful.'],
         ['Details', 'Do the little things when nobody is grading them.'],
-        ['Flesh to flesh', 'Take the charge. Contact is part of the game.'],
+        ['Take the contact', 'Take the charge, box out, hold your spot. Contact is part of the game and we do not run from it.'],
         ['Finish everything', 'The last play is the strongest play.']
       ], 'numbered'],
       ['Three levels of communication', 'Most teams stop at one.', [
