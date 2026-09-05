@@ -4,17 +4,17 @@
  * Director / founder only (profiles.role in director, founder and approved).
  * Coaches never see these controls, and the database refuses the calls anyway:
  * every write goes through the v17_01 RPCs (admin_update_athlete,
- * admin_set_roster_membership, admin_delete_team), which check
- * is_program_admin() and write to the append-only roster_admin_log.
+ * admin_set_roster_membership, admin_delete_team) and v17_03 admin_create_athlete,
+ * which check is_program_admin() and write to the append-only roster_admin_log.
  *
  * What a director gets:
  *   - On a team roster: text-only "Edit" per player (name, jersey, grade, date of
- *     birth, status, teams), "Add player" (any athlete not on this team), and
- *     "Delete team" when the team has no active players (typed confirmation).
+ *     birth, status, teams), "Add player" (any athlete in the system, or create a
+ *     brand-new one), and "Delete team" when the team has no active players.
  *   - After every save the portal reloads live data (CoachHome.reload) and
  *     re-renders the roster, so what you see is what the database has.
  *
- * Contract: no direct table writes, no service key, no emojis, no em dashes.
+ * Contract: no direct table writes for mutations, no service key, no emojis, no em dashes.
  * Depends on window.auth.getSupabaseClient, getDB, loadTeamRoster, CoachHome.
  */
 (function () {
@@ -86,6 +86,7 @@
   function gradeValue(g) { var m = /^(K|\d{1,2})/.exec(String(g || '').trim()); return m ? m[1] : ''; }
   function toast(msg) { var t = document.createElement('div'); t.className = 'ra-ok'; t.textContent = msg; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 2600); }
   function errText(e) { var m = (e && (e.message || e.error_description || e.details)) || String(e); return m.replace(/^.*?:\s*/, function (x) { return /^(P0001|42501)/.test(x) ? '' : x; }); }
+  function gradeOptionLabel(g) { return g === 'K' ? 'Kindergarten' : g + (g === '1' ? 'st' : g === '2' ? 'nd' : g === '3' ? 'rd' : 'th') + ' grade'; }
 
   async function refresh(teamId) {
     if (window.CoachHome && window.CoachHome.reload) await window.CoachHome.reload();
@@ -114,7 +115,7 @@
     var a = athleteFromRoster(athleteId); if (!a) return;
     var teams = db().teams || [];
     var mine = teamsOf(athleteId);
-    var gradeSel = '<select name="grade"><option value="">Not set</option>' + GRADES.map(function (g) { return '<option value="' + g + '"' + (gradeValue(a.grade) === g ? ' selected' : '') + '>' + (g === 'K' ? 'Kindergarten' : g + (g === '1' ? 'st' : g === '2' ? 'nd' : g === '3' ? 'rd' : 'th') + ' grade') + '</option>'; }).join('') + '</select>';
+    var gradeSel = '<select name="grade"><option value="">Not set</option>' + GRADES.map(function (g) { return '<option value="' + g + '"' + (gradeValue(a.grade) === g ? ' selected' : '') + '>' + gradeOptionLabel(g) + '</option>'; }).join('') + '</select>';
     var teamBoxes = teams.map(function (t) { return '<label><input type="checkbox" name="team" value="' + esc(t.id) + '"' + (mine.indexOf(t.id) > -1 ? ' checked' : '') + '>' + esc(t.name) + '</label>'; }).join('');
     var b = modal(
       '<h3>Edit player</h3><p class="ra-sub">Changes save to the roster database and show for every coach right away.</p>' +
@@ -152,23 +153,23 @@
     });
   }
 
-  // ---------- add player to this team ----------
+  // ---------- add player to this team (existing athlete from the whole system) ----------
   function openAdd(teamId) {
     var t = teamById(teamId); if (!t) return;
     var on = {}; activeOn(teamId).forEach(function (r) { on[r.athleteId] = 1; });
-    var seen = {}; var pool = [];
-    (db().roster || []).forEach(function (r) { if (seen[r.athleteId] || on[r.athleteId]) return; seen[r.athleteId] = 1; pool.push(r); });
-    pool.sort(function (a, b) { return a.name.localeCompare(b.name); });
-    var b = modal('<h3>Add a player to ' + esc(t.name) + '</h3><p class="ra-sub">Players already on another team stay there too. Nothing is removed.</p>' +
+    var pool = [];
+    var b = modal('<h3>Add a player to ' + esc(t.name) + '</h3><p class="ra-sub">Pick a player already in Godspeed, or create a brand-new one. Nobody is removed from another team.</p>' +
+      '<div style="margin:0 0 12px"><button type="button" class="ra-btn primary" id="ra-new">New player</button></div>' +
       '<input class="ra-search" id="ra-q" placeholder="Type a name" autocomplete="off">' +
-      '<div class="ra-list" id="ra-list"></div><div class="ra-err" id="ra-err"></div>' +
+      '<div class="ra-list" id="ra-list"><div class="ra-hint" style="padding:10px 4px">Loading players...</div></div><div class="ra-err" id="ra-err"></div>' +
       '<div class="ra-actions"><button type="button" class="ra-btn ghost" id="ra-cancel">Cancel</button></div>');
     b.querySelector('#ra-cancel').onclick = close;
+    b.querySelector('#ra-new').onclick = function () { openCreate(teamId); };
     function paint(q) {
-      var list = el('ra-list'); var ql = (q || '').toLowerCase();
+      var list = el('ra-list'); if (!list) return; var ql = (q || '').toLowerCase();
       var items = pool.filter(function (r) { return !ql || (r.name + ' ' + r.lastName).toLowerCase().indexOf(ql) > -1; });
-      if (!items.length) { list.innerHTML = '<div class="ra-hint" style="padding:10px 4px">' + (pool.length ? 'No match.' : 'Every athlete is already on this team.') + '</div>'; return; }
-      list.innerHTML = items.map(function (r) { var tm = teamsOf(r.athleteId).map(function (id) { var x = teamById(id); return x ? x.name.replace(/^Godspeed /, '') : ''; }).filter(Boolean).join(', '); return '<button type="button" data-id="' + esc(r.athleteId) + '"><b>' + esc(r.name + (r.lastName ? ' ' + r.lastName : '')) + '</b>' + (r.status !== 'active' ? ' <span class="ra-hint">' + esc(r.status) + '</span>' : '') + '<small>' + esc(tm || 'no team') + '</small></button>'; }).join('');
+      if (!items.length) { list.innerHTML = '<div class="ra-hint" style="padding:10px 4px">' + (pool.length ? 'No match.' : 'No other players in the system yet. Use New player.') + '</div>'; return; }
+      list.innerHTML = items.map(function (r) { var tm = teamsOf(r.athleteId).map(function (id) { var x = teamById(id); return x ? x.name.replace(/^Godspeed /, '') : ''; }).filter(Boolean).join(', '); return '<button type="button" data-id="' + esc(r.athleteId) + '"><b>' + esc(r.name + (r.lastName ? ' ' + r.lastName : '')) + '</b>' + (r.status && r.status !== 'active' ? ' <span class="ra-hint">' + esc(r.status) + '</span>' : '') + '<small>' + esc(tm || 'no team') + '</small></button>'; }).join('');
       list.querySelectorAll('button').forEach(function (btn) { btn.onclick = async function () {
         if (state.busy) return; state.busy = true; btn.disabled = true;
         try { var c = client(); var r = await c.rpc('admin_set_roster_membership', { p_team_id: teamId, p_athlete_id: btn.getAttribute('data-id'), p_active: true }); if (r.error) throw r.error; close(); toast('Added to ' + t.name + '.'); await refresh(teamId); }
@@ -176,7 +177,62 @@
         state.busy = false;
       }; });
     }
-    paint(''); el('ra-q').addEventListener('input', function () { paint(el('ra-q').value); });
+    el('ra-q').addEventListener('input', function () { paint(el('ra-q').value); });
+    // Load the full athlete pool from the database (a director can read all athletes),
+    // not just the roster rows already loaded in memory. Falls back to loaded data on error.
+    (async function () {
+      var c = client();
+      if (c) {
+        try {
+          var r = await c.from('athletes').select('id,first_name,last_name,enrollment_status').order('first_name');
+          if (r.error) throw r.error;
+          pool = (r.data || []).filter(function (a) { return !on[a.id]; }).map(function (a) { return { athleteId: a.id, name: a.first_name || '', lastName: a.last_name || '', status: a.enrollment_status }; });
+          paint(el('ra-q') ? el('ra-q').value : '');
+          return;
+        } catch (e) { /* fall through to loaded data */ }
+      }
+      var seen = {}; pool = [];
+      (db().roster || []).forEach(function (rr) { if (seen[rr.athleteId] || on[rr.athleteId]) return; seen[rr.athleteId] = 1; pool.push(rr); });
+      pool.sort(function (a, b) { return (a.name || '').localeCompare(b.name || ''); });
+      paint(el('ra-q') ? el('ra-q').value : '');
+    })();
+  }
+
+  // ---------- create a brand-new player, then add to this team ----------
+  function openCreate(teamId) {
+    var t = teamById(teamId); if (!t) return;
+    var gradeSel = '<select name="grade"><option value="">Not set</option>' + GRADES.map(function (g) { return '<option value="' + g + '">' + gradeOptionLabel(g) + '</option>'; }).join('') + '</select>';
+    var b = modal(
+      '<h3>New player on ' + esc(t.name) + '</h3><p class="ra-sub">Creates the player in Godspeed and adds them to this team. You can edit the rest anytime.</p>' +
+      '<form id="ra-create"><div class="ra-grid">' +
+      '<div class="ra-field"><label>First name</label><input name="first_name" required maxlength="60" autocomplete="off"></div>' +
+      '<div class="ra-field"><label>Last name</label><input name="last_name" maxlength="60" autocomplete="off"></div>' +
+      '<div class="ra-field"><label>Jersey number</label><input name="jersey_number" type="number" min="0" max="99" inputmode="numeric"></div>' +
+      '<div class="ra-field"><label>Grade</label>' + gradeSel + '</div>' +
+      '<div class="ra-field"><label>Date of birth</label><input name="date_of_birth" type="date"><span class="ra-hint" id="ra-age">Optional</span></div>' +
+      '<div class="ra-field"><label>Status</label><select name="enrollment_status"><option value="active" selected>Active</option><option value="pending">Pending</option><option value="inactive">Inactive</option></select></div>' +
+      '</div><div class="ra-err" id="ra-err"></div>' +
+      '<div class="ra-actions"><button type="button" class="ra-btn ghost" id="ra-cancel">Cancel</button><button type="submit" class="ra-btn primary" id="ra-save">Create and add</button></div></form>');
+    b.querySelector('#ra-cancel').onclick = close;
+    var dobIn = b.querySelector('[name=date_of_birth]');
+    dobIn.addEventListener('input', function () { var ag = ageFrom(dobIn.value); el('ra-age').textContent = ag === '' ? 'Optional' : 'Age ' + ag; });
+    b.querySelector('#ra-create').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      if (state.busy) return;
+      var f = e.target; var err = el('ra-err'); err.classList.remove('on');
+      var patch = { first_name: f.first_name.value.trim(), last_name: f.last_name.value.trim(), jersey_number: f.jersey_number.value === '' ? null : f.jersey_number.value, grade: f.grade.value, date_of_birth: f.date_of_birth.value || null, enrollment_status: f.enrollment_status.value };
+      if (!patch.first_name) { err.textContent = 'First name is required.'; err.classList.add('on'); return; }
+      var c = client(); if (!c) { err.textContent = 'Sign-in service not loaded.'; err.classList.add('on'); return; }
+      state.busy = true; el('ra-save').disabled = true; el('ra-save').textContent = 'Creating';
+      try {
+        var r = await c.rpc('admin_create_athlete', { p_patch: patch }); if (r.error) throw r.error;
+        var newId = r.data && r.data.id; if (!newId) throw new Error('Create did not return an id.');
+        var rm = await c.rpc('admin_set_roster_membership', { p_team_id: teamId, p_athlete_id: newId, p_active: true }); if (rm.error) throw rm.error;
+        close(); toast('Added ' + patch.first_name + ' to ' + t.name + '.');
+        await refresh(teamId);
+      } catch (ex) { err.textContent = errText(ex); err.classList.add('on'); }
+      state.busy = false; var sb = el('ra-save'); if (sb) { sb.disabled = false; sb.textContent = 'Create and add'; }
+    });
   }
 
   // ---------- remove from team (from the edit form the team checkbox does it; this is the quick path) ----------
@@ -260,6 +316,6 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     wrap();
-    window.CoachRosterAdmin = { decorate: decorate, openEdit: openEdit, openAdd: openAdd, openDelete: openDelete, checkAdmin: checkAdmin };
+    window.CoachRosterAdmin = { decorate: decorate, openEdit: openEdit, openAdd: openAdd, openCreate: openCreate, openDelete: openDelete, checkAdmin: checkAdmin };
   });
 })();
