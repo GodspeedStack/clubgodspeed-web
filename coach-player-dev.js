@@ -61,7 +61,7 @@
     var c = client(); if (!c) throw new Error('no_client');
     var s = await c.auth.getSession();
     if (!s || !s.data || !s.data.session) throw new Error('no_session');
-    var uid = s.data.session.user.id;
+    var uid = s.data.session.user.id; state.uid = uid;
     var r = await Promise.all([
       c.from('development_config').select('key,value'),
       c.from('player_development').select('athlete_id,skills,shoot_sub,post_sub,strength_bench,focus,updated_at'),
@@ -84,7 +84,110 @@
     state.myTeams = (r[3].data && r[3].data.team_ids) || [];
     state.isAdmin = !!(r[4] && r[4].data === true);
   }
-  function raw() { return window.CoachHome && window.CoachHome.state && window.CoachHome.state.raw; }
+  // ---------- offline: snapshot cache, write queue, sync ----------
+  // The board keeps a copy of what it last saw on this device and queues every
+  // rating or focus change made without a connection. Nothing is dropped: the
+  // queue drains, in order, the moment the browser is back online. Session and
+  // RLS still decide on the server; the cache only holds what this coach was
+  // already allowed to read.
+  var CACHE_KEY = 'gs_devboard_cache', QUEUE_KEY = 'gs_devboard_queue';
+  var sync = { online: typeof navigator === 'undefined' || navigator.onLine !== false, fromCache: false, cachedAt: null, flushing: false, lastError: null };
+  function readJson(k) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
+  function writeJson(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+  function isNetworkError(e) { var m = String((e && e.message) || e || '').toLowerCase(); return !sync.online || /fetch|network|failed to|load failed|timeout|abort|offline/.test(m); }
+  function slimRoster(rw) {
+    return { teams: rw.teams.map(function (t) { return { id: t.id, name: t.name, age_group: t.age_group || null }; }),
+      rosters: rw.rosters.filter(function (m) { return !m.left_at; }).map(function (m) { return { team_id: m.team_id, athlete_id: m.athlete_id, role: m.role || null, left_at: null }; }),
+      athletes: rw.athletes.map(function (a) { return { id: a.id, first_name: a.first_name, last_name: a.last_name || '', jersey_number: a.jersey_number, grade: a.grade || '', enrollment_status: a.enrollment_status, age: ageOf(a) }; }) };
+  }
+  function snapshot() {
+    var rw = liveRaw(); if (!rw) return;
+    writeJson(CACHE_KEY, { at: new Date().toISOString(), uid: state.uid || null, cfg: state.cfg, dev: state.dev, bank: state.bank, shape: state.shape, powerups: state.powerups, myTeams: state.myTeams, isAdmin: state.isAdmin, roster: slimRoster(rw) });
+  }
+  function restoreCache() {
+    var c = readJson(CACHE_KEY); if (!c || !c.roster) return false;
+    state.cfg = Object.assign({}, DEFAULT_CFG, c.cfg || {}); state.dev = c.dev || {}; state.bank = c.bank || []; state.shape = c.shape; state.powerups = c.powerups; state.myTeams = c.myTeams || []; state.isAdmin = !!c.isAdmin;
+    state.cachedRoster = c.roster; sync.fromCache = true; sync.cachedAt = c.at; state.uid = state.uid || c.uid || null;
+    replayQueue();
+    return true;
+  }
+  function queue() { return readJson(QUEUE_KEY) || []; }
+  function setQueue(q) { writeJson(QUEUE_KEY, q); }
+  function enqueue(op) {
+    var q = queue().filter(function (x) { return !(x.rpc === op.rpc && x.args.p_athlete_id === op.args.p_athlete_id && (x.args.p_skill || x.args.p_field) === (op.args.p_skill || op.args.p_field)); });
+    op.id = Date.now() + '-' + Math.random().toString(36).slice(2, 8); op.at = new Date().toISOString(); op.uid = state.uid || null;
+    q.push(op); setQueue(q); paintStatus();
+  }
+  // Re-apply queued changes on top of a cached snapshot so the board shows what the coach did.
+  function replayQueue() {
+    queue().forEach(function (op) { var a = op.args; var d = state.dev[a.p_athlete_id] = state.dev[a.p_athlete_id] || { athlete_id: a.p_athlete_id, skills: {} }; if (op.rpc === 'set_player_skill') { d.skills = d.skills || {}; d.skills[a.p_skill] = { p: a.p_phase, r: a.p_rating == null ? 0 : a.p_rating }; } else if (a.p_field === 'focus') d.focus = a.p_value; });
+  }
+  async function flush() {
+    if (sync.flushing || !sync.online) return;
+    var q = queue(); if (!q.length) return;
+    var c = client(); if (!c) return;
+    sync.flushing = true; sync.lastError = null; paintStatus();
+    var me = null; try { var ss = await c.auth.getSession(); me = ss && ss.data && ss.data.session ? ss.data.session.user.id : null; } catch (e) { me = null; }
+    if (!me) { sync.lastError = 'Sign in again to send ' + q.length + ' saved change' + (q.length > 1 ? 's' : '') + '.'; sync.flushing = false; paintStatus(); return; }
+    var mine = q.filter(function (op) { return !op.uid || op.uid === me; }); var others = q.filter(function (op) { return op.uid && op.uid !== me; });
+    while (mine.length) {
+      var op = mine[0];
+      try {
+        var r = await c.rpc(op.rpc, op.args);
+        if (r.error) throw r.error;
+        mine.shift(); q = others.concat(mine); setQueue(q);
+      } catch (e) {
+        if (isNetworkError(e)) { sync.online = false; break; }              // still no connection: keep everything
+        if (/jwt|token|sign in|not authenticated|401/i.test(String(e.message))) { sync.lastError = 'Sign in again to send ' + q.length + ' saved change' + (q.length > 1 ? 's' : '') + '.'; break; }
+        mine.shift(); q = others.concat(mine); setQueue(q); toast('One change was refused by the server: ' + (e.message || 'error')); // a rule said no (for example, not your team): drop it, keep going
+      }
+    }
+    sync.flushing = false;
+    if (others.length) sync.lastError = others.length + ' saved change' + (others.length > 1 ? 's' : '') + ' belong to another sign-in on this device and will send when that coach signs in.';
+    if (!mine.length && sync.online && !others.length) { snapshot(); toast('Everything is synced.'); }
+    paintStatus();
+  }
+  // One write path for the whole board: apply on screen first, send now if we can, queue if we cannot.
+  async function commit(rpcName, args) {
+    var c = client();
+    if (sync.online && c && !queue().length) {
+      try { var r = await c.rpc(rpcName, args); if (r.error) throw r.error; snapshot(); return { ok: true, data: r.data }; }
+      catch (e) { if (!isNetworkError(e)) return { ok: false, error: e }; sync.online = false; }
+    }
+    enqueue({ rpc: rpcName, args: args });
+    if (sync.online) setTimeout(flush, 50);
+    return { ok: true, queued: true };
+  }
+  function statusHtml() {
+    var n = queue().length;
+    if (!sync.online) return '<div class="db-status off"><i></i>Offline. Everything you enter is saved on this device' + (n ? ' (' + n + ' change' + (n > 1 ? 's' : '') + ' waiting)' : '') + ' and sends itself when you are back online.' + (sync.cachedAt ? ' Showing the copy from ' + esc(new Date(sync.cachedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })) + '.' : '') + '</div>';
+    if (sync.flushing) return '<div class="db-status on"><i></i>Sending ' + n + ' saved change' + (n > 1 ? 's' : '') + '...</div>';
+    if (sync.lastError) return '<div class="db-status off"><i></i>' + esc(sync.lastError) + '</div>';
+    if (n) return '<div class="db-status on"><i></i>' + n + ' change' + (n > 1 ? 's' : '') + ' waiting to send. <button type="button" class="db-link" id="db-sync-now">Send now</button></div>';
+    return '';
+  }
+  function paintStatus() { var v = el('devboard-view'); if (!v) return; var s = v.querySelector('#db-status'); if (!s) return; s.innerHTML = statusHtml(); var b = s.querySelector('#db-sync-now'); if (b) b.onclick = flush; }
+  function goOnline() { sync.online = true; sync.lastError = null; paintStatus(); flush(); if (state.loaded && sync.fromCache) { if (window.CoachHome && window.CoachHome.reload) { try { window.CoachHome.reload(); } catch (e) { /* home decides */ } } refreshFromServer(); } }
+  function goOffline() { sync.online = false; paintStatus(); }
+  async function refreshFromServer() {
+    try { await loadAll(); var tries = 0; while (!liveRaw() && tries++ < 20) { await new Promise(function (r) { setTimeout(r, 250); }); } if (liveRaw()) { state.cachedRoster = null; sync.fromCache = false; } replayQueue(); snapshot(); paint(); } catch (e) { /* stay on the cache */ }
+  }
+  // Offline entry: no network means no session check, so open the portal from what this device already knows.
+  function offlineEntry(probe) {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) sync.online = false;
+    if (sync.online && !probe) return;
+    var role = localStorage.getItem('gba_user_role');
+    if (localStorage.getItem('isCoachLoggedIn') !== 'true' || ['coach', 'director', 'founder'].indexOf(role) < 0 || !readJson(CACHE_KEY)) return;
+    var d = el('coach-dashboard'); if (d && d.style.display && d.style.display !== 'none') return;
+    if (typeof window.enterPortal === 'function') { try { window.enterPortal(role); } catch (e) { /* the portal decides */ } }
+  }
+  function registerSw() {
+    if (!('serviceWorker' in navigator) || location.protocol !== 'https:') return;
+    try { navigator.serviceWorker.register('/coach-sw.js?v=1', { scope: '/coach-portal.html' }).catch(function (e) { console.warn('[devboard] offline worker not registered:', e.message); }); } catch (e) { /* older browser */ }
+  }
+
+  function liveRaw() { return window.CoachHome && window.CoachHome.state && window.CoachHome.state.raw; }
+  function raw() { return liveRaw() || state.cachedRoster || null; }
   function teams() { var rw = raw(); return rw ? rw.teams.slice().sort(function (a, b) { return a.name.localeCompare(b.name); }) : []; }
   function playersOf(teamId) {
     var rw = raw(); if (!rw) return [];
@@ -98,6 +201,7 @@
 
   // ---------- model ----------
   function ageOf(a) {
+    if (typeof a.age === 'number') return a.age;
     if (a.date_of_birth) { var d = new Date(a.date_of_birth + 'T12:00:00'); if (!isNaN(d)) { var n = new Date(); var y = n.getFullYear() - d.getFullYear(); if (n < new Date(n.getFullYear(), d.getMonth(), d.getDate())) y--; return y; } }
     var g = parseInt(String(a.grade || '').replace(/\D/g, ''), 10);
     return g ? g + 6 : 11;
@@ -266,6 +370,11 @@
 #devboard-view .db-chip{display:inline-block;font-size:11px;font-weight:600;background:#F2F2F7;color:#3A3A3C;border-radius:999px;padding:2px 8px;margin:1px 3px 1px 0}\
 #devboard-view .db-chip.flag{background:#FFF1E8;color:#C2410C}\
 #devboard-view .db-note{font-size:12px;color:#A1A1A6;margin-top:14px}\
+#devboard-view .db-status{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:500;border-radius:12px;padding:10px 14px;margin:0 0 14px;line-height:1.45}\
+#devboard-view .db-status i{width:9px;height:9px;border-radius:50%;flex:0 0 9px}\
+#devboard-view .db-status.off{background:#FFF1E8;color:#9A3412}#devboard-view .db-status.off i{background:#FF5722}\
+#devboard-view .db-status.on{background:#EAF3FF;color:#0A3F7A}#devboard-view .db-status.on i{background:#0071E3}\
+#devboard-view .db-status .db-link{margin-left:auto;white-space:nowrap}\
 #db-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.36);z-index:400;display:flex;align-items:center;justify-content:center;padding:16px}\
 #db-backdrop .ra-modal{background:#fff;border-radius:18px;width:min(520px,100%);max-height:92vh;overflow:auto;box-shadow:0 24px 80px rgba(0,0,0,.28);padding:22px 24px}\
 #db-backdrop .ra-modal h3{margin:0 0 2px;font-size:18px;font-weight:700;letter-spacing:-.01em;text-transform:none}\
@@ -384,15 +493,15 @@
     var sf = b.querySelector('#db-save-focus');
     if (sf) sf.onclick = async function () {
       var txt = b.querySelector('#db-focus').value.trim(); sf.disabled = true;
-      try { var c = client(); var r = await c.rpc('set_player_dev_field', { p_athlete_id: a.id, p_field: 'focus', p_key: null, p_value: txt || null }); if (r.error) throw r.error; (state.dev[a.id] = state.dev[a.id] || { athlete_id: a.id, skills: {} }).focus = txt || null; toast('Focus saved.'); paint(); }
+      try { var r = await commit('set_player_dev_field', { p_athlete_id: a.id, p_field: 'focus', p_key: null, p_value: txt || null }); if (!r.ok) throw r.error; (state.dev[a.id] = state.dev[a.id] || { athlete_id: a.id, skills: {} }).focus = txt || null; toast(r.queued ? 'Focus saved on this device. It sends when you are online.' : 'Focus saved.'); paint(); }
       catch (e) { err(e.message || 'Could not save.'); }
       sf.disabled = false;
     };
   }
   async function save(a, sk, p, r, row, err) {
     try {
-      var c = client(); var res = await c.rpc('set_player_skill', { p_athlete_id: a.id, p_skill: sk, p_phase: p, p_rating: r }); if (res.error) throw res.error;
-      var d = state.dev[a.id] = state.dev[a.id] || { athlete_id: a.id, skills: {} }; d.skills = d.skills || {}; d.skills[sk] = res.data.value;
+      var res = await commit('set_player_skill', { p_athlete_id: a.id, p_skill: sk, p_phase: p, p_rating: r }); if (!res.ok) throw res.error;
+      var d = state.dev[a.id] = state.dev[a.id] || { athlete_id: a.id, skills: {} }; d.skills = d.skills || {}; d.skills[sk] = res.data ? res.data.value : { p: p, r: r };
       var fresh = document.createElement('div'); fresh.innerHTML = rateRow(a, sk, true); var nr = fresh.firstChild; row.parentNode.replaceChild(nr, row);
       rebindRow(a, sk, nr, err); err('');
       paint();
@@ -510,12 +619,13 @@
     if (!state.teamId) { var ts = teams().filter(function (t) { return playersOf(t.id).length; }); var mine = ts.filter(function (t) { return state.myTeams.indexOf(t.id) >= 0; }); state.teamId = (mine[0] || ts[0] || {}).id || null; }
     var tabs = '<div class="db-tabs" role="tablist">' + TABS.filter(function (t) { return t[0] !== 'bank' || state.isAdmin; }).map(function (t) { return '<button type="button" role="tab" data-tab="' + t[0] + '"' + (t[0] === state.tab ? ' class="active"' : '') + '>' + t[1] + '</button>'; }).join('') + '</div>';
     var body = state.tab === 'team' ? teamHtml() : state.tab === 'plan' ? planHtml() : state.tab === 'bank' && state.isAdmin ? bankHtml() : playersHtml();
-    return tabs + body;
+    return tabs + '<div id="db-status">' + statusHtml() + '</div>' + body;
   }
   function paint() {
     var v = el('devboard-view'); if (!v) return;
     var focusQ = document.activeElement && document.activeElement.classList.contains('db-search'); var pos = focusQ ? document.activeElement.selectionStart : 0;
     v.innerHTML = html();
+    var sn = v.querySelector('#db-sync-now'); if (sn) sn.onclick = flush;
     v.querySelectorAll('.db-tabs button').forEach(function (b) { b.onclick = function () { state.tab = b.getAttribute('data-tab'); try { localStorage.setItem('gs_devboard_tab', state.tab); } catch (e) { /* optional */ } paint(); setSub(); }; });
     v.querySelectorAll('.db-teams button').forEach(function (b) { b.onclick = function () { state.teamId = b.getAttribute('data-team'); paint(); }; });
     var q = v.querySelector('.db-search'); if (q) { q.oninput = function () { state.q = q.value; paint(); }; if (focusQ) { q.focus(); try { q.setSelectionRange(pos, pos); } catch (e) { /* fine */ } } }
@@ -544,11 +654,17 @@
   async function load() {
     if (state.loading) return; state.loading = true; state.error = null; paint();
     try {
+      if (!sync.online) throw new Error('offline');
       await loadAll();
-      var tries = 0; while (!raw() && tries++ < 40) { await new Promise(function (r) { setTimeout(r, 250); }); }
-      if (!raw()) throw new Error('Rosters did not load. Open Home, then come back.');
+      var tries = 0; while (!liveRaw() && tries++ < 40) { await new Promise(function (r) { setTimeout(r, 250); }); }
+      if (!liveRaw()) throw new Error('Rosters did not load. Open Home, then come back.');
+      state.cachedRoster = null; sync.fromCache = false; replayQueue(); snapshot();
       state.loaded = true;
-    } catch (e) { state.error = e.message === 'no_session' ? 'Sign in with your email to use the development board.' : e.message === 'no_client' ? 'Sign-in service not loaded.' : e.message; }
+      flush();
+    } catch (e) {
+      if ((e.message === 'offline' || isNetworkError(e)) && restoreCache()) { sync.online = false; state.loaded = true; }
+      else state.error = e.message === 'no_session' ? 'Sign in with your email to use the development board.' : e.message === 'no_client' ? 'Sign-in service not loaded.' : e.message === 'offline' ? 'No connection, and no saved copy on this device yet. Open the board once while online and it will work offline after that.' : e.message;
+    }
     state.loading = false; paint(); setSub();
   }
   function open(tab) {
@@ -588,6 +704,12 @@
       if (d && d.style.display && d.style.display !== 'none' && mountNav()) clearInterval(timer);
       if (++tries > 120) clearInterval(timer);
     }, 700);
-    window.CoachDevBoard = { open: open, mountNav: mountNav, reload: function () { state.loaded = false; return load(); }, state: state };
+    window.addEventListener('online', goOnline); window.addEventListener('offline', goOffline);
+    registerSw();
+    setTimeout(offlineEntry, 1800);
+    // Captive wifi or a dead link can report "online" while nothing gets through: probe once, then enter from the cache.
+    setTimeout(function () { var d = el('coach-dashboard'); if (d && d.style.display && d.style.display !== 'none') return; if (!readJson(CACHE_KEY)) return; fetch('/coach-portal.html?probe=' + Date.now(), { method: 'HEAD', cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('probe'); }).catch(function () { sync.online = false; offlineEntry(true); }); }, 6000);
+    // Leaving with changes waiting: the browser keeps them in localStorage; nothing to do but say so.
+    window.CoachDevBoard = { open: open, mountNav: mountNav, reload: function () { state.loaded = false; return load(); }, state: state, sync: sync, flush: flush, queue: queue };
   });
 })();
