@@ -1,9 +1,12 @@
 /**
  * GODSPEED BASKETBALL. Development board, inside the Coach Portal.
  *
- * The 5-Year Vision, running on live data: every player has a current read
- * (11 skills, four phases, age targets), the two or three skills holding him
- * back, and the Godspeed drills that fix them. The team has its top needs, the
+ * The 5-Year Vision, running on live data. A coach rates what he can see: 47
+ * sub-skills, 1 to 5 in the Godspeed tryout words (Poor, Weak, Some good
+ * actions, Consistent, Excellent), plus strength numbers scored against age
+ * norms. The 11 phases are derived from the subs, never clicked. The board
+ * names the three lowest, most important sub-skills for each player and hands
+ * the coach the Godspeed drill and the exact rep at his level. The team has its top needs, the
  * read of the week, and work groups for stations. Tuesday and Thursday are
  * generated from the seven blocks with power-ups and the finishing bridge
  * filled from the roster's needs. A coach never goes to find a drill.
@@ -52,9 +55,14 @@
     coachability: ['Say it back', 'Every kid names the one thing before we play it live. Eyes on the coach, then eyes up.']
   };
   // Finishing bridge candidates, by drill name pattern, in priority order.
-  var FINISH_RX = [/finish through contact/i, /two-foot power/i, /deceleration finish/i, /floater/i, /mikan/i, /rim protection/i];
 
-  var state = { loading: false, loaded: false, error: null, isAdmin: false, myTeams: [], cfg: DEFAULT_CFG, dev: {}, bank: [], shape: null, powerups: null, teamId: null, tab: 'players', q: '', swaps: {} };
+  var POSITIONS = ['Guard', 'Wing', 'Big', 'Utility'];
+  // Which skills a position leans on; a weak sub in one of these counts a little more.
+  var POS_SKILLS = { Guard: ['handles', 'shooting', 'vision', 'iq', 'offInstincts'], Wing: ['shooting', 'offInstincts', 'defense', 'vision', 'handles'], Big: ['postGame', 'defense', 'strength', 'defInstincts', 'shooting'], Utility: ['strength', 'stamina', 'defense', 'coachability'] };
+  // Category colors, same as the Command Center bank.
+  var TAGS = { 'Culture': '#0071e3', 'Toughness': '#d92d20', 'Bigs': '#7c3aed', 'Guards': '#0d9488', 'Passing/Reads': '#4f46e5', 'Individual': '#64748b', 'Conditioning': '#d97706', 'Strength': '#57534e' };
+  var TAG_ORDER = ['Culture', 'Toughness', 'Bigs', 'Guards', 'Passing/Reads', 'Individual', 'Conditioning', 'Strength'];
+  var state = { loading: false, loaded: false, error: null, isAdmin: false, myTeams: [], cfg: DEFAULT_CFG, dev: {}, bank: [], shape: null, powerups: null, teamId: null, tab: 'players', q: '', swaps: {}, bankQ: '', bankTag: 'All', expanded: {}, workout: null };
 
   // ---------- data ----------
   async function loadAll() {
@@ -64,8 +72,8 @@
     var uid = s.data.session.user.id; state.uid = uid;
     var r = await Promise.all([
       c.from('development_config').select('key,value'),
-      c.from('player_development').select('athlete_id,skills,shoot_sub,post_sub,strength_bench,focus,updated_at'),
-      c.from('program_content').select('slug,body').in('slug', ['drills-bank', 'planner-practice-shape', 'planner-powerups']),
+      c.from('player_development').select('athlete_id,skills,subs,position,strength_bench,focus,updated_at'),
+      c.from('program_content').select('slug,body').in('slug', ['drills-bank', 'planner-practice-shape', 'planner-powerups', 'planner-workout']),
       c.from('coach_profiles').select('team_ids').eq('user_id', uid).maybeSingle(),
       c.rpc('is_program_admin')
     ]);
@@ -80,6 +88,7 @@
       if (row.slug === 'drills-bank') state.bank = (row.body && row.body.drills) || [];
       if (row.slug === 'planner-practice-shape') state.shape = row.body;
       if (row.slug === 'planner-powerups') state.powerups = row.body;
+      if (row.slug === 'planner-workout') state.workout = row.body;
     });
     state.myTeams = (r[3].data && r[3].data.team_ids) || [];
     state.isAdmin = !!(r[4] && r[4].data === true);
@@ -102,11 +111,11 @@
   }
   function snapshot() {
     var rw = liveRaw(); if (!rw) return;
-    writeJson(CACHE_KEY, { at: new Date().toISOString(), uid: state.uid || null, cfg: state.cfg, dev: state.dev, bank: state.bank, shape: state.shape, powerups: state.powerups, myTeams: state.myTeams, isAdmin: state.isAdmin, roster: slimRoster(rw) });
+    writeJson(CACHE_KEY, { at: new Date().toISOString(), uid: state.uid || null, cfg: state.cfg, dev: state.dev, bank: state.bank, shape: state.shape, powerups: state.powerups, workout: state.workout, myTeams: state.myTeams, isAdmin: state.isAdmin, roster: slimRoster(rw) });
   }
   function restoreCache() {
     var c = readJson(CACHE_KEY); if (!c || !c.roster) return false;
-    state.cfg = Object.assign({}, DEFAULT_CFG, c.cfg || {}); state.dev = c.dev || {}; state.bank = c.bank || []; state.shape = c.shape; state.powerups = c.powerups; state.myTeams = c.myTeams || []; state.isAdmin = !!c.isAdmin;
+    state.cfg = Object.assign({}, DEFAULT_CFG, c.cfg || {}); state.dev = c.dev || {}; state.bank = c.bank || []; state.shape = c.shape; state.powerups = c.powerups; state.workout = c.workout || null; state.myTeams = c.myTeams || []; state.isAdmin = !!c.isAdmin;
     state.cachedRoster = c.roster; sync.fromCache = true; sync.cachedAt = c.at; state.uid = state.uid || c.uid || null;
     replayQueue();
     return true;
@@ -114,13 +123,20 @@
   function queue() { return readJson(QUEUE_KEY) || []; }
   function setQueue(q) { writeJson(QUEUE_KEY, q); }
   function enqueue(op) {
-    var q = queue().filter(function (x) { return !(x.rpc === op.rpc && x.args.p_athlete_id === op.args.p_athlete_id && (x.args.p_skill || x.args.p_field) === (op.args.p_skill || op.args.p_field)); });
+    var key = function (x) { return x.rpc + '|' + x.args.p_athlete_id + '|' + (x.args.p_sub || x.args.p_skill || x.args.p_field || x.args.p_key || ''); };
+    var q = queue().filter(function (x) { return key(x) !== key(op); });
     op.id = Date.now() + '-' + Math.random().toString(36).slice(2, 8); op.at = new Date().toISOString(); op.uid = state.uid || null;
     q.push(op); setQueue(q); paintStatus();
   }
   // Re-apply queued changes on top of a cached snapshot so the board shows what the coach did.
   function replayQueue() {
-    queue().forEach(function (op) { var a = op.args; var d = state.dev[a.p_athlete_id] = state.dev[a.p_athlete_id] || { athlete_id: a.p_athlete_id, skills: {} }; if (op.rpc === 'set_player_skill') { d.skills = d.skills || {}; d.skills[a.p_skill] = { p: a.p_phase, r: a.p_rating == null ? 0 : a.p_rating }; } else if (a.p_field === 'focus') d.focus = a.p_value; });
+    queue().forEach(function (op) {
+      var a = op.args; var d = state.dev[a.p_athlete_id] = state.dev[a.p_athlete_id] || { athlete_id: a.p_athlete_id, skills: {}, subs: {} };
+      if (op.rpc === 'set_player_sub') { d.subs = d.subs || {}; if (a.p_score > 0) d.subs[a.p_sub] = a.p_score; else delete d.subs[a.p_sub]; d.skills = deriveSkills(d.subs); }
+      else if (op.rpc === 'set_player_position') d.position = a.p_position;
+      else if (op.rpc === 'set_player_dev_field' && a.p_field === 'focus') d.focus = a.p_value;
+      else if (op.rpc === 'set_player_dev_field' && a.p_field === 'strength_bench') { d.strength_bench = d.strength_bench || {}; d.strength_bench[a.p_key] = a.p_value; }
+    });
   }
   async function flush() {
     if (sync.flushing || !sync.online) return;
@@ -207,45 +223,92 @@
     return g ? g + 6 : 11;
   }
   function targetsFor(age) { var t = state.cfg.age_targets || {}; var k = Math.min(14, Math.max(9, age)); return t[String(k)] || t[String(14)] || {}; }
-  function skillOf(a, sk) { var d = state.dev[a.id]; var v = d && d.skills && d.skills[sk]; return v && typeof v === 'object' ? { p: +v.p || 0, r: +v.r || 0 } : { p: 0, r: 0 }; }
-  function started(a) { return state.cfg.skills.some(function (sk) { return skillOf(a, sk).p > 0; }); }
-  function track(a, sk) { var t = targetsFor(ageOf(a))[sk] || 0; var p = skillOf(a, sk).p; return p > t ? 'ahead' : p === t ? 'on' : 'behind'; }
-  function behindCount(a) { var age = ageOf(a); return state.cfg.skills.filter(function (sk) { return skillOf(a, sk).p > 0 && track(a, sk) === 'behind' && (targetsFor(age)[sk] || 0) > 0; }).length; }
-  // The needs: skills behind the age target first (biggest gap first), then the lowest phase and rating.
-  // Coachability is culture, not a station: it never drives a drill.
-  var DRILL_SKILLS = function () { return state.cfg.skills.filter(function (sk) { return sk !== 'coachability'; }); };
-  function needsOf(a) {
-    var tg = targetsFor(ageOf(a));
-    var rows = DRILL_SKILLS().map(function (sk) { var s = skillOf(a, sk); return { skill: sk, p: s.p, r: s.r, target: tg[sk] || 0, gap: Math.max(0, (tg[sk] || 0) - s.p) }; });
-    var rated = rows.filter(function (x) { return x.p > 0; });
-    if (rated.length) rows = rated; // only what the coach has actually rated; unrated skills are listed separately
-    rows.sort(function (x, y) { return y.gap - x.gap || x.p - y.p || x.r - y.r; });
-    return rows.slice(0, 3);
-  }
-  function unrated(a) { return state.cfg.skills.filter(function (sk) { return skillOf(a, sk).p === 0; }); }
-  function prereqWarnings(a) {
-    var out = []; var pr = state.cfg.prereqs || {};
-    Object.keys(pr).forEach(function (sk) { var rule = pr[sk]; if (skillOf(a, sk).p >= 2 && skillOf(a, rule.need).p < rule.needPhase) out.push(rule.msg); });
+  function subsCfg() { return state.cfg.subskills || {}; }
+  function skillOrder() { var c = subsCfg(); var o = (state.cfg.skills || []).filter(function (k) { return c[k]; }); Object.keys(c).forEach(function (k) { if (o.indexOf(k) < 0) o.push(k); }); return o; }
+  function subList(skill) { return subsCfg()[skill] || []; }
+  function subKeyLabel(key) { var p = key.split('.'); var s = subList(p[0]).filter(function (x) { return x.key === p[1]; })[0]; return s ? s.label : p[1]; }
+  function subHint(key) { var p = key.split('.'); var s = subList(p[0]).filter(function (x) { return x.key === p[1]; })[0]; return s ? (s.hint || '') : ''; }
+  function rubric(n) { return (state.cfg.rubric || ['Poor', 'Weak', 'Some good actions', 'Consistent', 'Excellent'])[n - 1] || ''; }
+  function devOf(a) { return state.dev[a.id] || { skills: {}, subs: {} }; }
+  function subScore(a, key) { var d = devOf(a); return +((d.subs || {})[key] || 0); }
+  // Same math as the database: phase from the average of the rated subs, Elite capped by the prerequisite.
+  function deriveSkills(subs) {
+    var out = {}; var bands = state.cfg.phase_bands || { foundationMax: 2.5, intermediateMax: 4 }; var pr = state.cfg.prereqs || {};
+    Object.keys(subsCfg()).forEach(function (sk) {
+      var vals = Object.keys(subs || {}).filter(function (k) { return k.split('.')[0] === sk && +subs[k] > 0; }).map(function (k) { return +subs[k]; });
+      var n = vals.length; var avg = n ? vals.reduce(function (x, y) { return x + y; }, 0) / n : 0;
+      var p = !n ? 0 : avg < bands.foundationMax ? 1 : avg < bands.intermediateMax ? 2 : 3;
+      out[sk] = { p: p, r: Math.round(avg * 2), a: Math.round(avg * 100) / 100, n: n };
+    });
+    Object.keys(pr).forEach(function (sk) { var rule = pr[sk]; if (out[sk] && out[sk].p === 3 && (!out[rule.need] || out[rule.need].p < (rule.needPhase || 2))) { out[sk].p = 2; out[sk].capped = true; } });
     return out;
   }
-  function visibleBank() { return state.isAdmin ? state.bank : state.bank.filter(function (d) { return !d.review; }); }
-  function drillsFor(skill, exclude, limit) {
-    var pool = visibleBank().filter(function (d) { return (d.skills || []).indexOf(skill) >= 0 && exclude.indexOf(d.name) < 0; });
-    pool.sort(function (x, y) { var xf = x.review ? 1 : 0, yf = y.review ? 1 : 0; var xi = x.skills.indexOf(skill), yi = y.skills.indexOf(skill); return xf - yf || xi - yi || (x.min || 0) - (y.min || 0); });
-    return pool.slice(0, limit || 2);
+  function skillOf(a, sk) { var d = devOf(a); var v = d.skills && d.skills[sk]; return v && typeof v === 'object' ? { p: +v.p || 0, r: +v.r || 0, a: +v.a || 0, n: +v.n || 0, capped: !!v.capped } : { p: 0, r: 0, a: 0, n: 0 }; }
+  function started(a) { var d = devOf(a); return Object.keys(d.subs || {}).some(function (k) { return +d.subs[k] > 0; }); }
+  function ratedCount(a) { var d = devOf(a); return Object.keys(d.subs || {}).filter(function (k) { return +d.subs[k] > 0; }).length; }
+  function totalSubs() { var n = 0; Object.keys(subsCfg()).forEach(function (sk) { n += subList(sk).length; }); return n; }
+  function track(a, sk) { var t = targetsFor(ageOf(a))[sk] || 0; var p = skillOf(a, sk).p; if (!p) return 'none'; return p > t ? 'ahead' : p === t ? 'on' : 'behind'; }
+  function behindCount(a) { return Object.keys(subsCfg()).filter(function (sk) { return track(a, sk) === 'behind' && (targetsFor(ageOf(a))[sk] || 0) > 0; }).length; }
+  function prereqWarnings(a) { var out = []; var pr = state.cfg.prereqs || {}; Object.keys(pr).forEach(function (sk) { if (skillOf(a, sk).capped) out.push(pr[sk].msg); }); return out; }
+  function overallPhase(a) { var ps = skillOrder().map(function (sk) { return skillOf(a, sk).p; }).filter(Boolean); if (!ps.length) return 'No rating'; return phaseName(Math.round(ps.reduce(function (x, y) { return x + y; }, 0) / ps.length)); }
+  function positionOf(a) { return devOf(a).position || ''; }
+  // Strength numbers become a 1 to 5 score against the age band.
+  function strengthScore(age, key, value) {
+    var norms = state.cfg.strength_norms; if (!norms || !norms[key] || value == null || value === '') return 0;
+    var bi = 0; (norms.bands || []).forEach(function (b, i) { if (age >= b[0] && age <= b[1]) bi = i; }); if (age > 14) bi = (norms.bands || []).length - 1;
+    var t = norms[key].t[bi] || norms[key].t[0]; var v = +value; var s = 1;
+    if (norms[key].lower) { t.forEach(function (th) { if (v <= th) s++; }); } else { t.forEach(function (th) { if (v >= th) s++; }); }
+    return Math.min(5, s);
   }
-  // Prescribed drills: two per need, no repeats, in need order.
+  // The needs: every rated sub-skill scored by how low it is, how far the skill is
+  // behind the age target, and whether his position leans on it. Top three, at most two per skill.
+  function needsOf(a) {
+    var pos = positionOf(a); var lean = POS_SKILLS[pos] || []; var tg = targetsFor(ageOf(a)); var d = devOf(a);
+    var rows = [];
+    skillOrder().forEach(function (sk) {
+      if (sk === 'coachability') return;
+      var st = skillOf(a, sk); var behind = st.p > 0 && st.p < (tg[sk] || 0);
+      subList(sk).forEach(function (s) {
+        var key = sk + '.' + s.key; var v = +((d.subs || {})[key] || 0); if (!v) return;
+        var w = (5 - v) * (behind ? 1.5 : 1) + (lean.indexOf(sk) >= 0 ? 0.5 : 0);
+        rows.push({ key: key, skill: sk, score: v, weight: w, behind: behind, phase: st.p || 1 });
+      });
+    });
+    rows.sort(function (x, y) { return y.weight - x.weight || x.score - y.score; });
+    var out = [], per = {};
+    rows.forEach(function (r) { if (out.length >= 3) return; if ((per[r.skill] || 0) >= 2) return; per[r.skill] = (per[r.skill] || 0) + 1; out.push(r); });
+    return out;
+  }
+  function unratedSkills(a) { return Object.keys(subsCfg()).filter(function (sk) { return skillOf(a, sk).n === 0; }); }
+  function visibleBank() { return state.isAdmin ? state.bank : state.bank.filter(function (d) { return !d.review || d.import; }); }
+  // The drill for a need: develops that sub (primary counts more), at his level, not flagged, not repeated.
+  function drillsForSub(key, phase, exclude, limit) {
+    var lvl = phase || 1;
+    var pool = visibleBank().filter(function (d) { return (d.develops || []).indexOf(key) >= 0 && exclude.indexOf(d.name) < 0; });
+    pool.forEach(function (d) {
+      var ix = (d.develops || []).indexOf(key); var s = ix === 0 ? 4 : ix === 1 ? 2.5 : ix === 2 ? 1.5 : 1;
+      var L = +d.level || 0; s += L === lvl ? 1.5 : L === 0 ? 1 : Math.abs(L - lvl) === 1 ? 0.5 : -1;
+      if (d.review && !d.import) s -= 5; if (d.import) s -= 0.4;
+      d.__s = s;
+    });
+    pool.sort(function (x, y) { return y.__s - x.__s || (x.min || 0) - (y.min || 0); });
+    return pool.slice(0, limit || 1);
+  }
+  // The rep to start with: the first sub-rep tagged at his level.
+  function repAt(d, phase) {
+    var reps = (d.coaching && d.coaching.drills) || []; var prog = d.progression || [1, 1, 2, 2, 3]; var lvl = phase || 1;
+    for (var i = 0; i < reps.length; i++) { if ((prog[i] || 1) === lvl) return { i: i, text: reps[i] }; }
+    return reps.length ? { i: 0, text: reps[0] } : null;
+  }
   function prescribe(a) {
     var used = [], out = [];
-    needsOf(a).forEach(function (n) { drillsFor(n.skill, used, 1).forEach(function (d) { used.push(d.name); out.push({ need: n.skill, drill: d }); }); });
+    needsOf(a).forEach(function (n) { var d = drillsForSub(n.key, n.phase, used, 1)[0]; if (!d) return; used.push(d.name); out.push({ need: n, drill: d, rep: repAt(d, n.phase) }); });
     return out;
   }
   function teamNeeds(players) {
-    var count = {}, phase = {};
-    players.forEach(function (a) { needsOf(a).forEach(function (n) { count[n.skill] = (count[n.skill] || 0) + 1; }); state.cfg.skills.forEach(function (sk) { phase[sk] = (phase[sk] || 0) + skillOf(a, sk).p; }); });
-    var rows = state.cfg.skills.map(function (sk) { return { skill: sk, players: count[sk] || 0, avg: players.length ? phase[sk] / players.length : 0 }; });
-    rows.sort(function (x, y) { return y.players - x.players || x.avg - y.avg; });
-    return rows;
+    var count = {}, sum = {};
+    players.forEach(function (a) { needsOf(a).forEach(function (n) { count[n.key] = (count[n.key] || 0) + 1; sum[n.key] = (sum[n.key] || 0) + n.score; }); });
+    return Object.keys(count).map(function (k) { return { key: k, skill: k.split('.')[0], players: count[k], avg: sum[k] / count[k] }; }).sort(function (x, y) { return y.players - x.players || x.avg - y.avg; });
   }
   function workGroups(players) {
     var g = {};
@@ -255,14 +318,16 @@
   function gaps(players) {
     var out = [];
     var un = players.filter(function (a) { return !started(a); }).length;
-    if (un) out.push(['red', un + (un > 1 ? ' players have' : ' player has') + ' no skills rated yet. Open Rate and click the dots.']);
+    if (un) out.push(['red', un + (un > 1 ? ' players have' : ' player has') + ' no rating yet. Open Rate; three minutes each.']);
     var behind = 0; players.forEach(function (a) { behind += behindCount(a); });
-    if (behind) out.push(['orange', behind + ' rated skill' + (behind > 1 ? 's' : '') + ' behind age targets across the roster.']);
-    var partial = players.filter(function (a) { return started(a) && unrated(a).length; }).length;
-    if (partial) out.push(['grey', partial + ' player' + (partial > 1 ? 's' : '') + ' only partly rated.']);
+    if (behind) out.push(['orange', behind + ' skill' + (behind > 1 ? 's' : '') + ' behind the age target across the roster.']);
     var pv = 0; players.forEach(function (a) { pv += prereqWarnings(a).length; });
-    if (pv) out.push(['red', pv + ' prerequisite warning' + (pv > 1 ? 's' : '') + '. A skill is ahead of the skill it depends on.']);
-    var nf = players.filter(function (a) { return !(state.dev[a.id] && state.dev[a.id].focus); }).length;
+    if (pv) out.push(['red', pv + ' skill' + (pv > 1 ? 's' : '') + ' held at Intermediate by a prerequisite.']);
+    var partial = players.filter(function (a) { return started(a) && unratedSkills(a).length; }).length;
+    if (partial) out.push(['grey', partial + ' player' + (partial > 1 ? 's' : '') + ' with skills not rated yet.']);
+    var np = players.filter(function (a) { return !positionOf(a); }).length;
+    if (np) out.push(['grey', np + ' player' + (np > 1 ? 's' : '') + ' without a position.']);
+    var nf = players.filter(function (a) { return !devOf(a).focus; }).length;
     if (nf && nf < players.length) out.push(['grey', nf + ' player' + (nf > 1 ? 's' : '') + ' without a coach focus sentence.']);
     if (!out.length && players.length) out.push(['green', 'Every player rated, nobody behind target, no warnings. Keep the reps honest.']);
     return out;
@@ -270,188 +335,249 @@
   function label(sk) { return (state.cfg.skill_labels || {})[sk] || sk; }
   function phaseName(p) { return (state.cfg.phases || DEFAULT_CFG.phases)[p] || ''; }
   function initials(a) { return ((a.first_name || '').charAt(0) + (a.last_name || '').charAt(0)).toUpperCase() || '?'; }
+  function shortName(a) { return (a.first_name + ' ' + (a.last_name || '').charAt(0)).trim(); }
   function gradeText(a) { var g = String(a.grade || '').replace(/\D/g, ''); return g ? (g === '1' ? '1st' : g === '2' ? '2nd' : g === '3' ? '3rd' : g + 'th') + ' grade' : ''; }
+  function tagColor(t) { return TAGS[t] || '#64748b'; }
+  function tagChip(t, extra) { return '<span class="db-tag' + (extra ? ' ' + extra : '') + '" style="--tc:' + tagColor(t) + '">' + esc(t || 'Drill') + '</span>'; }
 
-  // ---------- styles ----------
+
+  // ---------- styles (the Command Center look: white cards on a soft ground, blue pills, colored category chips) ----------
   var CSS = '\
+#devboard-view{--ac:#0071e3;--acd:#0060c0;--acs:#eaf3ff;--tx:#1d1d1f;--ts:#6e6e73;--tf:#a1a1a6;--bd:#d9d9de;--bl:#ececf0;--bg:#fff;--bgs:#f5f5f7;--bgt:#fafafc;--sh:0 1px 2px rgba(15,23,42,.04),0 6px 16px rgba(15,23,42,.06);--rc:16px;--rb:10px;--green:#159a52;--orange:#d9660a;--red:#d92d20}\
 #devboard-view .db-tabs{display:inline-flex;gap:2px;padding:3px;background:rgba(118,118,128,.12);border-radius:11px;margin:0 0 14px;max-width:100%;overflow-x:auto;scrollbar-width:none}\
 #devboard-view .db-tabs::-webkit-scrollbar{display:none}\
-#devboard-view .db-tabs button{border:none;background:transparent;color:#6E6E73;font-family:inherit;font-size:13px;font-weight:600;padding:6px 14px;border-radius:8px;cursor:pointer;min-height:32px;min-width:0;text-transform:none;white-space:nowrap}\
-#devboard-view .db-tabs button.active{background:#fff;color:#1D1D1F;box-shadow:0 1px 3px rgba(0,0,0,.1)}\
-#devboard-view .db-tabs button:focus-visible{outline:2px solid #0071E3;outline-offset:2px}\
+#devboard-view .db-tabs button{border:none;background:transparent;color:var(--ts);font-family:inherit;font-size:13px;font-weight:600;padding:6px 14px;border-radius:8px;cursor:pointer;min-height:32px;min-width:0;text-transform:none;white-space:nowrap}\
+#devboard-view .db-tabs button.active{background:#fff;color:var(--tx);box-shadow:0 1px 3px rgba(0,0,0,.1)}\
 #devboard-view .db-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px}\
 #devboard-view .db-teams{display:inline-flex;gap:6px;flex-wrap:wrap}\
-#devboard-view .db-teams button{font:inherit;font-size:13px;font-weight:600;padding:7px 14px;border-radius:999px;border:1px solid rgba(60,60,67,.14);background:#fff;color:#1D1D1F;cursor:pointer;min-height:0;min-width:0;text-transform:none}\
-#devboard-view .db-teams button.active{background:#1D1D1F;color:#fff;border-color:#1D1D1F}\
-#devboard-view .db-teams button .ro{font-weight:500;color:#A1A1A6;margin-left:4px}\
-#devboard-view .db-teams button.active .ro{color:#8E8E93}\
-#devboard-view .db-search{font:inherit;font-size:14px;padding:8px 12px;border:1px solid rgba(60,60,67,.18);border-radius:10px;min-height:0;width:200px;margin-left:auto}\
-#devboard-view .db-lead{background:#0A0A0A;color:#fff;border-radius:16px;padding:20px 24px;margin:0 0 18px;display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center}\
-#devboard-view .db-lead h4{margin:0 0 4px;font-size:17px;font-weight:700;color:#fff;text-transform:none;letter-spacing:-.01em}\
-#devboard-view .db-lead p{margin:0;font-size:13.5px;line-height:1.5;color:#C7C7CC;max-width:720px}\
-#devboard-view .db-lead .st{display:flex;gap:18px}\
-#devboard-view .db-lead .st div{text-align:center}\
-#devboard-view .db-lead .st b{display:block;font-size:24px;font-weight:700;color:#FF5722;line-height:1.1}\
-#devboard-view .db-lead .st small{font-size:11px;color:#8E8E93;text-transform:uppercase;letter-spacing:.05em;font-weight:600}\
-#devboard-view .db-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}\
-#devboard-view .db-card{background:#fff;border:1px solid rgba(60,60,67,.07);border-radius:16px;padding:18px 20px;box-shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.05);min-width:0;display:flex;flex-direction:column;gap:12px}\
-#devboard-view .db-head{display:flex;align-items:center;gap:12px}\
-#devboard-view .db-av{width:38px;height:38px;border-radius:50%;background:#EAF3FF;color:#0060C0;font-size:13px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:0 0 38px}\
-#devboard-view .db-head .nm{flex:1;min-width:0}\
-#devboard-view .db-head .nm b{display:block;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}\
-#devboard-view .db-head .nm small{font-size:12px;color:#6E6E73}\
-#devboard-view .db-pill{font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;white-space:nowrap}\
-#devboard-view .db-pill.on{background:#E8F8EE;color:#1B7F3B}#devboard-view .db-pill.behind{background:#FFF1E8;color:#C2410C}#devboard-view .db-pill.ahead{background:#EAF3FF;color:#0060C0}#devboard-view .db-pill.none{background:#F2F2F7;color:#6E6E73}\
-#devboard-view .db-sec{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#A1A1A6;margin:2px 0 6px}\
-#devboard-view .db-need{display:flex;align-items:center;gap:10px;font-size:13.5px;padding:6px 0;border-top:1px solid rgba(60,60,67,.07)}\
-#devboard-view .db-need:first-of-type{border-top:none}\
-#devboard-view .db-need b{font-weight:600;flex:1;min-width:0}\
-#devboard-view .db-dots{display:inline-flex;gap:4px}\
-#devboard-view .db-dot{width:10px;height:10px;border-radius:50%;background:#E5E5EA;display:inline-block}\
-#devboard-view .db-dot.f{background:#1D1D1F}#devboard-view .db-dot.t{box-shadow:0 0 0 2px #fff,0 0 0 3px #FF5722}\
-#devboard-view .db-need small{font-size:12px;color:#6E6E73;white-space:nowrap}\
-#devboard-view .db-drill{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;font-size:13px;padding:8px 0;border-top:1px solid rgba(60,60,67,.07)}\
-#devboard-view .db-drill:first-of-type{border-top:none}\
-#devboard-view .db-drill .k{width:22px;height:22px;border-radius:50%;background:#1D1D1F;color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-top:1px}\
-#devboard-view .db-drill b{display:block;font-weight:600;font-size:14px;color:#1D1D1F}\
-#devboard-view .db-drill span{color:#3A3A3C;line-height:1.45}\
-#devboard-view .db-drill .why{display:block;font-size:12px;color:#6E6E73;margin-top:2px}\
-#devboard-view .db-drill .mn{font-size:12px;font-weight:600;color:#6E6E73;white-space:nowrap}\
-#devboard-view .db-drill.flag b:after{content:"Flagged";font-size:10px;font-weight:700;color:#C2410C;background:#FFF1E8;border-radius:999px;padding:2px 7px;margin-left:8px;vertical-align:middle}\
-#devboard-view .db-focus{font-size:13.5px;color:#1D1D1F;background:#F5F5F7;border-radius:10px;padding:10px 12px;line-height:1.45}\
-#devboard-view .db-focus.empty{color:#A1A1A6;font-style:normal}\
-#devboard-view .db-warn{font-size:12.5px;color:#C2410C;background:#FFF1E8;border-radius:10px;padding:8px 12px}\
-#devboard-view .db-foot{display:flex;gap:14px;margin-top:auto;padding-top:4px}\
-#devboard-view .db-link{background:none;border:none;padding:0;font:inherit;font-size:13px;font-weight:600;color:#0071E3;cursor:pointer;min-height:0;min-width:0;text-transform:none}\
-#devboard-view .db-link:hover{opacity:.7}#devboard-view .db-link:disabled{color:#A1A1A6;cursor:default;opacity:1}\
-#devboard-view .db-empty{padding:40px 20px;text-align:center;color:#6E6E73;font-size:14px;background:#fff;border-radius:16px;border:1px dashed rgba(60,60,67,.2)}\
-#devboard-view .db-two{display:grid;grid-template-columns:1.2fr 1fr;gap:14px}\
-#devboard-view .db-panel{background:#fff;border:1px solid rgba(60,60,67,.07);border-radius:16px;padding:18px 20px;box-shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.05);min-width:0}\
-#devboard-view .db-panel h4{margin:0 0 2px;font-size:16px;font-weight:700;text-transform:none;letter-spacing:-.01em}\
-#devboard-view .db-panel .in{margin:0 0 12px;font-size:13px;color:#6E6E73}\
-#devboard-view .db-rank{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:9px 0;border-top:1px solid rgba(60,60,67,.07);font-size:14px}\
-#devboard-view .db-rank:first-of-type{border-top:none}\
-#devboard-view .db-rank .k{width:24px;height:24px;border-radius:50%;background:#1D1D1F;color:#fff;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}\
-#devboard-view .db-rank .bar{height:6px;border-radius:3px;background:#F2F2F7;margin-top:6px;overflow:hidden}\
-#devboard-view .db-rank .bar i{display:block;height:100%;background:#FF5722;border-radius:3px}\
-#devboard-view .db-rank small{color:#6E6E73;font-size:12px;white-space:nowrap}\
-#devboard-view .db-gap{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;padding:7px 0;line-height:1.45}\
-#devboard-view .db-gap i{width:9px;height:9px;border-radius:50%;flex:0 0 9px;margin-top:6px}\
-#devboard-view .db-gap.red i{background:#D70015}#devboard-view .db-gap.orange i{background:#FF9500}#devboard-view .db-gap.green i{background:#34C759}#devboard-view .db-gap.grey i{background:#C7C7CC}\
-#devboard-view .db-group{padding:10px 0;border-top:1px solid rgba(60,60,67,.07);font-size:13.5px}\
-#devboard-view .db-group:first-of-type{border-top:none}\
-#devboard-view .db-group b{display:block;font-weight:600;font-size:14px}\
-#devboard-view .db-group .who{color:#3A3A3C;margin-top:3px}\
-#devboard-view .db-group .cue{color:#6E6E73;font-size:12.5px;margin-top:2px}\
-#devboard-view .db-block{display:grid;grid-template-columns:64px 1fr;gap:16px;padding:14px 0;border-top:1px solid rgba(60,60,67,.07)}\
-#devboard-view .db-block:first-of-type{border-top:none;padding-top:0}\
-#devboard-view .db-block .tm{font-size:15px;font-weight:700;letter-spacing:-.01em}\
-#devboard-view .db-block .tm small{display:block;font-size:11px;font-weight:600;color:#A1A1A6;margin-top:2px}\
-#devboard-view .db-block h5{margin:0 0 3px;font-size:15px;font-weight:700;text-transform:none}\
-#devboard-view .db-block p{margin:0;font-size:13.5px;line-height:1.5;color:#3A3A3C}\
-#devboard-view .db-block .nt{font-size:12.5px;color:#6E6E73;margin-top:4px}\
-#devboard-view .db-fill{margin-top:8px;display:grid;gap:6px}\
-#devboard-view .db-st{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;background:#F5F5F7;border-radius:10px;padding:9px 12px;font-size:13px}\
-#devboard-view .db-st .k{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#FF5722;padding-top:3px;white-space:nowrap}\
-#devboard-view .db-st b{display:block;font-weight:600;font-size:13.5px}\
-#devboard-view .db-st span{color:#3A3A3C}\
-#devboard-view .db-st .who{display:block;font-size:12px;color:#6E6E73;margin-top:2px}\
-#devboard-view .db-st .db-link{font-size:12px;padding-top:2px}\
-#devboard-view .db-plan-bar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}\
-#devboard-view .db-btn{font:inherit;font-size:13px;font-weight:600;padding:8px 16px;border-radius:999px;border:none;cursor:pointer;min-height:0;min-width:0;text-transform:none;background:#1D1D1F;color:#fff}\
-#devboard-view .db-btn.ghost{background:rgba(0,0,0,.05);color:#1D1D1F}\
-#devboard-view .db-bk{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:8px 16px;padding:11px 0;border-top:1px solid rgba(60,60,67,.07);font-size:13.5px}\
-#devboard-view .db-bk:first-child{border-top:none;padding-top:0}\
-#devboard-view .db-bk .nm b{font-weight:600;font-size:14px;margin-right:6px}\
-#devboard-view .db-bk .cue{font-size:12.5px;color:#6E6E73;margin-top:2px}\
-#devboard-view .db-bk .ch{display:flex;flex-wrap:wrap;gap:4px;align-content:flex-start}\
-#devboard-view .db-chip.grp{background:#1D1D1F;color:#fff}\
-@media (max-width:700px){#devboard-view .db-bk{grid-template-columns:1fr}}\
-#devboard-view .db-chip{display:inline-block;font-size:11px;font-weight:600;background:#F2F2F7;color:#3A3A3C;border-radius:999px;padding:2px 8px;margin:1px 3px 1px 0}\
-#devboard-view .db-chip.flag{background:#FFF1E8;color:#C2410C}\
-#devboard-view .db-note{font-size:12px;color:#A1A1A6;margin-top:14px}\
+#devboard-view .db-teams button,#devboard-view .db-chipbtn{font:inherit;font-size:13px;font-weight:600;padding:7px 14px;border-radius:999px;border:1px solid var(--bd);background:#fff;color:var(--tx);cursor:pointer;min-height:0;min-width:0;text-transform:none;display:inline-flex;align-items:center;gap:7px}\
+#devboard-view .db-teams button.active,#devboard-view .db-chipbtn.active{background:var(--tx);color:#fff;border-color:var(--tx)}\
+#devboard-view .db-teams button .ro{font-weight:500;color:var(--tf);margin-left:2px}#devboard-view .db-teams button.active .ro{color:#8e8e93}\
+#devboard-view .db-chipbtn i{width:8px;height:8px;border-radius:50%;background:var(--tc,#64748b);display:inline-block}\
+#devboard-view .db-search{font:inherit;font-size:14px;padding:9px 12px 9px 36px;border:1px solid var(--bd);border-radius:12px;min-height:0;width:220px;margin-left:auto;background:#fff url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2716%27 height=%2716%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23a1a1a6%27 stroke-width=%272%27%3E%3Ccircle cx=%2711%27 cy=%2711%27 r=%278%27/%3E%3Cpath d=%27m21 21-4.3-4.3%27/%3E%3C/svg%3E") 12px center no-repeat}\
+#devboard-view .db-search:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 3px rgba(0,113,227,.15)}\
+#devboard-view .db-lead{background:#fff;border:1px solid var(--bl);border-radius:var(--rc);padding:18px 22px;margin:0 0 16px;display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;box-shadow:var(--sh)}\
+#devboard-view .db-lead h4{margin:0 0 4px;font-size:17px;font-weight:700;color:var(--tx);text-transform:none;letter-spacing:-.01em;padding-left:12px;border-left:3px solid var(--ac)}\
+#devboard-view .db-lead p{margin:0;font-size:13.5px;line-height:1.5;color:var(--ts);max-width:720px;padding-left:15px}\
+#devboard-view .db-lead .st{display:flex;gap:20px}#devboard-view .db-lead .st div{text-align:center}\
+#devboard-view .db-lead .st b{display:block;font-size:24px;font-weight:700;color:var(--ac);line-height:1.1}\
+#devboard-view .db-lead .st small{font-size:11px;color:var(--tf);text-transform:uppercase;letter-spacing:.05em;font-weight:600}\
 #devboard-view .db-status{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:500;border-radius:12px;padding:10px 14px;margin:0 0 14px;line-height:1.45}\
 #devboard-view .db-status i{width:9px;height:9px;border-radius:50%;flex:0 0 9px}\
-#devboard-view .db-status.off{background:#FFF1E8;color:#9A3412}#devboard-view .db-status.off i{background:#FF5722}\
-#devboard-view .db-status.on{background:#EAF3FF;color:#0A3F7A}#devboard-view .db-status.on i{background:#0071E3}\
+#devboard-view .db-status.off{background:#fff6ec;color:#9a3412}#devboard-view .db-status.off i{background:var(--orange)}\
+#devboard-view .db-status.on{background:var(--acs);color:#0a3f7a}#devboard-view .db-status.on i{background:var(--ac)}\
 #devboard-view .db-status .db-link{margin-left:auto;white-space:nowrap}\
-#db-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.36);z-index:400;display:flex;align-items:center;justify-content:center;padding:16px}\
-#db-backdrop .ra-modal{background:#fff;border-radius:18px;width:min(520px,100%);max-height:92vh;overflow:auto;box-shadow:0 24px 80px rgba(0,0,0,.28);padding:22px 24px}\
-#db-backdrop .ra-modal h3{margin:0 0 2px;font-size:18px;font-weight:700;letter-spacing:-.01em;text-transform:none}\
-#db-backdrop .ra-sub{margin:0 0 16px;font-size:13px;color:#6E6E73}\
-#db-backdrop .ra-hint{font-size:12px;color:#A1A1A6}\
-#db-backdrop .ra-field{display:flex;flex-direction:column;gap:5px}#db-backdrop .ra-field label{font-size:12px;font-weight:600;color:#6E6E73}\
-#db-backdrop .ra-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}\
-#db-backdrop .ra-btn{font:inherit;font-size:14px;font-weight:600;padding:9px 16px;border-radius:999px;border:none;cursor:pointer;min-height:0;min-width:0;text-transform:none}\
-#db-backdrop .ra-btn.primary{background:#0071E3;color:#fff}#db-backdrop .ra-btn.primary:disabled{opacity:.55}#db-backdrop .ra-btn.ghost{background:rgba(0,0,0,.05);color:#1D1D1F}\
-#db-backdrop .ra-err{margin-top:12px;font-size:13px;color:#D70015;background:#FFF1F0;border-radius:10px;padding:10px 12px;display:none}#db-backdrop .ra-err.on{display:block}\
-#db-backdrop .ra-modal.db-rate{width:min(640px,100%)}\
-.db-rate .row{display:grid;grid-template-columns:190px auto 1fr auto;gap:12px;align-items:center;padding:8px 0;border-top:1px solid rgba(60,60,67,.07)}\
-.db-rate .row:first-of-type{border-top:none}\
-.db-rate .row .lb{font-size:14px;font-weight:600}\
-.db-rate .row .lb small{display:block;font-size:11px;color:#A1A1A6;font-weight:600}\
-.db-rate .ph{display:inline-flex;gap:5px}\
-.db-rate .ph button{width:22px;height:22px;border-radius:50%;border:2px solid #D1D1D6;background:#fff;cursor:pointer;min-height:0;min-width:0;padding:0}\
-.db-rate .ph button.f{background:#1D1D1F;border-color:#1D1D1F}\
-.db-rate .ph button.t{box-shadow:0 0 0 2px #fff,0 0 0 3px #FF5722}\
-.db-rate .ph button:disabled{cursor:default;opacity:.6}\
-.db-rate .rt{display:flex;gap:2px}\
-.db-rate .rt button{flex:1;height:14px;border-radius:3px;border:none;background:#E5E5EA;cursor:pointer;min-height:0;min-width:0;padding:0}\
-.db-rate .rt button.f{background:#0071E3}\
-.db-rate .rt button:disabled{cursor:default}\
-.db-rate .st{font-size:11px;font-weight:700;width:52px;text-align:right}\
-.db-rate .st.on{color:#1B7F3B}.db-rate .st.behind{color:#C2410C}.db-rate .st.ahead{color:#0060C0}\
-.db-rate textarea{font:inherit;font-size:14px;width:100%;padding:10px 12px;border:1px solid rgba(60,60,67,.18);border-radius:10px;min-height:64px;resize:vertical}\
-.db-rate .legend{display:flex;gap:14px;font-size:12px;color:#6E6E73;margin:0 0 10px}\
-.db-rate .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;background:#1D1D1F;margin-right:5px;vertical-align:-1px}\
-.db-rate .legend i.t{background:#fff;box-shadow:0 0 0 2px #FF5722}\
-.db-toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#1D1D1F;color:#fff;font-size:13.5px;font-weight:600;padding:10px 18px;border-radius:999px;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,.25)}\
+#devboard-view .db-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}\
+#devboard-view .db-card{background:#fff;border:1px solid var(--bl);border-radius:var(--rc);box-shadow:var(--sh);min-width:0;overflow:hidden}\
+#devboard-view .db-head{display:flex;align-items:center;gap:11px;padding:14px 15px;border-bottom:1px solid var(--bl)}\
+#devboard-view .db-av{width:44px;height:44px;border-radius:12px;background:var(--acs);color:var(--ac);font-size:15px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:0 0 44px}\
+#devboard-view .db-head .nm{flex:1;min-width:0}\
+#devboard-view .db-head .nm b{display:block;font-size:15px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}\
+#devboard-view .db-head .nm small{display:block;font-size:11.5px;color:var(--ts);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}\
+#devboard-view .db-head .pills{display:flex;flex-direction:column;gap:5px;align-items:flex-end}\
+#devboard-view .db-pill{font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap;background:var(--bgs);color:var(--ts)}\
+#devboard-view .db-pill.blue{background:var(--acs);color:var(--ac)}#devboard-view .db-pill.red{background:#fef2f2;color:var(--red)}#devboard-view .db-pill.green{background:#e9f7ef;color:var(--green)}#devboard-view .db-pill.orange{background:#fff6ec;color:var(--orange)}\
+#devboard-view .db-toggle{width:34px;height:34px;border-radius:10px;border:1px solid var(--bd);background:#fff;cursor:pointer;min-height:0;min-width:0;padding:0;display:inline-flex;align-items:center;justify-content:center;color:var(--ts);flex:0 0 34px}\
+#devboard-view .db-track{padding:12px 15px;border-bottom:1px solid var(--bl)}\
+#devboard-view .db-track .lbl{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;margin-bottom:8px}\
+#devboard-view .db-track .lbl small{font-weight:600;color:var(--tf);font-size:11px;text-transform:uppercase;letter-spacing:.05em}\
+#devboard-view .db-bar2{height:6px;border-radius:3px;background:var(--bl);position:relative;overflow:visible}\
+#devboard-view .db-bar2 i{display:block;height:100%;border-radius:3px;background:var(--ac)}\
+#devboard-view .db-bar2 em{position:absolute;top:-6px;width:2px;height:18px;background:var(--red);border-radius:1px}\
+#devboard-view .db-bar2 em:after{content:attr(data-l);position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:700;color:var(--red);font-style:normal}\
+#devboard-view .db-pos{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:12px 15px;background:var(--bgt);border-bottom:1px solid var(--bl)}\
+#devboard-view .db-pos .k{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tf);margin-right:2px}\
+#devboard-view .db-pos button{font:inherit;font-size:12.5px;font-weight:600;padding:5px 12px;border-radius:999px;border:1px solid var(--bd);background:#fff;color:var(--ts);cursor:pointer;min-height:0;min-width:0;text-transform:none}\
+#devboard-view .db-pos button.on{background:var(--ac);color:#fff;border-color:transparent}\
+#devboard-view .db-pos button:disabled{cursor:default;opacity:.7}\
+#devboard-view .db-body{padding:12px 15px 14px}\
+#devboard-view .db-sec{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tf);margin:4px 0 8px}\
+#devboard-view .db-need{display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--bl)}\
+#devboard-view .db-need b{font-weight:600;font-size:14px}\
+#devboard-view .db-need small{display:block;font-size:12px;color:var(--ts);margin-top:1px}\
+#devboard-view .db-need .sc{display:inline-flex;gap:3px;align-items:center}\
+#devboard-view .db-need .sc i{width:9px;height:9px;border-radius:50%;background:var(--bl)}\
+#devboard-view .db-need .sc i.f{background:var(--tx)}#devboard-view .db-need .sc i.lo{background:var(--red)}\
+#devboard-view .db-need .sc span{font-size:11px;font-weight:700;color:var(--ts);margin-left:5px}\
+#devboard-view .db-item{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:start;padding:10px 0;border-bottom:1px solid var(--bl);cursor:pointer}\
+#devboard-view .db-item:hover .t{color:var(--ac)}\
+#devboard-view .db-item .t{font-size:14px;font-weight:600;line-height:1.3}\
+#devboard-view .db-item .c{font-size:12.5px;color:var(--ts);line-height:1.45;margin-top:2px}\
+#devboard-view .db-item .rep{font-size:12.5px;color:var(--tx);background:var(--bgs);border-radius:8px;padding:7px 10px;margin-top:7px;line-height:1.4;grid-column:1/-1}\
+#devboard-view .db-item .rep b{color:var(--ac);font-weight:700;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;margin-right:6px}\
+#devboard-view .db-item .why{font-size:11.5px;color:var(--tf);margin-top:4px;grid-column:1/-1}\
+#devboard-view .db-item .mn{font-size:12px;font-weight:600;color:var(--ts);white-space:nowrap;padding-top:2px}\
+#devboard-view .db-tag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--tc);background:color-mix(in srgb,var(--tc) 12%,#fff);border-radius:999px;padding:3px 9px;margin-top:6px;white-space:nowrap}\
+#devboard-view .db-tag.sm{margin:0;font-size:10px;padding:2px 7px}\
+#devboard-view .db-focus{font-size:13.5px;color:var(--tx);background:var(--bgs);border-radius:10px;padding:10px 12px;line-height:1.45}\
+#devboard-view .db-focus.empty{color:var(--tf)}\
+#devboard-view .db-warn{font-size:12.5px;color:#9a3412;background:#fff6ec;border-radius:10px;padding:8px 12px;margin-top:10px}\
+#devboard-view .db-foot{display:flex;gap:8px;padding:12px 15px 14px;border-top:1px solid var(--bl);background:var(--bgt)}\
+#devboard-view .db-btn{font:inherit;font-size:13px;font-weight:600;padding:9px 16px;border-radius:var(--rb);border:1px solid var(--bd);cursor:pointer;min-height:0;min-width:0;text-transform:none;background:#fff;color:var(--tx);display:inline-flex;align-items:center;gap:6px}\
+#devboard-view .db-btn.primary{background:var(--ac);color:#fff;border-color:transparent}\
+#devboard-view .db-btn.soft{background:var(--acs);color:var(--ac);border-color:transparent;width:100%;justify-content:center}\
+#devboard-view .db-btn:disabled{opacity:.55;cursor:default}\
+#devboard-view .db-link{background:none;border:none;padding:0;font:inherit;font-size:13px;font-weight:600;color:var(--ac);cursor:pointer;min-height:0;min-width:0;text-transform:none}\
+#devboard-view .db-link:disabled{color:var(--tf);cursor:default}\
+#devboard-view .db-empty{padding:40px 20px;text-align:center;color:var(--ts);font-size:14px;background:#fff;border-radius:var(--rc);border:1px dashed var(--bd)}\
+#devboard-view .db-two{display:grid;grid-template-columns:1.2fr 1fr;gap:14px}\
+#devboard-view .db-panel{background:#fff;border:1px solid var(--bl);border-radius:var(--rc);padding:18px 20px;box-shadow:var(--sh);min-width:0}\
+#devboard-view .db-panel h4{margin:0 0 2px;font-size:16px;font-weight:700;text-transform:none;letter-spacing:-.01em;padding-left:10px;border-left:3px solid var(--ac)}\
+#devboard-view .db-panel .in{margin:0 0 12px;font-size:13px;color:var(--ts);padding-left:13px}\
+#devboard-view .db-rank{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:9px 0;border-top:1px solid var(--bl);font-size:14px}\
+#devboard-view .db-rank:first-of-type{border-top:none}\
+#devboard-view .db-rank .k{width:24px;height:24px;border-radius:50%;background:var(--tx);color:#fff;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}\
+#devboard-view .db-rank b{font-weight:600}#devboard-view .db-rank b small{font-weight:500;color:var(--ts);margin-left:6px;font-size:12px}\
+#devboard-view .db-rank .bar{height:6px;border-radius:3px;background:var(--bl);margin-top:6px;overflow:hidden}\
+#devboard-view .db-rank .bar i{display:block;height:100%;background:var(--ac);border-radius:3px}\
+#devboard-view .db-rank small.r{color:var(--ts);font-size:12px;white-space:nowrap}\
+#devboard-view .db-gap{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;padding:7px 0;line-height:1.45}\
+#devboard-view .db-gap i{width:9px;height:9px;border-radius:50%;flex:0 0 9px;margin-top:6px}\
+#devboard-view .db-gap.red i{background:var(--red)}#devboard-view .db-gap.orange i{background:var(--orange)}#devboard-view .db-gap.green i{background:var(--green)}#devboard-view .db-gap.grey i{background:#c7c7cc}\
+#devboard-view .db-group{padding:10px 0;border-top:1px solid var(--bl);font-size:13.5px}\
+#devboard-view .db-group:first-of-type{border-top:none}\
+#devboard-view .db-group b{display:block;font-weight:600;font-size:14px}\
+#devboard-view .db-group .who{color:var(--tx);margin-top:3px}\
+#devboard-view .db-group .cue{color:var(--ts);font-size:12.5px;margin-top:2px}\
+#devboard-view .db-block{display:grid;grid-template-columns:auto 64px 1fr;gap:16px;padding:14px 0;border-top:1px solid var(--bl)}\
+#devboard-view .db-block:first-of-type{border-top:none;padding-top:0}\
+#devboard-view .db-block .n{width:28px;height:28px;border-radius:8px;background:var(--bgs);font-weight:700;font-size:14px;display:inline-flex;align-items:center;justify-content:center;color:var(--tx)}\
+#devboard-view .db-block .tm{font-size:15px;font-weight:700;letter-spacing:-.01em}\
+#devboard-view .db-block .tm small{display:block;font-size:11px;font-weight:600;color:var(--tf);margin-top:2px}\
+#devboard-view .db-block h5{margin:0 0 3px;font-size:15px;font-weight:700;text-transform:none}\
+#devboard-view .db-block p{margin:0;font-size:13.5px;line-height:1.5;color:var(--ts)}\
+#devboard-view .db-block .nt{font-size:12.5px;color:var(--tf);margin-top:4px}\
+#devboard-view .db-fill{margin-top:8px;display:grid;gap:6px}\
+#devboard-view .db-st{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;background:var(--bgs);border-radius:10px;padding:9px 12px;font-size:13px}\
+#devboard-view .db-st .k{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ac);padding-top:3px;white-space:nowrap}\
+#devboard-view .db-st b{display:block;font-weight:600;font-size:13.5px}\
+#devboard-view .db-st span{color:var(--ts)}\
+#devboard-view .db-st .who{display:block;font-size:12px;color:var(--ts);margin-top:2px}\
+#devboard-view .db-plan-bar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}\
+#devboard-view .db-bankgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}\
+#devboard-view .db-bk{background:#fff;border:1px solid var(--bl);border-radius:var(--rc);box-shadow:var(--sh);padding:16px 18px 14px;border-top:4px solid var(--tc,#64748b);min-width:0;display:flex;flex-direction:column;gap:8px;cursor:pointer}\
+#devboard-view .db-bk:hover{border-color:var(--bd);border-top-color:var(--tc)}\
+#devboard-view .db-bk .top{display:flex;justify-content:space-between;align-items:center;gap:8px}\
+#devboard-view .db-bk .top .db-tag{margin:0}\
+#devboard-view .db-bk h5{margin:0;font-size:15px;font-weight:700;text-transform:none;letter-spacing:-.01em}\
+#devboard-view .db-bk .cue{font-size:13px;color:var(--ts);line-height:1.45;flex:1}\
+#devboard-view .db-bk .meta{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--ts)}\
+#devboard-view .db-bk .meta .lv{margin-left:auto;font-size:11px;color:var(--tf)}\
+#devboard-view .db-bk .devs{display:flex;flex-wrap:wrap;gap:4px}\
+#devboard-view .db-chip{display:inline-block;font-size:11px;font-weight:600;background:var(--bgs);color:#3a3a3c;border-radius:999px;padding:2px 8px}\
+#devboard-view .db-chip.flag{background:#fff6ec;color:var(--orange)}#devboard-view .db-chip.imp{background:var(--acs);color:var(--ac)}#devboard-view .db-chip.hit{background:#fef2f2;color:var(--red)}\
+#devboard-view .db-note{font-size:12px;color:var(--tf);margin-top:14px}\
+#devboard-view .db-i{width:24px;height:24px;border-radius:50%;border:1px solid var(--bd);background:#fff;color:var(--tf);font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;min-height:0;min-width:0;padding:0}\
+#db-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.38);z-index:400;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(2px)}\
+#db-backdrop .db-sheet{background:#fff;border-radius:20px;width:min(640px,100%);max-height:92vh;overflow:auto;box-shadow:0 18px 48px rgba(15,23,42,.18);position:relative}\
+#db-backdrop .db-sheet .hd{padding:26px 28px 20px;background:linear-gradient(180deg,color-mix(in srgb,var(--hc,#0071e3) 10%,#fff),#fff);position:relative}\
+#db-backdrop .db-sheet .hd h3{margin:8px 0 6px;font-size:22px;font-weight:700;letter-spacing:-.02em;text-transform:none}\
+#db-backdrop .db-sheet .hd p{margin:0;font-size:14px;color:#6e6e73;line-height:1.45}\
+#db-backdrop .db-sheet .x{position:absolute;top:18px;right:18px;width:36px;height:36px;border-radius:50%;border:none;background:#f5f5f7;color:#1d1d1f;font-size:18px;cursor:pointer;min-height:0;min-width:0;padding:0;display:inline-flex;align-items:center;justify-content:center}\
+#db-backdrop .db-sheet .bd{padding:6px 28px 26px}\
+#db-backdrop .db-tag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--tc);background:color-mix(in srgb,var(--tc) 12%,#fff);border-radius:999px;padding:4px 10px;margin:0}\
+#db-backdrop .sec{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--hc,#0071e3);margin:18px 0 8px}\
+#db-backdrop ul.dots{list-style:none;margin:0;padding:0}\
+#db-backdrop ul.dots li{position:relative;padding:5px 0 5px 20px;font-size:14.5px;line-height:1.5;color:#1d1d1f}\
+#db-backdrop ul.dots li:before{content:"";position:absolute;left:4px;top:13px;width:7px;height:7px;border-radius:50%;background:var(--hc,#0071e3)}\
+#db-backdrop ul.dots li .lv{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;color:#6e6e73;background:#f5f5f7;border-radius:999px;padding:1px 7px;margin-right:6px;vertical-align:1px}\
+#db-backdrop ul.dots li.mine{background:#eaf3ff;border-radius:8px;margin:2px 0;padding-left:20px}\
+#db-backdrop .box{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start;background:#f5f5f7;border:1px solid #ececf0;border-radius:12px;padding:14px 16px;margin-top:10px;font-size:14.5px;font-weight:600;line-height:1.45}\
+#db-backdrop .box .k{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--hc,#0071e3);padding-top:3px;white-space:nowrap}\
+#db-backdrop .devs{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}\
+#db-backdrop .db-chip{display:inline-block;font-size:11.5px;font-weight:600;background:#f5f5f7;color:#3a3a3c;border-radius:999px;padding:3px 9px}\
+#db-backdrop .db-chip.hit{background:#fef2f2;color:#d92d20}\
+#db-backdrop .rt-skill{margin-top:18px;padding-top:14px;border-top:1px solid #ececf0}\
+#db-backdrop .rt-skill:first-child{margin-top:8px;border-top:none;padding-top:0}\
+#db-backdrop .rt-head{display:flex;align-items:center;gap:10px;margin-bottom:6px}\
+#db-backdrop .rt-head b{font-size:15px;font-weight:700}\
+#db-backdrop .rt-head .ph{font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:999px;background:#f5f5f7;color:#6e6e73}\
+#db-backdrop .rt-head .ph.on{background:#e9f7ef;color:#159a52}#db-backdrop .rt-head .ph.behind{background:#fff6ec;color:#d9660a}#db-backdrop .rt-head .ph.ahead{background:#eaf3ff;color:#0071e3}\
+#db-backdrop .rt-row{display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center;padding:7px 0}\
+#db-backdrop .rt-row .lb{font-size:14px;font-weight:600}\
+#db-backdrop .rt-row .lb small{display:block;font-size:11.5px;color:#a1a1a6;font-weight:500;margin-top:1px}\
+#db-backdrop .rt-seg{display:inline-flex;gap:3px;padding:3px;background:rgba(118,118,128,.12);border-radius:10px}\
+#db-backdrop .rt-seg button{width:38px;height:32px;border:none;border-radius:8px;background:transparent;font:inherit;font-size:13px;font-weight:700;color:#6e6e73;cursor:pointer;min-height:0;min-width:0;padding:0}\
+#db-backdrop .rt-seg button.on{background:#0071e3;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15)}\
+#db-backdrop .rt-seg button:disabled{cursor:default;opacity:.6}\
+#db-backdrop .rt-word{font-size:11.5px;color:#6e6e73;text-align:right;grid-column:2;margin-top:-4px;min-height:14px}\
+#db-backdrop .rt-num{display:inline-flex;align-items:center;gap:6px}\
+#db-backdrop .rt-num input{font:inherit;font-size:14px;width:76px;padding:7px 9px;border:1px solid #d9d9de;border-radius:8px;min-height:0;text-align:right}\
+#db-backdrop .rt-num small{font-size:11.5px;color:#a1a1a6;width:34px}\
+#db-backdrop .rt-num .sc{font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:#f5f5f7;color:#6e6e73;min-width:22px;text-align:center}\
+#db-backdrop .rt-num .sc.g{background:#eaf3ff;color:#0071e3}\
+#db-backdrop .pos{display:flex;gap:8px;flex-wrap:wrap}\
+#db-backdrop .pos button{font:inherit;font-size:13px;font-weight:600;padding:7px 16px;border-radius:999px;border:1px solid #d9d9de;background:#fff;color:#6e6e73;cursor:pointer;min-height:0;min-width:0;text-transform:none}\
+#db-backdrop .pos button.on{background:#0071e3;color:#fff;border-color:transparent}\
+#db-backdrop textarea{font:inherit;font-size:14px;width:100%;padding:10px 12px;border:1px solid #d9d9de;border-radius:10px;min-height:64px;resize:vertical}\
+#db-backdrop .err{margin-top:12px;font-size:13px;color:#d92d20;background:#fef2f2;border-radius:10px;padding:10px 12px;display:none}#db-backdrop .err.on{display:block}\
+#db-backdrop .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;position:sticky;bottom:0;background:#fff;padding-top:12px}\
+#db-backdrop .btn{font:inherit;font-size:14px;font-weight:600;padding:9px 16px;border-radius:10px;border:1px solid #d9d9de;cursor:pointer;min-height:0;min-width:0;text-transform:none;background:#fff;color:#1d1d1f}\
+#db-backdrop .btn.primary{background:#0071e3;color:#fff;border-color:transparent}#db-backdrop .btn:disabled{opacity:.55}\
+#db-backdrop .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#6e6e73;margin:6px 0 4px}\
+#db-backdrop .legend b{color:#1d1d1f;font-weight:700}\
+.db-toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#1d1d1f;color:#fff;font-size:13.5px;font-weight:600;padding:10px 18px;border-radius:999px;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,.25)}\
 @media (max-width:960px){#devboard-view .db-two{grid-template-columns:1fr}#devboard-view .db-lead{grid-template-columns:1fr}#devboard-view .db-search{width:100%;margin-left:0}}\
-@media (max-width:640px){.db-rate .row{grid-template-columns:1fr auto;grid-template-areas:"lb st" "ph ph" "rt rt";padding:10px 0}.db-rate .row .lb{grid-area:lb}.db-rate .row .st{grid-area:st}.db-rate .row .ph{grid-area:ph}.db-rate .row .rt{grid-area:rt}.db-rate .ph button{width:30px;height:30px}.db-rate .rt button{height:22px}\
-#db-backdrop{padding:0;align-items:flex-end}#db-backdrop .ra-modal{border-radius:18px 18px 0 0;max-height:94vh;max-height:94dvh;padding:20px 18px calc(18px + env(safe-area-inset-bottom))}#db-backdrop .ra-actions{position:sticky;bottom:0;background:#fff;padding:12px 0 0;margin-top:14px}\
-#devboard-view .db-lead{padding:18px 20px}#devboard-view .db-lead .st{gap:22px}#devboard-view .db-lead .st b{font-size:22px}#devboard-view .db-block{grid-template-columns:52px 1fr;gap:12px}#devboard-view .db-drill{grid-template-columns:auto 1fr}#devboard-view .db-drill .mn{grid-column:2;text-align:left}#devboard-view .db-st{grid-template-columns:1fr auto}#devboard-view .db-st .k{grid-column:1/-1;padding-top:0}#devboard-view .db-foot{gap:18px}#devboard-view .db-foot .db-link{min-height:44px;display:inline-flex;align-items:center}#devboard-view .db-teams button{min-height:36px}}\
+@media (max-width:640px){#devboard-view .db-grid{grid-template-columns:1fr}#devboard-view .db-block{grid-template-columns:auto 52px 1fr;gap:10px}#devboard-view .db-st{grid-template-columns:1fr auto}#devboard-view .db-st .k{grid-column:1/-1;padding-top:0}\
+#db-backdrop{padding:0;align-items:flex-end}#db-backdrop .db-sheet{border-radius:20px 20px 0 0;max-height:94vh;max-height:94dvh}#db-backdrop .db-sheet .hd{padding:22px 20px 16px}#db-backdrop .db-sheet .bd{padding:4px 20px calc(18px + env(safe-area-inset-bottom))}\
+#db-backdrop .rt-row{grid-template-columns:1fr;gap:6px}#db-backdrop .rt-word{grid-column:1;text-align:left}#db-backdrop .rt-seg{width:100%}#db-backdrop .rt-seg button{flex:1;height:40px}}\
 @media print{#devboard-view .db-tabs,#devboard-view .db-bar,#devboard-view .db-plan-bar,#devboard-view .db-foot{display:none}}';
   function injectCss() { if (el('coach-devboard-css')) return; var s = document.createElement('style'); s.id = 'coach-devboard-css'; s.textContent = CSS; document.head.appendChild(s); }
   function toast(msg) { var t = document.createElement('div'); t.className = 'db-toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 2600); }
 
+
   // ---------- players tab ----------
-  function dots(p, t) { var h = '<span class="db-dots" aria-label="Phase ' + p + ' of 3, target ' + t + '">'; for (var i = 1; i <= 3; i++) h += '<i class="db-dot' + (i <= p ? ' f' : '') + (i === t && t > 0 ? ' t' : '') + '"></i>'; return h + '</span>'; }
+  function scoreDots(v) { var h = '<span class="sc">'; for (var i = 1; i <= 5; i++) h += '<i class="' + (i <= v ? (v <= 2 ? 'f lo' : 'f') : '') + '"></i>'; return h + '<span>' + esc(rubric(v)) + '</span></span>'; }
+  function trackPill(a) {
+    if (!started(a)) return '<span class="db-pill">Not rated</span>';
+    var b = behindCount(a); if (b) return '<span class="db-pill red">' + b + ' behind target</span>';
+    var ahead = Object.keys(subsCfg()).filter(function (sk) { return track(a, sk) === 'ahead'; }).length;
+    return ahead ? '<span class="db-pill green">On track, ' + ahead + ' ahead</span>' : '<span class="db-pill green">On track</span>';
+  }
   function playerCard(a, teamId) {
-    var d = state.dev[a.id] || {}; var age = ageOf(a); var nd = needsOf(a); var rx = prescribe(a); var warn = prereqWarnings(a);
-    var behind = behindCount(a); var un = unrated(a);
-    var pill = !started(a) ? '<span class="db-pill none">Not rated</span>' : behind ? '<span class="db-pill behind">' + behind + ' behind</span>' : '<span class="db-pill on">On track</span>';
-    var meta = [a.jersey_number ? '#' + a.jersey_number : '', 'Age ' + age + (a.date_of_birth ? '' : ' (from grade)'), gradeText(a)].filter(Boolean).join('  ');
-    var h = '<article class="db-card" data-id="' + esc(a.id) + '"><div class="db-head"><div class="db-av">' + esc(initials(a)) + '</div><div class="nm"><b>' + esc(a.first_name + ' ' + (a.last_name || '')) + '</b><small>' + esc(meta) + '</small></div>' + pill + '</div>';
-    h += '<div><div class="db-sec">Needs next</div>';
-    if (!started(a)) h += '<div class="db-focus empty">No rating yet. Open Rate and click the dots; it takes two minutes.</div>';
-    else nd.forEach(function (n) { h += '<div class="db-need"><b>' + esc(label(n.skill)) + '</b>' + dots(n.p, n.target) + '<small>' + esc(phaseName(n.p)) + (n.gap ? ', target ' + esc(phaseName(n.target)) : '') + '</small></div>'; });
-    if (started(a) && un.length) h += '<div class="db-need" style="color:#A1A1A6;font-size:12.5px"><span>Not rated yet: ' + esc(un.map(label).join(', ')) + '</span></div>';
-    h += '</div>';
-    if (started(a)) {
-      h += '<div><div class="db-sec">Run these</div>';
-      if (!rx.length) h += '<div class="db-focus empty">No drill in the bank is tagged for these needs yet.</div>';
-      rx.forEach(function (x, i) { var dr = x.drill; h += '<div class="db-drill' + (dr.review ? ' flag' : '') + '"><span class="k">' + (i + 1) + '</span><div><b>' + esc(dr.name) + '</b><span>' + esc(dr.cue || '') + '</span><span class="why">For ' + esc(label(x.need)) + '. Standard: ' + esc((dr.coaching && dr.coaching.standard) || 'game speed, both hands') + '</span></div><span class="mn">' + esc(dr.min || 5) + ' min</span></div>'; });
+    var d = devOf(a); var age = ageOf(a); var nd = needsOf(a); var rx = prescribe(a); var warn = prereqWarnings(a); var rc = ratedCount(a); var total = totalSubs(); var can = canEdit(teamId);
+    var open = state.expanded[a.id] !== false;
+    var meta = [a.jersey_number ? '#' + a.jersey_number : '', gradeText(a).replace(' grade', ''), 'Age ' + age].filter(Boolean).join(' \u00b7 ');
+    var h = '<article class="db-card" data-id="' + esc(a.id) + '">';
+    h += '<div class="db-head"><div class="db-av">' + esc(a.jersey_number ? String(a.jersey_number) : initials(a)) + '</div><div class="nm"><b>' + esc(a.first_name + ' ' + (a.last_name || '')) + '</b><small>' + esc(meta) + '</small></div><div class="pills"><span class="db-pill">' + rc + ' of ' + total + ' rated</span>' + trackPill(a) + '</div><button type="button" class="db-toggle" data-act="toggle" aria-label="Show or hide">' + (open ? '&#8963;' : '&#8964;') + '</button></div>';
+    // rating coverage bar with the age-target marker
+    var pct = total ? Math.round(rc / total * 100) : 0;
+    h += '<div class="db-track"><div class="lbl"><span>' + rc + ' of ' + total + ' rated</span><small>' + (started(a) ? esc(overallPhase(a)) : 'No rating') + '</small></div><div class="db-bar2"><i style="width:' + pct + '%"></i></div></div>';
+    h += '<div class="db-pos"><span class="k">Position</span>' + POSITIONS.map(function (p) { return '<button type="button" data-pos="' + p + '" class="' + (positionOf(a) === p ? 'on' : '') + '"' + (can ? '' : ' disabled') + '>' + p + '</button>'; }).join('') + '</div>';
+    if (open) {
+      h += '<div class="db-body">';
+      if (!started(a)) h += '<div class="db-focus empty">No rating yet. Open Rate and score what you see; his card fills itself.</div>';
+      else {
+        h += '<div class="db-sec">Needs next</div>';
+        if (!nd.length) h += '<div class="db-focus empty">Every rated sub-skill is Consistent or better. Rate the rest, or raise the bar.</div>';
+        nd.forEach(function (n) { h += '<div class="db-need"><div><b>' + esc(subKeyLabel(n.key)) + '</b><small>' + esc(label(n.skill)) + (n.behind ? ', behind the age target' : '') + (subHint(n.key) ? '. ' + esc(subHint(n.key)) : '') + '</small></div>' + scoreDots(n.score) + '</div>'; });
+        var un = unratedSkills(a); if (un.length) h += '<div class="db-need" style="grid-template-columns:1fr"><small>Not rated yet: ' + esc(un.map(label).join(', ')) + '</small></div>';
+        if (rx.length) {
+          h += '<div class="db-sec" style="margin-top:14px">Run these</div>';
+          rx.forEach(function (x) { var dr = x.drill; h += '<div class="db-item" data-drill="' + esc(dr.name) + '"><div><div class="t">' + esc(dr.name) + '</div><div class="c">' + esc(dr.cue || '') + '</div>' + tagChip(dr.tag) + '</div><div class="mn">' + esc(dr.min || 5) + ' min</div>' + (x.rep ? '<div class="rep"><b>Start here</b>' + esc(x.rep.text) + '</div>' : '') + '<div class="why">For ' + esc(subKeyLabel(x.need.key).toLowerCase()) + ' at ' + esc(phaseName(x.need.phase)) + '. Standard: ' + esc((dr.coaching && dr.coaching.standard) || 'game speed, both hands') + '</div></div>'; });
+        }
+      }
+      warn.forEach(function (w) { h += '<div class="db-warn">' + esc(w) + '</div>'; });
+      h += '<div class="db-sec" style="margin-top:14px">Coach focus</div><div class="db-focus' + (d.focus ? '' : ' empty') + '">' + esc(d.focus || 'One sentence for this kid. What he hears from every coach this month.') + '</div>';
       h += '</div>';
     }
-    warn.forEach(function (w) { h += '<div class="db-warn">' + esc(w) + '</div>'; });
-    h += '<div><div class="db-sec">Coach focus</div><div class="db-focus' + (d.focus ? '' : ' empty') + '">' + esc(d.focus || 'One sentence for this kid. What he hears from every coach this month.') + '</div></div>';
-    h += '<div class="db-foot"><button type="button" class="db-link" data-act="rate"' + (canEdit(teamId) ? '' : ' disabled title="Only his own coach or the director can rate"') + '>' + (started(a) ? 'Rate' : 'Rate now') + '</button><button type="button" class="db-link" data-act="drills">All drills for him</button></div></article>';
-    return h;
+    h += '<div class="db-foot"><button type="button" class="db-btn primary" data-act="rate"' + (can ? '' : ' disabled title="Only his own coach or the director can rate"') + '>' + (started(a) ? 'Rate' : 'Rate now') + '</button><button type="button" class="db-btn" data-act="drills">All drills for him</button></div>';
+    return h + '</article>';
   }
-  function teamBar() {
+  function teamBar(withSearch) {
     var ts = teams(); if (!ts.length) return '';
     var h = '<div class="db-bar"><div class="db-teams">';
     ts.forEach(function (t) { var n = playersOf(t.id).length; if (!n && !state.isAdmin) return; h += '<button type="button" data-team="' + esc(t.id) + '"' + (t.id === state.teamId ? ' class="active"' : '') + '>' + esc(t.name.replace(/^Godspeed /, '')) + '<span class="ro">' + n + '</span></button>'; });
     h += '</div>';
-    if (state.tab === 'players') h += '<input class="db-search" type="search" placeholder="Find a player" value="' + esc(state.q) + '" aria-label="Find a player">';
+    if (withSearch) h += '<input class="db-search" type="search" placeholder="Find a player" value="' + esc(state.q) + '" aria-label="Find a player">';
     return h + '</div>';
   }
   function playersHtml() {
     var ps = playersOf(state.teamId); var q = state.q.trim().toLowerCase();
     var vis = q ? ps.filter(function (a) { return (a.first_name + ' ' + a.last_name).toLowerCase().indexOf(q) >= 0; }) : ps;
-    var rated = ps.filter(started).length; var behind = 0; ps.forEach(function (a) { if (started(a) && needsOf(a)[0] && needsOf(a)[0].gap > 0) behind++; });
-    var h = '<div class="db-lead"><div><h4>Every player has a next step. Every step has a drill.</h4><p>Needs come from the age targets in our 5-Year Vision. Drills come from the Godspeed bank, matched to the need. Rate a kid in two minutes and his card fills itself.</p></div><div class="st"><div><b>' + ps.length + '</b><small>Players</small></div><div><b>' + rated + '</b><small>Rated</small></div><div><b>' + behind + '</b><small>Behind target</small></div></div></div>';
-    h += teamBar();
+    var rated = ps.filter(started).length; var behind = ps.filter(function (a) { return behindCount(a) > 0; }).length;
+    var h = '<div class="db-lead"><div><h4>Rate what you see. The board picks the drill.</h4><p>' + totalSubs() + ' sub-skills, 1 to 5 in our words. The phase comes from the scores, the needs come from the age targets, and every need gets the Godspeed drill and the rep to start with at his level.</p></div><div class="st"><div><b>' + ps.length + '</b><small>Players</small></div><div><b>' + rated + '</b><small>Rated</small></div><div><b>' + behind + '</b><small>Behind target</small></div></div></div>';
+    h += teamBar(true);
     if (!ps.length) return h + '<div class="db-empty">No active players on this team.</div>';
     if (!vis.length) return h + '<div class="db-empty">No player matches that name.</div>';
     h += '<div class="db-grid">' + vis.map(function (a) { return playerCard(a, state.teamId); }).join('') + '</div>';
@@ -459,96 +585,132 @@
     return h;
   }
 
-  // ---------- rate modal (evaluate in the portal) ----------
-  function modal(html, cls) {
+  // ---------- sheets ----------
+  function sheet(html, color) {
     var old = el('db-backdrop'); if (old) old.remove();
-    var b = document.createElement('div'); b.className = 'ra-backdrop'; b.id = 'db-backdrop';
-    b.innerHTML = '<div class="ra-modal ' + (cls || '') + '" role="dialog" aria-modal="true">' + html + '</div>';
-    b.addEventListener('click', function (e) { if (e.target === b) closeModal(); });
-    document.body.appendChild(b);
-    document.addEventListener('keydown', escClose);
+    var b = document.createElement('div'); b.id = 'db-backdrop';
+    b.innerHTML = '<div class="db-sheet" role="dialog" aria-modal="true" style="--hc:' + (color || '#0071e3') + '">' + html + '</div>';
+    b.addEventListener('click', function (e) { if (e.target === b) closeSheet(); });
+    document.body.appendChild(b); document.addEventListener('keydown', escClose);
+    b.querySelectorAll('.x, [data-close]').forEach(function (x) { x.onclick = closeSheet; });
     return b;
   }
-  function escClose(e) { if (e.key === 'Escape') closeModal(); }
-  function closeModal() { var b = el('db-backdrop'); if (b) b.remove(); document.removeEventListener('keydown', escClose); }
-  function rateRow(a, sk, editable) {
-    var s = skillOf(a, sk); var t = targetsFor(ageOf(a))[sk] || 0; var st = track(a, sk);
-    var h = '<div class="row" data-skill="' + sk + '"><div class="lb">' + esc(label(sk)) + '<small>' + esc(phaseName(s.p)) + (t && t !== s.p ? ', target ' + esc(phaseName(t)) : '') + '</small></div><div class="ph">';
-    for (var p = 1; p <= 3; p++) h += '<button type="button" data-phase="' + p + '" class="' + (p <= s.p ? 'f' : '') + (p === t ? ' t' : '') + '" title="' + esc(phaseName(p)) + '"' + (editable ? '' : ' disabled') + ' aria-label="' + esc(label(sk)) + ' ' + esc(phaseName(p)) + '"></button>';
-    h += '</div><div class="rt" aria-label="Rating ' + s.r + ' of 10">';
-    for (var r = 1; r <= 10; r++) h += '<button type="button" data-rating="' + r + '" class="' + (r <= s.r ? 'f' : '') + '"' + (editable ? '' : ' disabled') + ' title="' + r + ' of 10"></button>';
-    return h + '</div><div class="st ' + st + '">' + (s.p === 0 ? '' : st === 'on' ? 'On track' : st === 'ahead' ? 'Ahead' : 'Behind') + '</div></div>';
-  }
-  function openRate(a, teamId) {
-    var editable = canEdit(teamId); var d = state.dev[a.id] || {};
-    var h = '<h3>' + esc(a.first_name + ' ' + (a.last_name || '')) + '</h3><p class="ra-sub">Age ' + ageOf(a) + '. Click a dot to set the phase, a bar to set the rating inside it. Click the last filled one again to step back. Every click saves.</p>';
-    h += '<div class="legend"><span><i></i>Phase reached</span><span><i class="t"></i>Age target</span></div>';
-    h += '<div id="db-rate-rows">' + state.cfg.skills.map(function (sk) { return rateRow(a, sk, editable); }).join('') + '</div>';
-    h += '<div style="margin-top:14px"><div class="ra-field"><label>Coach focus (one sentence)</label><textarea id="db-focus" maxlength="240"' + (editable ? '' : ' disabled') + ' placeholder="What he hears from every coach this month.">' + esc(d.focus || '') + '</textarea></div></div>';
-    h += '<div class="ra-err" id="db-err"></div><div class="ra-actions">' + (editable ? '<button type="button" class="ra-btn ghost" id="db-close">Close</button><button type="button" class="ra-btn primary" id="db-save-focus">Save focus</button>' : '<button type="button" class="ra-btn primary" id="db-close">Close</button>') + '</div>';
-    var b = modal(h, 'db-rate');
-    b.querySelector('#db-close').onclick = closeModal;
-    var err = function (m) { var e = b.querySelector('#db-err'); if (!e) return; e.textContent = m || ''; e.classList.toggle('on', !!m); };
-    b.querySelectorAll('.row').forEach(function (row) { rebindRow(a, row.getAttribute('data-skill'), row, err); });
-    var sf = b.querySelector('#db-save-focus');
-    if (sf) sf.onclick = async function () {
-      var txt = b.querySelector('#db-focus').value.trim(); sf.disabled = true;
-      try { var r = await commit('set_player_dev_field', { p_athlete_id: a.id, p_field: 'focus', p_key: null, p_value: txt || null }); if (!r.ok) throw r.error; (state.dev[a.id] = state.dev[a.id] || { athlete_id: a.id, skills: {} }).focus = txt || null; toast(r.queued ? 'Focus saved on this device. It sends when you are online.' : 'Focus saved.'); paint(); }
-      catch (e) { err(e.message || 'Could not save.'); }
-      sf.disabled = false;
-    };
-  }
-  async function save(a, sk, p, r, row, err) {
-    try {
-      var res = await commit('set_player_skill', { p_athlete_id: a.id, p_skill: sk, p_phase: p, p_rating: r }); if (!res.ok) throw res.error;
-      var d = state.dev[a.id] = state.dev[a.id] || { athlete_id: a.id, skills: {} }; d.skills = d.skills || {}; d.skills[sk] = res.data ? res.data.value : { p: p, r: r };
-      var fresh = document.createElement('div'); fresh.innerHTML = rateRow(a, sk, true); var nr = fresh.firstChild; row.parentNode.replaceChild(nr, row);
-      rebindRow(a, sk, nr, err); err('');
-      paint();
-    } catch (e) { err(e.message || 'Could not save.'); }
-  }
-  function rebindRow(a, sk, row, err) {
-    row.querySelectorAll('[data-phase]').forEach(function (btn) {
-      btn.onclick = async function () {
-        var cur = skillOf(a, sk); var p = +btn.getAttribute('data-phase'); if (p === cur.p) p = p - 1;
-        var rule = (state.cfg.prereqs || {})[sk]; if (p === 3 && rule && skillOf(a, rule.need).p < rule.needPhase) { err(rule.msg + '.'); return; }
-        await save(a, sk, p, p === 0 ? 0 : (cur.r || 1), row, err);
-      };
-    });
-    row.querySelectorAll('[data-rating]').forEach(function (btn) {
-      btn.onclick = async function () { var cur = skillOf(a, sk); var r = +btn.getAttribute('data-rating'); if (r === cur.r) r = r - 1; await save(a, sk, cur.p || 1, r, row, err); };
-    });
+  function escClose(e) { if (e.key === 'Escape') closeSheet(); }
+  function closeSheet() { var b = el('db-backdrop'); if (b) b.remove(); document.removeEventListener('keydown', escClose); }
+  // Drill detail, the Command Center card: what to look for, standard, elite tell, drills to run with levels.
+  function openDrill(d, a) {
+    var c = d.coaching || {}; var color = tagColor(d.tag); var prog = d.progression || [1, 1, 2, 2, 3];
+    var mySubs = a ? needsOf(a).map(function (n) { return n.key; }) : []; var myPhase = a && mySubs.length ? needsOf(a)[0].phase : 0;
+    var h = '<div class="hd">' + tagChip(d.tag) + '<button type="button" class="x" aria-label="Close">&times;</button><h3>' + esc(d.name) + '</h3><p>' + esc(d.cue || '') + '</p></div><div class="bd">';
+    h += '<div class="sec">Develops</div><div class="devs">' + (d.develops || []).map(function (k) { return '<span class="db-chip' + (mySubs.indexOf(k) >= 0 ? ' hit' : '') + '">' + esc(subKeyLabel(k)) + '</span>'; }).join('') + (d.level ? '<span class="db-chip">Level ' + esc(phaseName(d.level)) + '</span>' : '<span class="db-chip">Any level</span>') + (d.min ? '<span class="db-chip">' + esc(d.min) + ' min</span>' : '') + '</div>';
+    if (c.look && c.look.length) h += '<div class="sec">What to look for</div><ul class="dots">' + c.look.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>';
+    if (c.standard) h += '<div class="box"><span class="k">Standard</span><span>' + esc(c.standard) + '</span></div>';
+    if (c.elite) h += '<div class="box"><span class="k">Elite tell</span><span>' + esc(c.elite) + '</span></div>';
+    if (c.drills && c.drills.length) h += '<div class="sec">Drills to run</div><ul class="dots">' + c.drills.map(function (r, i) { var L = prog[i] || 1; return '<li' + (myPhase && L === myPhase ? ' class="mine"' : '') + '><span class="lv">' + esc(phaseName(L).slice(0, 1)) + '</span>' + esc(r) + '</li>'; }).join('') + '</ul>';
+    if (d.review) h += '<div class="box" style="background:#fff6ec;border-color:#fde3c8"><span class="k" style="color:#d9660a">Review</span><span style="font-weight:500">' + esc(d.review) + (d.source ? ' (' + esc(d.source) + ')' : '') + '</span></div>';
+    h += '</div>';
+    sheet(h, color);
   }
   function openDrills(a) {
     var seen = {}; var list = [];
-    needsOf(a).forEach(function (n) { drillsFor(n.skill, [], 6).forEach(function (d) { if (seen[d.name]) return; seen[d.name] = 1; list.push({ need: n.skill, drill: d }); }); });
-    var h = '<h3>Drills for ' + esc(a.first_name) + '</h3><p class="ra-sub">Everything in the bank tagged for his three needs. Cue, what to look for, the standard.</p>';
-    if (!list.length) h += '<div class="ra-hint">Nothing tagged yet.</div>';
-    list.forEach(function (x) { var d = x.drill; var c = d.coaching || {}; h += '<div style="padding:12px 0;border-top:1px solid rgba(60,60,67,.08)"><div style="display:flex;justify-content:space-between;gap:10px"><b style="font-size:15px">' + esc(d.name) + '</b><span class="ra-hint">' + esc(label(x.need)) + ', ' + esc(d.min || 5) + ' min</span></div><div style="font-size:13.5px;color:#3A3A3C;margin-top:3px">' + esc(d.cue || '') + '</div>' + (c.look && c.look.length ? '<ul style="margin:8px 0 0;padding-left:18px;font-size:13px;color:#3A3A3C;line-height:1.5">' + c.look.slice(0, 3).map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>' : '') + (c.standard ? '<div style="font-size:12.5px;color:#6E6E73;margin-top:6px">Standard: ' + esc(c.standard) + '</div>' : '') + '</div>'; });
-    h += '<div class="ra-actions"><button type="button" class="ra-btn primary" id="db-close">Close</button></div>';
-    modal(h).querySelector('#db-close').onclick = closeModal;
+    needsOf(a).forEach(function (n) { drillsForSub(n.key, n.phase, [], 4).forEach(function (d) { if (seen[d.name]) return; seen[d.name] = 1; list.push({ need: n, drill: d }); }); });
+    var h = '<div class="hd"><span class="db-tag" style="--tc:#0071e3">Drills for him</span><button type="button" class="x" aria-label="Close">&times;</button><h3>' + esc(a.first_name) + '</h3><p>Everything in the bank that develops his three needs, best fit first. Tap one for the detail.</p></div><div class="bd">';
+    if (!list.length) h += '<p style="color:#6e6e73">Nothing tagged for his needs yet, or he is not rated.</p>';
+    var byNeed = {}; list.forEach(function (x) { (byNeed[x.need.key] = byNeed[x.need.key] || []).push(x.drill); });
+    Object.keys(byNeed).forEach(function (k) {
+      h += '<div class="sec">' + esc(subKeyLabel(k)) + ' <span style="color:#a1a1a6;font-weight:600">' + esc(rubric(subScore(a, k))) + '</span></div>';
+      byNeed[k].forEach(function (d) { var rep = repAt(d, needsOf(a).filter(function (n) { return n.key === k; })[0].phase); h += '<div class="db-item" data-drill="' + esc(d.name) + '" style="display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:10px 0;border-bottom:1px solid #ececf0;cursor:pointer"><div><div style="font-weight:600;font-size:14.5px">' + esc(d.name) + '</div><div style="font-size:12.5px;color:#6e6e73;margin-top:2px">' + esc(d.cue || '') + '</div><div style="margin-top:6px">' + tagChip(d.tag, 'sm') + '</div></div><div style="font-size:12px;font-weight:600;color:#6e6e73;white-space:nowrap">' + esc(d.min || 5) + ' min</div>' + (rep ? '<div style="grid-column:1/-1;font-size:12.5px;background:#f5f5f7;border-radius:8px;padding:7px 10px;margin-top:6px"><b style="color:#0071e3;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;margin-right:6px">Start here</b>' + esc(rep.text) + '</div>' : '') + '</div>'; });
+    });
+    h += '</div>';
+    var b = sheet(h, '#0071e3');
+    b.querySelectorAll('[data-drill]').forEach(function (n) { n.onclick = function () { var d = findDrill(n.getAttribute('data-drill')); if (d) openDrill(d, a); }; });
+  }
+
+  // ---------- rate sheet (three minutes per player) ----------
+  function rateRowHtml(a, sk, s, editable) {
+    var key = sk + '.' + s.key; var v = subScore(a, key);
+    if (sk === 'strength') {
+      var raw_ = (devOf(a).strength_bench || {})[s.key]; var sc = strengthScore(ageOf(a), s.key, raw_);
+      return '<div class="rt-row" data-sub="' + key + '"><div class="lb">' + esc(s.label) + '<small>' + esc(s.hint) + '</small></div><div class="rt-num"><input type="number" step="0.1" inputmode="decimal" data-bench="' + s.key + '" value="' + (raw_ == null ? '' : esc(raw_)) + '"' + (editable ? '' : ' disabled') + '><small>' + esc(s.unit || '') + '</small><span class="sc' + (sc ? ' g' : '') + '">' + (sc || '') + '</span></div></div>';
+    }
+    var h = '<div class="rt-row" data-sub="' + key + '"><div class="lb">' + esc(s.label) + (s.hint ? '<small>' + esc(s.hint) + '</small>' : '') + '</div><div class="rt-seg">';
+    for (var i = 1; i <= 5; i++) h += '<button type="button" data-v="' + i + '" class="' + (i === v ? 'on' : '') + '" title="' + esc(rubric(i)) + '"' + (editable ? '' : ' disabled') + '>' + i + '</button>';
+    return h + '</div><div class="rt-word">' + (v ? esc(rubric(v)) : '') + '</div></div>';
+  }
+  function skillHead(a, sk) {
+    var st = skillOf(a, sk); var tr = track(a, sk); var t = targetsFor(ageOf(a))[sk] || 0;
+    var pill = !st.n ? '<span class="ph">Not rated</span>' : '<span class="ph ' + tr + '">' + esc(phaseName(st.p)) + (st.capped ? ', capped' : '') + (t && tr !== 'on' ? ', target ' + esc(phaseName(t)) : '') + '</span>';
+    return '<div class="rt-head"><b>' + esc(label(sk)) + '</b>' + pill + '<span style="font-size:11.5px;color:#a1a1a6;margin-left:auto">' + st.n + ' of ' + subList(sk).length + '</span></div>';
+  }
+  function openRate(a, teamId) {
+    var editable = canEdit(teamId); var d = devOf(a);
+    var h = '<div class="hd"><span class="db-tag" style="--tc:#0071e3">Rate</span><button type="button" class="x" aria-label="Close">&times;</button><h3>' + esc(a.first_name + ' ' + (a.last_name || '')) + '</h3><p>Age ' + ageOf(a) + (positionOf(a) ? ', ' + esc(positionOf(a)) : '') + '. Score what you see. Every tap saves. The phase for each skill comes from the scores.</p></div><div class="bd">';
+    h += '<div class="legend"><span><b>1</b> Poor</span><span><b>2</b> Weak</span><span><b>3</b> Some good actions</span><span><b>4</b> Consistent</span><span><b>5</b> Excellent</span></div>';
+    h += '<div class="sec">Position</div><div class="pos">' + POSITIONS.map(function (p) { return '<button type="button" data-pos="' + p + '" class="' + (positionOf(a) === p ? 'on' : '') + '"' + (editable ? '' : ' disabled') + '>' + p + '</button>'; }).join('') + '</div>';
+    skillOrder().forEach(function (sk) { h += '<div class="rt-skill" data-skill="' + sk + '">' + skillHead(a, sk) + subList(sk).map(function (s) { return rateRowHtml(a, sk, s, editable); }).join('') + '</div>'; });
+    h += '<div class="sec">Coach focus</div><textarea id="db-focus" maxlength="240"' + (editable ? '' : ' disabled') + ' placeholder="One sentence. What he hears from every coach this month.">' + esc(d.focus || '') + '</textarea>';
+    h += '<div class="err" id="db-err"></div><div class="actions"><button type="button" class="btn" data-close>Close</button>' + (editable ? '<button type="button" class="btn primary" id="db-save-focus">Save focus</button>' : '') + '</div></div>';
+    var b = sheet(h, '#0071e3');
+    var err = function (m) { var e = b.querySelector('#db-err'); if (!e) return; e.textContent = m || ''; e.classList.toggle('on', !!m); };
+    var refreshSkill = function (sk) { var box = b.querySelector('.rt-skill[data-skill="' + sk + '"]'); if (!box) return; var head = box.querySelector('.rt-head'); var tmp = document.createElement('div'); tmp.innerHTML = skillHead(a, sk); head.replaceWith(tmp.firstChild); };
+    b.querySelectorAll('.rt-row [data-v]').forEach(function (btn) {
+      btn.onclick = async function () {
+        var row = btn.closest('.rt-row'); var key = row.getAttribute('data-sub'); var v = +btn.getAttribute('data-v'); if (v === subScore(a, key)) v = 0;
+        var res = await commit('set_player_sub', { p_athlete_id: a.id, p_sub: key, p_score: v });
+        if (!res.ok) { err(res.error && res.error.message || 'Could not save.'); return; }
+        var dd = state.dev[a.id] = state.dev[a.id] || { athlete_id: a.id, skills: {}, subs: {} }; dd.subs = dd.subs || {}; if (v) dd.subs[key] = v; else delete dd.subs[key];
+        dd.skills = res.data && res.data.skills ? res.data.skills : deriveSkills(dd.subs);
+        row.querySelectorAll('[data-v]').forEach(function (x) { x.classList.toggle('on', +x.getAttribute('data-v') === v); }); row.querySelector('.rt-word').textContent = v ? rubric(v) : '';
+        Object.keys(subsCfg()).forEach(refreshSkill); err(''); paint();
+      };
+    });
+    b.querySelectorAll('input[data-bench]').forEach(function (inp) {
+      inp.onchange = async function () {
+        var k = inp.getAttribute('data-bench'); var val = inp.value === '' ? null : +inp.value; var key = 'strength.' + k; var sc = val == null ? 0 : strengthScore(ageOf(a), k, val);
+        var r1 = val == null ? { ok: true } : await commit('set_player_dev_field', { p_athlete_id: a.id, p_field: 'strength_bench', p_key: k, p_value: val });
+        if (!r1.ok) { err(r1.error && r1.error.message || 'Could not save.'); return; }
+        var r2 = await commit('set_player_sub', { p_athlete_id: a.id, p_sub: key, p_score: sc });
+        if (!r2.ok) { err(r2.error && r2.error.message || 'Could not save.'); return; }
+        var dd = state.dev[a.id] = state.dev[a.id] || { athlete_id: a.id, skills: {}, subs: {} }; dd.strength_bench = dd.strength_bench || {}; if (val == null) delete dd.strength_bench[k]; else dd.strength_bench[k] = val; dd.subs = dd.subs || {}; if (sc) dd.subs[key] = sc; else delete dd.subs[key]; dd.skills = r2.data && r2.data.skills ? r2.data.skills : deriveSkills(dd.subs);
+        var scEl = inp.parentNode.querySelector('.sc'); scEl.textContent = sc || ''; scEl.classList.toggle('g', !!sc); refreshSkill('strength'); err(''); paint();
+      };
+    });
+    b.querySelectorAll('.pos [data-pos]').forEach(function (btn) { btn.onclick = async function () { await setPosition(a, btn.getAttribute('data-pos'), err); b.querySelectorAll('.pos [data-pos]').forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-pos') === positionOf(a)); }); }; });
+    var sf = b.querySelector('#db-save-focus');
+    if (sf) sf.onclick = async function () {
+      var txt = b.querySelector('#db-focus').value.trim(); sf.disabled = true;
+      var r = await commit('set_player_dev_field', { p_athlete_id: a.id, p_field: 'focus', p_key: null, p_value: txt || null });
+      if (!r.ok) err(r.error && r.error.message || 'Could not save.'); else { (state.dev[a.id] = state.dev[a.id] || { athlete_id: a.id, skills: {}, subs: {} }).focus = txt || null; toast(r.queued ? 'Focus saved on this device. It sends when you are online.' : 'Focus saved.'); paint(); }
+      sf.disabled = false;
+    };
+  }
+  async function setPosition(a, pos, err) {
+    var next = positionOf(a) === pos ? null : pos;
+    var r = await commit('set_player_position', { p_athlete_id: a.id, p_position: next });
+    if (!r.ok) { if (err) err(r.error && r.error.message || 'Could not save.'); else toast(r.error && r.error.message || 'Could not save.'); return; }
+    (state.dev[a.id] = state.dev[a.id] || { athlete_id: a.id, skills: {}, subs: {} }).position = next; paint();
   }
 
   // ---------- team tab ----------
-  function readOfWeek(players) { var top = teamNeeds(players).filter(function (r) { return r.players > 0 && r.skill !== 'coachability'; })[0]; var key = top ? top.skill : 'handles'; return { skill: key, read: READS[key] || READS.handles }; }
+  function readOfWeek(players) { var top = teamNeeds(players)[0]; var key = top ? top.skill : 'handles'; return { skill: key, read: READS[key] || READS.handles }; }
   function teamHtml() {
-    var ps = playersOf(state.teamId); var h = teamBar();
+    var ps = playersOf(state.teamId); var h = teamBar(false);
     if (!ps.length) return h + '<div class="db-empty">No active players on this team.</div>';
-    var rated = ps.filter(started); var tn = teamNeeds(rated).slice(0, 3); var row = readOfWeek(rated); var wg = workGroups(rated); var gp = gaps(ps);
-    h += '<div class="db-lead"><div><h4>' + esc(row.read[0]) + '</h4><p>The read of the week, chosen from the top need. ' + esc(row.read[1]) + '</p></div><div class="st"><div><b>' + rated.length + '</b><small>Rated</small></div><div><b>' + (ps.length - rated.length) + '</b><small>To rate</small></div><div><b>' + wg.length + '</b><small>Stations</small></div></div></div>';
-    h += '<div class="db-two"><div class="db-panel"><h4>Top three needs</h4><p class="in">How many players have each skill in their next three, and the average phase.</p>';
-    if (!rated.length) h += '<div class="ra-hint">Rate a few players first.</div>';
-    tn.forEach(function (r, i) { h += '<div class="db-rank"><span class="k">' + (i + 1) + '</span><div><b>' + esc(label(r.skill)) + '</b><div class="bar"><i style="width:' + Math.round(r.players / rated.length * 100) + '%"></i></div></div><small>' + r.players + ' of ' + rated.length + ', avg ' + r.avg.toFixed(1) + '</small></div>'; });
+    var rated = ps.filter(started); var tn = teamNeeds(rated).slice(0, 5); var row = readOfWeek(rated); var wg = workGroups(rated); var gp = gaps(ps);
+    h += '<div class="db-lead"><div><h4>' + esc(row.read[0]) + '</h4><p>The read of the week, from the top need on this roster. ' + esc(row.read[1]) + '</p></div><div class="st"><div><b>' + rated.length + '</b><small>Rated</small></div><div><b>' + (ps.length - rated.length) + '</b><small>To rate</small></div><div><b>' + wg.length + '</b><small>Stations</small></div></div></div>';
+    h += '<div class="db-two"><div class="db-panel"><h4>Top needs</h4><p class="in">Sub-skills that show up in the most players\' next three.</p>';
+    if (!rated.length) h += '<div class="db-note">Rate a few players first.</div>';
+    tn.forEach(function (r, i) { h += '<div class="db-rank"><span class="k">' + (i + 1) + '</span><div><b>' + esc(subKeyLabel(r.key)) + '<small>' + esc(label(r.skill)) + '</small></b><div class="bar"><i style="width:' + Math.round(r.players / rated.length * 100) + '%"></i></div></div><small class="r">' + r.players + ' of ' + rated.length + ', avg ' + r.avg.toFixed(1) + '</small></div>'; });
     h += '</div><div class="db-panel"><h4>Gaps</h4><p class="in">What the director sees first.</p>';
     gp.forEach(function (g) { h += '<div class="db-gap ' + g[0] + '"><i></i><span>' + esc(g[1]) + '</span></div>'; });
     h += '</div></div>';
     h += '<div class="db-panel" style="margin-top:14px"><h4>Work groups for power-ups</h4><p class="in">Players bucketed by their first drill. One coach per two stations, rotate at five minutes.</p>';
-    if (!wg.length) h += '<div class="ra-hint">Groups appear once players are rated.</div>';
-    wg.forEach(function (g) { h += '<div class="db-group"><b>' + esc(g.drill.name) + ' <span style="font-weight:500;color:#6E6E73">for ' + esc(label(g.need)) + ', ' + esc(g.drill.min || 5) + ' min</span></b><div class="who">' + esc(g.players.map(function (a) { return (a.first_name + ' ' + (a.last_name || '').charAt(0)).trim(); }).join(', ')) + '</div><div class="cue">' + esc(g.drill.cue || '') + '</div></div>'; });
+    if (!wg.length) h += '<div class="db-note">Groups appear once players are rated.</div>';
+    wg.forEach(function (g) { h += '<div class="db-group"><b>' + esc(g.drill.name) + ' <span style="font-weight:500;color:#6e6e73">for ' + esc(subKeyLabel(g.need.key).toLowerCase()) + ', ' + esc(g.drill.min || 5) + ' min</span></b><div class="who">' + esc(g.players.map(shortName).join(', ')) + '</div><div class="cue">' + esc(g.drill.cue || '') + '</div></div>'; });
     h += '</div>';
     if (state.isAdmin) {
       h += '<div class="db-panel" style="margin-top:14px"><h4>All teams</h4><p class="in">Director view. Rated players and behind-target skills per team.</p>';
-      teams().forEach(function (t) { var tp = playersOf(t.id); if (!tp.length) return; var b = 0; tp.forEach(function (a) { b += behindCount(a); }); h += '<div class="db-rank"><span class="k" style="background:#0071E3">' + tp.length + '</span><div><b>' + esc(t.name) + '</b></div><small>' + tp.filter(started).length + ' rated, ' + b + ' behind</small></div>'; });
+      teams().forEach(function (t) { var tp = playersOf(t.id); if (!tp.length) return; var b = 0; tp.forEach(function (a) { b += behindCount(a); }); h += '<div class="db-rank"><span class="k" style="background:#0071e3">' + tp.length + '</span><div><b>' + esc(t.name) + '</b></div><small class="r">' + tp.filter(started).length + ' rated, ' + b + ' behind</small></div>'; });
       h += '</div>';
     }
     return h;
@@ -559,37 +721,43 @@
   function swapKey(block, i) { return state.teamId + ':' + block + ':' + i; }
   function pick(cands, block, i) { if (!cands.length) return null; var off = state.swaps[swapKey(block, i)] || 0; return cands[off % cands.length]; }
   function stationHtml(k, d, who, block, i, cands) {
-    return '<div class="db-st"><span class="k">' + esc(k) + '</span><div><b>' + esc(d.name) + '</b><span>' + esc(d.cue || '') + '</span>' + (who ? '<span class="who">' + esc(who) + '</span>' : '') + '</div>' + (cands && cands.length > 1 ? '<button type="button" class="db-link" data-swap="' + esc(block + '|' + i) + '">Swap</button>' : '<span class="mn" style="font-size:12px;color:#6E6E73">' + esc(d.min || 5) + ' min</span>') + '</div>';
+    return '<div class="db-st"><span class="k">' + esc(k) + '</span><div data-drill="' + esc(d.name) + '" style="cursor:pointer"><b>' + esc(d.name) + '</b><span>' + esc(d.cue || '') + '</span>' + (who ? '<span class="who">' + esc(who) + '</span>' : '') + '</div>' + (cands && cands.length > 1 ? '<button type="button" class="db-link" data-swap="' + esc(block + '|' + i) + '">Swap</button>' : '<span style="font-size:12px;color:#6e6e73">' + esc(d.min || 5) + ' min</span>') + '</div>';
   }
   function planHtml() {
-    var ps = playersOf(state.teamId); var h = teamBar();
+    var ps = playersOf(state.teamId); var h = teamBar(false);
     if (!state.shape) return h + '<div class="db-empty">The practice shape is not loaded.</div>';
     var rated = ps.filter(started); var wg = workGroups(rated); var row = readOfWeek(rated); var tn = teamNeeds(rated);
     var day = new Date(); var dow = day.getDay(); var next = dow < 2 ? 'Tuesday' : dow < 4 ? 'Thursday' : 'Tuesday';
-    h += '<div class="db-lead"><div><h4>' + esc(next) + ', doors 5:55, ball at 6:00.</h4><p>Seven blocks from How we practice. Power-ups and the finishing bridge are filled from this roster\'s needs; the guided block teaches this week\'s read. Swap a drill if the gym says so.</p></div><div class="st"><div><b>' + esc(row.read[0]) + '</b><small>Read of the week</small></div></div></div>';
-    h += '<div class="db-plan-bar"><button type="button" class="db-btn" id="db-print">Print</button><button type="button" class="db-btn ghost" id="db-copy">Copy as text</button><span class="ra-hint">' + (rated.length ? rated.length + ' rated players shape this plan.' : 'Nobody is rated yet, so the stations are the default power-ups.') + '</span></div>';
+    h += '<div class="db-lead"><div><h4>' + esc(next) + ', doors 5:55, ball at 6:00.</h4><p>Seven blocks from How we practice. Power-ups and the finishing bridge are filled from this roster\'s needs; the guided block teaches this week\'s read. Swap a drill if the gym says so.</p></div><div class="st"><div><b style="font-size:18px">' + esc(row.read[0]) + '</b><small>Read of the week</small></div></div></div>';
+    h += '<div class="db-plan-bar"><button type="button" class="db-btn primary" id="db-print">Print</button><button type="button" class="db-btn" id="db-copy">Copy as text</button><span class="db-note" style="margin:0">' + (rated.length ? rated.length + ' rated players shape this plan.' : 'Nobody is rated yet, so the stations are the default power-ups.') + '</span></div>';
     h += '<div class="db-panel" id="db-plan">';
     state.shape.blocks.forEach(function (b, bi) {
-      h += '<div class="db-block"><div class="tm">' + esc(b.start) + '<small>' + esc(b.minutes) + ' min</small></div><div><h5>' + esc(b.name) + '</h5><p>' + esc(b.what) + '</p>' + (b.note ? '<div class="nt">' + esc(b.note) + '</div>' : '');
+      h += '<div class="db-block"><span class="n">' + (bi + 1) + '</span><div class="tm">' + esc(b.start) + '<small>' + esc(b.minutes) + ' min</small></div><div><h5>' + esc(b.name) + '</h5><p>' + esc(b.what) + '</p>' + (b.note ? '<div class="nt">' + esc(b.note) + '</div>' : '');
       if (/power-ups/i.test(b.name)) {
         h += '<div class="db-fill">';
-        if (wg.length) wg.slice(0, 4).forEach(function (g, i) { var cands = drillsFor(g.need, [], 6); var d = pick(cands, 'pu', i) || g.drill; h += stationHtml('Station ' + (i + 1), d, g.players.map(function (a) { return (a.first_name + ' ' + (a.last_name || '').charAt(0)).trim(); }).join(', '), 'pu', i, cands); });
+        if (wg.length) wg.slice(0, 4).forEach(function (g, i) { var cands = drillsForSub(g.need.key, g.need.phase, [], 6); var d = pick(cands, 'pu', i) || g.drill; h += stationHtml('Station ' + (i + 1), d, g.players.map(shortName).join(', '), 'pu', i, cands); });
         var unr = ps.filter(function (a) { return !started(a); });
-        if (wg.length && unr.length) { var ud = visibleBank().filter(function (d) { return /bodyweight strength|core and bracing/i.test(d.name); })[0]; if (ud) h += stationHtml('Utility', ud, 'Not rated yet, so they work strength: ' + unr.map(function (a) { return (a.first_name + ' ' + (a.last_name || '').charAt(0)).trim(); }).join(', '), 'ut', 0, []); }
+        if (wg.length && unr.length) { var ud = findDrill('Bodyweight strength circuit'); if (ud) h += stationHtml('Utility', ud, 'Not rated yet, so they work strength: ' + unr.map(shortName).join(', '), 'ut', 0, []); }
         if (!wg.length && state.powerups) ['Guard', 'Wing', 'Big'].forEach(function (k, i) { var list = state.powerups[k] || []; var d = list.length ? (findDrill(list[i % list.length].text) || { name: list[i % list.length].text, cue: '' }) : null; if (d) h += stationHtml(k, d, '', 'pu', i, []); });
         h += '</div>';
       }
       if (/finishing bridge/i.test(b.name)) {
-        var cands = []; FINISH_RX.forEach(function (rx) { visibleBank().forEach(function (d) { if (rx.test(d.name) && cands.indexOf(d) < 0) cands.push(d); }); });
-        var need = tn.filter(function (r) { return ['strength', 'shooting', 'postGame', 'handles'].indexOf(r.skill) >= 0 && r.players > 0; })[0];
-        if (need) cands.sort(function (x, y) { return ((y.skills || []).indexOf(need.skill) >= 0 ? 1 : 0) - ((x.skills || []).indexOf(need.skill) >= 0 ? 1 : 0); });
-        var d = pick(cands, 'fb', 0); if (d) h += '<div class="db-fill">' + stationHtml('Finish', d, need ? label(need.skill) + ' is a top need on this roster' : '', 'fb', 0, cands) + '</div>';
+        var cands = visibleBank().filter(function (d) { return (d.develops || []).indexOf('shooting.finishing') >= 0; });
+        var need = tn.filter(function (r) { return /finishing|weakHand|footwork|attackAdvantage/.test(r.key); })[0];
+        cands.sort(function (x, y) { return ((y.develops || []).indexOf('shooting.finishing') === 0 ? 1 : 0) - ((x.develops || []).indexOf('shooting.finishing') === 0 ? 1 : 0) || (x.import ? 1 : 0) - (y.import ? 1 : 0); });
+        var d = pick(cands, 'fb', 0); if (d) h += '<div class="db-fill">' + stationHtml('Finish', d, need ? subKeyLabel(need.key) + ' is a top need on this roster' : '', 'fb', 0, cands) + '</div>';
       }
       if (/guided reads/i.test(b.name)) h += '<div class="db-fill"><div class="db-st"><span class="k">Read</span><div><b>' + esc(row.read[0]) + '</b><span>' + esc(row.read[1]) + '</span></div></div></div>';
-      if (/competition/i.test(b.name) && tn[1] && tn[1].players) h += '<div class="db-fill"><div class="db-st"><span class="k">Watch</span><div><b>' + esc(label(tn[1].skill)) + '</b><span>Second need on this roster. Call it out when you see it, good or bad.</span></div></div></div>';
+      if (/competition/i.test(b.name) && tn[1]) h += '<div class="db-fill"><div class="db-st"><span class="k">Watch</span><div><b>' + esc(subKeyLabel(tn[1].key)) + '</b><span>Second need on this roster. Call it out when you see it, good or bad.</span></div></div></div>';
       h += '</div></div>';
     });
     h += '</div>';
+    if (state.workout) {
+      h += '<div class="db-panel" style="margin-top:14px"><h4>' + esc(state.workout.title || 'Workout track') + '</h4><p class="in">' + esc(state.workout.intro || '') + '</p>';
+      (state.workout.blocks || []).forEach(function (b) { var d = findDrill(b.drill); h += '<div class="db-group"><b>' + esc(b.name) + ' <span style="font-weight:500;color:#6e6e73">' + esc(b.minutes) + ' min</span></b>' + (d ? '<div class="who" data-drill="' + esc(d.name) + '" style="cursor:pointer;color:#0071e3;font-weight:600">' + esc(d.name) + '</div>' : '') + (b.rx ? '<div class="cue">' + esc(b.rx.join('. ')) + '</div>' : '') + (b.note ? '<div class="cue">' + esc(b.note) + '</div>' : '') + '</div>'; });
+      if (state.workout.progression) h += '<div class="db-sec" style="margin-top:12px">Progression</div>' + state.workout.progression.map(function (p) { return '<div class="db-gap grey"><i></i><span><b>' + esc(p[0]) + '</b>: ' + esc(p[1]) + '</span></div>'; }).join('');
+      h += '</div>';
+    }
     if (state.shape.rules && state.shape.rules.length) h += '<div class="db-note">' + state.shape.rules.map(esc).join('  ') + '</div>';
     return h;
   }
@@ -600,41 +768,53 @@
     return out.join('\n');
   }
 
-  // ---------- drill bank tab (director only) ----------
+  // ---------- the bank ----------
   function bankHtml() {
-    var h = '<div class="db-lead"><div><h4>The Godspeed drill bank</h4><p>' + state.bank.length + ' drills, each tagged with the skills it develops. Tags decide which drill a player gets. Flagged drills are hidden from coaches until you decide.</p></div><div class="st"><div><b>' + state.bank.filter(function (d) { return d.review; }).length + '</b><small>Flagged</small></div><div><b>' + state.bank.filter(function (d) { return !(d.skills && d.skills.length); }).length + '</b><small>Untagged</small></div></div></div>';
-    var cov = {}; state.bank.forEach(function (d) { (d.skills || []).forEach(function (s) { cov[s] = (cov[s] || 0) + 1; }); });
-    h += '<div class="db-panel" style="margin-bottom:14px"><h4>Coverage</h4><p class="in">Drills per skill. A skill with fewer than three is thin.</p><div>' + state.cfg.skills.map(function (s) { return '<span class="db-chip' + ((cov[s] || 0) < 3 ? ' flag' : '') + '">' + esc(label(s)) + ' ' + (cov[s] || 0) + '</span>'; }).join('') + '</div></div>';
-    h += '<div class="db-panel"><div class="db-bank">';
-    state.bank.forEach(function (d) { h += '<div class="db-bk"><div class="nm"><b>' + esc(d.name) + '</b>' + (d.review ? '<span class="db-chip flag">Flagged</span>' : '') + '<div class="cue">' + esc(d.cue || '') + '</div></div><div class="ch"><span class="db-chip grp">' + esc(d.tag || '') + (d.min ? ', ' + esc(d.min) + ' min' : '') + '</span>' + (d.skills || []).map(function (sk) { return '<span class="db-chip">' + esc(label(sk)) + '</span>'; }).join('') + '</div></div>'; });
-    h += '</div></div><div class="db-note">Editing tags and age targets from here is the next step. For now they change in the database.</div>';
+    var all = visibleBank(); var q = state.bankQ.trim().toLowerCase(); var tag = state.bankTag;
+    var list = all.filter(function (d) { return (tag === 'All' || d.tag === tag) && (!q || (d.name + ' ' + (d.cue || '') + ' ' + (d.develops || []).map(subKeyLabel).join(' ')).toLowerCase().indexOf(q) >= 0); });
+    var cov = {}; all.forEach(function (d) { (d.develops || []).forEach(function (k) { cov[k] = (cov[k] || 0) + 1; }); });
+    var thin = []; Object.keys(subsCfg()).forEach(function (sk) { subList(sk).forEach(function (s) { if ((cov[sk + '.' + s.key] || 0) < 2) thin.push(sk + '.' + s.key); }); });
+    var h = '<div class="db-lead"><div><h4>The Bank</h4><p>' + all.length + ' drills, each tagged with the sub-skills it develops and the level it is for. The tags decide which drill a player gets. Tap a card for the coaching detail.</p></div><div class="st"><div><b>' + all.length + '</b><small>Drills</small></div>' + (state.isAdmin ? '<div><b>' + all.filter(function (d) { return d.import; }).length + '</b><small>Imported</small></div><div><b>' + all.filter(function (d) { return d.review && !d.import; }).length + '</b><small>Flagged</small></div>' : '') + '</div></div>';
+    h += '<div class="db-bar"><div class="db-teams"><button type="button" class="db-chipbtn' + (tag === 'All' ? ' active' : '') + '" data-tag="All">All</button>' + TAG_ORDER.map(function (t) { return '<button type="button" class="db-chipbtn' + (tag === t ? ' active' : '') + '" data-tag="' + esc(t) + '" style="--tc:' + tagColor(t) + '"><i></i>' + esc(t) + '</button>'; }).join('') + '</div><input class="db-search" type="search" placeholder="Search drills, cues, sub-skills" value="' + esc(state.bankQ) + '" aria-label="Search drills"></div>';
+    if (state.isAdmin && thin.length) h += '<div class="db-status on"><i></i>Thin coverage (fewer than two drills): ' + esc(thin.map(subKeyLabel).join(', ')) + '</div>';
+    h += '<div class="db-bankgrid">' + list.map(function (d) {
+      return '<div class="db-bk" data-drill="' + esc(d.name) + '" style="--tc:' + tagColor(d.tag) + '"><div class="top">' + tagChip(d.tag) + '<button type="button" class="db-i" aria-label="Detail">i</button></div><h5>' + esc(d.name) + '</h5><div class="cue">' + esc(d.cue || '') + '</div><div class="meta"><span>' + esc(d.min || 5) + ' min</span><span class="lv">' + (d.level ? esc(phaseName(d.level)) : 'Any level') + '</span></div><div class="devs">' + (d.develops || []).slice(0, 4).map(function (k) { return '<span class="db-chip">' + esc(subKeyLabel(k)) + '</span>'; }).join('') + (d.import && state.isAdmin ? '<span class="db-chip imp">Imported</span>' : '') + (d.review && !d.import ? '<span class="db-chip flag">Flagged</span>' : '') + '</div></div>';
+    }).join('') + '</div>';
+    if (!list.length) h += '<div class="db-empty">No drill matches.</div>';
+    h += '<div class="db-note">Editing tags, levels and flags from here is the next step. For now they change in the database.</div>';
     return h;
   }
 
   // ---------- paint and events ----------
-  var TABS = [['players', 'Players'], ['team', 'Team'], ['plan', 'Practice plan'], ['bank', 'Drill bank']];
+  var TABS = [['players', 'Players'], ['team', 'Team'], ['plan', 'Practice plan'], ['bank', 'The Bank']];
   function html() {
     if (state.error) return '<div class="db-empty">' + esc(state.error) + '</div>';
-    if (!state.loaded || !raw()) return '<div class="db-empty">Loading players and the drill bank...</div>';
+    if (!state.loaded || !raw()) return '<div class="db-empty">Loading players and the bank...</div>';
     if (!state.teamId) { var ts = teams().filter(function (t) { return playersOf(t.id).length; }); var mine = ts.filter(function (t) { return state.myTeams.indexOf(t.id) >= 0; }); state.teamId = (mine[0] || ts[0] || {}).id || null; }
-    var tabs = '<div class="db-tabs" role="tablist">' + TABS.filter(function (t) { return t[0] !== 'bank' || state.isAdmin; }).map(function (t) { return '<button type="button" role="tab" data-tab="' + t[0] + '"' + (t[0] === state.tab ? ' class="active"' : '') + '>' + t[1] + '</button>'; }).join('') + '</div>';
-    var body = state.tab === 'team' ? teamHtml() : state.tab === 'plan' ? planHtml() : state.tab === 'bank' && state.isAdmin ? bankHtml() : playersHtml();
+    var tabs = '<div class="db-tabs" role="tablist">' + TABS.map(function (t) { return '<button type="button" role="tab" data-tab="' + t[0] + '"' + (t[0] === state.tab ? ' class="active"' : '') + '>' + t[1] + '</button>'; }).join('') + '</div>';
+    var body = state.tab === 'team' ? teamHtml() : state.tab === 'plan' ? planHtml() : state.tab === 'bank' ? bankHtml() : playersHtml();
     return tabs + '<div id="db-status">' + statusHtml() + '</div>' + body;
   }
   function paint() {
     var v = el('devboard-view'); if (!v) return;
-    var focusQ = document.activeElement && document.activeElement.classList.contains('db-search'); var pos = focusQ ? document.activeElement.selectionStart : 0;
+    var act = document.activeElement; var focusQ = act && act.classList && act.classList.contains('db-search'); var pos = focusQ ? act.selectionStart : 0; var scrollTop = (document.querySelector('.dashboard-main') || {}).scrollTop;
     v.innerHTML = html();
+    if (typeof scrollTop === 'number') { var m = document.querySelector('.dashboard-main'); if (m) m.scrollTop = scrollTop; }
     var sn = v.querySelector('#db-sync-now'); if (sn) sn.onclick = flush;
-    v.querySelectorAll('.db-tabs button').forEach(function (b) { b.onclick = function () { state.tab = b.getAttribute('data-tab'); try { localStorage.setItem('gs_devboard_tab', state.tab); } catch (e) { /* optional */ } paint(); setSub(); }; });
-    v.querySelectorAll('.db-teams button').forEach(function (b) { b.onclick = function () { state.teamId = b.getAttribute('data-team'); paint(); }; });
-    var q = v.querySelector('.db-search'); if (q) { q.oninput = function () { state.q = q.value; paint(); }; if (focusQ) { q.focus(); try { q.setSelectionRange(pos, pos); } catch (e) { /* fine */ } } }
+    v.querySelectorAll('.db-tabs button').forEach(function (b) { b.onclick = function () { state.tab = b.getAttribute('data-tab'); try { localStorage.setItem('gs_devboard_tab', state.tab); } catch (e) { /* optional */ } paint(); setSub(); var mm = document.querySelector('.dashboard-main'); if (mm) mm.scrollTop = 0; }; });
+    v.querySelectorAll('.db-teams [data-team]').forEach(function (b) { b.onclick = function () { state.teamId = b.getAttribute('data-team'); paint(); }; });
+    v.querySelectorAll('.db-teams [data-tag]').forEach(function (b) { b.onclick = function () { state.bankTag = b.getAttribute('data-tag'); paint(); }; });
+    var q = v.querySelector('.db-search'); if (q) { q.oninput = function () { if (state.tab === 'bank') state.bankQ = q.value; else state.q = q.value; paint(); }; if (focusQ) { q.focus(); try { q.setSelectionRange(pos, pos); } catch (e) { /* fine */ } } }
     v.querySelectorAll('.db-card').forEach(function (card) {
       var a = playersOf(state.teamId).filter(function (x) { return x.id === card.getAttribute('data-id'); })[0]; if (!a) return;
       var rb = card.querySelector('[data-act="rate"]'); if (rb) rb.onclick = function () { openRate(a, state.teamId); };
       var db = card.querySelector('[data-act="drills"]'); if (db) db.onclick = function () { openDrills(a); };
+      var tg = card.querySelector('[data-act="toggle"]'); if (tg) tg.onclick = function () { state.expanded[a.id] = state.expanded[a.id] === false; paint(); };
+      card.querySelectorAll('.db-pos [data-pos]').forEach(function (pb) { pb.onclick = function () { setPosition(a, pb.getAttribute('data-pos')); }; });
+      card.querySelectorAll('.db-item[data-drill]').forEach(function (it) { it.onclick = function () { var d = findDrill(it.getAttribute('data-drill')); if (d) openDrill(d, a); }; });
     });
-    v.querySelectorAll('[data-swap]').forEach(function (b) { b.onclick = function () { var k = b.getAttribute('data-swap').split('|'); var key = swapKey(k[0], +k[1]); state.swaps[key] = (state.swaps[key] || 0) + 1; paint(); }; });
+    v.querySelectorAll('.db-bk[data-drill], #db-plan [data-drill], .db-panel [data-drill]').forEach(function (n) { n.onclick = function () { var d = findDrill(n.getAttribute('data-drill')); if (d) openDrill(d, null); }; });
+    v.querySelectorAll('[data-swap]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); var k = b.getAttribute('data-swap').split('|'); var key = swapKey(k[0], +k[1]); state.swaps[key] = (state.swaps[key] || 0) + 1; paint(); }; });
     var pr = el('db-print'); if (pr) pr.onclick = function () { window.print(); };
     var cp = el('db-copy'); if (cp) cp.onclick = function () { var t = planText(); if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function () { toast('Plan copied.'); }, function () { toast('Copy blocked by the browser.'); }); else toast('Copy is not available here.'); };
   }
@@ -642,6 +822,7 @@
     var s = document.querySelector('#coach-dashboard .dashboard-header .text-sub');
     if (s) s.textContent = { players: 'Needs and drills, per player.', team: 'Top needs, the read of the week, work groups.', plan: 'Tuesday and Thursday, built from the roster.', bank: 'Every drill and what it develops.' }[state.tab] || 'Development board';
   }
+
   function ensureView() {
     var v = el('devboard-view'); if (v) return v;
     var main = document.querySelector('.dashboard-main'); if (!main) return null;
