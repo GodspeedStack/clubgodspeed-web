@@ -333,7 +333,7 @@
   function gaps(players) {
     var out = [];
     var un = players.filter(function (a) { return !started(a); }).length;
-    if (un) out.push(['red', un + (un > 1 ? ' players' : ' player') + ' not evaluated yet. Open Evaluate; three minutes each.']);
+    if (un) out.push(['red', un + (un > 1 ? ' players' : ' player') + ' still need an evaluation. Open Evaluate and score them, about three minutes each.']);
     var behind = 0; players.forEach(function (a) { behind += behindCount(a); });
     if (behind) out.push(['orange', behind + ' skill' + (behind > 1 ? 's' : '') + ' behind the age target across the roster.']);
     var pv = 0; players.forEach(function (a) { pv += prereqWarnings(a).length; });
@@ -672,7 +672,7 @@
   }
   function openRate(a, teamId) {
     var editable = canEdit(teamId); var d = devOf(a);
-    var h = '<div class="hd"><span class="db-tag" style="--tc:#0071e3">Evaluation</span><button type="button" class="x" aria-label="Close">&times;</button><h3>' + esc(a.first_name + ' ' + (a.last_name || '')) + '</h3><p>Age ' + ageOf(a) + (positionOf(a) ? ', ' + esc(positionOf(a)) : '') + '. Score what you see. Every tap saves. The phase for each skill comes from the scores.</p></div><div class="bd">';
+    var h = '<div class="hd"><span class="db-tag" style="--tc:#0071e3">Evaluation</span><button type="button" class="x" aria-label="Close">&times;</button><h3>' + esc(a.first_name + ' ' + (a.last_name || '')) + '</h3><p>Age ' + ageOf(a) + (positionOf(a) ? ', ' + esc(positionOf(a)) : '') + '. Score what you see, and every tap saves as you go. The phase for each skill is calculated from those scores.</p></div><div class="bd">';
     h += '<div class="legend"><span><b>1</b> Poor</span><span><b>2</b> Weak</span><span><b>3</b> Some good actions</span><span><b>4</b> Consistent</span><span><b>5</b> Excellent</span></div>';
     if (editable) h += '<div class="rt-bulk"><b>Set every skill to</b><span class="seg">' + [1, 2, 3, 4, 5].map(function (i) { return '<button type="button" data-bulk="' + i + '">' + i + ' ' + esc(rubric(i)) + '</button>'; }).join('') + '</span><small>One tap scores all ' + (totalSubs() - subList('strength').length) + ' skills. Strength stays on the numbers. Then change the ones you saw differently.</small></div>';
     h += '<div class="sec">Position</div><div class="pos">' + POSITIONS.map(function (p) { return '<button type="button" data-pos="' + p + '" class="' + (positionOf(a) === p ? 'on' : '') + '"' + (editable ? '' : ' disabled') + '>' + p + '</button>'; }).join('') + '</div>';
@@ -724,7 +724,7 @@
     if (sf) sf.onclick = async function () {
       var txt = b.querySelector('#db-focus').value.trim(); sf.disabled = true;
       var r = await commit('set_player_dev_field', { p_athlete_id: a.id, p_field: 'focus', p_key: null, p_value: txt || null });
-      if (!r.ok) err(r.error && r.error.message || 'Could not save.'); else { (state.dev[a.id] = state.dev[a.id] || { athlete_id: a.id, skills: {}, subs: {} }).focus = txt || null; toast(r.queued ? 'Focus saved on this device. It sends when you are online.' : 'Focus saved.'); paint(); }
+      if (!r.ok) err(r.error && r.error.message || 'Could not save.'); else { (state.dev[a.id] = state.dev[a.id] || { athlete_id: a.id, skills: {}, subs: {} }).focus = txt || null; toast(r.queued ? 'Focus saved on this device, and it will send once you are back online.' : 'Focus saved.'); paint(); }
       sf.disabled = false;
     };
   }
@@ -763,7 +763,7 @@
       var r = await commit('share_player_development', { p_athlete_id: a.id, p_note: note || null, p_summary: sm });
       if (!r.ok) { err(r.error && r.error.message || 'Could not share.'); btn.disabled = false; return; }
       state.shares[a.id] = { athlete_id: a.id, shared_at: (r.data && r.data.shared_at) || new Date().toISOString(), note: note || null };
-      toast(r.queued ? 'Saved on this device. It shares when you are online.' : 'Shared with the parent.'); closeSheet(); paint();
+      toast(r.queued ? 'Saved on this device, and it will share with the parent once you are back online.' : 'Shared with the parent.'); closeSheet(); paint();
     };
   }
   // Director: who may share. One toggle per coach, all teams.
@@ -895,7 +895,7 @@
     if (!canEdit(state.teamId)) return; var plan = planData(); if (!plan.stations.length) { toast('Nothing to save yet. Evaluate a few players first.'); return; }
     btn.disabled = true; var r = await commit('save_practice_plan', { p_team_id: state.teamId, p_plan_date: nextPracticeDate(), p_plan: plan }); btn.disabled = false;
     if (!r.ok) { toast('Could not save the plan: ' + (r.error && r.error.message || 'error')); return; }
-    toast(r.queued ? 'Plan saved on this device. It sends when you are online.' : 'Plan saved for ' + plan.title.split(',')[0] + '. ' + plan.stations.length + ' stations.');
+    toast(r.queued ? 'Plan saved on this device, and it will send once you are back online.' : 'Plan saved for ' + plan.title.split(',')[0] + ' with ' + plan.stations.length + ' stations.');
   }
   // ---------- activity (director only) ----------
   async function loadActivity(force) {

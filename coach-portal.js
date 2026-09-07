@@ -2779,7 +2779,7 @@ window.sendBulkTrainingReports = async function() {
     if (errorCount === 0) {
         showEmailSuccess(`Successfully sent ${successCount} training reports!`);
     } else {
-        showEmailError(`Sent ${successCount} reports. ${errorCount} failed. Check console for details.`);
+        showEmailError(`Sent ${successCount} training reports, but ${errorCount} did not go through. Those families still need theirs.`);
         console.error('Email errors:', errors);
     }
 };
@@ -2838,7 +2838,7 @@ window.sendBulkPracticeInfo = async function() {
     if (errorCount === 0) {
         showEmailSuccess(`Successfully sent ${successCount} practice info emails!`);
     } else {
-        showEmailError(`Sent ${successCount} emails. ${errorCount} failed. Check console for details.`);
+        showEmailError(`Sent ${successCount} practice emails, but ${errorCount} did not go through. Those families still need theirs.`);
         console.error('Email errors:', errors);
     }
 };
