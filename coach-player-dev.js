@@ -135,7 +135,7 @@
   function queue() { return readJson(QUEUE_KEY) || []; }
   function setQueue(q) { writeJson(QUEUE_KEY, q); }
   function enqueue(op) {
-    var key = function (x) { return x.rpc + '|' + x.args.p_athlete_id + '|' + (x.args.p_sub || x.args.p_skill || x.args.p_field || x.args.p_key || (x.args.p_subs ? Object.keys(x.args.p_subs).sort().join(',') : '') || (x.args.p_team_id ? x.args.p_team_id + ':' + x.args.p_plan_date : '')); };
+    var key = function (x) { return x.rpc + '|' + x.args.p_athlete_id + '|' + (x.args.p_sub || x.args.p_skill || x.args.p_field || x.args.p_key || (x.args.p_subs ? Object.keys(x.args.p_subs).sort().join(',') : '') || (x.args.p_team_id ? x.args.p_team_id + ':' + x.args.p_plan_date : '') || (x.rpc === 'log_training_session' ? x.args.p_date + ':' + x.args.p_minutes + ':' + (x.args.p_subs || []).join(',') : '')); };
     var q = queue().filter(function (x) { return key(x) !== key(op); });
     op.id = Date.now() + '-' + Math.random().toString(36).slice(2, 8); op.at = new Date().toISOString(); op.uid = state.uid || null;
     q.push(op); setQueue(q); paintStatus();
@@ -147,7 +147,7 @@
       if (op.rpc === 'set_player_sub') { d.subs = d.subs || {}; if (a.p_score > 0) d.subs[a.p_sub] = a.p_score; else delete d.subs[a.p_sub]; d.skills = deriveSkills(d.subs); }
       else if (op.rpc === 'set_player_subs') { d.subs = d.subs || {}; Object.keys(a.p_subs || {}).forEach(function (k) { if (+a.p_subs[k] > 0) d.subs[k] = +a.p_subs[k]; else delete d.subs[k]; }); d.skills = deriveSkills(d.subs); }
       else if (op.rpc === 'set_player_position') d.position = a.p_position;
-      else if (op.rpc === 'save_practice_plan') return;
+      else if (op.rpc === 'save_practice_plan' || op.rpc === 'log_training_session') return;
       else if (op.rpc === 'set_player_dev_field' && a.p_field === 'focus') d.focus = a.p_value;
       else if (op.rpc === 'set_player_dev_field' && a.p_field === 'strength_bench') { d.strength_bench = d.strength_bench || {}; d.strength_bench[a.p_key] = a.p_value; }
     });
@@ -473,7 +473,7 @@
 #devboard-view .db-plan-bar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}\
 #devboard-view .db-tabs button .db-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#d92d20;margin-left:6px;vertical-align:2px}\
 #devboard-view .db-act{display:grid;grid-template-columns:44px 1fr auto;gap:4px 12px;align-items:start;padding:12px 0;border-bottom:1px solid var(--bl)}\
-#devboard-view .db-act .ic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;letter-spacing:.04em;color:#fff;background:var(--ac)}#devboard-view .db-act .ic.plan{background:#7c3aed}#devboard-view .db-act .ic.share{background:#159a52}\
+#devboard-view .db-act .ic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;letter-spacing:.04em;color:#fff;background:var(--ac)}#devboard-view .db-act .ic.plan{background:#7c3aed}#devboard-view .db-act .ic.share{background:#159a52}#devboard-view .db-act .ic.training{background:#d97706;font-size:9.5px}\
 #devboard-view .db-act b{font-size:14.5px;font-weight:700}#devboard-view .db-act p{margin:2px 0 0;font-size:13px;color:var(--ts);line-height:1.45}#devboard-view .db-act .when{font-size:12px;color:var(--tf);white-space:nowrap}#devboard-view .db-act.new b::after{content:"New";font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#d92d20;background:#fdecea;border-radius:999px;padding:2px 7px;margin-left:8px;vertical-align:1px}\
 #devboard-view .db-act .chips{margin-top:6px;display:flex;flex-wrap:wrap;gap:4px}#devboard-view .db-act .chips span{font-size:11.5px;font-weight:600;background:var(--bgs);border-radius:999px;padding:3px 9px;color:var(--tx)}\
 #devboard-view .db-bankgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}\
@@ -923,8 +923,9 @@
       } else if (r.kind === 'plan') {
         title = esc(r.actor) + ' saved the plan for ' + esc(fmtDay(d.plan_date + 'T12:00:00')); body = (r.team ? esc(r.team) + '. ' : '') + ((d.drills || []).length) + ' drill' + ((d.drills || []).length === 1 ? '' : 's') + (d.saves > 1 ? ', saved ' + d.saves + ' times' : '') + '.';
         chips = (d.drills || []).slice(0, 6).map(function (x) { return '<span>' + esc(x) + '</span>'; }).join('');
-      } else { title = esc(r.actor) + ' shared ' + esc((r.athlete || 'a player').trim()) + ' with his parents'; body = d.note ? '"' + esc(d.note) + '"' : 'No note.'; }
-      var ic = r.kind === 'plan' ? 'PLAN' : r.kind === 'share' ? 'SENT' : 'EVAL';
+      } else if (r.kind === 'training') { title = esc(r.actor) + ' trained ' + esc((r.athlete || 'a player').trim()) + ', ' + (d.minutes || 0) + ' min'; body = ((d.subs || []).length) + ' skill' + ((d.subs || []).length === 1 ? '' : 's') + (r.team ? ' on ' + esc(r.team) : '') + '.'; chips = (d.subs || []).slice(0, 6).map(function (k) { return '<span>' + esc(subKeyLabel(k)) + '</span>'; }).join('') + (d.drills || []).slice(0, 3).map(function (x) { return '<span>' + esc(x) + '</span>'; }).join(''); }
+      else { title = esc(r.actor) + ' shared ' + esc((r.athlete || 'a player').trim()) + ' with his parents'; body = d.note ? '"' + esc(d.note) + '"' : 'No note.'; }
+      var ic = r.kind === 'plan' ? 'PLAN' : r.kind === 'share' ? 'SENT' : r.kind === 'training' ? 'TRAIN' : 'EVAL';
       return '<div class="db-act' + (isNew ? ' new' : '') + '"' + (r.athlete_id ? ' data-act-athlete="' + esc(r.athlete_id) + '" style="cursor:pointer"' : '') + '><span class="ic ' + r.kind + '">' + ic + '</span><div><b>' + title + '</b><p>' + body + '</p>' + (chips ? '<div class="chips">' + chips + '</div>' : '') + '</div><span class="when">' + esc(ago(r.at)) + '</span></div>';
     }).join('') + '</div>';
     return h;
@@ -1041,6 +1042,6 @@
     // Captive wifi or a dead link can report "online" while nothing gets through: probe once, then enter from the cache.
     setTimeout(function () { var d = el('coach-dashboard'); if (d && d.style.display && d.style.display !== 'none') return; if (!readJson(CACHE_KEY)) return; fetch('/coach-portal.html?probe=' + Date.now(), { method: 'HEAD', cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('probe'); }).catch(function () { sync.online = false; offlineEntry(true); }); }, 6000);
     // Leaving with changes waiting: the browser keeps them in localStorage; nothing to do but say so.
-    window.CoachDevBoard = { open: open, mountNav: mountNav, reload: function () { state.loaded = false; return load(); }, state: state, sync: sync, flush: flush, queue: queue };
+    window.CoachDevBoard = { open: open, mountNav: mountNav, reload: function () { state.loaded = false; return load(); }, state: state, sync: sync, flush: flush, queue: queue, commit: commit, toast: toast, sheet: sheet, closeSheet: closeSheet, ensureConfig: function () { return state.loaded ? Promise.resolve() : load(); } };
   });
 })();
