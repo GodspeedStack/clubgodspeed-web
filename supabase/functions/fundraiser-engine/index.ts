@@ -77,9 +77,13 @@ async function sendEmail(to: string, subject: string, html: string): Promise<str
   return data.id ?? null
 }
 
-async function logEmail(row: Record<string, unknown>) {
+// Returns false when the ledger already holds this (donation|contact, email_type)
+// pair (unique index from v19_01): the send raced a retry and must not repeat.
+async function logEmail(row: Record<string, unknown>): Promise<boolean> {
   const { error } = await supabase.from('fundraiser_email_log').insert(row)
-  if (error) console.error('email log insert failed', error)
+  if (!error) return true
+  if (error.code !== '23505') console.error('email log insert failed', error)
+  return false
 }
 
 // ---------------- Ask cadence copy ----------------
@@ -169,13 +173,16 @@ async function handleUnsubscribe(token: string): Promise<Response> {
 async function handleCron(): Promise<Response> {
   const summary = { cadence_sent: 0, impact_sent: 0, skipped: 0, errors: 0, pending_expired: 0 }
 
-  // ---- Clean up abandoned pending donations (never reached Stripe success) ----
-  // Completed/refunded rows are untouched; only stale 'pending' rows are removed.
-  const { data: expired } = await supabase.from('donations')
-    .delete()
+  // ---- Expire abandoned pending donations (never reached Stripe success) ----
+  // Contract 5: financial rows are never deleted. pending -> expired is the
+  // only forward move for an abandoned checkout (Stripe sessions expire at
+  // 1 hour; this TTL is 24 hours, so no payable checkout is ever expired here).
+  const { data: expired, error: expErr } = await supabase.from('donations')
+    .update({ status: 'expired' })
     .eq('status', 'pending')
     .lt('created_at', new Date(Date.now() - PENDING_TTL_HOURS * 3600000).toISOString())
     .select('id')
+  if (expErr) { console.error('pending expiry failed', expErr); summary.errors++ }
   summary.pending_expired = expired?.length ?? 0
 
   // ---- Live campaigns ----

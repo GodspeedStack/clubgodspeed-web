@@ -48,16 +48,34 @@ Deno.serve(async (req) => {
     } else if (paymentType === 'fundraiser_donation') {
       // Godspeed Raise: complete pending donation (idempotent on session id).
       // The donations status trigger feeds fundraising_totals automatically.
-      const { data: donation } = await supabase.from('donations')
+      // Match on the session id, or on metadata.donationId when the checkout
+      // function could not write the session id back (contract 3: no lost money).
+      let donationQuery = supabase.from('donations')
         .update({
           status: 'completed',
           completed_at: new Date().toISOString(),
-          stripe_payment_intent_id: session.payment_intent as string
+          stripe_payment_intent_id: session.payment_intent as string,
+          stripe_session_id: session.id
         })
-        .eq('stripe_session_id', session.id)
         .eq('status', 'pending')
-        .select('id')
-        .single()
+      donationQuery = metadata.donationId
+        ? donationQuery.eq('id', metadata.donationId)
+        : donationQuery.eq('stripe_session_id', session.id)
+      const { data: donation, error: donErr } = await donationQuery.select('id').maybeSingle()
+
+      if (donErr) console.error('[stripe-webhook] donation complete failed', session.id, donErr)
+      if (!donation && !donErr) {
+        // Either already completed (Stripe retry, idempotent no-op) or no row
+        // at all. Only the second case is money without a record: say so.
+        const { data: existing } = await supabase.from('donations')
+          .select('id, status').eq('stripe_session_id', session.id).maybeSingle()
+        if (!existing) {
+          console.error(
+            `[stripe-webhook] UNRECONCILED donation: session ${session.id} pi ${session.payment_intent} ` +
+            `amount ${session.amount_total} has no donations row. Reconcile manually in admin-fundraising.`
+          )
+        }
+      }
 
       // Instant thank-you + receipt to donor via fundraiser-engine
       if (donation) {
@@ -205,6 +223,18 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({ paymentId, type: 'payment_admin_notify' })
       })
+    }
+  }
+
+  // Godspeed Raise: donor closed or abandoned checkout; Stripe says it is no
+  // longer payable, so expire the pending row now instead of waiting for the cron.
+  if (event.type === 'checkout.session.expired') {
+    const session = event.data.object as Stripe.Checkout.Session
+    if ((session.metadata || {}).paymentType === 'fundraiser_donation') {
+      await supabase.from('donations')
+        .update({ status: 'expired' })
+        .eq('stripe_session_id', session.id)
+        .eq('status', 'pending')
     }
   }
 

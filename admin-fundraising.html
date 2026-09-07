@@ -131,7 +131,7 @@
             const SUPABASE_URL = 'https://nnqokhqennuxalamnvps.supabase.co';
             const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis';
             const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            const CAMPAIGN_SLUG = new URLSearchParams(location.search).get('c') || '10u-season-2026';
+            const CAMPAIGN_SLUG = new URLSearchParams(location.search).get('c') || 'fall-2026-season';
 
             let campaign = null;
             let pendingAction = null;

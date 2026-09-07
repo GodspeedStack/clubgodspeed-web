@@ -13,7 +13,7 @@
 
     const SUPABASE_URL = 'https://nnqokhqennuxalamnvps.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis';
-    const DEFAULT_CAMPAIGN = '10u-season-2026';
+    const DEFAULT_CAMPAIGN = 'fall-2026-season';
 
     const params = new URLSearchParams(window.location.search);
     const campaignSlug = (params.get('c') || DEFAULT_CAMPAIGN).replace(/[^a-z0-9-]/gi, '');
@@ -28,15 +28,33 @@
         return d.innerHTML;
     }
 
+    // Draft preview is staff-only at the database (v19_01). The public page has
+    // no supabase-js, so when previewing we send the portal's signed-in session
+    // token (same origin, same storage key supabase-js uses). Anonymous callers
+    // asking for preview simply get the public view.
+    function staffAccessToken() {
+        try {
+            const raw = localStorage.getItem('sb-nnqokhqennuxalamnvps-auth-token');
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            const tok = parsed && (parsed.access_token || (parsed.currentSession && parsed.currentSession.access_token));
+            if (!tok) return null;
+            const claims = JSON.parse(atob(tok.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+            return claims.exp * 1000 > Date.now() ? tok : null;
+        } catch (e) { return null; }
+    }
+
     async function fetchCampaign() {
+        const wantPreview = params.get('preview') === '1';
+        const bearer = (wantPreview && staffAccessToken()) || SUPABASE_ANON_KEY;
         const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_campaign_public', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'apikey': SUPABASE_ANON_KEY,
-                'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+                'Authorization': 'Bearer ' + bearer
             },
-            body: JSON.stringify({ p_slug: campaignSlug, p_preview: params.get('preview') === '1' })
+            body: JSON.stringify({ p_slug: campaignSlug, p_preview: wantPreview })
         });
         if (!res.ok) throw new Error('Campaign fetch failed: ' + res.status);
         return res.json();
@@ -129,7 +147,8 @@
             }
             const data = await res.json();
             if (!res.ok || !data.url) {
-                errEl.textContent = data.error || 'Something went wrong. Please try again.';
+                var msg = data.error && typeof data.error === 'object' ? data.error.message : data.error;
+                errEl.textContent = msg || 'Something went wrong. Please try again.';
                 return;
             }
             window.location.href = data.url;

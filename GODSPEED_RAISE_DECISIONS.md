@@ -8,7 +8,7 @@
 
 ## Architecture (deployed to production 2026-06-11)
 - **Schema** (`supabase/migrations/v10_01_godspeed_raise.sql`): fundraising_campaigns (forward-only status: draft->live->ended->paid_out), campaign_participants, fundraiser_contacts, donations, fundraiser_email_log (insert-only ledger). security_invoker views. Completed donations auto-feed `fundraising_totals` (dues-credit model) via trigger; refunds decrement.
-- **Public read path**: ONLY through `get_campaign_public(p_slug, p_preview default false)` SECURITY DEFINER RPC. No anon table policies. p_preview=true includes draft campaigns.
+- **Public read path**: ONLY through `get_campaign_public(p_slug, p_preview default false)` SECURITY DEFINER RPC. No anon table policies. p_preview=true includes draft campaigns ONLY when the caller is staff (current_user_is_staff()); anonymous preview returns the public view.
 - **Edge functions**: `fundraiser-checkout` (validated donate -> Stripe session + pending row; 503 = Stripe not configured), `fundraiser-engine` (the agent), `stripe-webhook` (fundraiser_donation branch + charge.refunded).
 - **Engine auth**: NO caller auth (house cron pattern = no bearer tokens). Abuse resistance via ledger idempotency: every send path (cadence/receipt/impact/digest) dedupes against fundraiser_email_log; digest capped one per 20h; 48h rate limit per contact; donors leave the ask track. verify_jwt OFF on engine, ON on checkout.
 - **Cron**: `fundraiser-engine-daily` 0 15 * * * UTC (9AM MT), created by cloning payment-reminders-daily command in SQL so the service key is never exposed in chat.
@@ -23,7 +23,8 @@
 - Donation entry points when live: (1) cadence email "Support {athlete}" button -> player page (primary), (2) hub hero Donate now + player cards.
 
 ## Pilot campaign
-- `10u-season-2026`: $9,000 goal, 12 athletes @ $750, status draft, 30-day window starts at launch.
+- `fall-2026-season` (renamed from `10u-season-2026` by v19_02, 2026-09-07): one program campaign across all three current teams, 19 athletes @ $750 = $14,250 goal, status draft, 30-day window starts at launch (re-run the LAUNCH DAY block in v19_02 that day). Public names are first name + last initial.
+- Pre-launch audit 2026-09-07 (v19_01 + fixes/2026-09-07-raise-prelaunch/): `p_preview` is honored only for staff sessions; `get_campaign_public` has exactly one signature; checkout inserts the pending row before creating the Stripe session; abandoned donations become `expired`, never deleted; donations status is forward-only; email ledger has unique (donation_id|contact_id, email_type).
 - Parent linkage via parent_player_links junction: 7/12 linked (Aiden, Quest, Anton, Emory, Ashton, Khyrie, Khaliq). Unlinked (no junction rows): Cassius, A.D., Howard, Junior, Oliver — re-run the link UPDATE when their rows exist.
 
 ## Launch checklist (blocked on EIN/Stripe)
