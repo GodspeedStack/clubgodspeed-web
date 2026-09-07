@@ -1,0 +1,64 @@
+<!--
+  GODSPEED ANNOUNCEMENT email template (special sends only).
+  Same blue hero, but on the black background for weight. Reserve for big news
+  (season launch, major deadline). For everyday email use standard.html instead.
+  Brand: blue #1A3A8F, orange #FF5722, black #0A0A0A. Helvetica Neue. No emojis. No em dashes.
+
+  GMAIL RULE (do not "simplify" this back to divs):
+  Every colored block is a <table>/<td> carrying BOTH a bgcolor attribute and a
+  style background-color. Gmail strips CSS backgrounds from plain <div>s, which
+  turns white text on a colored block into white-on-white and makes the block
+  vanish. This bit us on 2026-09-06. Keep the table + bgcolor pattern.
+
+  Fill: {{TITLE_LINE_1}}, {{TITLE_LINE_2}} (big two-line headline in the hero),
+        {{GREETING}}, {{BODY_1}}, {{BODY_2}}, optional CTA ({{CTA_TEXT}}/{{CTA_URL}}), {{CLOSING}}.
+  Use clean URLs only (https://clubgodspeed.com/...).
+-->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#0A0A0A" style="background-color:#0A0A0A;">
+<tr><td align="center" style="padding:28px 16px;">
+
+  <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">
+
+    <!-- BLUE HERO ON BLACK -->
+    <tr><td bgcolor="#1A3A8F" style="background-color:#1A3A8F;border-radius:16px 16px 0 0;padding:40px 34px 34px;">
+      <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:.18em;color:#c3cfea;text-transform:uppercase;">GODSPEED BASKETBALL &bull; EST. 2026</div>
+      <div style="height:16px;font-size:16px;line-height:16px;">&nbsp;</div>
+      <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:38px;line-height:1.02;font-weight:800;letter-spacing:-.02em;color:#ffffff;text-transform:uppercase;">{{TITLE_LINE_1}}<br>{{TITLE_LINE_2}}</div>
+      <div style="height:20px;font-size:20px;line-height:20px;">&nbsp;</div>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+        <td bgcolor="#FF5722" width="64" height="5" style="background-color:#FF5722;width:64px;height:5px;font-size:0;line-height:0;border-radius:2px;">&nbsp;</td>
+      </tr></table>
+    </td></tr>
+
+    <!-- WHITE CONTENT -->
+    <tr><td bgcolor="#ffffff" style="background-color:#ffffff;border-radius:0 0 16px 16px;padding:30px 34px;">
+      <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#3a3a3c;">{{GREETING}}</div>
+      <div style="height:16px;font-size:16px;line-height:16px;">&nbsp;</div>
+      <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#3a3a3c;">{{BODY_1}}</div>
+      <div style="height:16px;font-size:16px;line-height:16px;">&nbsp;</div>
+      <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#3a3a3c;">{{BODY_2}}</div>
+      <div style="height:22px;font-size:22px;line-height:22px;">&nbsp;</div>
+
+      <!-- OPTIONAL CTA BUTTON. Delete this block if unused. -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+        <td bgcolor="#1A3A8F" style="background-color:#1A3A8F;border-radius:999px;">
+          <a href="{{CTA_URL}}" style="display:inline-block;padding:13px 24px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;letter-spacing:.02em;color:#ffffff;text-decoration:none;">{{CTA_TEXT}}</a>
+        </td>
+      </tr></table>
+      <div style="height:22px;font-size:22px;line-height:22px;">&nbsp;</div>
+
+      <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#3a3a3c;">{{CLOSING}}</div>
+      <div style="height:18px;font-size:18px;line-height:18px;">&nbsp;</div>
+      <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;color:#1d1d1f;"><strong>Coach Scott</strong></div>
+      <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;color:#6e6e73;">Godspeed Basketball</div>
+
+      <div style="height:22px;font-size:22px;line-height:22px;">&nbsp;</div>
+      <div style="border-top:1px solid #ececf0;height:1px;font-size:0;line-height:0;">&nbsp;</div>
+      <div style="height:18px;font-size:18px;line-height:18px;">&nbsp;</div>
+      <div align="center" style="text-align:center;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:.16em;color:#1d1d1f;">BROTHERHOOD. HABITS. <span style="color:#FF5722;">SUCCESS.</span></div>
+    </td></tr>
+
+  </table>
+
+</td></tr>
+</table>

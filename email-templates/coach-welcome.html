@@ -1,0 +1,95 @@
+<!--
+  Godspeed go-to COACH WELCOME / INVITE email template.
+  White branded UI: black header bar, white card, blue action button, tagline footer.
+  Brand: blue #1A3A8F, orange #FF5722, black #0A0A0A. Helvetica Neue. No emojis. No em dashes.
+
+  GMAIL RULE (do not "simplify" this back to divs):
+  Every colored block is a <table>/<td> carrying BOTH a bgcolor attribute and a
+  style background-color. Gmail strips CSS backgrounds from plain <div>s, which
+  turns white text on a colored block into white-on-white and makes the block
+  vanish. This bit us on 2026-09-06. Keep the table + bgcolor pattern.
+
+  Placeholders to replace before sending:
+    {{COACH_FIRST}}  first name, e.g. Steven
+    {{GROUP}}        their group, e.g. 5th and 4th grade
+  Plain-text fallback (paste into the text part) is at the bottom of this file, in the comment.
+-->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f5f5f7" style="background-color:#f5f5f7;">
+<tr><td align="center" style="padding:24px 16px;">
+
+  <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(15,23,42,.06),0 10px 30px rgba(15,23,42,.06);">
+
+    <!-- BLACK HEADER BAR -->
+    <tr><td bgcolor="#0A0A0A" style="background-color:#0A0A0A;padding:20px 28px;">
+      <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:16px;font-weight:800;letter-spacing:-.01em;color:#ffffff;">GODSPEED <span style="color:#FF5722;">BASKETBALL</span></div>
+    </td></tr>
+
+    <!-- BODY -->
+    <tr><td style="padding:28px;">
+      <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:22px;font-weight:800;letter-spacing:-.02em;color:#1d1d1f;">Welcome to the staff, Coach {{COACH_FIRST}}</div>
+      <div style="height:10px;font-size:10px;line-height:10px;">&nbsp;</div>
+      <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.55;color:#3a3a3c;">Welcome to the Godspeed Basketball coaching staff. Glad to have you with the {{GROUP}} group.</div>
+      <div style="height:16px;font-size:16px;line-height:16px;">&nbsp;</div>
+      <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.55;color:#3a3a3c;">Here is how to get set up. You will get an invitation email from Godspeed with a sign-in link. Open it, set your password, and it takes you straight to the coach setup page. There you will:</div>
+      <div style="height:10px;font-size:10px;line-height:10px;">&nbsp;</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr><td width="22" valign="top" style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#FF5722;font-weight:700;">&bull;</td><td style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#3a3a3c;">finish your coach profile</td></tr>
+        <tr><td width="22" valign="top" style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#FF5722;font-weight:700;">&bull;</td><td style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#3a3a3c;">sign the coaching documents (a few minutes)</td></tr>
+        <tr><td width="22" valign="top" style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#FF5722;font-weight:700;">&bull;</td><td style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#3a3a3c;">confirm your teams</td></tr>
+      </table>
+      <div style="height:16px;font-size:16px;line-height:16px;">&nbsp;</div>
+      <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.55;color:#3a3a3c;">Once that is done you are in the coach portal: rosters, the playbook, and how we practice.</div>
+      <div style="height:22px;font-size:22px;line-height:22px;">&nbsp;</div>
+
+      <!-- CTA BUTTON -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+        <td bgcolor="#1A3A8F" style="background-color:#1A3A8F;border-radius:999px;">
+          <a href="https://clubgodspeed.com/coach-portal.html" style="display:inline-block;padding:12px 22px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;">Open the coach portal</a>
+        </td>
+      </tr></table>
+      <div style="height:22px;font-size:22px;line-height:22px;">&nbsp;</div>
+
+      <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13.5px;line-height:1.55;color:#6e6e73;">If the invitation does not show up, check your spam folder, or let me know and I will resend it.</div>
+      <div style="height:22px;font-size:22px;line-height:22px;">&nbsp;</div>
+      <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.55;color:#3a3a3c;">Glad you are here. Let us build.</div>
+      <div style="height:18px;font-size:18px;line-height:18px;">&nbsp;</div>
+      <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;color:#1d1d1f;"><strong>Coach Scott</strong></div>
+      <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;color:#6e6e73;">Godspeed Basketball</div>
+    </td></tr>
+
+    <!-- FOOTER -->
+    <tr><td style="padding:16px 28px 20px;">
+      <div style="border-top:1px solid #ececf0;height:1px;font-size:0;line-height:0;">&nbsp;</div>
+      <div style="height:16px;font-size:16px;line-height:16px;">&nbsp;</div>
+      <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:.16em;color:#1d1d1f;">BROTHERHOOD. HABITS. <span style="color:#FF5722;">SUCCESS.</span></div>
+    </td></tr>
+
+  </table>
+
+</td></tr>
+</table>
+<!--
+PLAIN TEXT FALLBACK:
+
+{{COACH_FIRST}},
+
+Welcome to the Godspeed Basketball coaching staff. Glad to have you with the {{GROUP}} group.
+
+Here is how to get set up. You will get an invitation email from Godspeed with a sign-in link. Open it, set your password, and it takes you straight to the coach setup page. There you will:
+
+- finish your coach profile
+- sign the coaching documents (a few minutes)
+- confirm your teams
+
+Once that is done you are in the coach portal: rosters, the playbook, and how we practice.
+
+The coach portal lives at https://clubgodspeed.com/coach-portal.html once you are set up.
+
+If the invitation does not show up, check your spam folder, or let me know and I will resend it.
+
+Glad you are here. Let us build.
+
+Coach Scott
+Godspeed Basketball
+BROTHERHOOD. HABITS. SUCCESS.
+-->
