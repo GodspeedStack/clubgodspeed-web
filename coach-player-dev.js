@@ -62,7 +62,7 @@
   // Category colors, same as the Command Center bank.
   var TAGS = { 'Culture': '#0071e3', 'Toughness': '#d92d20', 'Bigs': '#7c3aed', 'Guards': '#0d9488', 'Passing/Reads': '#4f46e5', 'Individual': '#64748b', 'Conditioning': '#d97706', 'Strength': '#57534e' };
   var TAG_ORDER = ['Culture', 'Toughness', 'Bigs', 'Guards', 'Passing/Reads', 'Individual', 'Conditioning', 'Strength'];
-  var state = { loading: false, loaded: false, error: null, isAdmin: false, myTeams: [], cfg: DEFAULT_CFG, dev: {}, bank: [], shape: null, powerups: null, teamId: null, tab: 'players', q: '', swaps: {}, bankQ: '', bankTag: 'All', expanded: {}, workout: null, shareAccess: [], shares: {}, privileges: null };
+  var state = { activity: null, activityErr: null, activitySeen: null, loading: false, loaded: false, error: null, isAdmin: false, myTeams: [], cfg: DEFAULT_CFG, dev: {}, bank: [], shape: null, powerups: null, teamId: null, tab: 'players', q: '', swaps: {}, bankQ: '', bankTag: 'All', expanded: {}, workout: null, shareAccess: [], shares: {}, privileges: null };
 
   // ---------- data ----------
   async function loadAll() {
@@ -135,7 +135,7 @@
   function queue() { return readJson(QUEUE_KEY) || []; }
   function setQueue(q) { writeJson(QUEUE_KEY, q); }
   function enqueue(op) {
-    var key = function (x) { return x.rpc + '|' + x.args.p_athlete_id + '|' + (x.args.p_sub || x.args.p_skill || x.args.p_field || x.args.p_key || ''); };
+    var key = function (x) { return x.rpc + '|' + x.args.p_athlete_id + '|' + (x.args.p_sub || x.args.p_skill || x.args.p_field || x.args.p_key || (x.args.p_subs ? Object.keys(x.args.p_subs).sort().join(',') : '') || (x.args.p_team_id ? x.args.p_team_id + ':' + x.args.p_plan_date : '')); };
     var q = queue().filter(function (x) { return key(x) !== key(op); });
     op.id = Date.now() + '-' + Math.random().toString(36).slice(2, 8); op.at = new Date().toISOString(); op.uid = state.uid || null;
     q.push(op); setQueue(q); paintStatus();
@@ -143,9 +143,11 @@
   // Re-apply queued changes on top of a cached snapshot so the board shows what the coach did.
   function replayQueue() {
     queue().forEach(function (op) {
-      var a = op.args; var d = state.dev[a.p_athlete_id] = state.dev[a.p_athlete_id] || { athlete_id: a.p_athlete_id, skills: {}, subs: {} };
+      var a = op.args; if (!a.p_athlete_id) return; var d = state.dev[a.p_athlete_id] = state.dev[a.p_athlete_id] || { athlete_id: a.p_athlete_id, skills: {}, subs: {} };
       if (op.rpc === 'set_player_sub') { d.subs = d.subs || {}; if (a.p_score > 0) d.subs[a.p_sub] = a.p_score; else delete d.subs[a.p_sub]; d.skills = deriveSkills(d.subs); }
+      else if (op.rpc === 'set_player_subs') { d.subs = d.subs || {}; Object.keys(a.p_subs || {}).forEach(function (k) { if (+a.p_subs[k] > 0) d.subs[k] = +a.p_subs[k]; else delete d.subs[k]; }); d.skills = deriveSkills(d.subs); }
       else if (op.rpc === 'set_player_position') d.position = a.p_position;
+      else if (op.rpc === 'save_practice_plan') return;
       else if (op.rpc === 'set_player_dev_field' && a.p_field === 'focus') d.focus = a.p_value;
       else if (op.rpc === 'set_player_dev_field' && a.p_field === 'strength_bench') { d.strength_bench = d.strength_bench || {}; d.strength_bench[a.p_key] = a.p_value; }
     });
@@ -217,6 +219,7 @@
   function liveRaw() { return window.CoachHome && window.CoachHome.state && window.CoachHome.state.raw; }
   function raw() { return liveRaw() || state.cachedRoster || null; }
   function teams() { var rw = raw(); return rw ? rw.teams.slice().sort(function (a, b) { return a.name.localeCompare(b.name); }) : []; }
+  function teamsOf(athleteId) { var rw = raw(); if (!rw) return []; return rw.rosters.filter(function (m) { return m.athlete_id === athleteId && !m.left_at; }).map(function (m) { return m.team_id; }); }
   function playersOf(teamId) {
     var rw = raw(); if (!rw) return [];
     var byId = {}; rw.athletes.forEach(function (a) { byId[a.id] = a; });
@@ -468,6 +471,11 @@
 #devboard-view .db-st span{color:var(--ts)}\
 #devboard-view .db-st .who{display:block;font-size:12px;color:var(--ts);margin-top:2px}\
 #devboard-view .db-plan-bar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}\
+#devboard-view .db-tabs button .db-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#d92d20;margin-left:6px;vertical-align:2px}\
+#devboard-view .db-act{display:grid;grid-template-columns:44px 1fr auto;gap:4px 12px;align-items:start;padding:12px 0;border-bottom:1px solid var(--bl)}\
+#devboard-view .db-act .ic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;letter-spacing:.04em;color:#fff;background:var(--ac)}#devboard-view .db-act .ic.plan{background:#7c3aed}#devboard-view .db-act .ic.share{background:#159a52}\
+#devboard-view .db-act b{font-size:14.5px;font-weight:700}#devboard-view .db-act p{margin:2px 0 0;font-size:13px;color:var(--ts);line-height:1.45}#devboard-view .db-act .when{font-size:12px;color:var(--tf);white-space:nowrap}#devboard-view .db-act.new b::after{content:"New";font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#d92d20;background:#fdecea;border-radius:999px;padding:2px 7px;margin-left:8px;vertical-align:1px}\
+#devboard-view .db-act .chips{margin-top:6px;display:flex;flex-wrap:wrap;gap:4px}#devboard-view .db-act .chips span{font-size:11.5px;font-weight:600;background:var(--bgs);border-radius:999px;padding:3px 9px;color:var(--tx)}\
 #devboard-view .db-bankgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}\
 #devboard-view .db-bk{background:#fff;border:1px solid var(--bl);border-radius:var(--rc);box-shadow:var(--sh);padding:16px 18px 14px;border-top:4px solid var(--tc,#64748b);min-width:0;display:flex;flex-direction:column;gap:8px;cursor:pointer}\
 #devboard-view .db-bk:hover{border-color:var(--bd);border-top-color:var(--tc)}\
@@ -503,7 +511,11 @@
 #db-backdrop .db-chip.hit{background:#fef2f2;color:#d92d20}\
 #db-backdrop .rt-skill{margin-top:18px;padding-top:14px;border-top:1px solid #ececf0}\
 #db-backdrop .rt-skill:first-child{margin-top:8px;border-top:none;padding-top:0}\
-#db-backdrop .rt-head{display:flex;align-items:center;gap:10px;margin-bottom:6px}\
+#db-backdrop .rt-head{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}\
+#db-backdrop .rt-all{display:inline-flex;align-items:center;gap:4px;margin-left:auto}#db-backdrop .rt-all small{font-size:11px;color:#a1a1a6;margin-right:2px}\
+#db-backdrop .rt-all button{width:24px;height:24px;border-radius:7px;border:1px solid #d9d9de;background:#fff;font-size:11.5px;font-weight:600;color:#6e6e73;cursor:pointer;padding:0}#db-backdrop .rt-all button:hover{border-color:#0071e3;color:#0071e3}#db-backdrop .rt-all button:disabled{opacity:.45;cursor:default}\
+#db-backdrop .rt-bulk{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#f5f5f7;border:1px solid #ececf0;border-radius:12px;padding:10px 12px;margin:2px 0 14px}\
+#db-backdrop .rt-bulk b{font-size:13px;font-weight:700}#db-backdrop .rt-bulk .seg{display:inline-flex;gap:4px}#db-backdrop .rt-bulk .seg button{height:32px;padding:0 12px;border-radius:9px;border:1px solid #d9d9de;background:#fff;font-size:13px;font-weight:600;color:#1d1d1f;cursor:pointer}#db-backdrop .rt-bulk .seg button:hover{border-color:#0071e3;color:#0071e3}#db-backdrop .rt-bulk .seg button:disabled{opacity:.45;cursor:default}#db-backdrop .rt-bulk small{font-size:11.5px;color:#6e6e73;flex-basis:100%}\
 #db-backdrop .rt-head b{font-size:15px;font-weight:700}\
 #db-backdrop .rt-head .ph{font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:999px;background:#f5f5f7;color:#6e6e73}\
 #db-backdrop .rt-head .ph.on{background:#e9f7ef;color:#159a52}#db-backdrop .rt-head .ph.behind{background:#fff6ec;color:#d9660a}#db-backdrop .rt-head .ph.ahead{background:#eaf3ff;color:#0071e3}\
@@ -652,22 +664,39 @@
     for (var i = 1; i <= 5; i++) h += '<button type="button" data-v="' + i + '" class="' + (i === v ? 'on' : '') + '" title="' + esc(rubric(i)) + '"' + (editable ? '' : ' disabled') + '>' + i + '</button>';
     return h + '</div><div class="rt-word">' + (v ? esc(rubric(v)) : '') + '</div></div>';
   }
-  function skillHead(a, sk) {
+  function skillHead(a, sk, editable) {
     var st = skillOf(a, sk); var tr = track(a, sk); var t = targetsFor(ageOf(a))[sk] || 0;
     var pill = !st.n ? '<span class="ph">Not scored</span>' : '<span class="ph ' + tr + '">' + esc(phaseName(st.p)) + (st.capped ? ', capped' : '') + (t && tr !== 'on' ? ', target ' + esc(phaseName(t)) : '') + '</span>';
-    return '<div class="rt-head"><b>' + esc(label(sk)) + '</b>' + pill + '<span style="font-size:11.5px;color:#a1a1a6;margin-left:auto">' + st.n + ' of ' + subList(sk).length + '</span></div>';
+    var all = sk === 'strength' ? '' : '<span class="rt-all" data-all="' + sk + '"><small>All</small>' + [1, 2, 3, 4, 5].map(function (i) { return '<button type="button" data-v="' + i + '" title="Set every ' + esc(label(sk).toLowerCase()) + ' skill to ' + esc(rubric(i)) + '"' + (editable === false ? ' disabled' : '') + '>' + i + '</button>'; }).join('') + '</span>';
+    return '<div class="rt-head"><b>' + esc(label(sk)) + '</b>' + pill + all + '<span style="font-size:11.5px;color:#a1a1a6' + (all ? '' : ';margin-left:auto') + '">' + st.n + ' of ' + subList(sk).length + '</span></div>';
   }
   function openRate(a, teamId) {
     var editable = canEdit(teamId); var d = devOf(a);
     var h = '<div class="hd"><span class="db-tag" style="--tc:#0071e3">Evaluation</span><button type="button" class="x" aria-label="Close">&times;</button><h3>' + esc(a.first_name + ' ' + (a.last_name || '')) + '</h3><p>Age ' + ageOf(a) + (positionOf(a) ? ', ' + esc(positionOf(a)) : '') + '. Score what you see. Every tap saves. The phase for each skill comes from the scores.</p></div><div class="bd">';
     h += '<div class="legend"><span><b>1</b> Poor</span><span><b>2</b> Weak</span><span><b>3</b> Some good actions</span><span><b>4</b> Consistent</span><span><b>5</b> Excellent</span></div>';
+    if (editable) h += '<div class="rt-bulk"><b>Set every skill to</b><span class="seg">' + [1, 2, 3, 4, 5].map(function (i) { return '<button type="button" data-bulk="' + i + '">' + i + ' ' + esc(rubric(i)) + '</button>'; }).join('') + '</span><small>One tap scores all ' + (totalSubs() - subList('strength').length) + ' skills. Strength stays on the numbers. Then change the ones you saw differently.</small></div>';
     h += '<div class="sec">Position</div><div class="pos">' + POSITIONS.map(function (p) { return '<button type="button" data-pos="' + p + '" class="' + (positionOf(a) === p ? 'on' : '') + '"' + (editable ? '' : ' disabled') + '>' + p + '</button>'; }).join('') + '</div>';
-    skillOrder().forEach(function (sk) { h += '<div class="rt-skill" data-skill="' + sk + '">' + skillHead(a, sk) + subList(sk).map(function (s) { return rateRowHtml(a, sk, s, editable); }).join('') + '</div>'; });
+    skillOrder().forEach(function (sk) { h += '<div class="rt-skill" data-skill="' + sk + '">' + skillHead(a, sk, editable) + subList(sk).map(function (s) { return rateRowHtml(a, sk, s, editable); }).join('') + '</div>'; });
     h += '<div class="sec">Coach focus</div><textarea id="db-focus" maxlength="240"' + (editable ? '' : ' disabled') + ' placeholder="One sentence. What he hears from every coach this month.">' + esc(d.focus || '') + '</textarea>';
     h += '<div class="err" id="db-err"></div><div class="actions"><button type="button" class="btn" data-close>Close</button>' + (editable ? '<button type="button" class="btn primary" id="db-save-focus">Save focus</button>' : '') + '</div></div>';
     var b = sheet(h, '#0071e3');
     var err = function (m) { var e = b.querySelector('#db-err'); if (!e) return; e.textContent = m || ''; e.classList.toggle('on', !!m); };
-    var refreshSkill = function (sk) { var box = b.querySelector('.rt-skill[data-skill="' + sk + '"]'); if (!box) return; var head = box.querySelector('.rt-head'); var tmp = document.createElement('div'); tmp.innerHTML = skillHead(a, sk); head.replaceWith(tmp.firstChild); };
+    var refreshSkill = function (sk) { var box = b.querySelector('.rt-skill[data-skill="' + sk + '"]'); if (!box) return; var head = box.querySelector('.rt-head'); var tmp = document.createElement('div'); tmp.innerHTML = skillHead(a, sk, editable); var nh = tmp.firstChild; head.replaceWith(nh); bindAll(nh); };
+    var syncRows = function () { b.querySelectorAll('.rt-row').forEach(function (row) { var key = row.getAttribute('data-sub'); if (key.split('.')[0] === 'strength') return; var v = subScore(a, key); row.querySelectorAll('[data-v]').forEach(function (x) { x.classList.toggle('on', +x.getAttribute('data-v') === v); }); var w = row.querySelector('.rt-word'); if (w) w.textContent = v ? rubric(v) : ''; }); };
+    var bulk = async function (skills, v, btns) {
+      var map = {}; skills.forEach(function (sk) { if (sk === 'strength') return; subList(sk).forEach(function (s) { map[sk + '.' + s.key] = v; }); });
+      btns.forEach(function (x) { x.disabled = true; });
+      var res = await commit('set_player_subs', { p_athlete_id: a.id, p_subs: map });
+      btns.forEach(function (x) { x.disabled = false; });
+      if (!res.ok) { err(res.error && res.error.message || 'Could not save.'); return; }
+      var dd = state.dev[a.id] = state.dev[a.id] || { athlete_id: a.id, skills: {}, subs: {} }; dd.subs = dd.subs || {}; Object.keys(map).forEach(function (k) { dd.subs[k] = v; });
+      dd.skills = res.data && res.data.skills ? res.data.skills : deriveSkills(dd.subs);
+      syncRows(); Object.keys(subsCfg()).forEach(refreshSkill); err(''); paint();
+      toast((skills.length > 1 ? 'Every skill' : label(skills[0])) + ' set to ' + rubric(v) + (res.queued ? '. Sends when you are online.' : '.'));
+    };
+    var bindAll = function (head) { head.querySelectorAll('.rt-all [data-v]').forEach(function (btn) { btn.onclick = function () { var sk = btn.closest('.rt-all').getAttribute('data-all'); bulk([sk], +btn.getAttribute('data-v'), [].slice.call(btn.parentNode.querySelectorAll('button'))); }; }); };
+    b.querySelectorAll('.rt-head').forEach(bindAll);
+    b.querySelectorAll('.rt-bulk [data-bulk]').forEach(function (btn) { btn.onclick = function () { bulk(skillOrder(), +btn.getAttribute('data-bulk'), [].slice.call(b.querySelectorAll('.rt-bulk [data-bulk]'))); }; });
     b.querySelectorAll('.rt-row [data-v]').forEach(function (btn) {
       btn.onclick = async function () {
         var row = btn.closest('.rt-row'); var key = row.getAttribute('data-sub'); var v = +btn.getAttribute('data-v'); if (v === subScore(a, key)) v = 0;
@@ -793,7 +822,7 @@
     var rated = ps.filter(started); var wg = workGroups(rated); var row = readOfWeek(rated); var tn = teamNeeds(rated);
     var day = new Date(); var dow = day.getDay(); var next = dow < 2 ? 'Tuesday' : dow < 4 ? 'Thursday' : 'Tuesday';
     h += '<div class="db-lead"><div><h4>' + esc(next) + ', doors 5:55, ball at 6:00.</h4><p>Seven blocks from How we practice. Power-ups and the finishing bridge are filled from this roster\'s needs; the guided block teaches this week\'s read. Swap a drill if the gym says so.</p></div><div class="st"><div><b style="font-size:18px">' + esc(row.read[0]) + '</b><small>Read of the week</small></div></div></div>';
-    h += '<div class="db-plan-bar"><button type="button" class="db-btn primary" id="db-print">Print</button><button type="button" class="db-btn" id="db-copy">Copy as text</button><span class="db-note" style="margin:0">' + (rated.length ? rated.length + ' evaluated players shape this plan.' : 'Nobody is evaluated yet, so the stations are the default power-ups.') + '</span></div>';
+    h += '<div class="db-plan-bar">' + (canEdit(state.teamId) ? '<button type="button" class="db-btn primary" id="db-save-plan">Save plan</button>' : '') + '<button type="button" class="db-btn' + (canEdit(state.teamId) ? '' : ' primary') + '" id="db-print">Print</button><button type="button" class="db-btn" id="db-copy">Copy as text</button><span class="db-note" style="margin:0">' + (rated.length ? rated.length + ' evaluated players shape this plan.' : 'Nobody is evaluated yet, so the stations are the default power-ups.') + '</span></div>';
     h += '<div class="db-panel" id="db-plan">';
     state.shape.blocks.forEach(function (b, bi) {
       h += '<div class="db-block"><span class="n">' + (bi + 1) + '</span><div class="tm">' + esc(b.start) + '<small>' + esc(b.minutes) + ' min</small></div><div><h5>' + esc(b.name) + '</h5><p>' + esc(b.what) + '</p>' + (b.note ? '<div class="nt">' + esc(b.note) + '</div>' : '');
@@ -850,13 +879,65 @@
   }
 
   // ---------- paint and events ----------
+  // The plan as saved: what is on the screen right now, block by block.
+  function planData() {
+    var root = el('db-plan'); var stations = [], blocks = [];
+    if (root) root.querySelectorAll('.db-block').forEach(function (b) {
+      var name = (b.querySelector('h5') || {}).textContent || ''; var min = ((b.querySelector('.tm small') || {}).textContent || '').replace(/\D/g, '');
+      var st = []; b.querySelectorAll('.db-st').forEach(function (s) { var k = (s.querySelector('.k') || {}).textContent || ''; var drill = (s.querySelector('b') || {}).textContent || ''; var who = (s.querySelector('.who') || {}).textContent || ''; var row = { block: name, k: k, drill: drill.trim() }; if (who) row.who = who.trim(); st.push(row); stations.push(row); });
+      blocks.push({ name: name, minutes: +min || null, stations: st });
+    });
+    var lead = document.querySelector('#devboard-view .db-lead h4');
+    return { title: lead ? lead.textContent : 'Practice', team: (teams().filter(function (t) { return t.id === state.teamId; })[0] || {}).name || '', blocks: blocks, stations: stations, version: 1 };
+  }
+  function nextPracticeDate() { var d = new Date(); var dow = d.getDay(); var add = dow < 2 ? 2 - dow : dow < 4 ? 4 - dow : 9 - dow; d.setDate(d.getDate() + add); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  async function savePlan(btn) {
+    if (!canEdit(state.teamId)) return; var plan = planData(); if (!plan.stations.length) { toast('Nothing to save yet. Evaluate a few players first.'); return; }
+    btn.disabled = true; var r = await commit('save_practice_plan', { p_team_id: state.teamId, p_plan_date: nextPracticeDate(), p_plan: plan }); btn.disabled = false;
+    if (!r.ok) { toast('Could not save the plan: ' + (r.error && r.error.message || 'error')); return; }
+    toast(r.queued ? 'Plan saved on this device. It sends when you are online.' : 'Plan saved for ' + plan.title.split(',')[0] + '. ' + plan.stations.length + ' stations.');
+  }
+  // ---------- activity (director only) ----------
+  async function loadActivity(force) {
+    if (!state.isAdmin) return; if (state.activity !== null && !force) return; state.activity = state.activity || []; var c = client(); if (!c || !sync.online) return;
+    try { var r = await c.rpc('list_coach_activity', { p_limit: 60 }); if (r.error) throw r.error; state.activity = r.data || []; state.activityErr = null; } catch (e) { state.activityErr = e.message; }
+    try { state.activitySeen = localStorage.getItem('gs_devboard_activity_seen') || ''; } catch (e) { state.activitySeen = ''; }
+    paint();
+  }
+  function markActivitySeen() { var top = (state.activity || [])[0]; if (!top) return; try { localStorage.setItem('gs_devboard_activity_seen', top.at); } catch (e) { /* optional */ } state.activitySeen = top.at; }
+  function newActivityCount() { if (!state.activity || !state.activity.length) return 0; var seen = state.activitySeen || ''; return state.activity.filter(function (r) { return r.at > seen; }).length; }
+  function ago(iso) { var ms = Date.now() - new Date(iso).getTime(); var m = Math.round(ms / 60000); if (m < 1) return 'just now'; if (m < 60) return m + ' min ago'; var h = Math.round(m / 60); if (h < 24) return h + ' hr ago'; return fmtDay(iso); }
+  function activityHtml() {
+    if (!state.isAdmin) return '';
+    var h = '<div class="db-lead"><div><h4>What the coaches did</h4><p>Every evaluation, saved plan, and parent share by a coach, newest first. Taps by the same coach on the same player within twenty minutes show as one line.</p></div></div>';
+    if (state.activity === null) return h + '<div class="db-empty">Loading...</div>';
+    if (state.activityErr) return h + '<div class="db-empty">' + esc(state.activityErr) + '</div>';
+    if (!state.activity.length) return h + '<div class="db-empty">Nothing yet. When a coach evaluates a player or saves a plan it shows up here.</div>';
+    var seen = state.activitySeen || '';
+    h += '<div class="db-panel">' + state.activity.map(function (r) {
+      var d = r.detail || {}; var isNew = r.at > seen; var title, body, chips = '';
+      if (r.kind === 'evaluation') {
+        var bits = []; if (d.subs) bits.push(d.subs + ' skill' + (d.subs > 1 ? 's' : '') + ' scored'); if (d.position) bits.push('position set'); if (d.focus) bits.push('focus written');
+        title = esc(r.actor) + ' evaluated ' + esc((r.athlete || 'a player').trim()); body = bits.join(', ') + (r.team ? ' on ' + esc(r.team) : '') + '.';
+        chips = (d.sample || []).filter(function (x) { return /^sub\./.test(x); }).slice(0, 4).map(function (x) { var m = x.match(/^sub\.([^=]+)=(\d)/); return m ? '<span>' + esc(subKeyLabel(m[1])) + ' ' + m[2] + '</span>' : ''; }).join('');
+      } else if (r.kind === 'plan') {
+        title = esc(r.actor) + ' saved the plan for ' + esc(fmtDay(d.plan_date + 'T12:00:00')); body = (r.team ? esc(r.team) + '. ' : '') + ((d.drills || []).length) + ' drill' + ((d.drills || []).length === 1 ? '' : 's') + (d.saves > 1 ? ', saved ' + d.saves + ' times' : '') + '.';
+        chips = (d.drills || []).slice(0, 6).map(function (x) { return '<span>' + esc(x) + '</span>'; }).join('');
+      } else { title = esc(r.actor) + ' shared ' + esc((r.athlete || 'a player').trim()) + ' with his parents'; body = d.note ? '"' + esc(d.note) + '"' : 'No note.'; }
+      var ic = r.kind === 'plan' ? 'PLAN' : r.kind === 'share' ? 'SENT' : 'EVAL';
+      return '<div class="db-act' + (isNew ? ' new' : '') + '"' + (r.athlete_id ? ' data-act-athlete="' + esc(r.athlete_id) + '" style="cursor:pointer"' : '') + '><span class="ic ' + r.kind + '">' + ic + '</span><div><b>' + title + '</b><p>' + body + '</p>' + (chips ? '<div class="chips">' + chips + '</div>' : '') + '</div><span class="when">' + esc(ago(r.at)) + '</span></div>';
+    }).join('') + '</div>';
+    return h;
+  }
   var TABS = [['players', 'Players'], ['team', 'Team'], ['plan', 'Practice plan'], ['bank', 'The Bank']];
   function html() {
     if (state.error) return '<div class="db-empty">' + esc(state.error) + '</div>';
     if (!state.loaded || !raw()) return '<div class="db-empty">Loading players and the bank...</div>';
     if (!state.teamId) { var ts = teams().filter(function (t) { return playersOf(t.id).length; }); var mine = ts.filter(function (t) { return state.myTeams.indexOf(t.id) >= 0; }); state.teamId = (mine[0] || ts[0] || {}).id || null; }
-    var tabs = '<div class="db-tabs" role="tablist">' + TABS.map(function (t) { return '<button type="button" role="tab" data-tab="' + t[0] + '"' + (t[0] === state.tab ? ' class="active"' : '') + '>' + t[1] + '</button>'; }).join('') + '</div>';
-    var body = state.tab === 'team' ? teamHtml() : state.tab === 'plan' ? planHtml() : state.tab === 'bank' ? bankHtml() : playersHtml();
+    var tabList = state.isAdmin ? TABS.concat([['activity', 'Activity']]) : TABS; var nn = newActivityCount();
+    var tabs = '<div class="db-tabs" role="tablist">' + tabList.map(function (t) { return '<button type="button" role="tab" data-tab="' + t[0] + '"' + (t[0] === state.tab ? ' class="active"' : '') + '>' + t[1] + (t[0] === 'activity' && nn && state.tab !== 'activity' ? '<span class="db-dot" title="' + nn + ' new"></span>' : '') + '</button>'; }).join('') + '</div>';
+    if (state.tab === 'activity' && !state.isAdmin) state.tab = 'players';
+    var body = state.tab === 'team' ? teamHtml() : state.tab === 'plan' ? planHtml() : state.tab === 'bank' ? bankHtml() : state.tab === 'activity' ? activityHtml() : playersHtml();
     return tabs + '<div id="db-status">' + statusHtml() + '</div>' + body;
   }
   function paint() {
@@ -865,7 +946,7 @@
     v.innerHTML = html();
     if (typeof scrollTop === 'number') { var m = document.querySelector('.dashboard-main'); if (m) m.scrollTop = scrollTop; }
     var sn = v.querySelector('#db-sync-now'); if (sn) sn.onclick = flush;
-    v.querySelectorAll('.db-tabs button').forEach(function (b) { b.onclick = function () { state.tab = b.getAttribute('data-tab'); try { localStorage.setItem('gs_devboard_tab', state.tab); } catch (e) { /* optional */ } paint(); setSub(); var mm = document.querySelector('.dashboard-main'); if (mm) mm.scrollTop = 0; }; });
+    v.querySelectorAll('.db-tabs button').forEach(function (b) { b.onclick = function () { state.tab = b.getAttribute('data-tab'); try { localStorage.setItem('gs_devboard_tab', state.tab); } catch (e) { /* optional */ } if (state.tab === 'activity') { loadActivity(true).then(function () { paint(); markActivitySeen(); }); } paint(); setSub(); var mm = document.querySelector('.dashboard-main'); if (mm) mm.scrollTop = 0; }; });
     v.querySelectorAll('.db-teams [data-team]').forEach(function (b) { b.onclick = function () { state.teamId = b.getAttribute('data-team'); paint(); }; });
     v.querySelectorAll('.db-teams [data-tag]').forEach(function (b) { b.onclick = function () { state.bankTag = b.getAttribute('data-tag'); paint(); }; });
     var q = v.querySelector('.db-search'); if (q) { q.oninput = function () { if (state.tab === 'bank') state.bankQ = q.value; else state.q = q.value; paint(); }; if (focusQ) { q.focus(); try { q.setSelectionRange(pos, pos); } catch (e) { /* fine */ } } }
@@ -882,11 +963,13 @@
     v.querySelectorAll('[data-priv]').forEach(function (b) { b.onclick = function () { togglePrivilege(b.getAttribute('data-priv'), b.getAttribute('data-on') !== '1'); }; });
     v.querySelectorAll('[data-swap]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); var k = b.getAttribute('data-swap').split('|'); var key = swapKey(k[0], +k[1]); state.swaps[key] = (state.swaps[key] || 0) + 1; paint(); }; });
     var pr = el('db-print'); if (pr) pr.onclick = function () { window.print(); };
+    var sp = el('db-save-plan'); if (sp) sp.onclick = function () { savePlan(sp); };
+    v.querySelectorAll('[data-act-athlete]').forEach(function (n) { n.onclick = function () { var id = n.getAttribute('data-act-athlete'); var a = (raw() ? raw().athletes : []).filter(function (x) { return x.id === id; })[0]; var tm = a && teamsOf(a.id)[0]; if (a && tm) { state.teamId = tm; state.tab = 'players'; state.expanded[a.id] = true; paint(); } }; });
     var cp = el('db-copy'); if (cp) cp.onclick = function () { var t = planText(); if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function () { toast('Plan copied.'); }, function () { toast('Copy blocked by the browser.'); }); else toast('Copy is not available here.'); };
   }
   function setSub() {
     var s = document.querySelector('#coach-dashboard .dashboard-header .text-sub');
-    if (s) s.textContent = { players: 'Needs and drills, per player.', team: 'Top needs, the read of the week, work groups.', plan: 'Tuesday and Thursday, built from the roster.', bank: 'Every drill and what it develops.' }[state.tab] || 'Development board';
+    if (s) s.textContent = { players: 'Needs and drills, per player.', team: 'Top needs, the read of the week, work groups.', plan: 'Tuesday and Thursday, built from the roster.', bank: 'Every drill and what it develops.', activity: 'What the coaches did.' }[state.tab] || 'Development board';
   }
 
   function ensureView() {
@@ -908,6 +991,7 @@
       state.cachedRoster = null; sync.fromCache = false; replayQueue(); snapshot();
       state.loaded = true;
       flush();
+      if (state.isAdmin) loadActivity(true);
     } catch (e) {
       if ((e.message === 'offline' || isNetworkError(e)) && restoreCache()) { sync.online = false; state.loaded = true; }
       else state.error = e.message === 'no_session' ? 'Sign in with your email to use the development board.' : e.message === 'no_client' ? 'Sign-in service not loaded.' : e.message === 'offline' ? 'No connection, and no saved copy on this device yet. Open the board once while online and it will work offline after that.' : e.message;
