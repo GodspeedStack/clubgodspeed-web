@@ -62,7 +62,7 @@
   // Category colors, same as the Command Center bank.
   var TAGS = { 'Culture': '#0071e3', 'Toughness': '#d92d20', 'Bigs': '#7c3aed', 'Guards': '#0d9488', 'Passing/Reads': '#4f46e5', 'Individual': '#64748b', 'Conditioning': '#d97706', 'Strength': '#57534e' };
   var TAG_ORDER = ['Culture', 'Toughness', 'Bigs', 'Guards', 'Passing/Reads', 'Individual', 'Conditioning', 'Strength'];
-  var state = { loading: false, loaded: false, error: null, isAdmin: false, myTeams: [], cfg: DEFAULT_CFG, dev: {}, bank: [], shape: null, powerups: null, teamId: null, tab: 'players', q: '', swaps: {}, bankQ: '', bankTag: 'All', expanded: {}, workout: null };
+  var state = { loading: false, loaded: false, error: null, isAdmin: false, myTeams: [], cfg: DEFAULT_CFG, dev: {}, bank: [], shape: null, powerups: null, teamId: null, tab: 'players', q: '', swaps: {}, bankQ: '', bankTag: 'All', expanded: {}, workout: null, shareAccess: [], shares: {}, privileges: null };
 
   // ---------- data ----------
   async function loadAll() {
@@ -75,7 +75,9 @@
       c.from('player_development').select('athlete_id,skills,subs,position,strength_bench,focus,updated_at'),
       c.from('program_content').select('slug,body').in('slug', ['drills-bank', 'planner-practice-shape', 'planner-powerups', 'planner-workout']),
       c.from('coach_profiles').select('team_ids').eq('user_id', uid).maybeSingle(),
-      c.rpc('is_program_admin')
+      c.rpc('is_program_admin'),
+      c.from('coach_access').select('user_id,area,team_id,allowed').eq('area', 'share_development'),
+      c.from('player_development_shares').select('athlete_id,shared_at,shared_by,note').order('shared_at', { ascending: false }).limit(400)
     ]);
     if (r[0].error) throw new Error('config: ' + r[0].error.message);
     if (r[1].error) throw new Error('development: ' + r[1].error.message);
@@ -92,6 +94,16 @@
     });
     state.myTeams = (r[3].data && r[3].data.team_ids) || [];
     state.isAdmin = !!(r[4] && r[4].data === true);
+    state.shareAccess = (r[5] && r[5].data) ? r[5].data.filter(function (x) { return x.user_id === uid; }) : [];
+    state.shares = {}; ((r[6] && r[6].data) || []).forEach(function (x) { if (!state.shares[x.athlete_id]) state.shares[x.athlete_id] = x; });
+  }
+  // Director always; a coach only with the director's grant (coach_access, area share_development) for all teams or this team.
+  function canShare(teamId) {
+    if (state.isAdmin) return true;
+    if (state.myTeams.indexOf(teamId) < 0) return false;
+    var allow = state.shareAccess.some(function (a) { return a.allowed && (!a.team_id || a.team_id === teamId); });
+    var deny = state.shareAccess.some(function (a) { return !a.allowed && (!a.team_id || a.team_id === teamId); });
+    return allow && !deny;
   }
   // ---------- offline: snapshot cache, write queue, sync ----------
   // The board keeps a copy of what it last saw on this device and queues every
@@ -111,11 +123,11 @@
   }
   function snapshot() {
     var rw = liveRaw(); if (!rw) return;
-    writeJson(CACHE_KEY, { at: new Date().toISOString(), uid: state.uid || null, cfg: state.cfg, dev: state.dev, bank: state.bank, shape: state.shape, powerups: state.powerups, workout: state.workout, myTeams: state.myTeams, isAdmin: state.isAdmin, roster: slimRoster(rw) });
+    writeJson(CACHE_KEY, { at: new Date().toISOString(), uid: state.uid || null, cfg: state.cfg, dev: state.dev, bank: state.bank, shape: state.shape, powerups: state.powerups, workout: state.workout, shareAccess: state.shareAccess, shares: state.shares, myTeams: state.myTeams, isAdmin: state.isAdmin, roster: slimRoster(rw) });
   }
   function restoreCache() {
     var c = readJson(CACHE_KEY); if (!c || !c.roster) return false;
-    state.cfg = Object.assign({}, DEFAULT_CFG, c.cfg || {}); state.dev = c.dev || {}; state.bank = c.bank || []; state.shape = c.shape; state.powerups = c.powerups; state.workout = c.workout || null; state.myTeams = c.myTeams || []; state.isAdmin = !!c.isAdmin;
+    state.cfg = Object.assign({}, DEFAULT_CFG, c.cfg || {}); state.dev = c.dev || {}; state.bank = c.bank || []; state.shape = c.shape; state.powerups = c.powerups; state.workout = c.workout || null; state.shareAccess = c.shareAccess || []; state.shares = c.shares || {}; state.myTeams = c.myTeams || []; state.isAdmin = !!c.isAdmin;
     state.cachedRoster = c.roster; sync.fromCache = true; sync.cachedAt = c.at; state.uid = state.uid || c.uid || null;
     replayQueue();
     return true;
@@ -250,7 +262,7 @@
   function track(a, sk) { var t = targetsFor(ageOf(a))[sk] || 0; var p = skillOf(a, sk).p; if (!p) return 'none'; return p > t ? 'ahead' : p === t ? 'on' : 'behind'; }
   function behindCount(a) { return Object.keys(subsCfg()).filter(function (sk) { return track(a, sk) === 'behind' && (targetsFor(ageOf(a))[sk] || 0) > 0; }).length; }
   function prereqWarnings(a) { var out = []; var pr = state.cfg.prereqs || {}; Object.keys(pr).forEach(function (sk) { if (skillOf(a, sk).capped) out.push(pr[sk].msg); }); return out; }
-  function overallPhase(a) { var ps = skillOrder().map(function (sk) { return skillOf(a, sk).p; }).filter(Boolean); if (!ps.length) return 'No rating'; return phaseName(Math.round(ps.reduce(function (x, y) { return x + y; }, 0) / ps.length)); }
+  function overallPhase(a) { var ps = skillOrder().map(function (sk) { return skillOf(a, sk).p; }).filter(Boolean); if (!ps.length) return 'Not evaluated'; return phaseName(Math.round(ps.reduce(function (x, y) { return x + y; }, 0) / ps.length)); }
   function positionOf(a) { return devOf(a).position || ''; }
   // Strength numbers become a 1 to 5 score against the age band.
   function strengthScore(age, key, value) {
@@ -318,18 +330,18 @@
   function gaps(players) {
     var out = [];
     var un = players.filter(function (a) { return !started(a); }).length;
-    if (un) out.push(['red', un + (un > 1 ? ' players have' : ' player has') + ' no rating yet. Open Rate; three minutes each.']);
+    if (un) out.push(['red', un + (un > 1 ? ' players' : ' player') + ' not evaluated yet. Open Evaluate; three minutes each.']);
     var behind = 0; players.forEach(function (a) { behind += behindCount(a); });
     if (behind) out.push(['orange', behind + ' skill' + (behind > 1 ? 's' : '') + ' behind the age target across the roster.']);
     var pv = 0; players.forEach(function (a) { pv += prereqWarnings(a).length; });
     if (pv) out.push(['red', pv + ' skill' + (pv > 1 ? 's' : '') + ' held at Intermediate by a prerequisite.']);
     var partial = players.filter(function (a) { return started(a) && unratedSkills(a).length; }).length;
-    if (partial) out.push(['grey', partial + ' player' + (partial > 1 ? 's' : '') + ' with skills not rated yet.']);
+    if (partial) out.push(['grey', partial + ' player' + (partial > 1 ? 's' : '') + ' with skills not evaluated yet.']);
     var np = players.filter(function (a) { return !positionOf(a); }).length;
     if (np) out.push(['grey', np + ' player' + (np > 1 ? 's' : '') + ' without a position.']);
     var nf = players.filter(function (a) { return !devOf(a).focus; }).length;
     if (nf && nf < players.length) out.push(['grey', nf + ' player' + (nf > 1 ? 's' : '') + ' without a coach focus sentence.']);
-    if (!out.length && players.length) out.push(['green', 'Every player rated, nobody behind target, no warnings. Keep the reps honest.']);
+    if (!out.length && players.length) out.push(['green', 'Every player evaluated, nobody behind target, no warnings. Keep the reps honest.']);
     return out;
   }
   function label(sk) { return (state.cfg.skill_labels || {})[sk] || sk; }
@@ -337,6 +349,7 @@
   function initials(a) { return ((a.first_name || '').charAt(0) + (a.last_name || '').charAt(0)).toUpperCase() || '?'; }
   function shortName(a) { return (a.first_name + ' ' + (a.last_name || '').charAt(0)).trim(); }
   function gradeText(a) { var g = String(a.grade || '').replace(/\D/g, ''); return g ? (g === '1' ? '1st' : g === '2' ? '2nd' : g === '3' ? '3rd' : g + 'th') + ' grade' : ''; }
+  function fmtDay(iso) { var d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
   function tagColor(t) { return TAGS[t] || '#64748b'; }
   function tagChip(t, extra) { return '<span class="db-tag' + (extra ? ' ' + extra : '') + '" style="--tc:' + tagColor(t) + '">' + esc(t || 'Drill') + '</span>'; }
 
@@ -367,7 +380,8 @@
 #devboard-view .db-status.off{background:#fff6ec;color:#9a3412}#devboard-view .db-status.off i{background:var(--orange)}\
 #devboard-view .db-status.on{background:var(--acs);color:#0a3f7a}#devboard-view .db-status.on i{background:var(--ac)}\
 #devboard-view .db-status .db-link{margin-left:auto;white-space:nowrap}\
-#devboard-view .db-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}\
+#devboard-view .db-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;align-items:start}\
+#devboard-view .db-card{align-self:start;height:auto}\
 #devboard-view .db-card{background:#fff;border:1px solid var(--bl);border-radius:var(--rc);box-shadow:var(--sh);min-width:0;overflow:hidden}\
 #devboard-view .db-head{display:flex;align-items:center;gap:11px;padding:14px 15px;border-bottom:1px solid var(--bl)}\
 #devboard-view .db-av{width:44px;height:44px;border-radius:12px;background:var(--acs);color:var(--ac);font-size:15px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:0 0 44px}\
@@ -529,7 +543,7 @@
   // ---------- players tab ----------
   function scoreDots(v) { var h = '<span class="sc">'; for (var i = 1; i <= 5; i++) h += '<i class="' + (i <= v ? (v <= 2 ? 'f lo' : 'f') : '') + '"></i>'; return h + '<span>' + esc(rubric(v)) + '</span></span>'; }
   function trackPill(a) {
-    if (!started(a)) return '<span class="db-pill">Not rated</span>';
+    if (!started(a)) return '<span class="db-pill">Not evaluated</span>';
     var b = behindCount(a); if (b) return '<span class="db-pill red">' + b + ' behind target</span>';
     var ahead = Object.keys(subsCfg()).filter(function (sk) { return track(a, sk) === 'ahead'; }).length;
     return ahead ? '<span class="db-pill green">On track, ' + ahead + ' ahead</span>' : '<span class="db-pill green">On track</span>';
@@ -538,20 +552,21 @@
     var d = devOf(a); var age = ageOf(a); var nd = needsOf(a); var rx = prescribe(a); var warn = prereqWarnings(a); var rc = ratedCount(a); var total = totalSubs(); var can = canEdit(teamId);
     var open = state.expanded[a.id] !== false;
     var meta = [a.jersey_number ? '#' + a.jersey_number : '', gradeText(a).replace(' grade', ''), 'Age ' + age].filter(Boolean).join(' \u00b7 ');
+    var sh = state.shares[a.id];
     var h = '<article class="db-card" data-id="' + esc(a.id) + '">';
-    h += '<div class="db-head"><div class="db-av">' + esc(a.jersey_number ? String(a.jersey_number) : initials(a)) + '</div><div class="nm"><b>' + esc(a.first_name + ' ' + (a.last_name || '')) + '</b><small>' + esc(meta) + '</small></div><div class="pills"><span class="db-pill">' + rc + ' of ' + total + ' rated</span>' + trackPill(a) + '</div><button type="button" class="db-toggle" data-act="toggle" aria-label="Show or hide">' + (open ? '&#8963;' : '&#8964;') + '</button></div>';
+    h += '<div class="db-head"><div class="db-av">' + esc(a.jersey_number ? String(a.jersey_number) : initials(a)) + '</div><div class="nm"><b>' + esc(a.first_name + ' ' + (a.last_name || '')) + '</b><small>' + esc(meta) + (sh ? ' \u00b7 Shared ' + esc(fmtDay(sh.shared_at)) : '') + '</small></div><div class="pills"><span class="db-pill">' + rc + ' of ' + total + ' scored</span>' + trackPill(a) + '</div><button type="button" class="db-toggle" data-act="toggle" aria-label="Show or hide">' + (open ? '&#8963;' : '&#8964;') + '</button></div>';
     // rating coverage bar with the age-target marker
     var pct = total ? Math.round(rc / total * 100) : 0;
-    h += '<div class="db-track"><div class="lbl"><span>' + rc + ' of ' + total + ' rated</span><small>' + (started(a) ? esc(overallPhase(a)) : 'No rating') + '</small></div><div class="db-bar2"><i style="width:' + pct + '%"></i></div></div>';
+    h += '<div class="db-track"><div class="lbl"><span>' + rc + ' of ' + total + ' scored</span><small>' + (started(a) ? esc(overallPhase(a)) : 'Not evaluated') + '</small></div><div class="db-bar2"><i style="width:' + pct + '%"></i></div></div>';
     h += '<div class="db-pos"><span class="k">Position</span>' + POSITIONS.map(function (p) { return '<button type="button" data-pos="' + p + '" class="' + (positionOf(a) === p ? 'on' : '') + '"' + (can ? '' : ' disabled') + '>' + p + '</button>'; }).join('') + '</div>';
     if (open) {
       h += '<div class="db-body">';
-      if (!started(a)) h += '<div class="db-focus empty">No rating yet. Open Rate and score what you see; his card fills itself.</div>';
+      if (!started(a)) h += '<div class="db-focus empty">Not evaluated yet. Open Evaluate and score what you see; his card fills itself.</div>';
       else {
         h += '<div class="db-sec">Needs next</div>';
-        if (!nd.length) h += '<div class="db-focus empty">Every rated sub-skill is Consistent or better. Rate the rest, or raise the bar.</div>';
+        if (!nd.length) h += '<div class="db-focus empty">Every scored sub-skill is Consistent or better. Score the rest, or raise the bar.</div>';
         nd.forEach(function (n) { h += '<div class="db-need"><div><b>' + esc(subKeyLabel(n.key)) + '</b><small>' + esc(label(n.skill)) + (n.behind ? ', behind the age target' : '') + (subHint(n.key) ? '. ' + esc(subHint(n.key)) : '') + '</small></div>' + scoreDots(n.score) + '</div>'; });
-        var un = unratedSkills(a); if (un.length) h += '<div class="db-need" style="grid-template-columns:1fr"><small>Not rated yet: ' + esc(un.map(label).join(', ')) + '</small></div>';
+        var un = unratedSkills(a); if (un.length) h += '<div class="db-need" style="grid-template-columns:1fr"><small>Not scored yet: ' + esc(un.map(label).join(', ')) + '</small></div>';
         if (rx.length) {
           h += '<div class="db-sec" style="margin-top:14px">Run these</div>';
           rx.forEach(function (x) { var dr = x.drill; h += '<div class="db-item" data-drill="' + esc(dr.name) + '"><div><div class="t">' + esc(dr.name) + '</div><div class="c">' + esc(dr.cue || '') + '</div>' + tagChip(dr.tag) + '</div><div class="mn">' + esc(dr.min || 5) + ' min</div>' + (x.rep ? '<div class="rep"><b>Start here</b>' + esc(x.rep.text) + '</div>' : '') + '<div class="why">For ' + esc(subKeyLabel(x.need.key).toLowerCase()) + ' at ' + esc(phaseName(x.need.phase)) + '. Standard: ' + esc((dr.coaching && dr.coaching.standard) || 'game speed, both hands') + '</div></div>'; });
@@ -561,7 +576,7 @@
       h += '<div class="db-sec" style="margin-top:14px">Coach focus</div><div class="db-focus' + (d.focus ? '' : ' empty') + '">' + esc(d.focus || 'One sentence for this kid. What he hears from every coach this month.') + '</div>';
       h += '</div>';
     }
-    h += '<div class="db-foot"><button type="button" class="db-btn primary" data-act="rate"' + (can ? '' : ' disabled title="Only his own coach or the director can rate"') + '>' + (started(a) ? 'Rate' : 'Rate now') + '</button><button type="button" class="db-btn" data-act="drills">All drills for him</button></div>';
+    h += '<div class="db-foot"><button type="button" class="db-btn primary" data-act="rate"' + (can ? '' : ' disabled title="Only his own coach or the director can evaluate"') + '>' + (started(a) ? 'Evaluate' : 'Evaluate now') + '</button><button type="button" class="db-btn" data-act="drills">All drills for him</button>' + (canShare(teamId) && started(a) ? '<button type="button" class="db-btn" data-act="share" style="margin-left:auto">Share with parent</button>' : '') + '</div>';
     return h + '</article>';
   }
   function teamBar(withSearch) {
@@ -576,12 +591,12 @@
     var ps = playersOf(state.teamId); var q = state.q.trim().toLowerCase();
     var vis = q ? ps.filter(function (a) { return (a.first_name + ' ' + a.last_name).toLowerCase().indexOf(q) >= 0; }) : ps;
     var rated = ps.filter(started).length; var behind = ps.filter(function (a) { return behindCount(a) > 0; }).length;
-    var h = '<div class="db-lead"><div><h4>Rate what you see. The board picks the drill.</h4><p>' + totalSubs() + ' sub-skills, 1 to 5 in our words. The phase comes from the scores, the needs come from the age targets, and every need gets the Godspeed drill and the rep to start with at his level.</p></div><div class="st"><div><b>' + ps.length + '</b><small>Players</small></div><div><b>' + rated + '</b><small>Rated</small></div><div><b>' + behind + '</b><small>Behind target</small></div></div></div>';
+    var h = '<div class="db-lead"><div><h4>Score what you see. The board picks the drill.</h4><p>' + totalSubs() + ' sub-skills, 1 to 5 in our words. The phase comes from the scores, the needs come from the age targets, and every need gets the Godspeed drill and the rep to start with at his level.</p></div><div class="st"><div><b>' + ps.length + '</b><small>Players</small></div><div><b>' + rated + '</b><small>Evaluated</small></div><div><b>' + behind + '</b><small>Behind target</small></div></div></div>';
     h += teamBar(true);
     if (!ps.length) return h + '<div class="db-empty">No active players on this team.</div>';
     if (!vis.length) return h + '<div class="db-empty">No player matches that name.</div>';
     h += '<div class="db-grid">' + vis.map(function (a) { return playerCard(a, state.teamId); }).join('') + '</div>';
-    if (!canEdit(state.teamId)) h += '<div class="db-note">You can read this team. Rating is for its own coaches and the director.</div>';
+    if (!canEdit(state.teamId)) h += '<div class="db-note">You can read this team. Evaluating is for its own coaches and the director.</div>';
     return h;
   }
 
@@ -615,7 +630,7 @@
     var seen = {}; var list = [];
     needsOf(a).forEach(function (n) { drillsForSub(n.key, n.phase, [], 4).forEach(function (d) { if (seen[d.name]) return; seen[d.name] = 1; list.push({ need: n, drill: d }); }); });
     var h = '<div class="hd"><span class="db-tag" style="--tc:#0071e3">Drills for him</span><button type="button" class="x" aria-label="Close">&times;</button><h3>' + esc(a.first_name) + '</h3><p>Everything in the bank that develops his three needs, best fit first. Tap one for the detail.</p></div><div class="bd">';
-    if (!list.length) h += '<p style="color:#6e6e73">Nothing tagged for his needs yet, or he is not rated.</p>';
+    if (!list.length) h += '<p style="color:#6e6e73">Nothing tagged for his needs yet, or he is not evaluated.</p>';
     var byNeed = {}; list.forEach(function (x) { (byNeed[x.need.key] = byNeed[x.need.key] || []).push(x.drill); });
     Object.keys(byNeed).forEach(function (k) {
       h += '<div class="sec">' + esc(subKeyLabel(k)) + ' <span style="color:#a1a1a6;font-weight:600">' + esc(rubric(subScore(a, k))) + '</span></div>';
@@ -639,12 +654,12 @@
   }
   function skillHead(a, sk) {
     var st = skillOf(a, sk); var tr = track(a, sk); var t = targetsFor(ageOf(a))[sk] || 0;
-    var pill = !st.n ? '<span class="ph">Not rated</span>' : '<span class="ph ' + tr + '">' + esc(phaseName(st.p)) + (st.capped ? ', capped' : '') + (t && tr !== 'on' ? ', target ' + esc(phaseName(t)) : '') + '</span>';
+    var pill = !st.n ? '<span class="ph">Not scored</span>' : '<span class="ph ' + tr + '">' + esc(phaseName(st.p)) + (st.capped ? ', capped' : '') + (t && tr !== 'on' ? ', target ' + esc(phaseName(t)) : '') + '</span>';
     return '<div class="rt-head"><b>' + esc(label(sk)) + '</b>' + pill + '<span style="font-size:11.5px;color:#a1a1a6;margin-left:auto">' + st.n + ' of ' + subList(sk).length + '</span></div>';
   }
   function openRate(a, teamId) {
     var editable = canEdit(teamId); var d = devOf(a);
-    var h = '<div class="hd"><span class="db-tag" style="--tc:#0071e3">Rate</span><button type="button" class="x" aria-label="Close">&times;</button><h3>' + esc(a.first_name + ' ' + (a.last_name || '')) + '</h3><p>Age ' + ageOf(a) + (positionOf(a) ? ', ' + esc(positionOf(a)) : '') + '. Score what you see. Every tap saves. The phase for each skill comes from the scores.</p></div><div class="bd">';
+    var h = '<div class="hd"><span class="db-tag" style="--tc:#0071e3">Evaluation</span><button type="button" class="x" aria-label="Close">&times;</button><h3>' + esc(a.first_name + ' ' + (a.last_name || '')) + '</h3><p>Age ' + ageOf(a) + (positionOf(a) ? ', ' + esc(positionOf(a)) : '') + '. Score what you see. Every tap saves. The phase for each skill comes from the scores.</p></div><div class="bd">';
     h += '<div class="legend"><span><b>1</b> Poor</span><span><b>2</b> Weak</span><span><b>3</b> Some good actions</span><span><b>4</b> Consistent</span><span><b>5</b> Excellent</span></div>';
     h += '<div class="sec">Position</div><div class="pos">' + POSITIONS.map(function (p) { return '<button type="button" data-pos="' + p + '" class="' + (positionOf(a) === p ? 'on' : '') + '"' + (editable ? '' : ' disabled') + '>' + p + '</button>'; }).join('') + '</div>';
     skillOrder().forEach(function (sk) { h += '<div class="rt-skill" data-skill="' + sk + '">' + skillHead(a, sk) + subList(sk).map(function (s) { return rateRowHtml(a, sk, s, editable); }).join('') + '</div>'; });
@@ -691,27 +706,76 @@
     (state.dev[a.id] = state.dev[a.id] || { athlete_id: a.id, skills: {}, subs: {} }).position = next; paint();
   }
 
+  // ---------- share with the parent ----------
+  // What the parent sees: the phases, the three needs in plain words, the drills to work at home with the rep to start with, the coach note.
+  function buildSummary(a) {
+    var tg = targetsFor(ageOf(a));
+    return {
+      version: 1, age: ageOf(a), position: positionOf(a) || null, focus: devOf(a).focus || null, rated: ratedCount(a), total: totalSubs(),
+      phases: skillOrder().map(function (sk) { var st = skillOf(a, sk); return { skill: sk, label: label(sk), phase: st.p, phaseName: phaseName(st.p), target: tg[sk] || 0, targetName: phaseName(tg[sk] || 0), track: track(a, sk), rated: st.n, of: subList(sk).length }; }),
+      needs: needsOf(a).map(function (n) { return { key: n.key, label: subKeyLabel(n.key), skill: n.skill, skillLabel: label(n.skill), score: n.score, word: rubric(n.score), hint: subHint(n.key), behind: n.behind }; }),
+      drills: prescribe(a).map(function (x) { var d = x.drill; var c = d.coaching || {}; return { name: d.name, cue: d.cue || '', tag: d.tag || '', min: d.min || 5, forKey: x.need.key, forLabel: subKeyLabel(x.need.key), rep: x.rep ? x.rep.text : '', standard: c.standard || '', look: (c.look || []).slice(0, 3) }; })
+    };
+  }
+  function openShare(a, teamId) {
+    var sm = buildSummary(a); var prev = state.shares[a.id];
+    var h = '<div class="hd"><span class="db-tag" style="--tc:#159a52">Share with parent</span><button type="button" class="x" aria-label="Close">&times;</button><h3>' + esc(a.first_name + ' ' + (a.last_name || '')) + '</h3><p>This is what the parent will see in their portal. Nothing is emailed; it appears under Performance the next time they open it.' + (prev ? ' Last shared ' + esc(fmtDay(prev.shared_at)) + '.' : '') + '</p></div><div class="bd">';
+    h += '<div class="sec">Where he is</div><div class="devs">' + sm.phases.filter(function (p) { return p.phase; }).map(function (p) { return '<span class="db-chip' + (p.track === 'behind' ? ' hit' : '') + '">' + esc(p.label) + ': ' + esc(p.phaseName) + '</span>'; }).join('') + '</div>';
+    h += '<div class="sec">Working on next</div><ul class="dots">' + sm.needs.map(function (n) { return '<li><b>' + esc(n.label) + '</b> (' + esc(n.skillLabel) + '), ' + esc(n.word.toLowerCase()) + (n.behind ? ', behind the age target' : '') + '</li>'; }).join('') + '</ul>';
+    h += '<div class="sec">Drills to work at home</div><ul class="dots">' + sm.drills.map(function (d) { return '<li><b>' + esc(d.name) + '</b>, ' + esc(d.min) + ' min. ' + esc(d.cue) + (d.rep ? '<br><span style="color:#6e6e73">Start here: ' + esc(d.rep) + '</span>' : '') + '</li>'; }).join('') + '</ul>';
+    if (sm.focus) h += '<div class="box"><span class="k">Focus</span><span>' + esc(sm.focus) + '</span></div>';
+    h += '<div class="sec">A note from you</div><textarea id="db-share-note" maxlength="600" placeholder="Two or three sentences for the parent. What you see, what to work on at home, what is next.">' + esc(prev && prev.note ? prev.note : '') + '</textarea>';
+    h += '<div class="err" id="db-err"></div><div class="actions"><button type="button" class="btn" data-close>Cancel</button><button type="button" class="btn primary" id="db-share-go">Share with parent</button></div></div>';
+    var b = sheet(h, '#159a52');
+    var err = function (m) { var e = b.querySelector('#db-err'); if (!e) return; e.textContent = m || ''; e.classList.toggle('on', !!m); };
+    b.querySelector('#db-share-go').onclick = async function () {
+      var btn = b.querySelector('#db-share-go'); btn.disabled = true;
+      var note = b.querySelector('#db-share-note').value.trim();
+      var r = await commit('share_player_development', { p_athlete_id: a.id, p_note: note || null, p_summary: sm });
+      if (!r.ok) { err(r.error && r.error.message || 'Could not share.'); btn.disabled = false; return; }
+      state.shares[a.id] = { athlete_id: a.id, shared_at: (r.data && r.data.shared_at) || new Date().toISOString(), note: note || null };
+      toast(r.queued ? 'Saved on this device. It shares when you are online.' : 'Shared with the parent.'); closeSheet(); paint();
+    };
+  }
+  // Director: who may share. One toggle per coach, all teams.
+  async function loadPrivileges() { if (state.privileges !== null) return; state.privileges = []; var c = client(); if (!c || !state.isAdmin) return; try { var r = await c.rpc('list_share_privileges'); if (!r.error) state.privileges = r.data || []; else state.privLoadError = r.error.message; } catch (e) { state.privLoadError = e.message; } }
+  function privilegesHtml() {
+    if (!state.isAdmin) return '';
+    var h = '<div class="db-panel" style="margin-top:14px"><h4>Who can share with parents</h4><p class="in">You always can. A coach shares only after you turn it on here; it covers every team he coaches.</p>';
+    if (state.privileges === null) h += '<div class="db-note">Loading coaches...</div>';
+    else if (!state.privileges.length) h += '<div class="db-note">' + (state.privLoadError ? 'Could not load coaches: ' + esc(state.privLoadError) : 'No approved coaches yet.') + '</div>';
+    else state.privileges.forEach(function (p) { h += '<div class="db-rank" style="grid-template-columns:1fr auto"><div><b>' + esc(p.name || p.email) + '<small>' + esc(p.email) + '</small></b></div><button type="button" class="db-btn' + (p.allowed ? ' primary' : '') + '" data-priv="' + esc(p.user_id) + '" data-on="' + (p.allowed ? '1' : '0') + '">' + (p.allowed ? 'Can share' : 'Cannot share') + '</button></div>'; });
+    return h + '</div>';
+  }
+  async function togglePrivilege(userId, on) {
+    var c = client(); if (!c) return; if (!sync.online) { toast('Privileges change online only.'); return; }
+    try { var r = await c.rpc('set_coach_access', { p_user: userId, p_area: 'share_development', p_team: null, p_allowed: on ? true : null, p_note: 'Development board' }); if (r.error) throw r.error; (state.privileges || []).forEach(function (p) { if (p.user_id === userId) p.allowed = !!on; }); toast(on ? 'Coach can now share with parents.' : 'Sharing turned off for this coach.'); paint(); }
+    catch (e) { toast(e.message || 'Could not change that.'); }
+  }
+
   // ---------- team tab ----------
   function readOfWeek(players) { var top = teamNeeds(players)[0]; var key = top ? top.skill : 'handles'; return { skill: key, read: READS[key] || READS.handles }; }
   function teamHtml() {
     var ps = playersOf(state.teamId); var h = teamBar(false);
     if (!ps.length) return h + '<div class="db-empty">No active players on this team.</div>';
     var rated = ps.filter(started); var tn = teamNeeds(rated).slice(0, 5); var row = readOfWeek(rated); var wg = workGroups(rated); var gp = gaps(ps);
-    h += '<div class="db-lead"><div><h4>' + esc(row.read[0]) + '</h4><p>The read of the week, from the top need on this roster. ' + esc(row.read[1]) + '</p></div><div class="st"><div><b>' + rated.length + '</b><small>Rated</small></div><div><b>' + (ps.length - rated.length) + '</b><small>To rate</small></div><div><b>' + wg.length + '</b><small>Stations</small></div></div></div>';
+    h += '<div class="db-lead"><div><h4>' + esc(row.read[0]) + '</h4><p>The read of the week, from the top need on this roster. ' + esc(row.read[1]) + '</p></div><div class="st"><div><b>' + rated.length + '</b><small>Evaluated</small></div><div><b>' + (ps.length - rated.length) + '</b><small>To evaluate</small></div><div><b>' + wg.length + '</b><small>Stations</small></div></div></div>';
     h += '<div class="db-two"><div class="db-panel"><h4>Top needs</h4><p class="in">Sub-skills that show up in the most players\' next three.</p>';
-    if (!rated.length) h += '<div class="db-note">Rate a few players first.</div>';
+    if (!rated.length) h += '<div class="db-note">Evaluate a few players first.</div>';
     tn.forEach(function (r, i) { h += '<div class="db-rank"><span class="k">' + (i + 1) + '</span><div><b>' + esc(subKeyLabel(r.key)) + '<small>' + esc(label(r.skill)) + '</small></b><div class="bar"><i style="width:' + Math.round(r.players / rated.length * 100) + '%"></i></div></div><small class="r">' + r.players + ' of ' + rated.length + ', avg ' + r.avg.toFixed(1) + '</small></div>'; });
     h += '</div><div class="db-panel"><h4>Gaps</h4><p class="in">What the director sees first.</p>';
     gp.forEach(function (g) { h += '<div class="db-gap ' + g[0] + '"><i></i><span>' + esc(g[1]) + '</span></div>'; });
     h += '</div></div>';
     h += '<div class="db-panel" style="margin-top:14px"><h4>Work groups for power-ups</h4><p class="in">Players bucketed by their first drill. One coach per two stations, rotate at five minutes.</p>';
-    if (!wg.length) h += '<div class="db-note">Groups appear once players are rated.</div>';
+    if (!wg.length) h += '<div class="db-note">Groups appear once players are evaluated.</div>';
     wg.forEach(function (g) { h += '<div class="db-group"><b>' + esc(g.drill.name) + ' <span style="font-weight:500;color:#6e6e73">for ' + esc(subKeyLabel(g.need.key).toLowerCase()) + ', ' + esc(g.drill.min || 5) + ' min</span></b><div class="who">' + esc(g.players.map(shortName).join(', ')) + '</div><div class="cue">' + esc(g.drill.cue || '') + '</div></div>'; });
     h += '</div>';
     if (state.isAdmin) {
-      h += '<div class="db-panel" style="margin-top:14px"><h4>All teams</h4><p class="in">Director view. Rated players and behind-target skills per team.</p>';
-      teams().forEach(function (t) { var tp = playersOf(t.id); if (!tp.length) return; var b = 0; tp.forEach(function (a) { b += behindCount(a); }); h += '<div class="db-rank"><span class="k" style="background:#0071e3">' + tp.length + '</span><div><b>' + esc(t.name) + '</b></div><small class="r">' + tp.filter(started).length + ' rated, ' + b + ' behind</small></div>'; });
+      h += '<div class="db-panel" style="margin-top:14px"><h4>All teams</h4><p class="in">Director view. Evaluated players and behind-target skills per team.</p>';
+      teams().forEach(function (t) { var tp = playersOf(t.id); if (!tp.length) return; var b = 0; tp.forEach(function (a) { b += behindCount(a); }); h += '<div class="db-rank"><span class="k" style="background:#0071e3">' + tp.length + '</span><div><b>' + esc(t.name) + '</b></div><small class="r">' + tp.filter(started).length + ' evaluated, ' + b + ' behind</small></div>'; });
       h += '</div>';
+      if (state.privileges === null) loadPrivileges().then(function () { if (state.tab === 'team') paint(); });
+      h += privilegesHtml();
     }
     return h;
   }
@@ -729,7 +793,7 @@
     var rated = ps.filter(started); var wg = workGroups(rated); var row = readOfWeek(rated); var tn = teamNeeds(rated);
     var day = new Date(); var dow = day.getDay(); var next = dow < 2 ? 'Tuesday' : dow < 4 ? 'Thursday' : 'Tuesday';
     h += '<div class="db-lead"><div><h4>' + esc(next) + ', doors 5:55, ball at 6:00.</h4><p>Seven blocks from How we practice. Power-ups and the finishing bridge are filled from this roster\'s needs; the guided block teaches this week\'s read. Swap a drill if the gym says so.</p></div><div class="st"><div><b style="font-size:18px">' + esc(row.read[0]) + '</b><small>Read of the week</small></div></div></div>';
-    h += '<div class="db-plan-bar"><button type="button" class="db-btn primary" id="db-print">Print</button><button type="button" class="db-btn" id="db-copy">Copy as text</button><span class="db-note" style="margin:0">' + (rated.length ? rated.length + ' rated players shape this plan.' : 'Nobody is rated yet, so the stations are the default power-ups.') + '</span></div>';
+    h += '<div class="db-plan-bar"><button type="button" class="db-btn primary" id="db-print">Print</button><button type="button" class="db-btn" id="db-copy">Copy as text</button><span class="db-note" style="margin:0">' + (rated.length ? rated.length + ' evaluated players shape this plan.' : 'Nobody is evaluated yet, so the stations are the default power-ups.') + '</span></div>';
     h += '<div class="db-panel" id="db-plan">';
     state.shape.blocks.forEach(function (b, bi) {
       h += '<div class="db-block"><span class="n">' + (bi + 1) + '</span><div class="tm">' + esc(b.start) + '<small>' + esc(b.minutes) + ' min</small></div><div><h5>' + esc(b.name) + '</h5><p>' + esc(b.what) + '</p>' + (b.note ? '<div class="nt">' + esc(b.note) + '</div>' : '');
@@ -737,7 +801,7 @@
         h += '<div class="db-fill">';
         if (wg.length) wg.slice(0, 4).forEach(function (g, i) { var cands = drillsForSub(g.need.key, g.need.phase, [], 6); var d = pick(cands, 'pu', i) || g.drill; h += stationHtml('Station ' + (i + 1), d, g.players.map(shortName).join(', '), 'pu', i, cands); });
         var unr = ps.filter(function (a) { return !started(a); });
-        if (wg.length && unr.length) { var ud = findDrill('Bodyweight strength circuit'); if (ud) h += stationHtml('Utility', ud, 'Not rated yet, so they work strength: ' + unr.map(shortName).join(', '), 'ut', 0, []); }
+        if (wg.length && unr.length) { var ud = findDrill('Bodyweight strength circuit'); if (ud) h += stationHtml('Utility', ud, 'Not evaluated yet, so they work strength: ' + unr.map(shortName).join(', '), 'ut', 0, []); }
         if (!wg.length && state.powerups) ['Guard', 'Wing', 'Big'].forEach(function (k, i) { var list = state.powerups[k] || []; var d = list.length ? (findDrill(list[i % list.length].text) || { name: list[i % list.length].text, cue: '' }) : null; if (d) h += stationHtml(k, d, '', 'pu', i, []); });
         h += '</div>';
       }
@@ -809,11 +873,13 @@
       var a = playersOf(state.teamId).filter(function (x) { return x.id === card.getAttribute('data-id'); })[0]; if (!a) return;
       var rb = card.querySelector('[data-act="rate"]'); if (rb) rb.onclick = function () { openRate(a, state.teamId); };
       var db = card.querySelector('[data-act="drills"]'); if (db) db.onclick = function () { openDrills(a); };
+      var sb = card.querySelector('[data-act="share"]'); if (sb) sb.onclick = function () { openShare(a, state.teamId); };
       var tg = card.querySelector('[data-act="toggle"]'); if (tg) tg.onclick = function () { state.expanded[a.id] = state.expanded[a.id] === false; paint(); };
       card.querySelectorAll('.db-pos [data-pos]').forEach(function (pb) { pb.onclick = function () { setPosition(a, pb.getAttribute('data-pos')); }; });
       card.querySelectorAll('.db-item[data-drill]').forEach(function (it) { it.onclick = function () { var d = findDrill(it.getAttribute('data-drill')); if (d) openDrill(d, a); }; });
     });
     v.querySelectorAll('.db-bk[data-drill], #db-plan [data-drill], .db-panel [data-drill]').forEach(function (n) { n.onclick = function () { var d = findDrill(n.getAttribute('data-drill')); if (d) openDrill(d, null); }; });
+    v.querySelectorAll('[data-priv]').forEach(function (b) { b.onclick = function () { togglePrivilege(b.getAttribute('data-priv'), b.getAttribute('data-on') !== '1'); }; });
     v.querySelectorAll('[data-swap]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); var k = b.getAttribute('data-swap').split('|'); var key = swapKey(k[0], +k[1]); state.swaps[key] = (state.swaps[key] || 0) + 1; paint(); }; });
     var pr = el('db-print'); if (pr) pr.onclick = function () { window.print(); };
     var cp = el('db-copy'); if (cp) cp.onclick = function () { var t = planText(); if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function () { toast('Plan copied.'); }, function () { toast('Copy blocked by the browser.'); }); else toast('Copy is not available here.'); };

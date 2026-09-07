@@ -11,7 +11,7 @@
  * Assets: cache first, refreshed in the background (fast, and never stale for
  * more than one open). Bump VERSION to drop old caches.
  */
-var VERSION = 'coach-portal-v1';
+var VERSION = 'coach-portal-v2';
 var API_HOSTS = /supabase\.co$|supabase\.in$/i;
 
 self.addEventListener('install', function (e) { self.skipWaiting(); });

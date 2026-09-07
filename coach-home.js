@@ -65,12 +65,33 @@
       c.from('training_attendance').select('id,session_id,athlete_id,effort_rating,skill_ratings,coach_notes,created_at').order('created_at', { ascending: false }).limit(200),
       c.from('player_evaluations').select('athlete_id,evaluation_date,overall_rating').order('evaluation_date', { ascending: false }).limit(300),
       c.from('games').select('id,game_date,game_time,team_id,opponent_name,location,result,team_score,opponent_score').order('game_date', { ascending: false }).limit(30),
-      c.from('profiles').select('full_name').eq('id', s.data.session.user.id).maybeSingle()
+      c.from('profiles').select('full_name').eq('id', s.data.session.user.id).maybeSingle(),
+      c.rpc('is_program_admin'),
+      c.from('coach_profiles').select('team_ids').eq('user_id', s.data.session.user.id).maybeSingle()
     ]);
-    var names = ['teams', 'rosters', 'athletes', 'sessions', 'attendance', 'evaluations', 'games', 'me'];
+    var names = ['teams', 'rosters', 'athletes', 'sessions', 'attendance', 'evaluations', 'games', 'me', 'admin', 'coach'];
     var out = {};
-    r.forEach(function (res, i) { if (res.error && names[i] !== 'me') throw new Error(names[i] + ': ' + res.error.message); out[names[i]] = res.data || (names[i] === 'me' ? null : []); });
-    return out;
+    r.forEach(function (res, i) { if (res.error && ['me', 'admin', 'coach'].indexOf(names[i]) < 0) throw new Error(names[i] + ': ' + res.error.message); out[names[i]] = res.data || (names[i] === 'me' ? null : names[i] === 'admin' ? false : names[i] === 'coach' ? null : []); });
+    out.isAdmin = out.admin === true; out.myTeams = (out.coach && out.coach.team_ids) || [];
+    delete out.admin; delete out.coach;
+    return scopeToCoach(out);
+  }
+
+  // A coach sees his own teams only: the sidebar, the board, and every legacy
+  // screen read from this one payload. The director sees everything. Same rule
+  // the write guard enforces in the database.
+  function scopeToCoach(raw) {
+    if (raw.isAdmin) return raw;
+    var mine = {}; raw.myTeams.forEach(function (t) { mine[t] = true; });
+    raw.teams = raw.teams.filter(function (t) { return mine[t.id]; });
+    raw.rosters = raw.rosters.filter(function (m) { return mine[m.team_id]; });
+    var kids = {}; raw.rosters.forEach(function (m) { if (!m.left_at) kids[m.athlete_id] = true; });
+    raw.athletes = raw.athletes.filter(function (a) { return kids[a.id]; });
+    raw.sessions = raw.sessions.filter(function (s) { return !s.team_id || mine[s.team_id]; });
+    raw.games = raw.games.filter(function (g) { return !g.team_id || mine[g.team_id]; });
+    raw.attendance = raw.attendance.filter(function (a) { return kids[a.athlete_id]; });
+    raw.evaluations = raw.evaluations.filter(function (e) { return kids[e.athlete_id]; });
+    return raw;
   }
 
   function buildDb(raw) {
