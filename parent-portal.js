@@ -2218,8 +2218,39 @@ window.updateUIForCohort = function() {
 }
 
 // Ensure cohort update runs when portal is loaded automatically (cached login)
+/**
+ * Season copy comes from the database, never a hardcoded string.
+ *
+ * current_season_dues() returns the season config whose date range covers
+ * today, so the portal rolls over by itself at each season boundary with no
+ * admin action. This is what stops the "2026 AAU Spring/Summer Dues" heading
+ * from still being on screen in September.
+ *
+ * Deliberately sets the label only, not the amount. The Fall config total and
+ * the amount quoted to families do not currently agree, so the portal keeps
+ * quoting from the billing view until that is reconciled.
+ *
+ * On any failure the markup's neutral fallback ("AAU Season Dues") stays put.
+ * That is less specific, but it is never the wrong season.
+ */
+window.applyCurrentSeasonLabels = async function () {
+    const title = document.getElementById('aau-dues-cta-title');
+    if (!title) return;
+    try {
+        const sb = (window.auth && window.auth.getSupabaseClient) ? window.auth.getSupabaseClient() : null;
+        if (!sb) return;
+        const { data, error } = await sb.rpc('current_season_dues');
+        if (error) { console.warn('[portal] season label lookup failed:', error.message); return; }
+        const row = Array.isArray(data) ? data[0] : data;
+        if (row && row.display_label) title.textContent = row.display_label;
+    } catch (e) {
+        console.warn('[portal] season label lookup failed:', e && e.message);
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     updateUIForCohort();
+    applyCurrentSeasonLabels();
 });
 async function renderTrainingDashboard() {
     const parentEmail = localStorage.getItem('gba_user_email');
