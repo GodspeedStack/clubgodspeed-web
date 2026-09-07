@@ -62,7 +62,7 @@
   // Category colors, same as the Command Center bank.
   var TAGS = { 'Culture': '#0071e3', 'Toughness': '#d92d20', 'Bigs': '#7c3aed', 'Guards': '#0d9488', 'Passing/Reads': '#4f46e5', 'Individual': '#64748b', 'Conditioning': '#d97706', 'Strength': '#57534e' };
   var TAG_ORDER = ['Culture', 'Toughness', 'Bigs', 'Guards', 'Passing/Reads', 'Individual', 'Conditioning', 'Strength'];
-  var state = { activity: null, activityErr: null, activitySeen: null, loading: false, loaded: false, error: null, isAdmin: false, myTeams: [], cfg: DEFAULT_CFG, dev: {}, bank: [], shape: null, powerups: null, teamId: null, tab: 'players', q: '', swaps: {}, bankQ: '', bankTag: 'All', expanded: {}, workout: null, shareAccess: [], shares: {}, privileges: null };
+  var state = { health: null, healthErr: null, linkParent: '', linkAthlete: '', activity: null, activityErr: null, activitySeen: null, loading: false, loaded: false, error: null, isAdmin: false, myTeams: [], cfg: DEFAULT_CFG, dev: {}, bank: [], shape: null, powerups: null, teamId: null, tab: 'players', q: '', swaps: {}, bankQ: '', bankTag: 'All', expanded: {}, workout: null, shareAccess: [], shares: {}, privileges: null };
 
   // ---------- data ----------
   async function loadAll() {
@@ -333,7 +333,7 @@
   function gaps(players) {
     var out = [];
     var un = players.filter(function (a) { return !started(a); }).length;
-    if (un) out.push(['red', un + (un > 1 ? ' players' : ' player') + ' still need an evaluation. Open Evaluate and score them, about three minutes each.']);
+    if (un) out.push(['red', un + (un > 1 ? ' players' : ' player') + ' not evaluated yet. Open Evaluate; three minutes each.']);
     var behind = 0; players.forEach(function (a) { behind += behindCount(a); });
     if (behind) out.push(['orange', behind + ' skill' + (behind > 1 ? 's' : '') + ' behind the age target across the roster.']);
     var pv = 0; players.forEach(function (a) { pv += prereqWarnings(a).length; });
@@ -672,7 +672,7 @@
   }
   function openRate(a, teamId) {
     var editable = canEdit(teamId); var d = devOf(a);
-    var h = '<div class="hd"><span class="db-tag" style="--tc:#0071e3">Evaluation</span><button type="button" class="x" aria-label="Close">&times;</button><h3>' + esc(a.first_name + ' ' + (a.last_name || '')) + '</h3><p>Age ' + ageOf(a) + (positionOf(a) ? ', ' + esc(positionOf(a)) : '') + '. Score what you see, and every tap saves as you go. The phase for each skill is calculated from those scores.</p></div><div class="bd">';
+    var h = '<div class="hd"><span class="db-tag" style="--tc:#0071e3">Evaluation</span><button type="button" class="x" aria-label="Close">&times;</button><h3>' + esc(a.first_name + ' ' + (a.last_name || '')) + '</h3><p>Age ' + ageOf(a) + (positionOf(a) ? ', ' + esc(positionOf(a)) : '') + '. Score what you see. Every tap saves. The phase for each skill comes from the scores.</p></div><div class="bd">';
     h += '<div class="legend"><span><b>1</b> Poor</span><span><b>2</b> Weak</span><span><b>3</b> Some good actions</span><span><b>4</b> Consistent</span><span><b>5</b> Excellent</span></div>';
     if (editable) h += '<div class="rt-bulk"><b>Set every skill to</b><span class="seg">' + [1, 2, 3, 4, 5].map(function (i) { return '<button type="button" data-bulk="' + i + '">' + i + ' ' + esc(rubric(i)) + '</button>'; }).join('') + '</span><small>One tap scores all ' + (totalSubs() - subList('strength').length) + ' skills. Strength stays on the numbers. Then change the ones you saw differently.</small></div>';
     h += '<div class="sec">Position</div><div class="pos">' + POSITIONS.map(function (p) { return '<button type="button" data-pos="' + p + '" class="' + (positionOf(a) === p ? 'on' : '') + '"' + (editable ? '' : ' disabled') + '>' + p + '</button>'; }).join('') + '</div>';
@@ -724,7 +724,7 @@
     if (sf) sf.onclick = async function () {
       var txt = b.querySelector('#db-focus').value.trim(); sf.disabled = true;
       var r = await commit('set_player_dev_field', { p_athlete_id: a.id, p_field: 'focus', p_key: null, p_value: txt || null });
-      if (!r.ok) err(r.error && r.error.message || 'Could not save.'); else { (state.dev[a.id] = state.dev[a.id] || { athlete_id: a.id, skills: {}, subs: {} }).focus = txt || null; toast(r.queued ? 'Focus saved on this device, and it will send once you are back online.' : 'Focus saved.'); paint(); }
+      if (!r.ok) err(r.error && r.error.message || 'Could not save.'); else { (state.dev[a.id] = state.dev[a.id] || { athlete_id: a.id, skills: {}, subs: {} }).focus = txt || null; toast(r.queued ? 'Focus saved on this device. It sends when you are online.' : 'Focus saved.'); paint(); }
       sf.disabled = false;
     };
   }
@@ -763,7 +763,7 @@
       var r = await commit('share_player_development', { p_athlete_id: a.id, p_note: note || null, p_summary: sm });
       if (!r.ok) { err(r.error && r.error.message || 'Could not share.'); btn.disabled = false; return; }
       state.shares[a.id] = { athlete_id: a.id, shared_at: (r.data && r.data.shared_at) || new Date().toISOString(), note: note || null };
-      toast(r.queued ? 'Saved on this device, and it will share with the parent once you are back online.' : 'Shared with the parent.'); closeSheet(); paint();
+      toast(r.queued ? 'Saved on this device. It shares when you are online.' : 'Shared with the parent.'); closeSheet(); paint();
     };
   }
   // Director: who may share. One toggle per coach, all teams.
@@ -895,7 +895,7 @@
     if (!canEdit(state.teamId)) return; var plan = planData(); if (!plan.stations.length) { toast('Nothing to save yet. Evaluate a few players first.'); return; }
     btn.disabled = true; var r = await commit('save_practice_plan', { p_team_id: state.teamId, p_plan_date: nextPracticeDate(), p_plan: plan }); btn.disabled = false;
     if (!r.ok) { toast('Could not save the plan: ' + (r.error && r.error.message || 'error')); return; }
-    toast(r.queued ? 'Plan saved on this device, and it will send once you are back online.' : 'Plan saved for ' + plan.title.split(',')[0] + ' with ' + plan.stations.length + ' stations.');
+    toast(r.queued ? 'Plan saved on this device. It sends when you are online.' : 'Plan saved for ' + plan.title.split(',')[0] + '. ' + plan.stations.length + ' stations.');
   }
   // ---------- activity (director only) ----------
   async function loadActivity(force) {
@@ -904,12 +904,36 @@
     try { state.activitySeen = localStorage.getItem('gs_devboard_activity_seen') || ''; } catch (e) { state.activitySeen = ''; }
     paint();
   }
+  async function loadHealth(force) {
+    if (!state.isAdmin) return; if (state.health !== null && !force) return; state.health = state.health || {}; var c = client(); if (!c || !sync.online) return;
+    try { var r = await c.rpc('parent_portal_health'); if (r.error) throw r.error; state.health = r.data || {}; state.healthErr = null; } catch (e) { state.healthErr = e.message; }
+    paint();
+  }
+  async function linkParent() {
+    var c = client(); if (!c || !state.linkParent || !state.linkAthlete) return;
+    try { var r = await c.rpc('link_parent_to_athlete', { p_profile_id: state.linkParent, p_athlete_id: state.linkAthlete, p_relationship: 'guardian', p_is_primary: true }); if (r.error) throw r.error; toast('Linked. The parent sees the player on next open.'); state.linkParent = ''; state.linkAthlete = ''; loadHealth(true); }
+    catch (e) { toast('Could not link: ' + e.message); }
+  }
+  function familyHtml() {
+    if (!state.isAdmin) return '';
+    var h = state.health || {}; var un = h.parents_unlinked || [], np = h.athletes_without_parent || [], over = h.packages_over || [];
+    var issues = un.length + np.length + over.length;
+    var out = '<div class="db-panel" style="margin-bottom:14px"><h4>Family links' + (issues ? ' <span class="db-pill" style="background:#fdecea;color:#d92d20;margin-left:8px">' + issues + ' to fix</span>' : ' <span class="db-pill" style="background:#e9f7ef;color:#159a52;margin-left:8px">All linked</span>') + '</h4><p class="in">A parent sees hours, training, and reports only for the player linked to his account. Anything listed here is a family that will see zeros.</p>';
+    if (state.healthErr) out += '<div class="db-note">' + esc(state.healthErr) + '</div>';
+    if (np.length) out += '<div class="db-sec">Players with no parent linked</div>' + np.map(function (a) { return '<div class="db-gap orange"><i></i><span><b>' + esc(a.name) + '</b>' + (a.team ? ', ' + esc(a.team) : '') + (a.has_package ? ', has a training package' : '') + '</span></div>'; }).join('');
+    if (un.length) out += '<div class="db-sec">Parent accounts with no player</div>' + un.map(function (p) { return '<div class="db-gap grey"><i></i><span><b>' + esc(p.name || '(no name)') + '</b> ' + esc(p.email || '') + (p.player_name ? ', signed up for ' + esc(p.player_name) : '') + (p.approved ? '' : ', not approved') + '</span></div>'; }).join('');
+    if (over.length) out += '<div class="db-sec">Packages fully used</div>' + over.map(function (p) { return '<div class="db-gap red"><i></i><span><b>' + esc(p.athlete) + '</b>, ' + esc(p.label) + ': ' + p.used + ' of ' + p.purchased + ' hours used. Time to offer the next package.</span></div>'; }).join('');
+    var parents = h.parents || [], athletes = h.athletes || [];
+    out += '<div class="db-sec" style="margin-top:14px">Link a parent to a player</div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="db-link-parent" class="db-select" style="flex:1;min-width:200px;height:40px;border:1px solid #d9d9de;border-radius:10px;padding:0 10px;font-size:14px"><option value="">Parent...</option>' + parents.map(function (p) { return '<option value="' + esc(p.profile_id) + '"' + (p.profile_id === state.linkParent ? ' selected' : '') + '>' + esc(p.name || p.email || '') + (p.email ? ' (' + esc(p.email) + ')' : '') + '</option>'; }).join('') + '</select><select id="db-link-athlete" style="flex:1;min-width:160px;height:40px;border:1px solid #d9d9de;border-radius:10px;padding:0 10px;font-size:14px"><option value="">Player...</option>' + athletes.map(function (a) { return '<option value="' + esc(a.athlete_id) + '"' + (a.athlete_id === state.linkAthlete ? ' selected' : '') + '>' + esc(a.name) + '</option>'; }).join('') + '</select><button type="button" class="db-btn primary" id="db-link-go"' + (state.linkParent && state.linkAthlete ? '' : ' disabled') + '>Link</button></div>';
+    return out + '</div>';
+  }
   function markActivitySeen() { var top = (state.activity || [])[0]; if (!top) return; try { localStorage.setItem('gs_devboard_activity_seen', top.at); } catch (e) { /* optional */ } state.activitySeen = top.at; }
   function newActivityCount() { if (!state.activity || !state.activity.length) return 0; var seen = state.activitySeen || ''; return state.activity.filter(function (r) { return r.at > seen; }).length; }
   function ago(iso) { var ms = Date.now() - new Date(iso).getTime(); var m = Math.round(ms / 60000); if (m < 1) return 'just now'; if (m < 60) return m + ' min ago'; var h = Math.round(m / 60); if (h < 24) return h + ' hr ago'; return fmtDay(iso); }
   function activityHtml() {
     if (!state.isAdmin) return '';
     var h = '<div class="db-lead"><div><h4>What the coaches did</h4><p>Every evaluation, saved plan, and parent share by a coach, newest first. Taps by the same coach on the same player within twenty minutes show as one line.</p></div></div>';
+    h += familyHtml();
     if (state.activity === null) return h + '<div class="db-empty">Loading...</div>';
     if (state.activityErr) return h + '<div class="db-empty">' + esc(state.activityErr) + '</div>';
     if (!state.activity.length) return h + '<div class="db-empty">Nothing yet. When a coach evaluates a player or saves a plan it shows up here.</div>';
@@ -947,7 +971,7 @@
     v.innerHTML = html();
     if (typeof scrollTop === 'number') { var m = document.querySelector('.dashboard-main'); if (m) m.scrollTop = scrollTop; }
     var sn = v.querySelector('#db-sync-now'); if (sn) sn.onclick = flush;
-    v.querySelectorAll('.db-tabs button').forEach(function (b) { b.onclick = function () { state.tab = b.getAttribute('data-tab'); try { localStorage.setItem('gs_devboard_tab', state.tab); } catch (e) { /* optional */ } if (state.tab === 'activity') { loadActivity(true).then(function () { paint(); markActivitySeen(); }); } paint(); setSub(); var mm = document.querySelector('.dashboard-main'); if (mm) mm.scrollTop = 0; }; });
+    v.querySelectorAll('.db-tabs button').forEach(function (b) { b.onclick = function () { state.tab = b.getAttribute('data-tab'); try { localStorage.setItem('gs_devboard_tab', state.tab); } catch (e) { /* optional */ } if (state.tab === 'activity') { loadHealth(true); loadActivity(true).then(function () { paint(); markActivitySeen(); }); } paint(); setSub(); var mm = document.querySelector('.dashboard-main'); if (mm) mm.scrollTop = 0; }; });
     v.querySelectorAll('.db-teams [data-team]').forEach(function (b) { b.onclick = function () { state.teamId = b.getAttribute('data-team'); paint(); }; });
     v.querySelectorAll('.db-teams [data-tag]').forEach(function (b) { b.onclick = function () { state.bankTag = b.getAttribute('data-tag'); paint(); }; });
     var q = v.querySelector('.db-search'); if (q) { q.oninput = function () { if (state.tab === 'bank') state.bankQ = q.value; else state.q = q.value; paint(); }; if (focusQ) { q.focus(); try { q.setSelectionRange(pos, pos); } catch (e) { /* fine */ } } }
@@ -965,6 +989,9 @@
     v.querySelectorAll('[data-swap]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); var k = b.getAttribute('data-swap').split('|'); var key = swapKey(k[0], +k[1]); state.swaps[key] = (state.swaps[key] || 0) + 1; paint(); }; });
     var pr = el('db-print'); if (pr) pr.onclick = function () { window.print(); };
     var sp = el('db-save-plan'); if (sp) sp.onclick = function () { savePlan(sp); };
+    var lp = el('db-link-parent'); if (lp) lp.onchange = function () { state.linkParent = lp.value; paint(); };
+    var la = el('db-link-athlete'); if (la) la.onchange = function () { state.linkAthlete = la.value; paint(); };
+    var lg = el('db-link-go'); if (lg) lg.onclick = linkParent;
     v.querySelectorAll('[data-act-athlete]').forEach(function (n) { n.onclick = function () { var id = n.getAttribute('data-act-athlete'); var a = (raw() ? raw().athletes : []).filter(function (x) { return x.id === id; })[0]; var tm = a && teamsOf(a.id)[0]; if (a && tm) { state.teamId = tm; state.tab = 'players'; state.expanded[a.id] = true; paint(); } }; });
     var cp = el('db-copy'); if (cp) cp.onclick = function () { var t = planText(); if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(function () { toast('Plan copied.'); }, function () { toast('Copy blocked by the browser.'); }); else toast('Copy is not available here.'); };
   }
@@ -992,7 +1019,7 @@
       state.cachedRoster = null; sync.fromCache = false; replayQueue(); snapshot();
       state.loaded = true;
       flush();
-      if (state.isAdmin) loadActivity(true);
+      if (state.isAdmin) { loadActivity(true); loadHealth(true); }
     } catch (e) {
       if ((e.message === 'offline' || isNetworkError(e)) && restoreCache()) { sync.online = false; state.loaded = true; }
       else state.error = e.message === 'no_session' ? 'Sign in with your email to use the development board.' : e.message === 'no_client' ? 'Sign-in service not loaded.' : e.message === 'offline' ? 'No connection, and no saved copy on this device yet. Open the board once while online and it will work offline after that.' : e.message;

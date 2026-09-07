@@ -37,8 +37,23 @@
 #pt-root .pt-foot{font-size:12px;color:#a1a1a6;margin-top:14px;line-height:1.5}';
   function injectCss() { if (el('parent-training-css')) return; var s = document.createElement('style'); s.id = 'parent-training-css'; s.textContent = CSS; document.head.appendChild(s); }
 
+  var family = null;
+  async function loadFamily(c) {
+    if (family) return family;
+    try { var r = await c.rpc('my_athletes'); if (!r.error && Array.isArray(r.data)) family = r.data; } catch (e) { family = null; }
+    if (family && family.length) {
+      try {
+        var cur = localStorage.getItem('gba_current_athlete'); var ok = family.some(function (a) { return a.athlete_id === cur; });
+        if (!ok) { localStorage.setItem('gba_current_athlete', family[0].athlete_id); localStorage.setItem('gba_child_name', family[0].name); }
+      } catch (e) { /* storage optional */ }
+    }
+    return family || [];
+  }
   async function resolveAthleteId(c) {
-    var stored = localStorage.getItem('gba_current_athlete'); if (stored) return stored;
+    var fam = await loadFamily(c); var stored = null; try { stored = localStorage.getItem('gba_current_athlete'); } catch (e) { /* none */ }
+    if (fam.length && stored && fam.some(function (a) { return a.athlete_id === stored; })) return stored;
+    if (fam.length) return fam[0].athlete_id;
+    if (stored) return stored;
     try { var p = window.auth && window.auth.getProfile ? await window.auth.getProfile() : null; if (p && p.athlete_id) return p.athlete_id; } catch (e) { /* next */ }
     try { var sess = await c.auth.getSession(); var uid = sess && sess.data && sess.data.session && sess.data.session.user.id; if (uid) { var r = await c.from('parent_player_links').select('athlete_id').eq('profile_id', uid).order('is_primary', { ascending: false }).limit(1).maybeSingle(); if (r.data && r.data.athlete_id) return r.data.athlete_id; } } catch (e) { /* none */ }
     return null;
@@ -175,6 +190,15 @@
     setTimeout(function () { if (visible()) load(); }, 1500);
     var v = el('view-training');
     if (v) new MutationObserver(function () { if (visible() && !el('pt-root')) load(); }).observe(v, { attributes: true, attributeFilter: ['style', 'class'] });
-    window.ParentTraining = { load: function () { return load(true); }, buildPdf: buildPdf, get report() { return report; } };
+    // The hours card's Download button: same PDF, same data, no second code path.
+    window.viewTrainingStatement = async function () {
+      try {
+        var c = client(); if (!c) { alert('Sign in to download the report.'); return; }
+        var id = await resolveAthleteId(c); if (!id) { alert('No player is linked to this account yet. Ask Coach Scott to link your player.'); return; }
+        if (!report || report.athlete.id !== id) { var r = await c.rpc('training_report', { p_athlete_id: id }); if (r.error) throw r.error; report = r.data; }
+        var JsPDF = await loadJsPdf(); buildPdf(JsPDF, report);
+      } catch (e) { alert('Could not build the training report: ' + (e.message || e)); }
+    };
+    window.ParentTraining = { load: function () { return load(true); }, buildPdf: buildPdf, family: function () { return family; }, get report() { return report; } };
   });
 })();
