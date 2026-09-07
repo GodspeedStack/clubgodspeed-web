@@ -57,7 +57,7 @@
   function render(root) {
     if (!report) { root.innerHTML = ''; return; }
     var r = report; var first = r.athlete.first_name || 'He';
-    var h = '<div class="pt-card"><div class="pt-hd"><div><span class="pt-tag">Training report</span><h3>What we are working on with ' + esc(first) + '</h3><p>' + num(r.hours_remaining) + ' of ' + num(r.hours_purchased) + ' hours left' + (r.packages.length ? ' on ' + esc(r.packages[r.packages.length - 1].label) : '') + '. ' + r.sessions.length + ' session' + (r.sessions.length === 1 ? '' : 's') + ' logged. Trained by the coaches who run his team, so every rep points at what his team needs from him.</p></div><button type="button" class="pt-dl" id="pt-download">Download training report</button></div><div class="pt-bd">';
+    var cur = r.current; var h = '<div class="pt-card"><div class="pt-hd"><div><span class="pt-tag">Training report</span><h3>What we are working on with ' + esc(first) + '</h3><p>' + (cur ? num(cur.used) + ' of ' + num(cur.purchased) + ' hours used on ' + esc(cur.label) + ', ' + num(cur.remaining) + ' left. ' : '')  + r.sessions.length + ' session' + (r.sessions.length === 1 ? '' : 's') + ' logged. Trained by the coaches who run his team, so every rep points at what his team needs from him.</p></div><button type="button" class="pt-dl" id="pt-download">Download training report</button></div><div class="pt-bd">';
     if (r.working_on.length) {
       h += '<div class="pt-sec">Working on now, and how it shows up in his game</div>';
       r.working_on.forEach(function (w) { h += '<div class="pt-work"><b>' + esc(w.label) + '<small>' + esc(w.skill || '') + (w.times > 1 ? ', ' + w.times + ' sessions' : '') + (w.score ? ', ' + esc((r.rubric || [])[w.score - 1] || '') + ' today' : '') + '</small></b>' + (w.transfer ? '<p>' + esc(w.transfer) + '</p>' : '') + '</div>'; });
@@ -98,29 +98,35 @@
   }
   function buildPdf(JsPDF, r) {
     var doc = new JsPDF({ unit: 'pt', format: 'letter' }); var W = 612, M = 48, y = 0; var first = r.athlete.first_name || 'He';
-    var blue = [0, 113, 227], ink = [29, 29, 31], grey = [110, 110, 115], light = [236, 236, 240], green = [21, 154, 82], orange = [217, 102, 10];
+    var blue = [0, 113, 227], ink = [29, 29, 31], grey = [110, 110, 115], light = [236, 236, 240], green = [21, 154, 82], red = [217, 45, 32];
     function page() { doc.addPage(); y = M; }
     function need(h) { if (y + h > 792 - M) page(); }
     function text(s, x, size, color, style, maxW) { doc.setFont('helvetica', style || 'normal'); doc.setFontSize(size); doc.setTextColor(color[0], color[1], color[2]); var lines = doc.splitTextToSize(String(s), maxW || (W - M - x)); doc.text(lines, x, y); return lines.length * size * 1.28; }
     function sec(title) { need(40); y += 18; doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(blue[0], blue[1], blue[2]); doc.text(title.toUpperCase(), M, y); y += 6; doc.setDrawColor(light[0], light[1], light[2]); doc.line(M, y, W - M, y); y += 16; }
     // header band
-    doc.setFillColor(29, 29, 31); doc.rect(0, 0, W, 86, 'F');
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.setTextColor(255, 255, 255); doc.text('GODSPEED BASKETBALL', M, 40);
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(200, 200, 205); doc.text('Training report', M, 60);
-    doc.setFontSize(9); doc.text(new Date(r.generated_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' }), W - M, 60, { align: 'right' });
-    y = 118;
+    doc.setFillColor(10, 10, 10); doc.rect(0, 0, W, 92, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(24); doc.setTextColor(255, 255, 255); doc.text('GODSPEED', M, 56);
+    var gw = doc.getTextWidth('GODSPEED'); doc.setTextColor(59, 111, 255); doc.text('BASKETBALL', M + gw, 56);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(13); doc.setTextColor(210, 210, 214); doc.text('TRAINING REPORT', W - M, 46, { align: 'right' });
+    doc.setFontSize(10); doc.setTextColor(170, 170, 176); doc.text(r.athlete.name + '  ·  ' + new Date(r.generated_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' }), W - M, 64, { align: 'right' });
+    y = 124;
     y += text(r.athlete.name, M, 22, ink, 'bold');
     var meta = [r.team, r.athlete.grade ? (String(r.athlete.grade).replace(/\D/g, '') + 'th grade').replace(/^1th/, '1st').replace(/^2th/, '2nd').replace(/^3th/, '3rd') : null, r.athlete.age ? 'Age ' + r.athlete.age : null, r.athlete.position || null, r.season ? 'Season ' + r.season : null].filter(Boolean).join('  ·  ');
     y += text(meta, M, 10.5, grey) + 6;
     // hours boxes
-    var boxes = [[num(r.hours_remaining), 'Hours left'], [num(r.hours_purchased - r.hours_remaining), 'Hours used'], [num(r.hours_purchased), 'Hours purchased'], [r.sessions.length, 'Sessions logged']];
-    var bw = (W - 2 * M - 3 * 10) / 4; need(70);
-    boxes.forEach(function (b, i) { var x = M + i * (bw + 10); doc.setFillColor(245, 245, 247); doc.roundedRect(x, y, bw, 58, 8, 8, 'F'); doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(i === 0 ? blue[0] : ink[0], i === 0 ? blue[1] : ink[1], i === 0 ? blue[2] : ink[2]); doc.text(String(b[0]), x + 12, y + 30); doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(grey[0], grey[1], grey[2]); doc.text(b[1].toUpperCase(), x + 12, y + 46); });
-    y += 58;
+    var cur = r.current || { label: 'Training package', purchased: r.hours_purchased, used: r.hours_used, remaining: r.hours_remaining, sessions: r.sessions.length };
+    need(84); doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(grey[0], grey[1], grey[2]); doc.text(('Training hours remaining  ·  ' + cur.label + (cur.price ? '  ·  $' + Math.round(cur.price) : '') + (cur.completed ? '  ·  completed' : '  ·  in progress')).toUpperCase(), M, y); y += 10;
+    var boxes = [[num(cur.remaining) + ' h', 'Remaining', blue], [num(cur.used) + ' h', 'Used of ' + num(cur.purchased), ink], [num(cur.purchased) + ' h', 'Purchased', ink], [cur.sessions || 0, 'Sessions', ink]];
+    var bw = (W - 2 * M - 3 * 10) / 4;
+    boxes.forEach(function (b, i) { var x = M + i * (bw + 10); doc.setFillColor(245, 245, 247); doc.roundedRect(x, y, bw, 58, 8, 8, 'F'); doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(b[2][0], b[2][1], b[2][2]); doc.text(String(b[0]), x + 12, y + 30); doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(grey[0], grey[1], grey[2]); doc.text(b[1].toUpperCase(), x + 12, y + 46); });
+    y += 66;
+    // progress bar for the current package
+    var pct = cur.purchased ? Math.max(0, Math.min(1, cur.used / cur.purchased)) : 0;
+    doc.setFillColor(light[0], light[1], light[2]); doc.roundedRect(M, y, W - 2 * M, 6, 3, 3, 'F'); if (pct > 0) { doc.setFillColor(green[0], green[1], green[2]); doc.roundedRect(M, y, (W - 2 * M) * pct, 6, 3, 3, 'F'); } y += 6;
     // packages
     if (r.packages.length) {
-      sec('Skill package');
-      r.packages.forEach(function (p) { need(20); var line = p.label + ': ' + num(p.purchased) + ' hours purchased ' + fmt(p.purchase_date) + ', ' + num(p.used) + ' used, ' + num(p.remaining) + ' left' + (p.remaining <= 0 ? ' (completed)' : ''); y += text(line, M, 10.5, ink); });
+      sec('Skill packages');
+      r.packages.forEach(function (p) { need(20); var line = p.label + (p.price ? '  ·  $' + Math.round(p.price) : '') + ': ' + num(p.purchased) + ' h purchased ' + fmt(p.purchase_date) + ', ' + num(p.used) + ' h used, ' + num(p.remaining) + ' h left' + (p.completed ? '  ·  completed' : p.current ? '  ·  current' : ''); y += text(line, M, 10.5, p.current ? ink : grey, p.current ? 'bold' : 'normal'); });
     }
     // where he is
     if (r.phases.length) {
@@ -133,7 +139,7 @@
         need(18); doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(ink[0], ink[1], ink[2]); doc.text(p.label, M, y);
         doc.setFont('helvetica', 'normal'); doc.setTextColor(ink[0], ink[1], ink[2]); doc.text(p.phase ? p.phase_name : 'Not scored yet', M + colW[0], y);
         doc.setTextColor(grey[0], grey[1], grey[2]); doc.text(p.target ? p.target_name : '', M + colW[0] + colW[1], y);
-        var st = p.track === 'ahead' ? ['Ahead', blue] : p.track === 'on' ? ['On track', green] : p.track === 'behind' ? ['Working toward it', orange] : ['', grey];
+        var st = p.track === 'ahead' ? ['Ahead', blue] : p.track === 'on' ? ['On track', green] : p.track === 'behind' ? ['Working toward it', red] : ['', grey];
         doc.setFont('helvetica', 'bold'); doc.setTextColor(st[1][0], st[1][1], st[1][2]); doc.text(st[0], M + colW[0] + colW[1] + colW[2], y); y += 16;
       });
     }
