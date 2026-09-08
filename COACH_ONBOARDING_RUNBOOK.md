@@ -67,7 +67,7 @@ Send Version A from `emails/DRAFT_coach_welcome_2026-09-03.md` with `{coach_firs
 
 ## How you know it worked
 
-Coach Portal, left sidebar, **Staff**, **Staff Onboarding**. Steven's row shows a green check in every column and 6/6 documents. If a column is still "Open" after two days, text him; the invite link dies after 24 hours and "Email me a sign-in link" on the Staff Login gets him a fresh one.
+Coach Portal, left sidebar, **Staff**, **Staff Onboarding**. Steven's row shows a green check in every column and 6/6 documents. If a column is still "Open" after two days, text him. The invite link dies after 24 hours, and there is no self-serve way for him to get another: the Staff Login takes an email and a password only, so a coach who never set a password has no way back in on his own. You have to send him a new link from the Supabase dashboard. See "If it fails" below.
 
 ## If it fails
 
@@ -75,5 +75,33 @@ Coach Portal, left sidebar, **Staff**, **Staff Onboarding**. Steven's row shows 
 |---|---|---|
 | "This account is not set up as a coach" | Still filed as a parent | Redo Part 2 |
 | "Your coach account is still waiting to be approved" | `approved` is false | Redo Part 2 |
-| "That link has expired or was already used" | Invite older than 24 hours or clicked twice | Authentication, Users, his row, **Send magic link**; or he uses "Email me a sign-in link" |
+| "That link has expired or was already used" | Invite older than 24 hours or clicked twice | Authentication, Users, click his row, **Send password recovery**. See "Re-sending a link" below. |
 | Wizard never appears, plain dashboard opens | Branch not merged yet | Merge the branch; he can finish setup on his next sign-in |
+
+## Re-sending a link
+
+Clicking a user row in **Authentication**, **Users** opens a panel. It offers
+**Send password recovery** and **Send confirmation email**. There is no
+"Send magic link" button, so do not go looking for one.
+
+**Use Send password recovery.** It is the only one that gets a stranded coach
+all the way in. Confirmation only verifies his address: he still has no
+password afterward and still cannot sign in, which is the state he was already
+stuck in.
+
+What he does with it:
+
+1. Opens the email and chooses a password.
+2. Goes to `https://clubgodspeed.com/coach-portal.html` and signs in with his
+   email and that new password.
+3. The setup wizard runs as normal.
+
+It does not matter where the recovery link drops him. `coach-onboarding.js`
+accepts `recovery` as a link type, and the gate marks the password step
+complete for anyone who signs in with a password, so the wizard still runs on a
+normal sign-in afterward. That makes this route safe even though
+`reset-password.html` currently redirects to the parent portal.
+
+The 24-hour expiry is a project setting, not a law. **Authentication**,
+**Sign In / Providers**, **Email** has the OTP expiry. Raising it means the
+next coach who does not check email that day is not waiting on you.
