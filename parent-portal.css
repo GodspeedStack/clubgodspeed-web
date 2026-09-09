@@ -807,6 +807,17 @@
     animation: fadeInModal 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
+/* Phones: let the sheet use the whole screen and scroll to the Sign button. */
+@media (max-width: 767px) {
+    .doc-modal-overlay { align-items: flex-end; }
+    .doc-modal { max-height: 96dvh; max-height: 96vh; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+    .doc-modal-body { padding: 1.25rem 1.25rem calc(2rem + env(safe-area-inset-bottom)); -webkit-overflow-scrolling: touch; }
+    .doc-modal-header { padding: 1rem 1.25rem; }
+    .doc-modal-body .form-row { grid-template-columns: 1fr !important; }
+}
+/* While a document sheet is open the bottom tab bar stays out of the way. */
+body.doc-modal-open .mobile-bottom-nav { display: none !important; }
+
 @keyframes fadeInModal {
     from {
         opacity: 0;
@@ -939,6 +950,14 @@
 }
 
 /* Signature Pad Polish */
+/* The canvas fills its wrapper. Without this the canvas width attribute set
+   its layout size, so every open grew it by the device pixel ratio. */
+.signature-pad-wrapper canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+}
 .signature-pad-wrapper {
     background: #fff;
     border: 2px dashed #d1d5db;

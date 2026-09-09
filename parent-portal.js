@@ -1705,14 +1705,24 @@ async function loadMyDocuments() {
     try {
         const { data, error } = await sb.rpc('get_my_documents');
         if (error) { console.error('loadMyDocuments failed:', error); return; }
+        // One parent can have several children, so there can be several
+        // agreements per document. Keep them all, and point the card at the
+        // next one that still needs a signature. Only when every child's copy
+        // is signed does the card read "Signed".
+        const all = {};
+        (data || []).forEach(function (a) { (all[a.slug] = all[a.slug] || []).push(a); });
         const map = {};
-        (data || []).forEach(function (a) {
-            const cur = map[a.slug];
-            if (!cur || (cur.status === 'signed' && a.status !== 'signed')) map[a.slug] = a;
+        Object.keys(all).forEach(function (slug) {
+            const list = all[slug];
+            map[slug] = list.find(function (a) { return a.status !== 'signed'; }) || list[0];
         });
+        window._gsAgreementsAll = all;
         window._gsAgreements = map;
         ['athletic','medical','practice','conduct','media'].forEach(function (slug) {
-            if (map[slug] && map[slug].status === 'signed') markDocumentSigned(slug);
+            const list = all[slug] || [];
+            if (!list.length) return;
+            if (list.every(function (a) { return a.status === 'signed'; })) { markDocumentSigned(slug); return; }
+            markDocumentPending(slug, map[slug], list);
         });
         try { showComplianceBanner((data || []).filter(function(a){ return a.status !== 'signed'; })); } catch(e){}
     } catch (e) { console.error('loadMyDocuments error:', e); }
@@ -1723,15 +1733,19 @@ let currentDocType = null;
 
 window.openDocModal = async function (type) {
     currentDocType = type;
-    const modalTitle = document.getElementById('modal-title');
-    if (modalTitle) modalTitle.textContent = getTitleFromType(type);
-
     // Load the parent's real agreements (with server content) if not already loaded.
     if (!window._gsAgreements) { try { await loadMyDocuments(); } catch (e) {} }
     const ag = window._gsAgreements && window._gsAgreements[type];
 
     const pName = (ag && ag.parent_name) || localStorage.getItem('gba_parent_name') || 'Parent Name';
     const cName = (ag && ag.athlete_name) || localStorage.getItem('gba_child_name') || 'Athlete Name';
+
+    const modalTitle = document.getElementById('modal-title');
+    if (modalTitle) modalTitle.textContent = getTitleFromType(type) + ((ag && ag.athlete_name) ? ' for ' + ag.athlete_name : '');
+    const childInput = document.getElementById('signer-child-name');
+    const parentInput = document.getElementById('signer-parent-name');
+    if (childInput) childInput.value = (ag && ag.athlete_name) || '';
+    if (parentInput) parentInput.value = (ag && ag.parent_name) || '';
 
     let content = (ag && ag.content_html) || DOCUMENT_TEMPLATE[type] || '';
     content = content.replace(/{parent_name}/g, pName).replace(/{child_name}/g, cName);
@@ -1740,11 +1754,19 @@ window.openDocModal = async function (type) {
     if (modalContent) modalContent.innerHTML = content;
 
     const overlay = document.getElementById('doc-modal-overlay');
+    // A fixed overlay inside a transformed or filtered ancestor is trapped in
+    // that ancestor's stacking context, which is how the mobile bottom nav
+    // ended up drawn over the Sign button. Make it a child of body once.
+    if (overlay.parentNode !== document.body) document.body.appendChild(overlay);
     overlay.style.display = 'flex';
     document.body.style.overflow = 'hidden';
+    document.body.classList.add('doc-modal-open');
+    const body = overlay.querySelector('.doc-modal-body'); if (body) body.scrollTop = 0;
 
-    // Resize canvas
-    setTimeout(resizeCanvas, 100);
+    // Size the canvas once the modal is laid out, and again after the
+    // open animation settles (iOS reports 0 width mid-animation).
+    setTimeout(resizeCanvas, 50);
+    setTimeout(resizeCanvas, 350);
 
     // Add Overlay Click Listener (One-time or check uniqueness)
     overlay.onclick = function (e) {
@@ -1764,6 +1786,7 @@ window.openDocModal = async function (type) {
 window.closeDocModal = function () {
     document.getElementById('doc-modal-overlay').style.display = 'none';
     document.body.style.overflow = '';
+    document.body.classList.remove('doc-modal-open');
     document.onkeydown = null; // Clean up listener
     if (window.resetSignature) window.resetSignature();
 }
@@ -1777,6 +1800,26 @@ function getTitleFromType(type) {
         'media': 'Social Media Release'
     };
     return titles[type] || 'Document';
+}
+
+// Card for a document that still needs a signature. With several children the
+// button says whose copy is next so the parent is never surprised by a second one.
+function markDocumentPending(type, next, list) {
+    const card = document.getElementById('card-' + type);
+    if (!card) return;
+    const badge = card.querySelector('.card-status');
+    const signedCount = (list || []).filter(function (a) { return a.status === 'signed'; }).length;
+    if (badge) {
+        badge.textContent = (list && list.length > 1) ? ('Pending ' + (list.length - signedCount) + ' of ' + list.length) : 'Pending';
+        badge.className = 'card-status pending';
+    }
+    const btn = card.querySelector('button');
+    if (btn) {
+        btn.textContent = (list && list.length > 1 && next && next.athlete_name) ? ('Sign for ' + next.athlete_name) : 'Sign Now';
+        btn.className = 'btn-card';
+        btn.style.borderColor = '';
+        btn.style.color = '';
+    }
 }
 
 function markDocumentSigned(type) {
@@ -1901,10 +1944,19 @@ function initSignaturePad() {
     }
 
     window.resizeCanvas = function () {
+        // Measure the wrapper, not the canvas. Measuring the canvas made each
+        // open multiply its size by the device pixel ratio (3x on iPhone), so
+        // the second document a parent opened had a 2700px canvas, strokes
+        // landed off screen, and the Sign button was pushed out of reach.
+        const wrap = canvas.parentElement || canvas;
+        const cssW = Math.max(1, Math.round(wrap.clientWidth));
+        const cssH = Math.max(1, Math.round(wrap.clientHeight));
         const ratio = Math.max(window.devicePixelRatio || 1, 1);
-        canvas.width = canvas.offsetWidth * ratio;
-        canvas.height = canvas.offsetHeight * ratio;
-        if (ctx) ctx.scale(ratio, ratio);
+        canvas.style.width = cssW + 'px';
+        canvas.style.height = cssH + 'px';
+        canvas.width = Math.round(cssW * ratio);
+        canvas.height = Math.round(cssH * ratio);
+        if (ctx) ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     }
     window.addEventListener('resize', window.resizeCanvas);
 
@@ -1940,10 +1992,16 @@ function initSignaturePad() {
                         body: { agreement_ids: [ag.agreement_id], type: 'confirmation' }
                     }).catch(function () { /* email is best-effort */ });
                 } catch (e2) { /* email is best-effort */ }
-                markDocumentSigned(currentDocType);
+                const signedType = currentDocType;
+                const signedFor = ag.athlete_name || '';
                 closeDocModal();
+                // Re-read from the server: with two children the same card now
+                // points at the next child's copy instead of showing "Signed".
+                try { await loadMyDocuments(); } catch (e2) { markDocumentSigned(signedType); }
                 checkAllDocumentsSigned();
-                godspeedAlert(getTitleFromType(currentDocType) + ' signed and recorded.', 'Signed');
+                const nextAg = window._gsAgreements && window._gsAgreements[signedType];
+                const more = nextAg && nextAg.status !== 'signed' && nextAg.athlete_name ? ' Next: sign it for ' + nextAg.athlete_name + '.' : '';
+                godspeedAlert(getTitleFromType(signedType) + (signedFor ? ' for ' + signedFor : '') + ' signed and recorded.' + more, 'Signed');
             } catch (e) {
                 console.error('Signature failed:', e);
                 submitBtn.disabled = false;
