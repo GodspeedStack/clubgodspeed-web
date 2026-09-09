@@ -47,7 +47,7 @@
   function drillsForSelected() {
     var keys = selectedSubs(); if (!keys.length) return [];
     var out = []; bank().forEach(function (d) { var dev = d.develops || []; var hit = keys.filter(function (k) { return dev.indexOf(k) >= 0; }).length; if (hit) out.push({ d: d, hit: hit, primary: keys.indexOf(dev[0]) >= 0 ? 1 : 0 }); });
-    out.sort(function (x, y) { return y.primary - x.primary || y.hit - x.hit || (x.d.import ? 1 : 0) - (y.d.import ? 1 : 0); });
+    out.sort(function (x, y) { return (y.d.core ? 1 : 0) - (x.d.core ? 1 : 0) || y.primary - x.primary || y.hit - x.hit || (x.d.import ? 1 : 0) - (y.d.import ? 1 : 0); });
     return out.slice(0, 12).map(function (x) { return x.d; });
   }
   function fmtDay(iso) { var d = new Date(iso + (iso.length === 10 ? 'T12:00:00' : '')); return isNaN(d) ? '' : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
@@ -97,7 +97,7 @@
     h += '</div>';
     var cands = drillsForSelected();
     h += '<div class="tl-sec">Drills used<small>optional</small>' + (cands.length && !state.showDrills ? '<button type="button" class="tl-link" id="tl-show-drills">Show ' + cands.length + ' that fit</button>' : '') + '</div>';
-    if (state.showDrills || selectedDrills().length) h += '<div class="tl-panel"><div class="tl-chips">' + cands.map(function (d) { return '<button type="button" class="tl-chip' + (state.drills[d.name] ? ' on' : '') + '" data-drill="' + esc(d.name) + '">' + esc(d.name) + '<small>' + esc(d.tag || '') + '</small></button>'; }).join('') + (cands.length ? '' : '<div class="tl-empty">Pick a skill first and the drills that develop it show up here.</div>') + '</div></div>';
+    if (state.showDrills || selectedDrills().length) h += '<div class="tl-panel"><div class="tl-chips">' + cands.map(function (d) { return '<button type="button" class="tl-chip' + (state.drills[d.name] ? ' on' : '') + '" data-drill="' + esc(d.name) + '">' + esc(d.name) + '<small>' + esc(d.core ? 'Core ' + d.core : (d.tag || '')) + '</small></button>'; }).join('') + (cands.length ? '' : '<div class="tl-empty">Pick a skill first and the drills that develop it show up here.</div>') + '</div></div>';
     h += '<div class="tl-sec">Note for the parent<small>optional</small></div><div class="tl-panel"><textarea id="tl-notes" maxlength="1000" placeholder="What you saw, what is next. One or two sentences.">' + esc(state.notes) + '</textarea></div>';
     if (a) {
       h += '<div class="tl-sec">Recent sessions<small>' + esc(shortName(a)) + '</small></div><div class="tl-panel">';
