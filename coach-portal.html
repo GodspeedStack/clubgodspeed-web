@@ -1131,6 +1131,15 @@
                     style="display: none; margin-bottom: 16px; padding: 12px; border-radius: 12px; background: rgba(255, 59, 48, 0.1); color: #FF3B30; font-size: 14px; line-height: 1.4;">
                 </div>
                 <button type="submit" class="btn-login" id="coach-login-btn">Enter Portal</button>
+                <div id="coach-link-request">
+                    <button type="button" id="coach-send-link"
+                        style="background: none; border: none; color: #0071e3; font-size: 13px; margin-top: 16px; cursor: pointer; text-decoration: underline;">
+                        Email me a sign-in link
+                    </button>
+                    <div id="coach-link-status" role="status" aria-live="polite"
+                        style="display: none; margin-top: 12px; padding: 12px; border-radius: 12px; background: rgba(0, 113, 227, 0.08); color: #1d1d1f; font-size: 13.5px; line-height: 1.45;">
+                    </div>
+                </div>
                 <button type="button" id="coach-mode-toggle" onclick="toggleLegacyLogin()"
                     style="background: none; border: none; color: #666; font-size: 13px; margin-top: 16px; cursor: pointer; text-decoration: underline;">
                     Use access code instead
@@ -1782,8 +1791,8 @@
     <script src="coach-develop.js?v=3"></script>
     <script src="coach-roster-admin.js?v=1"></script>
     <script src="coach-iq.js?v=2"></script>
-    <script src="coach-player-dev.js?v=7"></script>
-    <script src="coach-training-log.js?v=1"></script>
+    <script src="coach-player-dev.js?v=8"></script>
+    <script src="coach-training-log.js?v=2"></script>
 </body>
 
 </html>
