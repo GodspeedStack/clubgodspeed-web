@@ -4,31 +4,232 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Godspeed Basketball | Built Different</title>
+    <title>Contact | Godspeed Basketball</title>
     <meta name="description"
-        content="Godspeed builds complete players for the modern game. Movement science. High-level decision-making. Competitive confidence.">
-    <meta property="og:title" content="Godspeed Basketball | Built Different">
+        content="Reach Godspeed Basketball. Questions about training, AAU, or joining the program? Get in touch and we will get back to you.">
+    <meta property="og:title" content="Contact | Godspeed Basketball">
     <meta property="og:description"
-        content="Godspeed builds complete players for the modern game. Movement science. High-level decision-making. Competitive confidence.">
+        content="Reach Godspeed Basketball. Questions about training, AAU, or joining the program? Get in touch and we will get back to you.">
     <meta property="og:type" content="website">
     <meta property="og:image" content="assets/hero-collage.png">
 
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,800;1,800&display=swap"
-        rel="stylesheet">
+    <!--
+      BROTHERHOOD. HABITS. SUCCESS.
+      You read the source. Of course you did. The ones who look under the hood
+      are the ones who put in the extra rep nobody sees. That rep is the whole game.
+      Keep looking closer than everyone else. It compounds. - Coach Scott
+    -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="mobile-fixes.css">
     <link rel="stylesheet" href="nav-unified.css">
+
+    <style>
+        /* Godspeed design system tokens (from styles.css :root) */
+        :root {
+            --gs-blue: #0071e3;
+            --gs-interaction: #0077ed;
+            --gs-accent: #FF4500;
+            --gs-near: #050505;
+        }
+
+        /* Contact section, modeled on the jewellsco "get in touch" interaction */
+        .gs-contact {
+            background: var(--gs-near);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 140px 0 96px;
+        }
+
+        .gs-contact .wrap {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 0 32px;
+            width: 100%;
+        }
+
+        .gs-eyebrow {
+            font-family: 'Syncopate', 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .24em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .55);
+        }
+
+        .gs-contact h1 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: clamp(40px, 6.4vw, 76px);
+            line-height: 1.02;
+            letter-spacing: -.02em;
+            text-transform: uppercase;
+            max-width: 16ch;
+            margin: 22px 0 0;
+        }
+
+        .gs-contact h1 .it {
+            color: var(--gs-blue);
+        }
+
+        .gs-sub {
+            font-family: 'Inter', sans-serif;
+            font-size: clamp(15px, 2vw, 18px);
+            line-height: 1.6;
+            color: rgba(255, 255, 255, .68);
+            max-width: 540px;
+            margin: 26px 0 0;
+        }
+
+        .gs-email {
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+            margin-top: 44px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: clamp(20px, 2.6vw, 30px);
+            letter-spacing: -.01em;
+            color: #fff;
+            border-bottom: 1px solid rgba(255, 255, 255, .3);
+            padding-bottom: 8px;
+            transition: gap .25s ease, border-color .25s ease;
+        }
+
+        .gs-email:hover {
+            gap: 20px;
+            border-color: #fff;
+        }
+
+        .gs-email svg { width: 22px; height: 22px; }
+
+        .gs-actions { margin-top: 40px; }
+
+        .gs-trigger {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: transparent;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, .28);
+            border-radius: 999px;
+            padding: 14px 24px;
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: border-color .25s ease, background .25s ease, transform .18s ease;
+        }
+
+        .gs-trigger:hover {
+            border-color: #fff;
+            background: rgba(255, 255, 255, .06);
+            transform: translateY(-1px);
+        }
+
+        .gs-trigger .pulse {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: var(--gs-blue);
+            box-shadow: 0 0 0 0 rgba(0, 113, 227, .7);
+            animation: gsPulse 2s infinite;
+        }
+
+        .gs-trigger svg { width: 20px; height: 20px; }
+
+        @keyframes gsPulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 113, 227, .6); }
+            70% { box-shadow: 0 0 0 12px rgba(0, 113, 227, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 113, 227, 0); }
+        }
+
+        .gs-links {
+            margin-top: 52px;
+            display: flex;
+            gap: 26px;
+            flex-wrap: wrap;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, .6);
+        }
+
+        .gs-links a { color: rgba(255, 255, 255, .6); transition: color .25s ease; }
+        .gs-links a:hover { color: #fff; }
+
+        .gs-foot-tag {
+            margin-top: 64px;
+            font-family: 'Syncopate', 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .2em;
+            color: rgba(255, 255, 255, .4);
+        }
+
+        .gs-foot-tag b { color: var(--gs-accent); }
+
+        /* scroll reveal */
+        .reveal {
+            opacity: 0;
+            transform: translateY(22px);
+            transition: opacity .85s cubic-bezier(.16, .84, .28, 1), transform .85s cubic-bezier(.16, .84, .28, 1);
+        }
+
+        .reveal.in { opacity: 1; transform: none; }
+
+        .stagger > * {
+            opacity: 0;
+            transform: translateY(18px);
+            transition: opacity .7s cubic-bezier(.16, .84, .28, 1), transform .7s cubic-bezier(.16, .84, .28, 1);
+        }
+
+        .stagger.in > * { opacity: 1; transform: none; }
+        .stagger.in > * { transition-delay: calc(var(--i, 0) * 90ms); }
+
+        @media (prefers-reduced-motion: reduce) {
+            .reveal, .stagger > * { opacity: 1; transform: none; transition: none; }
+            .gs-trigger .pulse { animation: none; }
+        }
+
+        /* Secret note overlay */
+        #gs-secret {
+            position: fixed; inset: 0; background: rgba(10, 10, 10, .85);
+            display: none; align-items: center; justify-content: center; z-index: 9999; padding: 24px;
+        }
+        #gs-secret.on { display: flex; }
+        #gs-secret .box {
+            background: #fff; border-radius: 20px; max-width: 460px; padding: 38px 34px;
+            text-align: center; box-shadow: 0 30px 80px rgba(0, 0, 0, .45);
+        }
+        #gs-secret .eb {
+            font-family: 'Syncopate', 'Inter', sans-serif; font-size: 11px; font-weight: 700;
+            letter-spacing: .26em; text-transform: uppercase; color: var(--gs-blue);
+        }
+        #gs-secret .msg {
+            font-family: 'Inter', sans-serif; font-weight: 600; font-size: 19px; line-height: 1.5;
+            color: var(--gs-near); margin: 16px 0 18px;
+        }
+        #gs-secret .sig { font-family: 'Inter', sans-serif; font-size: 14px; color: #6e6e73; font-weight: 700; }
+        #gs-secret .tag {
+            margin-top: 20px; font-family: 'Syncopate', 'Inter', sans-serif; font-size: 10px;
+            letter-spacing: .2em; color: #1d1d1f; font-weight: 700;
+        }
+        #gs-secret .tag b { color: var(--gs-accent); }
+
+        .gs-hidden-line { display: none; margin-top: 16px; font-family: 'Inter', sans-serif; font-weight: 500; font-size: 15px; color: var(--gs-blue); }
+        .gs-hidden-line.on { display: block; }
+    </style>
 </head>
 
 <body>
-        <nav class="navbar">
+    <nav class="navbar">
         <div class="logo">GODSPEED<span style="color: #2563eb;">BASKETBALL</span></div>
         <div class="nav-desktop-unified">
             <div class="nav-links-unified">
@@ -43,16 +244,13 @@
                 <div style="position: relative; opacity: 0.5; cursor: not-allowed; display: inline-flex; align-items: center;"><span>Shop</span><span style="position: absolute; top: -12px; right: -24px; font-size: 9px; background: #f3f4f6; color: #6b7280; padding: 2px 4px; border-radius: 4px; border: 1px solid #e5e7eb;">SOON</span></div>
                 <a href="about.html">About</a>
             </div>
-            <!-- Right Side Icons -->
             <div class="nav-right-unified">
-                <!-- Cart Icon -->
                 <a href="#" id="cart-btn" class="nav-cart-btn" aria-label="Cart">
                     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
                     <span class="cart-badge badge-bounce" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: bold; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">0</span>
                 </a>
-                <!-- Member Login Dropdown -->
                 <div class="nav-login-wrapper" style="position: relative; z-index: 50;">
                     <a href="parent-portal.html" class="nav-cart-btn" aria-label="Sign In">
                         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;">
@@ -66,466 +264,66 @@
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                                 Parents
                             </span>
-                            <span class="login-arrow">›</span>
+                            <span class="login-arrow">&rsaquo;</span>
                         </a>
                         <a href="coach-portal.html" class="login-option">
                             <span style="display: flex; align-items: center; gap: 10px;">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
                                 Coaches
                             </span>
-                            <span class="login-arrow">›</span>
+                            <span class="login-arrow">&rsaquo;</span>
                         </a>
                     </div>
                 </div>
                 <a href="training.html#signup" class="btn-unified-train">TRAIN WITH US</a>
             </div>
         </div>
-        <button class="mobile-menu-btn" aria-label="Menu" onclick="openMobileMenu()" style="background:none; border:none; font-size:24px; cursor:pointer;">☰</button>
+        <button class="mobile-menu-btn" aria-label="Menu" onclick="openMobileMenu()" style="background:none; border:none; font-size:24px; cursor:pointer;">&#9776;</button>
     </nav>
 
-    <header id="home" class="hero-section">
-        <div class="hero-content">
-            <h1 class="hero-title">BUILT DIFFERENT.<br>TRAINED DIFFERENT.</h1>
-            <p class="hero-subtitle">Movement science. High-level decision-making. Competitive confidence.<br>Godspeed
-                builds complete players for the modern game.</p>
-            <div class="cta-group">
-                <a href="training.html#signup" class="btn-primary">Train with Godspeed</a>
-                <a href="#club" class="btn-secondary">Join Club Godspeed</a>
+    <section class="gs-contact" id="contact">
+        <div class="wrap reveal stagger">
+            <div class="gs-eyebrow">Get in touch</div>
+            <h1 id="gs-title">Let's build a complete <span class="it">player.</span></h1>
+            <p class="gs-sub">Questions about training, AAU, or joining the program? Reach us and we will get back to you within a day or two.</p>
+
+            <div>
+                <a class="gs-email" id="gs-email-link" href="#">Email the program
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                </a>
             </div>
-        </div>
-        <div class="hero-visual">
-            <div class="glowing-orb"></div>
-            <img src="assets/hero-collage.png" alt="Godspeed Basketball Collage" class="hero-image">
-        </div>
-    </header>
 
-    <section id="philosophy" class="section-dark">
-        <div class="container">
-            <h2 class="section-title">WHAT WE STAND FOR</h2>
-            <div class="content-block text-center" style="margin-bottom: 2rem;">
-                <p style="max-width: 800px; margin: 0 auto;">Godspeed is a performance-driven basketball program
-                    committed to developing confident,
-                    mentally sharp, and purpose-led athletes.</p>
+            <div class="gs-actions">
+                <a class="gs-trigger" id="gs-msg-link" href="#">
+                    <span class="pulse"></span>
+                    Write us a message
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16v12H4z" stroke="currentColor" stroke-width="1.7" /><path d="m4 7 8 6 8-6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                </a>
             </div>
-            <div class="about-grid">
-                <div class="feature-card">
-                    <div class="card-image">
-                        <img src="assets/movement-mastery.png" alt="Movement Mastery">
-                    </div>
-                    <div class="card-content">
-                        <h3>Movement Mastery</h3>
-                        <p>We engineer movement not mimic drills.</p>
-                        <ul class="feature-list" style="margin-top: 0.5rem;">
-                            <li>Footwork</li>
-                            <li>Posture</li>
-                            <li>Balance</li>
-                            <li>Efficiency</li>
-                        </ul>
-                        <div class="card-details-expanded">
-                            <div class="detail-section">
-                                <h4>The Problem: "Instagram Training"</h4>
-                                <p>Modern basketball training has lost its way. It focuses on flashy drills that look
-                                    good on social media but don't translate to the game. Kids are learning to dribble
-                                    around cones but can't move efficiently against a defender. This leads to bad
-                                    habits, wasted energy, and a high risk of non-contact injuries.</p>
-                            </div>
 
-                            <div class="detail-section">
-                                <h4>The Godspeed Solution: Biomechanics First</h4>
-                                <p>We don't just run drills; we build athletes. Our Movement Mastery curriculum is
-                                    grounded in physics and biomechanics. We teach your child how to load their hips,
-                                    absorb force safely, and explode out of cuts. We strip away the "fluff" and focus on
-                                    the foundational movement patterns that every elite player possesses.</p>
-                            </div>
-
-                            <div class="detail-section">
-                                <h4>The Result: Unstoppable Efficiency</h4>
-                                <p>When your child steps on the court, they will look different. They will glide while
-                                    others grind. They will be faster, not just because they are running harder, but
-                                    because they are moving <em>better</em>. This is the "hidden" advantage that college
-                                    scouts notice immediately - an athlete who moves with purpose and power.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="feature-card">
-                    <div class="card-image">
-                        <img src="assets/iq-decision.png" alt="IQ & Decision Training" style="margin-top: 30px;">
-                    </div>
-                    <div class="card-content">
-                        <h3>IQ & Decision Training</h3>
-                        <p>Players learn to process faster than opponents can react.</p>
-                        <ul class="feature-list" style="margin-top: 0.5rem;">
-                            <li>Reads</li>
-                            <li>Spacing</li>
-                            <li>Manipulation</li>
-                            <li>Tempo</li>
-                        </ul>
-                        <div class="card-details-expanded">
-                            <div class="detail-section">
-                                <h4>The Problem: The "Robot" Athlete</h4>
-                                <p>Traditional coaching often treats players like robots - "go here, do this." This
-                                    creates players who can execute a set play but freeze when the defense does
-                                    something unexpected. They become dependent on the coach for every decision and lack
-                                    the autonomy to create on the fly.</p>
-                            </div>
-
-                            <div class="detail-section">
-                                <h4>The Godspeed Solution: Cognitive Overload</h4>
-                                <p>We train the brain as intensely as the body. We put players in chaotic, live-play
-                                    scenarios where the rules change constantly. We force them to make split-second
-                                    reads, manipulate defensive spacing, and control the tempo of the game. We don't
-                                    teach them <em>what</em> to think; we teach them <em>how</em> to think.</p>
-                            </div>
-
-                            <div class="detail-section">
-                                <h4>The Result: The Court General</h4>
-                                <p>Your child will play the game two steps ahead of everyone else. While other players
-                                    are reacting, yours will be dictating. They will see passing lanes before they open
-                                    and anticipate defensive rotations. This high "Basketball IQ" is the #1 trait that
-                                    separates elite level players.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="feature-card">
-                    <div class="card-image">
-                        <img src="assets/confidence-resilience.jpg" alt="Confidence & Resilience" style="margin-top: 20px;">
-                    </div>
-                    <div class="card-content">
-                        <h3>Confidence & Resilience</h3>
-                        <p>Growth without shortcuts. Leadership without ego.</p>
-                        <ul class="feature-list" style="margin-top: 0.5rem;">
-                            <li>Pressure-tested confidence</li>
-                            <li>Failure without shame</li>
-                        </ul>
-                        <div class="card-details-expanded">
-                            <div class="detail-section">
-                                <h4>The Problem: Fragile Confidence</h4>
-                                <p>In a world of participation trophies and curated social media lives, many young
-                                    athletes have never truly faced failure. Their confidence is fragile - it exists
-                                    only
-                                    when things are going well. The moment they miss a shot or get yelled at by a coach,
-                                    they crumble.</p>
-                            </div>
-
-                            <div class="detail-section">
-                                <h4>The Godspeed Solution: Manufactured Adversity</h4>
-                                <p>We believe that true confidence is forged in fire. We intentionally create difficult,
-                                    high-pressure environments where failure is guaranteed. We teach athletes to look
-                                    failure in the eye, own it, and learn from it without shame. We demand real
-                                    confidence, leadership, and accountability.</p>
-                            </div>
-
-                            <div class="detail-section">
-                                <h4>The Result: Bulletproof Character</h4>
-                                <p>Your child will walk away with a deep, inner belief that isn't dependent on external
-                                    validation. They will be the player who wants the ball in the final seconds, not for
-                                    the glory, but because they trust their preparation. They will be a leader who
-                                    elevates everyone around them - a trait that will serve them for the rest of their
-                                    lives.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="gs-links">
+                <a href="https://www.instagram.com/godspeedbasketball" target="_blank" rel="noopener">Instagram</a>
+                <a href="training.html#signup">Train with us</a>
+                <a href="aau.html">AAU program</a>
+                <a href="parent-portal.html">Parent portal</a>
+                <a href="coach-portal.html">Coach portal</a>
             </div>
+
+            <div class="gs-hidden-line" id="gs-title-secret">Brotherhood is a choice you make every day. - Coach Scott</div>
+
+            <div class="gs-foot-tag">BROTHERHOOD. HABITS. <b>SUCCESS.</b></div>
         </div>
     </section>
 
-    <section class="section-light">
-        <div class="container">
-            <h2 class="section-title">THE STANDARD</h2>
-            <div class="content-block text-center" style="margin-bottom: 5rem;">
-                <p style="font-size: 1.2rem; font-weight: 700; max-width: 800px; margin: 0 auto; text-align: center;">We
-                    don't just recruit
-                    talent. We build it.</p>
-            </div>
-
-            <div class="standard-bars-container"
-                style="width: 100%; max-width: 800px; margin: 0 auto 5rem auto; display: flex; flex-direction: column; gap: 2rem;">
-                <!-- Bar 1: 100% Commitment -->
-                <div class="standard-bar filled">
-                    <div class="bar-fill" style="width: 0%;"></div>
-                    <div class="bar-content">
-                        <span class="bar-label">Commitment Required</span>
-                        <span class="bar-value">100%</span>
-                    </div>
-                    <div class="bar-details">
-                        <p>Expect consistent, high-intensity coaching. We don't waste time, so we ask that you don't
-                            either.</p>
-                    </div>
-                </div>
-
-                <!-- Contact Section -->
-                <section class="section-light"
-                    style="padding-top: 140px; min-height: 80vh; display: flex; align-items: center;">
-                    <div class="container">
-                        <div class="w-full max-w-4xl mx-auto">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-                                <!-- Text Side -->
-                                <div>
-                                    <h1 class="section-title text-6xl mb-6" style="line-height: 0.9;">GET IN TOUCH
-                                    </h1>
-                                    <p class="text-xl text-gray-500 mb-8 font-medium">Questions about AAU teams,
-                                        training programs, or the academy? locked in.</p>
-
-                                    <div class="space-y-6">
-                                        <div class="flex items-start gap-4">
-                                            <div
-                                                class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                                                📍</div>
-                                            <div>
-                                                <div class="font-bold text-black uppercase tracking-wide text-xs mb-1">
-                                                    Location</div>
-                                                <div class="text-gray-900 font-bold">Denver Basketball Center</div>
-                                                <div class="text-gray-500 text-sm">7350 Prairie Falcon Rd, Denver, CO
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="flex items-start gap-4">
-                                            <div
-                                                class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                                                📧</div>
-                                            <div>
-                                                <div
-                                                    class="font-bold text-black uppercase tracking-widest text-xs mb-1">
-                                                    Email</div>
-                                                <a href="mailto:info@godspeedbasketball.com"
-                                                    class="text-gray-900 font-bold hover:text-blue-600 transition">info@godspeedbasketball.com</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Form Side -->
-                                <div class="signup-form p-8 shadow-2xl relative overflow-hidden"
-                                    style="background: white; border: 1px solid rgba(0,0,0,0.05);">
-                                    <!-- Decorative Blur -->
-                                    <div
-                                        class="absolute -top-20 -right-20 w-60 h-60 bg-blue-500/10 rounded-full blur-3xl pointer-events-none">
-                                    </div>
-
-                                    <form class="relative z-10 space-y-5">
-                                        <div class="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label
-                                                    class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">First
-                                                    Name</label>
-                                                <input type="text"
-                                                    class="w-full bg-gray-50 border border-gray-100 p-3 rounded-lg text-sm font-bold focus:ring-2 focus:ring-black outline-none transition"
-                                                    placeholder="LeBron">
-                                            </div>
-                                            <div>
-                                                <label
-                                                    class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Last
-                                                    Name</label>
-                                                <input type="text"
-                                                    class="w-full bg-gray-50 border border-gray-100 p-3 rounded-lg text-sm font-bold focus:ring-2 focus:ring-black outline-none transition"
-                                                    placeholder="James">
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <label
-                                                class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Email
-                                                Address</label>
-                                            <input type="email"
-                                                class="w-full bg-gray-50 border border-gray-100 p-3 rounded-lg text-sm font-bold focus:ring-2 focus:ring-black outline-none transition"
-                                                placeholder="king@lakers.com">
-                                        </div>
-
-                                        <div>
-                                            <label
-                                                class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Topic</label>
-                                            <div class="relative">
-                                                <select
-                                                    class="w-full bg-gray-50 border border-gray-100 p-3 rounded-lg text-sm font-bold focus:ring-2 focus:ring-black outline-none transition appearance-none text-gray-700">
-                                                    <option>General Inquiry</option>
-                                                    <option>AAU Team Tryouts</option>
-                                                    <option>Private Training</option>
-                                                    <option>Partnerships</option>
-                                                </select>
-                                                <div class="absolute right-3 top-3.5 pointer-events-none text-gray-400">
-                                                    ▼</div>
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <label
-                                                class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Message</label>
-                                            <textarea rows="4"
-                                                class="w-full bg-gray-50 border border-gray-100 p-3 rounded-lg text-sm font-bold focus:ring-2 focus:ring-black outline-none transition resize-none"
-                                                placeholder="How can we help you create your legacy?"></textarea>
-                                        </div>
-
-                                        <button type="submit"
-                                            class="w-full bg-black text-white font-black uppercase tracking-widest py-4 rounded-lg hover:bg-gray-900 hover:scale-[1.02] active:scale-[0.98] transition shadow-lg">
-                                            Send Message
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                </section>
-
-                <!-- Bar 2: 0% Politics -->
-                <div class="standard-bar">
-                    <div class="bar-fill" style="width: 0%;"></div> <!-- Empty fill for 0% -->
-                    <div class="bar-content">
-                        <span class="bar-label">Politics / Favoritism</span>
-                        <span class="bar-value">0%</span>
-                    </div>
-                    <div class="bar-details">
-                        <p>Expect total transparency. We play those who are prepared.</p>
-                    </div>
-                </div>
-
-                <!-- Bar 3: Earned Minutes -->
-                <div class="standard-bar filled">
-                    <div class="bar-fill" style="width: 0%;"></div>
-                    <div class="bar-content">
-                        <span class="bar-label">Earned Minutes</span>
-                        <span class="bar-value">100%</span>
-                    </div>
-                    <div class="bar-details">
-                        <p>Expect honest feedback. Playing time is a reward for practice performance, not a
-                            participation trophy.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div style="text-align: center; margin-top: 3rem;">
-                <a href="training.html#signup" class="btn-primary" style="padding: 1rem 3rem; font-size: 1.2rem;">APPLY
-                    NOW</a>
-            </div>
+    <!-- Secret note overlay (Konami: up up down down left right left right B A) -->
+    <div id="gs-secret" role="dialog" aria-modal="true" aria-label="A note from Coach Scott">
+        <div class="box">
+            <div class="eb">A note from Coach Scott</div>
+            <div class="msg">You went looking for something most people never do. That instinct, the one that digs for the extra rep, is the whole edge. Never lose it.</div>
+            <div class="sig">- Coach Scott</div>
+            <div class="tag">BROTHERHOOD. HABITS. <b>SUCCESS.</b></div>
         </div>
-    </section>
-
-    <section id="training" class="section-dark">
-        <div class="container">
-            <h2 class="section-title">PROGRAMS</h2>
-            <div class="about-grid">
-                <div class="feature-card">
-                    <div class="card-content">
-                        <h3>Elite Guard Academy</h3>
-                        <p>Designed for guards who depend on skill, IQ, and movement not height.</p>
-                        <ul class="feature-list" style="margin-top: 1rem; margin-bottom: 1rem;">
-                            <li>Footwork and separation</li>
-                            <li>Advanced finishing</li>
-                            <li>Shot creation</li>
-                            <li>Defensive manipulation</li>
-                            <li>Pace + deception</li>
-                            <li>Finishing at multiple angles</li>
-                            <li>Footwork systems</li>
-                            <li>Shooting mechanics</li>
-                            <li>Spacing habits</li>
-                        </ul>
-
-                    </div>
-                </div>
-                <div class="feature-card">
-                    <div class="card-content">
-                        <h3>IQ School</h3>
-                        <p>Not plays. Patterns. Players learn to read space, manipulate defenders, and make decisions.
-                        </p>
-                        <ul class="feature-list" style="margin-top: 1rem; margin-bottom: 1rem;">
-                            <li>Read space early</li>
-                            <li>Manipulate defenders</li>
-                            <li>Understand overloads</li>
-                            <li>Create advantages</li>
-                            <li>Make decisions at live speed</li>
-
-                    </div>
-                </div>
-                <div class="feature-card">
-                    <div class="card-content">
-                        <h3>Strength + Movement</h3>
-                        <p>Functional athletic development without the burnout culture.</p>
-                        <ul class="feature-list" style="margin-top: 1rem; margin-bottom: 1rem;">
-                            <li>Reflexive strength</li>
-                            <li>Ground reaction force</li>
-                            <li>Plyometric sequencing</li>
-                            <li>Balance + posture</li>
-                            <li>Low-to-the-ground efficiency</li>
-
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="club" class="section-light">
-        <div class="container">
-            <h2 class="section-title">THE GODSPEED <span class="accent">FAMILY</span></h2>
-            <div class="content-block text-center" style="margin-bottom: 4rem;">
-                <p style="font-size: 1.2rem; max-width: 800px; margin: 0 auto;">It's more than a jersey. It's a promise.
-                    When you
-                    join Club Godspeed, you join a brotherhood dedicated to excellence on and off the court.</p>
-            </div>
-
-            <div class="about-grid">
-                <div class="feature-card">
-                    <div class="card-image">
-                        <img src="assets/family-1.jpg" alt="Mentorship">
-                    </div>
-                    <div class="card-content">
-                        <h3>Mentorship First</h3>
-                        <p>Our coaches are mentors, not just trainers. We guide athletes through the challenges of
-                            competition, school, and life.</p>
-                    </div>
-                </div>
-                <div class="feature-card">
-                    <div class="card-image">
-                        <img src="assets/family-2.png" alt="Long-Term Vision">
-                    </div>
-                    <div class="card-content">
-                        <h3>Long-Term Vision</h3>
-                        <p>We don't chase trophies. We build skills that translate to high school, college,
-                            and beyond.</p>
-                    </div>
-                </div>
-                <div class="feature-card">
-                    <div class="card-image">
-                        <img src="assets/family-3.png" alt="Elite Skills">
-                    </div>
-                    <div class="card-content">
-                        <h3>Elite Skills Development</h3>
-                        <p>We are preparing kids to play. Iron sharpens iron. We plan to play a highly competitive schedule to
-                            expose
-                            weaknesses and accelerate growth.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="club-cta"
-                style="margin-top: 5rem; text-align: center; background: #111; padding: 4rem; border-radius: 20px; color: white;">
-                <h3 style="color: white; font-size: 2.5rem; margin-bottom: 1rem;">READY TO COMMIT?</h3>
-                <p style="color: #ccc; margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
-                    Our roster spots are earned, not bought. If you are ready to work, we are ready to build.</p>
-                <a href="training.html?interest=aau#signup" class="btn-primary">Apply for AAU</a>
-            </div>
-        </div>
-    </section>
-
-
-
-    <!--
-    <section id="community" class="section-dark">
-        <div class="container">
-            <h2 class="section-title">COMMUNITY <span class="accent">IMPACT</span></h2>
-            <div class="content-block">
-                <ul class="feature-list" style="justify-content: center; display: flex; flex-wrap: wrap; gap: 2rem;">
-                    <li>Holiday Clinic</li>
-                    <li>Turkey Giveaway</li>
-                    <li>Shoe Drive</li>
-                    <li>Local mentorship</li>
-                    <li>Academic + character development</li>
-                </ul>
-            </div>
-        </div>
-    </section>
-    -->
+    </div>
 
     <footer id="gs-shared-footer"></footer>
     <script src="shared-footer.js" defer></script>
@@ -535,6 +333,66 @@
     <script src="script.js"></script>
     <script src="auth.js"></script>
     <script src="mobile-menu.js"></script>
+
+    <script>
+        // ---- scroll reveal ----
+        (function () {
+            var els = document.querySelectorAll('.reveal');
+            if (!('IntersectionObserver' in window)) { els.forEach(function (e) { e.classList.add('in'); }); return; }
+            var io = new IntersectionObserver(function (entries) {
+                entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+            }, { threshold: 0.15 });
+            els.forEach(function (e, i) {
+                var kids = e.querySelectorAll(':scope > *');
+                kids.forEach(function (k, j) { k.style.setProperty('--i', j); });
+                io.observe(e);
+            });
+        })();
+
+        // ---- Assemble mailto at runtime so the address is not in the page text or static source ----
+        (function () {
+            var u = 'clubgodspeed', d = 'gmail.com', a = u + '@' + d;
+            var e = document.getElementById('gs-email-link');
+            if (e) e.href = 'mailto:' + a;
+            var m = document.getElementById('gs-msg-link');
+            if (m) m.href = 'mailto:' + a + '?subject=' + encodeURIComponent('Godspeed Basketball inquiry');
+        })();
+
+        // ---- Easter eggs, Godspeed ----
+        (function () {
+            var css1 = 'color:#2563eb;font-size:15px;font-weight:800;font-family:Inter,sans-serif';
+            var css2 = 'color:#6e6e73;font-size:12px;font-family:Inter,sans-serif';
+            try {
+                console.log('%cGODSPEED BASKETBALL', css1);
+                console.log('%cYou opened the console. Of course you did. The extra rep nobody sees is the one that wins games. Keep looking closer. - Coach Scott', css2);
+                console.log('%cBROTHERHOOD. HABITS. SUCCESS.', css2);
+            } catch (e) { }
+
+            var seq = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+            var pos = 0;
+            var overlay = document.getElementById('gs-secret');
+            function showSecret() { if (overlay) overlay.classList.add('on'); }
+            function hideSecret() { if (overlay) overlay.classList.remove('on'); }
+            document.addEventListener('keydown', function (e) {
+                var k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+                pos = (k === seq[pos]) ? pos + 1 : (k === seq[0] ? 1 : 0);
+                if (pos === seq.length) { showSecret(); pos = 0; }
+            });
+            if (overlay) overlay.addEventListener('click', hideSecret);
+            document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hideSecret(); });
+
+            var title = document.getElementById('gs-title');
+            var line = document.getElementById('gs-title-secret');
+            var taps = 0, timer = null;
+            if (title && line) {
+                title.addEventListener('click', function () {
+                    taps++; clearTimeout(timer);
+                    timer = setTimeout(function () { taps = 0; }, 1500);
+                    if (taps >= 7) { line.classList.add('on'); taps = 0; }
+                });
+            }
+        })();
+    </script>
 </body>
 
 </html>
