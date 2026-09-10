@@ -575,6 +575,7 @@
         let currentDate = new Date(); // Start at current real date
         let enrolledPrograms = []; // Programs the athlete is enrolled in
         let filterAthleteId = null; // Current athlete filter
+        let filterTeamIds = null; // Signed-in family's team ids; when set, games are scoped to these teams
         let externalEvents = []; // External events injected from parent
 
         // Listen for filter and injection messages from parent portal
@@ -585,6 +586,9 @@
                     if (window.parent && window.parent.trainingEnrolledPrograms) {
                         enrolledPrograms = window.parent.trainingEnrolledPrograms;
                     }
+                    renderCalendar();
+                } else if (event.data.type === 'setTeams') {
+                    filterTeamIds = (Array.isArray(event.data.teamIds) && event.data.teamIds.length) ? event.data.teamIds : null;
                     renderCalendar();
                 } else if (event.data.type === 'injectEvents') {
                     // Inject external events (e.g. Purchased Training)
@@ -604,24 +608,12 @@
 
         // Configuration
         const RECURRING_EVENTS = {
-            1: { // Monday
-                type: 'mandatory-skills',
-                title: 'Mandatory Skills',
-                time: '6:00 PM - 8:00 PM',
-                loc: 'NEC',
-                desc: 'Mandatory for players',
-                pillClass: 'event-mandatory-skills',
-                color: '#f0f0f0',
-                textColor: 'dark',
-                duration: 2,
-                startDate: '2025-12-08' // Only active from this date
-            },
             2: { // Tuesday
                 type: 'team-practice',
                 title: 'TEAM PRACTICE',
                 time: '6:00 PM - 8:00 PM',
-                loc: 'B.F. Elementary School',
-                desc: 'Regular Team Practice',
+                loc: 'Highline, Green Valley Ranch',
+                desc: 'Doors 5:55 PM. Regular team practice.',
                 pillClass: 'event-team-practice',
                 color: '#2563eb',
                 textColor: 'light',
@@ -631,8 +623,19 @@
                 type: 'team-practice',
                 title: 'TEAM PRACTICE',
                 time: '6:00 PM - 8:00 PM',
-                loc: 'B.F. Elementary School',
-                desc: 'Regular Team Practice',
+                loc: 'Highline, Green Valley Ranch',
+                desc: 'Doors 5:55 PM. Regular team practice.',
+                pillClass: 'event-team-practice',
+                color: '#2563eb',
+                textColor: 'light',
+                duration: 2
+            },
+            5: { // Friday
+                type: 'team-practice',
+                title: 'TEAM PRACTICE',
+                time: '6:00 PM - 8:00 PM',
+                loc: 'Highline, Green Valley Ranch',
+                desc: 'Doors 5:55 PM. Regular team practice.',
                 pillClass: 'event-team-practice',
                 color: '#2563eb',
                 textColor: 'light',
@@ -788,7 +791,14 @@
          * If enrolledPrograms is empty, show all events
          */
         function filterEventsByEnrollment(events) {
-            // If no filter is set, show all events
+            // Team scoping first: any event carrying a teamId shows only to that team's families.
+            // Events with no teamId (program-wide practices, tournaments) stay visible to all.
+            if (filterTeamIds && filterTeamIds.length) {
+                events = events.filter(function (event) {
+                    return !event.teamId || filterTeamIds.includes(event.teamId);
+                });
+            }
+            // If no enrollment filter is set, show all (team-scoped) events
             if (!filterAthleteId && enrolledPrograms.length === 0) {
             return events;
             }
@@ -1016,7 +1026,7 @@
         }
 
         function gotoToday() {
-            currentDate = new Date(2025, 11, 1);
+            currentDate = new Date();
             renderCalendar();
         }
 
@@ -1156,13 +1166,23 @@
         });
 
         // ── Load published events from Supabase and merge into SPECIFIC_EVENTS ──
+        function fmtTime(t) {
+            if (!t) return 'TBD';
+            var p = String(t).split(':');
+            var h = parseInt(p[0], 10);
+            var m = p[1] || '00';
+            var ap = h >= 12 ? 'PM' : 'AM';
+            var hh = h % 12; if (hh === 0) hh = 12;
+            return hh + ':' + m + ' ' + ap;
+        }
+
         async function loadPublishedEvents() {
             const startTime = performance.now();
             try {
                 const SUPA_URL = 'https://nnqokhqennuxalamnvps.supabase.co';
                 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis';
                 const today = new Date().toISOString().split('T')[0];
-                const url = `${SUPA_URL}/rest/v1/calendar_events?select=id,title,event_type,start_date,end_date,start_time,location,visibility,published_at&published_at=not.is.null&visibility=in.(public,team_only)&event_type=in.(tournament,season,game,camp)&is_cancelled=eq.false&start_date=gte.2026-03-01&order=start_date.asc`;
+                const url = `${SUPA_URL}/rest/v1/calendar_events?select=id,title,event_type,start_date,end_date,start_time,location,visibility,published_at,team_id&published_at=not.is.null&visibility=in.(public,team_only)&event_type=in.(tournament,season,game,camp)&is_cancelled=eq.false&start_date=gte.2026-03-01&order=start_date.asc`;
                 const res = await fetch(url, {
                     headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
                 });
@@ -1187,9 +1207,10 @@
                         const dateRange = totalDays > 1 ? ` (${e.start_date} - ${e.end_date})` : '';
                         const evObj = {
                             type: 'tournament',
+                            teamId: e.team_id || null,
                             title: e.title + dayLabel,
                             fullTitle: e.title + dateRange,
-                            time: 'TBD',
+                            time: e.start_time ? fmtTime(e.start_time) : 'TBD',
                             loc: e.location || 'TBD',
                             desc: (e.event_type || 'tournament') + dateRange,
                             pillClass: 'event-tournament',

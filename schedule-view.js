@@ -36,7 +36,7 @@ const ScheduleView = (() => {
     // Load calendar_events (practices, meetings, etc.)
     const { data: calData, error: calErr } = await supabase
       .from('calendar_events')
-      .select('id,title,event_type,start_date,start_time,end_time,end_date,location,location_url,grade_level,description,cost,tags,color')
+      .select('id,title,event_type,start_date,start_time,end_time,end_date,location,location_url,grade_level,description,cost,tags,color,team_id')
       .eq('is_cancelled', false)
       .not('published_at', 'is', null)
       .in('visibility', ['public', 'team_only'])
@@ -49,6 +49,17 @@ const ScheduleView = (() => {
       .select('schedule_id,tournament_id,tournament_name,start_date,end_date,city,state,event_type,rank_tier,game_guarantee,status')
       .order('start_date', { ascending: true });
     if (schedErr) { console.error('ScheduleView load team_schedule_view:', schedErr); }
+
+    // Team scoping: which team(s) does this family belong to. When known, games
+    // carrying a team_id are shown only for those teams. Events with no team_id
+    // (program-wide) and tournaments stay visible to everyone. If unknown, show all.
+    let myTeamIds = [];
+    try {
+      const { data: teamData } = await supabase.rpc('get_my_team_ids');
+      myTeamIds = (teamData || [])
+        .map(r => (typeof r === 'string') ? r : (r.get_my_team_ids || Object.values(r)[0]))
+        .filter(Boolean);
+    } catch (e) { /* fall back to showing all */ }
 
     // Normalize tournament names for dedup
     function normalizeName(name) {
@@ -92,7 +103,11 @@ const ScheduleView = (() => {
       _source: 'team_schedule'
     }));
 
-    allEvents = [...calEvents, ...schedEvents].sort((a, b) =>
+    const calEventsScoped = (myTeamIds.length)
+      ? calEvents.filter(e => !e.team_id || myTeamIds.includes(e.team_id))
+      : calEvents;
+
+    allEvents = [...calEventsScoped, ...schedEvents].sort((a, b) =>
       (a.start_date || '').localeCompare(b.start_date || '')
     );
 

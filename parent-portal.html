@@ -1589,6 +1589,32 @@
         }
     });
     </script>
+    <script>
+    // Scope the calendar to the signed-in family's team(s): fetch their team ids and
+    // send them to the calendar embed, which filters games to those teams.
+    (function () {
+        function sendTeams() {
+            var client = (window.auth && window.auth.getSupabaseClient) ? window.auth.getSupabaseClient() : null;
+            var iframe = document.getElementById('training-calendar-iframe');
+            if (!client || !iframe) { setTimeout(sendTeams, 500); return; }
+            client.rpc('get_my_team_ids').then(function (res) {
+                if (res.error || !res.data) return;
+                var teamIds = res.data
+                    .map(function (r) { return (typeof r === 'string') ? r : (r.get_my_team_ids || Object.values(r)[0]); })
+                    .filter(Boolean);
+                function post() {
+                    if (iframe.contentWindow) {
+                        iframe.contentWindow.postMessage({ type: 'setTeams', teamIds: teamIds }, window.location.origin);
+                    }
+                }
+                post();
+                iframe.addEventListener('load', post);
+            }).catch(function () {});
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sendTeams);
+        else sendTeams();
+    })();
+    </script>
 </body>
 
 </html>
