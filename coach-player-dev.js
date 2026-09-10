@@ -62,7 +62,7 @@
   // Category colors, same as the Command Center bank.
   var TAGS = { 'Culture': '#0071e3', 'Toughness': '#d92d20', 'Bigs': '#7c3aed', 'Guards': '#0d9488', 'Passing/Reads': '#4f46e5', 'Individual': '#64748b', 'Conditioning': '#d97706', 'Strength': '#57534e' };
   var TAG_ORDER = ['Culture', 'Toughness', 'Bigs', 'Guards', 'Passing/Reads', 'Individual', 'Conditioning', 'Strength'];
-  var state = { health: null, healthErr: null, linkParent: '', linkAthlete: '', activity: null, activityErr: null, activitySeen: null, loading: false, loaded: false, error: null, isAdmin: false, myTeams: [], cfg: DEFAULT_CFG, dev: {}, bank: [], shape: null, powerups: null, teamId: null, tab: 'players', q: '', swaps: {}, bankQ: '', bankTag: 'All', expanded: {}, workout: null, shareAccess: [], shares: {}, privileges: null };
+  var state = { callup: {}, strength: null, strengthWeek: 1, health: null, healthErr: null, linkParent: '', linkAthlete: '', activity: null, activityErr: null, activitySeen: null, loading: false, loaded: false, error: null, isAdmin: false, myTeams: [], cfg: DEFAULT_CFG, dev: {}, bank: [], shape: null, powerups: null, teamId: null, tab: 'players', q: '', swaps: {}, bankQ: '', bankTag: 'All', expanded: {}, workout: null, shareAccess: [], shares: {}, privileges: null };
 
   // ---------- data ----------
   async function loadAll() {
@@ -73,11 +73,12 @@
     var r = await Promise.all([
       c.from('development_config').select('key,value'),
       c.from('player_development').select('athlete_id,skills,subs,position,strength_bench,focus,updated_at'),
-      c.from('program_content').select('slug,body').in('slug', ['drills-bank', 'planner-practice-shape', 'planner-powerups', 'planner-workout']),
+      c.from('program_content').select('slug,body').in('slug', ['drills-bank', 'planner-practice-shape', 'planner-powerups', 'planner-workout', 'strength-program']),
       c.from('coach_profiles').select('team_ids').eq('user_id', uid).maybeSingle(),
       c.rpc('is_program_admin'),
       c.from('coach_access').select('user_id,area,team_id,allowed').eq('area', 'share_development'),
-      c.from('player_development_shares').select('athlete_id,shared_at,shared_by,note').order('shared_at', { ascending: false }).limit(400)
+      c.from('player_development_shares').select('athlete_id,shared_at,shared_by,note').order('shared_at', { ascending: false }).limit(400),
+      c.from('call_up_reviews').select('athlete_id,handling,defense,spacing,strength,square_ready,intangibles,notes,updated_at')
     ]);
     if (r[0].error) throw new Error('config: ' + r[0].error.message);
     if (r[1].error) throw new Error('development: ' + r[1].error.message);
@@ -91,7 +92,9 @@
       if (row.slug === 'planner-practice-shape') state.shape = row.body;
       if (row.slug === 'planner-powerups') state.powerups = row.body;
       if (row.slug === 'planner-workout') state.workout = row.body;
+      if (row.slug === 'strength-program') state.strength = row.body;
     });
+    state.callup = {}; ((r[7] && r[7].data) || []).forEach(function (x) { state.callup[x.athlete_id] = x; });
     state.myTeams = (r[3].data && r[3].data.team_ids) || [];
     state.isAdmin = !!(r[4] && r[4].data === true);
     state.shareAccess = (r[5] && r[5].data) ? r[5].data.filter(function (x) { return x.user_id === uid; }) : [];
@@ -135,7 +138,7 @@
   function queue() { return readJson(QUEUE_KEY) || []; }
   function setQueue(q) { writeJson(QUEUE_KEY, q); }
   function enqueue(op) {
-    var key = function (x) { return x.rpc + '|' + x.args.p_athlete_id + '|' + (x.args.p_sub || x.args.p_skill || x.args.p_field || x.args.p_key || (x.args.p_subs ? Object.keys(x.args.p_subs).sort().join(',') : '') || (x.args.p_team_id ? x.args.p_team_id + ':' + x.args.p_plan_date : '') || (x.rpc === 'log_training_session' ? x.args.p_date + ':' + x.args.p_minutes + ':' + (x.args.p_subs || []).join(',') : '')); };
+    var key = function (x) { return x.rpc + '|' + x.args.p_athlete_id + '|' + (x.args.p_sub || x.args.p_skill || x.args.p_field || x.args.p_key || (x.args.p_subs ? Object.keys(x.args.p_subs).sort().join(',') : '') || (x.args.p_fields ? Object.keys(x.args.p_fields).sort().join(',') : '') || (x.args.p_team_id ? x.args.p_team_id + ':' + x.args.p_plan_date : '') || (x.rpc === 'log_training_session' ? x.args.p_date + ':' + x.args.p_minutes + ':' + (x.args.p_subs || []).join(',') : '')); };
     var q = queue().filter(function (x) { return key(x) !== key(op); });
     op.id = Date.now() + '-' + Math.random().toString(36).slice(2, 8); op.at = new Date().toISOString(); op.uid = state.uid || null;
     q.push(op); setQueue(q); paintStatus();
@@ -147,6 +150,7 @@
       if (op.rpc === 'set_player_sub') { d.subs = d.subs || {}; if (a.p_score > 0) d.subs[a.p_sub] = a.p_score; else delete d.subs[a.p_sub]; d.skills = deriveSkills(d.subs); }
       else if (op.rpc === 'set_player_subs') { d.subs = d.subs || {}; Object.keys(a.p_subs || {}).forEach(function (k) { if (+a.p_subs[k] > 0) d.subs[k] = +a.p_subs[k]; else delete d.subs[k]; }); d.skills = deriveSkills(d.subs); }
       else if (op.rpc === 'set_player_position') d.position = a.p_position;
+      else if (op.rpc === 'set_call_up') { var cu = state.callup[a.p_athlete_id] = state.callup[a.p_athlete_id] || { athlete_id: a.p_athlete_id }; Object.keys(a.p_fields || {}).forEach(function (k) { cu[k] = a.p_fields[k]; }); }
       else if (op.rpc === 'save_practice_plan' || op.rpc === 'log_training_session') return;
       else if (op.rpc === 'set_player_dev_field' && a.p_field === 'focus') d.focus = a.p_value;
       else if (op.rpc === 'set_player_dev_field' && a.p_field === 'strength_bench') { d.strength_bench = d.strength_bench || {}; d.strength_bench[a.p_key] = a.p_value; }
@@ -354,6 +358,84 @@
   function gradeText(a) { var g = String(a.grade || '').replace(/\D/g, ''); return g ? (g === '1' ? '1st' : g === '2' ? '2nd' : g === '3' ? '3rd' : g + 'th') + ' grade' : ''; }
   function fmtDay(iso) { var d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
   function tagColor(t) { return TAGS[t] || '#64748b'; }
+  function coreChip(d) { return d && d.core ? '<span class="db-tag" style="--tc:#0071e3;margin-left:6px">Core ' + d.core + '</span>' : ''; }
+  // The call-up bar: four pillars scored 1..5 and two yes/no gates, from development_config.callup_bar.
+  var DEFAULT_BAR = { team: '5th Black', min: 4, pillars: [
+    { key: 'handling', label: 'Ball handling', gate: true, what: 'Weak hand, handling pressure, change of pace. The gatekeeper.', from: ['handles.weakHand', 'handles.pressure', 'handles.changeOfPace'] },
+    { key: 'defense', label: 'Defense at a high level', what: 'On-ball and team defense.', from: ['defense.stance', 'defense.slides', 'defense.ballPressure', 'defense.closeout', 'defInstincts.helpPosition', 'defInstincts.helpRecover', 'defInstincts.communication'] },
+    { key: 'spacing', label: 'Spacing and the square', what: 'Five-out spacing and the square set.', from: ['offInstincts.spacing', 'offInstincts.relocate', 'offInstincts.cutting', 'iq.rules'] },
+    { key: 'strength', label: 'Strength', what: 'Built through the strength program.', from: ['strength.pushups', 'strength.plank', 'strength.vertical', 'strength.sprint', 'strength.agility'] }],
+    gates: [{ key: 'square_ready', label: 'Runs the square', what: 'Game ready on the square set.' }, { key: 'intangibles', label: 'Coachable, high effort, shows up, next play', what: 'All of it, every week. A mistake is not the end of the world: next play, keep playing, stay out of your head.' }] };
+  function barCfg() { var b = state.cfg.callup_bar; return b && b.pillars ? b : DEFAULT_BAR; }
+  function callupOf(a) { return state.callup[a.id] || {}; }
+  function pillarAuto(a, p) { var vals = (p.from || []).map(function (k) { return subScore(a, k); }).filter(Boolean); if (!vals.length) return 0; return Math.round(vals.reduce(function (x, y) { return x + y; }, 0) / vals.length); }
+  function pillarScore(a, p) { var v = +(callupOf(a)[p.key] || 0); if (v > 0) return { v: v, auto: false }; var av = pillarAuto(a, p); return { v: av, auto: av > 0 }; }
+  function callupStatus(a) {
+    var b = barCfg(); var cu = callupOf(a); var pass = 0, scored = 0, total = b.pillars.length + b.gates.length; var miss = [];
+    b.pillars.forEach(function (p) { var sc = pillarScore(a, p); if (sc.v) scored++; if (sc.v >= (b.min || 4)) pass++; else miss.push(p.label); });
+    b.gates.forEach(function (g) { if (cu[g.key] === true) { pass++; scored++; } else miss.push(g.label); });
+    return { ready: pass === total, pass: pass, total: total, scored: scored, missing: miss, gate: b.pillars.filter(function (p) { return p.gate; }).every(function (p) { return pillarScore(a, p).v >= (b.min || 4); }) };
+  }
+  function onUpTeam(a) { var rw = raw(); if (!rw) return false; var names = {}; rw.teams.forEach(function (t) { names[t.id] = t.name; }); var ids = teamsOf(a.id); return ids.length > 0 && ids.every(function (id) { var n = names[id] || ''; return /6th/i.test(n) || (/5th Grade$/i.test(n) && !/4th/i.test(n)); }); }
+  function callupPill(a) {
+    var st = callupStatus(a); var up = onUpTeam(a); var team = barCfg().team || '5th Black';
+    if (!st.scored) return '<span class="db-pill" title="Score the four pillars">' + esc(team) + ' bar: not scored</span>';
+    if (st.ready) return '<span class="db-pill green">' + (up ? 'Holds the ' + esc(team) + ' bar' : 'Ready for ' + esc(team)) + '</span>';
+    return '<span class="db-pill orange">' + st.pass + ' of ' + st.total + ' at the ' + esc(team) + ' bar</span>';
+  }
+  function callupHtml(a, can) {
+    var b = barCfg(); var cu = callupOf(a); var st = callupStatus(a); var min = b.min || 4;
+    var h = '<div class="db-cu" data-cu="' + esc(a.id) + '"><div class="hd"><div><b>' + esc(b.team || '5th Black') + ' bar</b><small>Four pillars at ' + esc(rubric(min)) + ' or better, two gates. Grey scores are borrowed from his evaluation until you score the pillar yourself.</small></div>' + callupPill(a) + '</div>';
+    b.pillars.forEach(function (p) {
+      var sc = pillarScore(a, p);
+      h += '<div class="row"><div class="lb">' + esc(p.label) + (p.gate ? ' <em>Gatekeeper</em>' : '') + '<small>' + esc(p.what || '') + (sc.auto ? ' Borrowed from the evaluation.' : '') + (p.key === 'strength' && state.strength ? ' <a href="#" class="cu-strength">Open the strength program</a>' : '') + '</small></div><div class="ctl"><span class="rt-seg cu-seg' + (sc.auto ? ' auto' : '') + '" data-p="' + esc(p.key) + '">' + [1, 2, 3, 4, 5].map(function (i) { return '<button type="button" data-v="' + i + '" class="' + (i === sc.v ? 'on' : '') + '" title="' + esc(rubric(i)) + '"' + (can ? '' : ' disabled') + '>' + i + '</button>'; }).join('') + '</span><span class="wd">' + (sc.v ? esc(rubric(sc.v)) + (sc.v >= min ? '' : ', below the bar') : 'Not scored') + '</span></div></div>';
+    });
+    b.gates.forEach(function (g) {
+      var on = cu[g.key] === true;
+      h += '<div class="row gate"><div class="lb">' + esc(g.label) + '<small>' + esc(g.what || '') + '</small></div><button type="button" class="cu-tg' + (on ? ' on' : '') + '" data-g="' + esc(g.key) + '"' + (can ? '' : ' disabled') + '>' + (on ? 'Yes' : 'Not yet') + '</button></div>';
+    });
+    h += '<div class="row note"><input type="text" class="cu-note" maxlength="600" placeholder="One line for the director, optional" value="' + esc(cu.notes || '') + '"' + (can ? '' : ' disabled') + '></div>';
+    if (st.scored && !st.ready) h += '<div class="db-gap orange" style="padding-top:4px"><i></i><span>Still to hit: ' + esc(st.missing.join(', ')) + '.</span></div>';
+    if (st.ready) h += '<div class="db-gap green" style="padding-top:4px"><i></i><span>Every pillar and both gates are there. ' + (onUpTeam(a) ? 'He holds the bar.' : 'Ask him up.') + '</span></div>';
+    return h + '</div>';
+  }
+  async function setCallup(a, fields) {
+    var cu = state.callup[a.id] = state.callup[a.id] || { athlete_id: a.id }; var before = {}; Object.keys(fields).forEach(function (k) { before[k] = cu[k]; cu[k] = fields[k]; });
+    var r = await commit('set_call_up', { p_athlete_id: a.id, p_fields: fields });
+    if (!r.ok) { Object.keys(before).forEach(function (k) { cu[k] = before[k]; }); toast('Not saved: ' + ((r.error && r.error.message) || 'error')); }
+    else if (r.data && !r.queued) state.callup[a.id] = r.data;
+    paint();
+  }
+  function bindCallup(card, a) {
+    card.querySelectorAll('.cu-seg [data-v]').forEach(function (btn) { btn.onclick = function () { var k = btn.closest('.cu-seg').getAttribute('data-p'); var v = +btn.getAttribute('data-v'); var cur = +(callupOf(a)[k] || 0); var f = {}; f[k] = cur === v ? 0 : v; setCallup(a, f); }; });
+    card.querySelectorAll('.cu-tg').forEach(function (btn) { btn.onclick = function () { var k = btn.getAttribute('data-g'); var f = {}; f[k] = callupOf(a)[k] !== true; setCallup(a, f); }; });
+    var n = card.querySelector('.cu-note'); if (n) n.onchange = function () { setCallup(a, { notes: n.value.trim() }); };
+    var sl = card.querySelector('.cu-strength'); if (sl) sl.onclick = function (e) { e.preventDefault(); openStrength(); };
+  }
+  // The strength program: eight weeks of bodyweight work from program_content.strength-program.
+  function openStrength(week) {
+    var sp = state.strength; if (!sp) { toast('The strength program has not loaded yet.'); return; }
+    if (week) state.strengthWeek = week; var wk = (sp.weeks || []).filter(function (w) { return w.week === state.strengthWeek; })[0] || (sp.weeks || [])[0];
+    var h = '<div class="hd"><div class="k">Strength program</div><h3>' + esc(sp.title || 'Strength program') + '</h3><p>' + esc(sp.intro || '') + '</p><button type="button" class="x" aria-label="Close">&times;</button></div><div class="bd">';
+    h += '<div class="sec">Rules</div><ul class="dots">' + (sp.rules || []).map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul>';
+    h += '<div class="sec">Week</div><div class="devs">' + (sp.weeks || []).map(function (w) { return '<button type="button" class="db-chipbtn' + (wk && w.week === wk.week ? ' active' : '') + '" data-week="' + w.week + '">' + w.week + '</button>'; }).join('') + '</div>';
+    if (wk) {
+      h += '<div class="sec">Week ' + wk.week + ': ' + esc(wk.theme || '') + '</div><p style="font-size:13.5px;color:#6e6e73;margin:0 0 8px">' + esc(wk.note || '') + ' ' + wk.sessions + ' sessions, about ' + wk.minutes + ' minutes each.</p>';
+      h += '<div class="sec" style="margin-top:8px">Warm-up, every session</div><ul class="dots">' + (sp.warmup || []).map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul>';
+      h += '<div class="sec">The work</div>' + (wk.blocks || []).map(function (bk, i) { return '<div class="db-st"><span class="k">' + (i + 1) + '</span><div><b>' + esc(bk.name) + ' <span style="font-weight:500;color:#6e6e73">' + esc(bk.sets) + ' x ' + esc(bk.reps) + '</span></b><span>' + esc(bk.cue || '') + '</span></div></div>'; }).join('');
+      if (sp.finisher) h += '<div class="sec">Finisher</div><p style="font-size:13.5px;margin:0">' + esc(sp.finisher) + '</p>';
+    }
+    if (sp.progression) h += '<div class="sec">Progression</div>' + sp.progression.map(function (p) { return '<div class="db-gap grey"><i></i><span><b>' + esc(p[0]) + '</b>: ' + esc(p[1]) + '</span></div>'; }).join('');
+    h += '</div><div class="ft"><button type="button" class="db-btn" data-close>Close</button><button type="button" class="db-btn primary" id="db-strength-print">Print this week</button></div>';
+    var b = sheet(h, '#57534e');
+    b.querySelectorAll('[data-week]').forEach(function (x) { x.onclick = function () { openStrength(+x.getAttribute('data-week')); }; });
+    var pr = b.querySelector('#db-strength-print'); if (pr) pr.onclick = function () { window.print(); };
+  }
+  function strengthPanelHtml() {
+    var sp = state.strength; if (!sp) return '';
+    return '<div class="db-panel" style="margin-bottom:14px;border-left:4px solid #57534e"><h4>' + esc(sp.title || 'Strength program') + '</h4><p class="in">' + esc(sp.intro || '') + '</p>' + (sp.progression || []).map(function (p, i) { return '<div class="db-st" data-strength-week="' + (i * 2 + 1) + '" style="cursor:pointer"><span class="k" style="background:#57534e">' + (i + 1) + '</span><div><b>' + esc(p[0]) + '</b><span>' + esc(p[1]) + '</span></div></div>'; }).join('') + '<div style="margin-top:10px"><button type="button" class="db-btn primary" id="db-strength-open">Open the program</button></div></div>';
+  }
+  function coreDrills() { return visibleBank().filter(function (d) { return d.core; }).sort(function (x, y) { return x.core - y.core; }); }
   function tagChip(t, extra) { return '<span class="db-tag' + (extra ? ' ' + extra : '') + '" style="--tc:' + tagColor(t) + '">' + esc(t || 'Drill') + '</span>'; }
 
 
@@ -408,6 +490,27 @@
 #devboard-view .db-pos button.on{background:var(--ac);color:#fff;border-color:transparent}\
 #devboard-view .db-pos button:disabled{cursor:default;opacity:.7}\
 #devboard-view .db-body{padding:12px 15px 14px}\
+#devboard-view .db-cu{border:1px solid var(--bl);border-left:4px solid var(--ac);border-radius:12px;padding:12px 14px 10px;margin-bottom:14px;background:#fff}\
+#devboard-view .db-cu .hd{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px}\
+#devboard-view .db-cu .hd b{font-size:14.5px;display:block}#devboard-view .db-cu .hd small{display:block;font-size:12px;color:var(--ts);line-height:1.4;margin-top:2px}\
+#devboard-view .db-cu .row{display:block;padding:9px 0;border-top:1px solid var(--bl)}\
+#devboard-view .db-cu .row.gate{display:flex;justify-content:space-between;align-items:center;gap:12px}\
+#devboard-view .db-cu .ctl{display:flex;align-items:center;gap:10px;margin-top:7px}\
+#devboard-view .db-cu .lb{font-size:14px;font-weight:600}#devboard-view .db-cu .lb em{font-style:normal;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ac);margin-left:4px}\
+#devboard-view .db-cu .lb small{display:block;font-size:11.5px;color:var(--tf);font-weight:500;margin-top:1px;line-height:1.4}#devboard-view .db-cu .lb small a{color:var(--ac);font-weight:600;text-decoration:none}\
+#devboard-view .db-cu .wd{font-size:11.5px;color:var(--ts);white-space:nowrap;min-width:72px;text-align:right}\
+#devboard-view .cu-seg{display:flex;flex:1;gap:3px;padding:3px;background:rgba(118,118,128,.12);border-radius:10px}\
+#devboard-view .cu-seg button{flex:1;height:34px;border:none;border-radius:8px;background:transparent;font:inherit;font-size:13px;font-weight:700;color:#6e6e73;cursor:pointer;min-height:0;min-width:0;padding:0}\
+#devboard-view .cu-seg button.on{background:var(--ac);color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15)}#devboard-view .cu-seg.auto button.on{background:#c7c7cc;color:#fff;box-shadow:none}\
+#devboard-view .cu-seg button:disabled{cursor:default;opacity:.6}\
+#devboard-view .cu-tg{font:inherit;font-size:12.5px;font-weight:600;padding:6px 14px;border-radius:999px;border:1px solid var(--bd);background:#fff;color:var(--ts);cursor:pointer;min-height:0;min-width:0;text-transform:none}\
+#devboard-view .cu-tg.on{background:var(--green);color:#fff;border-color:transparent}#devboard-view .cu-tg:disabled{cursor:default;opacity:.7}\
+#db-backdrop .db-chipbtn{font:inherit;font-size:13px;font-weight:700;width:40px;height:40px;border-radius:10px;border:1px solid #d9d9de;background:#fff;color:#1d1d1f;cursor:pointer;min-height:0;min-width:0;padding:0;margin:0 6px 6px 0}#db-backdrop .db-chipbtn.active{background:#1d1d1f;color:#fff;border-color:#1d1d1f}\
+#db-backdrop .db-st{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;background:#f5f5f7;border-radius:10px;padding:9px 12px;font-size:13px;margin-bottom:6px}#db-backdrop .db-st .k{font-size:12px;font-weight:700;color:#0071e3;padding-top:2px;min-width:14px}#db-backdrop .db-st b{display:block;font-weight:600;font-size:13.5px}#db-backdrop .db-st span:not(.k){display:block;color:#6e6e73;font-size:12.5px;margin-top:2px}\
+#devboard-view .cu-note{font:inherit;font-size:13px;width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;min-height:0;background:#fff}\
+#devboard-view .cu-row .cbs{display:inline-flex;gap:4px}#devboard-view .cu-row .cb{width:24px;height:24px;border-radius:7px;background:var(--bgs);color:var(--tf);font-size:11.5px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}\
+#devboard-view .cu-row .cb.ok{background:#e9f7ef;color:var(--green)}#devboard-view .cu-row .cb.lo{background:#fff6ec;color:var(--orange)}#devboard-view .cu-row .cb.auto{opacity:.6}\
+@media (max-width:520px){#devboard-view .cu-seg button{height:40px}}\
 #devboard-view .db-sec{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tf);margin:4px 0 8px}\
 #devboard-view .db-need{display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--bl)}\
 #devboard-view .db-need b{font-weight:600;font-size:14px}\
@@ -566,13 +669,14 @@
     var meta = [a.jersey_number ? '#' + a.jersey_number : '', gradeText(a).replace(' grade', ''), 'Age ' + age].filter(Boolean).join(' \u00b7 ');
     var sh = state.shares[a.id];
     var h = '<article class="db-card" data-id="' + esc(a.id) + '">';
-    h += '<div class="db-head"><div class="db-av">' + esc(a.jersey_number ? String(a.jersey_number) : initials(a)) + '</div><div class="nm"><b>' + esc(a.first_name + ' ' + (a.last_name || '')) + '</b><small>' + esc(meta) + (sh ? ' \u00b7 Shared ' + esc(fmtDay(sh.shared_at)) : '') + '</small></div><div class="pills"><span class="db-pill">' + rc + ' of ' + total + ' scored</span>' + trackPill(a) + '</div><button type="button" class="db-toggle" data-act="toggle" aria-label="Show or hide">' + (open ? '&#8963;' : '&#8964;') + '</button></div>';
+    h += '<div class="db-head"><div class="db-av">' + esc(a.jersey_number ? String(a.jersey_number) : initials(a)) + '</div><div class="nm"><b>' + esc(a.first_name + ' ' + (a.last_name || '')) + '</b><small>' + esc(meta) + (sh ? ' \u00b7 Shared ' + esc(fmtDay(sh.shared_at)) : '') + '</small></div><div class="pills"><span class="db-pill">' + rc + ' of ' + total + ' scored</span>' + trackPill(a) + callupPill(a) + '</div><button type="button" class="db-toggle" data-act="toggle" aria-label="Show or hide">' + (open ? '&#8963;' : '&#8964;') + '</button></div>';
     // rating coverage bar with the age-target marker
     var pct = total ? Math.round(rc / total * 100) : 0;
     h += '<div class="db-track"><div class="lbl"><span>' + rc + ' of ' + total + ' scored</span><small>' + (started(a) ? esc(overallPhase(a)) : 'Not evaluated') + '</small></div><div class="db-bar2"><i style="width:' + pct + '%"></i></div></div>';
     h += '<div class="db-pos"><span class="k">Position</span>' + POSITIONS.map(function (p) { return '<button type="button" data-pos="' + p + '" class="' + (positionOf(a) === p ? 'on' : '') + '"' + (can ? '' : ' disabled') + '>' + p + '</button>'; }).join('') + '</div>';
     if (open) {
       h += '<div class="db-body">';
+      h += callupHtml(a, can);
       if (!started(a)) h += '<div class="db-focus empty">Not evaluated yet. Open Evaluate and score what you see; his card fills itself.</div>';
       else {
         h += '<div class="db-sec">Needs next</div>';
@@ -628,7 +732,7 @@
   function openDrill(d, a) {
     var c = d.coaching || {}; var color = tagColor(d.tag); var prog = d.progression || [1, 1, 2, 2, 3];
     var mySubs = a ? needsOf(a).map(function (n) { return n.key; }) : []; var myPhase = a && mySubs.length ? needsOf(a)[0].phase : 0;
-    var h = '<div class="hd">' + tagChip(d.tag) + '<button type="button" class="x" aria-label="Close">&times;</button><h3>' + esc(d.name) + '</h3><p>' + esc(d.cue || '') + '</p></div><div class="bd">';
+    var h = '<div class="hd">' + tagChip(d.tag) + coreChip(d) + '<button type="button" class="x" aria-label="Close">&times;</button><h3>' + esc(d.name) + '</h3><p>' + esc(d.cue || '') + (d.core ? ' Core handles drill ' + d.core + ' of 4: every practice, every team, off hand always active.' : '') + '</p></div><div class="bd">';
     h += '<div class="sec">Develops</div><div class="devs">' + (d.develops || []).map(function (k) { return '<span class="db-chip' + (mySubs.indexOf(k) >= 0 ? ' hit' : '') + '">' + esc(subKeyLabel(k)) + '</span>'; }).join('') + (d.level ? '<span class="db-chip">Level ' + esc(phaseName(d.level)) + '</span>' : '<span class="db-chip">Any level</span>') + (d.min ? '<span class="db-chip">' + esc(d.min) + ' min</span>' : '') + '</div>';
     if (c.look && c.look.length) h += '<div class="sec">What to look for</div><ul class="dots">' + c.look.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>';
     if (c.standard) h += '<div class="box"><span class="k">Standard</span><span>' + esc(c.standard) + '</span></div>';
@@ -784,11 +888,24 @@
 
   // ---------- team tab ----------
   function readOfWeek(players) { var top = teamNeeds(players)[0]; var key = top ? top.skill : 'handles'; return { skill: key, read: READS[key] || READS.handles }; }
+  function callupBoardHtml(ps) {
+    var b = barCfg(); var team = b.team || '5th Black'; var min = b.min || 4;
+    var rows = ps.map(function (a) { return { a: a, st: callupStatus(a) }; }).sort(function (x, y) { return (y.st.ready ? 1 : 0) - (x.st.ready ? 1 : 0) || y.st.pass - x.st.pass || y.st.scored - x.st.scored; });
+    var ready = rows.filter(function (r) { return r.st.ready; }).length; var scored = rows.filter(function (r) { return r.st.scored; }).length;
+    var h = '<div class="db-panel" style="margin-bottom:14px;border-left:4px solid var(--ac)"><h4>' + esc(team) + ' bar</h4><p class="in">Four pillars at ' + esc(rubric(min)) + ' or better, plus runs the square and the intangibles. ' + ready + ' ready, ' + scored + ' of ' + ps.length + ' scored. Tap a name to score him.</p>';
+    if (!scored) return h + '<div class="db-note">Nobody scored yet. Open a player and score the four pillars.</div></div>';
+    rows.forEach(function (r) {
+      var cells = b.pillars.map(function (p) { var sc = pillarScore(r.a, p); return '<span class="cb' + (sc.v >= min ? ' ok' : sc.v ? ' lo' : '') + (sc.auto ? ' auto' : '') + '" title="' + esc(p.label) + (sc.auto ? ', borrowed' : '') + '">' + (sc.v || '·') + '</span>'; }).join('') + b.gates.map(function (g) { var on = callupOf(r.a)[g.key] === true; return '<span class="cb' + (on ? ' ok' : '') + '" title="' + esc(g.label) + '">' + (on ? '✓' : '·') + '</span>'; }).join('');
+      h += '<div class="db-rank cu-row" data-act-athlete="' + esc(r.a.id) + '" style="cursor:pointer;grid-template-columns:auto 1fr auto"><span class="k" style="background:' + (r.st.ready ? 'var(--green)' : r.st.scored ? 'var(--orange)' : '#c7c7cc') + '">' + r.st.pass + '</span><div><b>' + esc(shortName(r.a)) + '<small>' + (r.st.ready ? 'Ready' : r.st.scored ? 'Still to hit: ' + esc(r.st.missing.join(', ')) : 'Not scored') + '</small></b></div><div class="cbs">' + cells + '</div></div>';
+    });
+    return h + '</div>';
+  }
   function teamHtml() {
     var ps = playersOf(state.teamId); var h = teamBar(false);
     if (!ps.length) return h + '<div class="db-empty">No active players on this team.</div>';
     var rated = ps.filter(started); var tn = teamNeeds(rated).slice(0, 5); var row = readOfWeek(rated); var wg = workGroups(rated); var gp = gaps(ps);
     h += '<div class="db-lead"><div><h4>' + esc(row.read[0]) + '</h4><p>The read of the week, from the top need on this roster. ' + esc(row.read[1]) + '</p></div><div class="st"><div><b>' + rated.length + '</b><small>Evaluated</small></div><div><b>' + (ps.length - rated.length) + '</b><small>To evaluate</small></div><div><b>' + wg.length + '</b><small>Stations</small></div></div></div>';
+    h += callupBoardHtml(ps);
     h += '<div class="db-two"><div class="db-panel"><h4>Top needs</h4><p class="in">Sub-skills that show up in the most players\' next three.</p>';
     if (!rated.length) h += '<div class="db-note">Evaluate a few players first.</div>';
     tn.forEach(function (r, i) { h += '<div class="db-rank"><span class="k">' + (i + 1) + '</span><div><b>' + esc(subKeyLabel(r.key)) + '<small>' + esc(label(r.skill)) + '</small></b><div class="bar"><i style="width:' + Math.round(r.players / rated.length * 100) + '%"></i></div></div><small class="r">' + r.players + ' of ' + rated.length + ', avg ' + r.avg.toFixed(1) + '</small></div>'; });
@@ -824,11 +941,14 @@
     h += '<div class="db-lead"><div><h4>' + esc(next) + ', doors 5:55, ball at 6:00.</h4><p>Seven blocks from How we practice. Power-ups and the finishing bridge are filled from this roster\'s needs; the guided block teaches this week\'s read. Swap a drill if the gym says so.</p></div><div class="st"><div><b style="font-size:18px">' + esc(row.read[0]) + '</b><small>Read of the week</small></div></div></div>';
     h += '<div class="db-plan-bar">' + (canEdit(state.teamId) ? '<button type="button" class="db-btn primary" id="db-save-plan">Save plan</button>' : '') + '<button type="button" class="db-btn' + (canEdit(state.teamId) ? '' : ' primary') + '" id="db-print">Print</button><button type="button" class="db-btn" id="db-copy">Copy as text</button><span class="db-note" style="margin:0">' + (rated.length ? rated.length + ' evaluated players shape this plan.' : 'Nobody is evaluated yet, so the stations are the default power-ups.') + '</span></div>';
     h += '<div class="db-panel" id="db-plan">';
+    var coreAt = -1; state.shape.blocks.forEach(function (b, bi) { if (coreAt < 0 && /handl|warm|skill|fundamental/i.test(b.name + ' ' + (b.what || ''))) coreAt = bi; }); if (coreAt < 0) coreAt = 0;
     state.shape.blocks.forEach(function (b, bi) {
       h += '<div class="db-block"><span class="n">' + (bi + 1) + '</span><div class="tm">' + esc(b.start) + '<small>' + esc(b.minutes) + ' min</small></div><div><h5>' + esc(b.name) + '</h5><p>' + esc(b.what) + '</p>' + (b.note ? '<div class="nt">' + esc(b.note) + '</div>' : '');
+      if (bi === coreAt && coreDrills().length) h += '<div class="db-fill">' + coreDrills().map(function (d) { return stationHtml('Core ' + d.core, d, 'Every team, every practice. Off hand up and active.', 'core', d.core, []); }).join('') + '</div>';
       if (/power-ups/i.test(b.name)) {
         h += '<div class="db-fill">';
-        if (wg.length) wg.slice(0, 4).forEach(function (g, i) { var cands = drillsForSub(g.need.key, g.need.phase, [], 6); var d = pick(cands, 'pu', i) || g.drill; h += stationHtml('Station ' + (i + 1), d, g.players.map(shortName).join(', '), 'pu', i, cands); });
+        var coreNames = coreDrills().map(function (d) { return d.name; });
+        if (wg.length) wg.slice(0, 4).forEach(function (g, i) { var cands = drillsForSub(g.need.key, g.need.phase, coreNames, 6); var d = pick(cands, 'pu', i) || g.drill; h += stationHtml('Station ' + (i + 1), d, g.players.map(shortName).join(', '), 'pu', i, cands); });
         var unr = ps.filter(function (a) { return !started(a); });
         if (wg.length && unr.length) { var ud = findDrill('Bodyweight strength circuit'); if (ud) h += stationHtml('Utility', ud, 'Not evaluated yet, so they work strength: ' + unr.map(shortName).join(', '), 'ut', 0, []); }
         if (!wg.length && state.powerups) ['Guard', 'Wing', 'Big'].forEach(function (k, i) { var list = state.powerups[k] || []; var d = list.length ? (findDrill(list[i % list.length].text) || { name: list[i % list.length].text, cue: '' }) : null; if (d) h += stationHtml(k, d, '', 'pu', i, []); });
@@ -867,11 +987,14 @@
     var list = all.filter(function (d) { return (tag === 'All' || d.tag === tag) && (!q || (d.name + ' ' + (d.cue || '') + ' ' + (d.develops || []).map(subKeyLabel).join(' ')).toLowerCase().indexOf(q) >= 0); });
     var cov = {}; all.forEach(function (d) { (d.develops || []).forEach(function (k) { cov[k] = (cov[k] || 0) + 1; }); });
     var thin = []; Object.keys(subsCfg()).forEach(function (sk) { subList(sk).forEach(function (s) { if ((cov[sk + '.' + s.key] || 0) < 2) thin.push(sk + '.' + s.key); }); });
+    list.sort(function (x, y) { return (y.core ? 1 : 0) - (x.core ? 1 : 0) || ((x.core || 0) - (y.core || 0)); });
     var h = '<div class="db-lead"><div><h4>The Bank</h4><p>' + all.length + ' drills, each tagged with the sub-skills it develops and the level it is for. The tags decide which drill a player gets. Tap a card for the coaching detail.</p></div><div class="st"><div><b>' + all.length + '</b><small>Drills</small></div>' + (state.isAdmin ? '<div><b>' + all.filter(function (d) { return d.import; }).length + '</b><small>Imported</small></div><div><b>' + all.filter(function (d) { return d.review && !d.import; }).length + '</b><small>Flagged</small></div>' : '') + '</div></div>';
     h += '<div class="db-bar"><div class="db-teams"><button type="button" class="db-chipbtn' + (tag === 'All' ? ' active' : '') + '" data-tag="All">All</button>' + TAG_ORDER.map(function (t) { return '<button type="button" class="db-chipbtn' + (tag === t ? ' active' : '') + '" data-tag="' + esc(t) + '" style="--tc:' + tagColor(t) + '"><i></i>' + esc(t) + '</button>'; }).join('') + '</div><input class="db-search" type="search" placeholder="Search drills, cues, sub-skills" value="' + esc(state.bankQ) + '" aria-label="Search drills"></div>';
+    if ((tag === 'All' || tag === 'Strength') && !q) h += strengthPanelHtml();
+    if (tag === 'All' && !q && coreDrills().length) h += '<div class="db-panel" style="margin-bottom:14px;border-left:4px solid #0071e3"><h4>Core handles, every practice, every team</h4><p class="in">Four drills in this order. The off hand is up and active in the guard position on every rep, never behind the back. Steven runs all four before anything else.</p>' + coreDrills().map(function (d) { return '<div class="db-st" data-drill="' + esc(d.name) + '" style="cursor:pointer"><span class="k">' + d.core + '</span><div><b>' + esc(d.name) + '</b><span>' + esc(d.cue || '') + '</span></div></div>'; }).join('') + '</div>';
     if (state.isAdmin && thin.length) h += '<div class="db-status on"><i></i>Thin coverage (fewer than two drills): ' + esc(thin.map(subKeyLabel).join(', ')) + '</div>';
     h += '<div class="db-bankgrid">' + list.map(function (d) {
-      return '<div class="db-bk" data-drill="' + esc(d.name) + '" style="--tc:' + tagColor(d.tag) + '"><div class="top">' + tagChip(d.tag) + '<button type="button" class="db-i" aria-label="Detail">i</button></div><h5>' + esc(d.name) + '</h5><div class="cue">' + esc(d.cue || '') + '</div><div class="meta"><span>' + esc(d.min || 5) + ' min</span><span class="lv">' + (d.level ? esc(phaseName(d.level)) : 'Any level') + '</span></div><div class="devs">' + (d.develops || []).slice(0, 4).map(function (k) { return '<span class="db-chip">' + esc(subKeyLabel(k)) + '</span>'; }).join('') + (d.import && state.isAdmin ? '<span class="db-chip imp">Imported</span>' : '') + (d.review && !d.import ? '<span class="db-chip flag">Flagged</span>' : '') + '</div></div>';
+      return '<div class="db-bk" data-drill="' + esc(d.name) + '" style="--tc:' + tagColor(d.tag) + '"><div class="top">' + tagChip(d.tag) + coreChip(d) + '<button type="button" class="db-i" aria-label="Detail" style="margin-left:auto">i</button></div><h5>' + esc(d.name) + '</h5><div class="cue">' + esc(d.cue || '') + '</div><div class="meta"><span>' + esc(d.min || 5) + ' min</span><span class="lv">' + (d.level ? esc(phaseName(d.level)) : 'Any level') + '</span></div><div class="devs">' + (d.develops || []).slice(0, 4).map(function (k) { return '<span class="db-chip">' + esc(subKeyLabel(k)) + '</span>'; }).join('') + (d.import && state.isAdmin ? '<span class="db-chip imp">Imported</span>' : '') + (d.review && !d.import ? '<span class="db-chip flag">Flagged</span>' : '') + '</div></div>';
     }).join('') + '</div>';
     if (!list.length) h += '<div class="db-empty">No drill matches.</div>';
     h += '<div class="db-note">Editing tags, levels and flags from here is the next step. For now they change in the database.</div>';
@@ -948,8 +1071,9 @@
         title = esc(r.actor) + ' saved the plan for ' + esc(fmtDay(d.plan_date + 'T12:00:00')); body = (r.team ? esc(r.team) + '. ' : '') + ((d.drills || []).length) + ' drill' + ((d.drills || []).length === 1 ? '' : 's') + (d.saves > 1 ? ', saved ' + d.saves + ' times' : '') + '.';
         chips = (d.drills || []).slice(0, 6).map(function (x) { return '<span>' + esc(x) + '</span>'; }).join('');
       } else if (r.kind === 'training') { title = esc(r.actor) + ' trained ' + esc((r.athlete || 'a player').trim()) + ', ' + (d.minutes || 0) + ' min'; body = ((d.subs || []).length) + ' skill' + ((d.subs || []).length === 1 ? '' : 's') + (r.team ? ' on ' + esc(r.team) : '') + '.'; chips = (d.subs || []).slice(0, 6).map(function (k) { return '<span>' + esc(subKeyLabel(k)) + '</span>'; }).join('') + (d.drills || []).slice(0, 3).map(function (x) { return '<span>' + esc(x) + '</span>'; }).join(''); }
+      else if (r.kind === 'callup') { var bb = barCfg(); title = esc(r.actor) + ' scored ' + esc((r.athlete || 'a player').trim()) + ' on the ' + esc(bb.team || '5th Black') + ' bar'; body = (r.team ? esc(r.team) + '. ' : '') + (d.count > 1 ? d.count + ' changes.' : ''); chips = bb.pillars.map(function (p) { return d[p.key] ? '<span>' + esc(p.label) + ' ' + d[p.key] + '</span>' : ''; }).join('') + bb.gates.map(function (g) { return d[g.key] === true ? '<span>' + esc(g.label) + '</span>' : ''; }).join('') + (d.notes ? '<span>' + esc(d.notes) + '</span>' : ''); }
       else { title = esc(r.actor) + ' shared ' + esc((r.athlete || 'a player').trim()) + ' with his parents'; body = d.note ? '"' + esc(d.note) + '"' : 'No note.'; }
-      var ic = r.kind === 'plan' ? 'PLAN' : r.kind === 'share' ? 'SENT' : r.kind === 'training' ? 'TRAIN' : 'EVAL';
+      var ic = r.kind === 'plan' ? 'PLAN' : r.kind === 'share' ? 'SENT' : r.kind === 'training' ? 'TRAIN' : r.kind === 'callup' ? 'BAR' : 'EVAL';
       return '<div class="db-act' + (isNew ? ' new' : '') + '"' + (r.athlete_id ? ' data-act-athlete="' + esc(r.athlete_id) + '" style="cursor:pointer"' : '') + '><span class="ic ' + r.kind + '">' + ic + '</span><div><b>' + title + '</b><p>' + body + '</p>' + (chips ? '<div class="chips">' + chips + '</div>' : '') + '</div><span class="when">' + esc(ago(r.at)) + '</span></div>';
     }).join('') + '</div>';
     return h;
@@ -982,12 +1106,15 @@
       var sb = card.querySelector('[data-act="share"]'); if (sb) sb.onclick = function () { openShare(a, state.teamId); };
       var tg = card.querySelector('[data-act="toggle"]'); if (tg) tg.onclick = function () { state.expanded[a.id] = state.expanded[a.id] === false; paint(); };
       card.querySelectorAll('.db-pos [data-pos]').forEach(function (pb) { pb.onclick = function () { setPosition(a, pb.getAttribute('data-pos')); }; });
+      bindCallup(card, a);
       card.querySelectorAll('.db-item[data-drill]').forEach(function (it) { it.onclick = function () { var d = findDrill(it.getAttribute('data-drill')); if (d) openDrill(d, a); }; });
     });
     v.querySelectorAll('.db-bk[data-drill], #db-plan [data-drill], .db-panel [data-drill]').forEach(function (n) { n.onclick = function () { var d = findDrill(n.getAttribute('data-drill')); if (d) openDrill(d, null); }; });
     v.querySelectorAll('[data-priv]').forEach(function (b) { b.onclick = function () { togglePrivilege(b.getAttribute('data-priv'), b.getAttribute('data-on') !== '1'); }; });
     v.querySelectorAll('[data-swap]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); var k = b.getAttribute('data-swap').split('|'); var key = swapKey(k[0], +k[1]); state.swaps[key] = (state.swaps[key] || 0) + 1; paint(); }; });
     var pr = el('db-print'); if (pr) pr.onclick = function () { window.print(); };
+    var so = el('db-strength-open'); if (so) so.onclick = function () { openStrength(); };
+    v.querySelectorAll('[data-strength-week]').forEach(function (n) { n.onclick = function () { openStrength(+n.getAttribute('data-strength-week')); }; });
     var sp = el('db-save-plan'); if (sp) sp.onclick = function () { savePlan(sp); };
     var lp = el('db-link-parent'); if (lp) lp.onchange = function () { state.linkParent = lp.value; paint(); };
     var la = el('db-link-athlete'); if (la) la.onchange = function () { state.linkAthlete = la.value; paint(); };
@@ -1069,6 +1196,6 @@
     // Captive wifi or a dead link can report "online" while nothing gets through: probe once, then enter from the cache.
     setTimeout(function () { var d = el('coach-dashboard'); if (d && d.style.display && d.style.display !== 'none') return; if (!readJson(CACHE_KEY)) return; fetch('/coach-portal.html?probe=' + Date.now(), { method: 'HEAD', cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('probe'); }).catch(function () { sync.online = false; offlineEntry(true); }); }, 6000);
     // Leaving with changes waiting: the browser keeps them in localStorage; nothing to do but say so.
-    window.CoachDevBoard = { open: open, mountNav: mountNav, reload: function () { state.loaded = false; return load(); }, state: state, sync: sync, flush: flush, queue: queue, commit: commit, toast: toast, sheet: sheet, closeSheet: closeSheet, ensureConfig: function () { return state.loaded ? Promise.resolve() : load(); } };
+    window.CoachDevBoard = { open: open, mountNav: mountNav, reload: function () { state.loaded = false; return load(); }, state: state, sync: sync, flush: flush, queue: queue, commit: commit, toast: toast, sheet: sheet, closeSheet: closeSheet, openStrength: openStrength, ensureConfig: function () { return state.loaded ? Promise.resolve() : load(); } };
   });
 })();
