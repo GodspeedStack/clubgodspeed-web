@@ -377,15 +377,17 @@
     return { ready: pass === total, pass: pass, total: total, scored: scored, missing: miss, gate: b.pillars.filter(function (p) { return p.gate; }).every(function (p) { return pillarScore(a, p).v >= (b.min || 4); }) };
   }
   function onUpTeam(a) { var rw = raw(); if (!rw) return false; var names = {}; rw.teams.forEach(function (t) { names[t.id] = t.name; }); var ids = teamsOf(a.id); return ids.length > 0 && ids.every(function (id) { var n = names[id] || ''; return /6th/i.test(n) || (/5th Grade$/i.test(n) && !/4th/i.test(n)); }); }
-  function callupPill(a) {
+  // The bar is for 4th/5th and 5th Black players. A player only on the 6th grade roster does not carry it.
+  function barApplies(a) { var rw = raw(); if (!rw) return true; var names = {}; rw.teams.forEach(function (t) { names[t.id] = t.name; }); var ids = teamsOf(a.id); return !ids.length || !ids.every(function (id) { return /6th/i.test(names[id] || ''); }); }
+  function callupPill(a, short) {
     var st = callupStatus(a); var up = onUpTeam(a); var team = barCfg().team || '5th Black';
-    if (!st.scored) return '<span class="db-pill" title="Score the four pillars">' + esc(team) + ' bar: not scored</span>';
-    if (st.ready) return '<span class="db-pill green">' + (up ? 'Holds the ' + esc(team) + ' bar' : 'Ready for ' + esc(team)) + '</span>';
-    return '<span class="db-pill orange">' + st.pass + ' of ' + st.total + ' at the ' + esc(team) + ' bar</span>';
+    if (!st.scored) return '<span class="db-pill" title="Score the four pillars">' + (short ? 'Bar not scored' : esc(team) + ' bar: not scored') + '</span>';
+    if (st.ready) return '<span class="db-pill green">' + (up ? 'Holds the bar' : 'Ready for ' + esc(team)) + '</span>';
+    return '<span class="db-pill orange">' + (short ? 'Bar ' + st.pass + ' of ' + st.total : st.pass + ' of ' + st.total + ' at the ' + esc(team) + ' bar') + '</span>';
   }
   function callupHtml(a, can) {
     var b = barCfg(); var cu = callupOf(a); var st = callupStatus(a); var min = b.min || 4;
-    var h = '<div class="db-cu" data-cu="' + esc(a.id) + '"><div class="hd"><div><b>' + esc(b.team || '5th Black') + ' bar</b><small>Four pillars at ' + esc(rubric(min)) + ' or better, two gates. Grey scores are borrowed from his evaluation until you score the pillar yourself.</small></div>' + callupPill(a) + '</div>';
+    var h = '<div class="db-cu" data-cu="' + esc(a.id) + '"><div class="hd"><b>' + esc(b.team || '5th Black') + ' bar</b>' + callupPill(a) + '</div><small class="in">Four pillars at ' + esc(rubric(min)) + ' or better, two gates. Grey scores are borrowed from his evaluation until you score the pillar yourself.</small>';
     b.pillars.forEach(function (p) {
       var sc = pillarScore(a, p);
       h += '<div class="row"><div class="lb">' + esc(p.label) + (p.gate ? ' <em>Gatekeeper</em>' : '') + '<small>' + esc(p.what || '') + (sc.auto ? ' Borrowed from the evaluation.' : '') + (p.key === 'strength' && state.strength ? ' <a href="#" class="cu-strength">Open the strength program</a>' : '') + '</small></div><div class="ctl"><span class="rt-seg cu-seg' + (sc.auto ? ' auto' : '') + '" data-p="' + esc(p.key) + '">' + [1, 2, 3, 4, 5].map(function (i) { return '<button type="button" data-v="' + i + '" class="' + (i === sc.v ? 'on' : '') + '" title="' + esc(rubric(i)) + '"' + (can ? '' : ' disabled') + '>' + i + '</button>'; }).join('') + '</span><span class="wd">' + (sc.v ? esc(rubric(sc.v)) + (sc.v >= min ? '' : ', below the bar') : 'Not scored') + '</span></div></div>';
@@ -471,12 +473,13 @@
 #devboard-view .db-head{display:flex;align-items:center;gap:11px;padding:14px 15px;border-bottom:1px solid var(--bl)}\
 #devboard-view .db-av{width:44px;height:44px;border-radius:12px;background:var(--acs);color:var(--ac);font-size:15px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:0 0 44px}\
 #devboard-view .db-head .nm{flex:1;min-width:0}\
-#devboard-view .db-head .nm b{display:block;font-size:15px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}\
-#devboard-view .db-head .nm small{display:block;font-size:11.5px;color:var(--ts);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}\
+#devboard-view .db-head .nm b{display:block;font-size:15px;font-weight:700;letter-spacing:-.01em;line-height:1.2;white-space:normal;overflow-wrap:anywhere}\
+#devboard-view .db-head .nm small{display:block;font-size:11.5px;color:var(--ts);margin-top:2px;white-space:normal;overflow-wrap:anywhere}\
 #devboard-view .db-head .pills{display:flex;flex-direction:column;gap:5px;align-items:flex-end}\
 #devboard-view .db-pill{font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap;background:var(--bgs);color:var(--ts)}\
 #devboard-view .db-pill.blue{background:var(--acs);color:var(--ac)}#devboard-view .db-pill.red{background:#fef2f2;color:var(--red)}#devboard-view .db-pill.green{background:#e9f7ef;color:var(--green)}#devboard-view .db-pill.orange{background:#fff6ec;color:var(--orange)}\
 #devboard-view .db-toggle{width:34px;height:34px;border-radius:10px;border:1px solid var(--bd);background:#fff;cursor:pointer;min-height:0;min-width:0;padding:0;display:inline-flex;align-items:center;justify-content:center;color:var(--ts);flex:0 0 34px}\
+@media (max-width:480px){#devboard-view .db-head{flex-wrap:wrap}#devboard-view .db-head .db-av{order:0}#devboard-view .db-head .nm{order:1}#devboard-view .db-head .db-toggle{order:2}#devboard-view .db-head .pills{order:3;flex-basis:100%;flex-direction:row;flex-wrap:wrap;align-items:flex-start;justify-content:flex-start;margin-top:8px}}\
 #devboard-view .db-track{padding:12px 15px;border-bottom:1px solid var(--bl)}\
 #devboard-view .db-track .lbl{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;margin-bottom:8px}\
 #devboard-view .db-track .lbl small{font-weight:600;color:var(--tf);font-size:11px;text-transform:uppercase;letter-spacing:.05em}\
@@ -491,14 +494,14 @@
 #devboard-view .db-pos button:disabled{cursor:default;opacity:.7}\
 #devboard-view .db-body{padding:12px 15px 14px}\
 #devboard-view .db-cu{border:1px solid var(--bl);border-left:4px solid var(--ac);border-radius:12px;padding:12px 14px 10px;margin-bottom:14px;background:#fff}\
-#devboard-view .db-cu .hd{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px}\
-#devboard-view .db-cu .hd b{font-size:14.5px;display:block}#devboard-view .db-cu .hd small{display:block;font-size:12px;color:var(--ts);line-height:1.4;margin-top:2px}\
+#devboard-view .db-cu .hd{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}\
+#devboard-view .db-cu .hd b{font-size:14.5px}#devboard-view .db-cu .in{display:block;font-size:12px;color:var(--ts);line-height:1.4;margin:4px 0 8px}\
 #devboard-view .db-cu .row{display:block;padding:9px 0;border-top:1px solid var(--bl)}\
 #devboard-view .db-cu .row.gate{display:flex;justify-content:space-between;align-items:center;gap:12px}\
 #devboard-view .db-cu .ctl{display:flex;align-items:center;gap:10px;margin-top:7px}\
 #devboard-view .db-cu .lb{font-size:14px;font-weight:600}#devboard-view .db-cu .lb em{font-style:normal;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ac);margin-left:4px}\
 #devboard-view .db-cu .lb small{display:block;font-size:11.5px;color:var(--tf);font-weight:500;margin-top:1px;line-height:1.4}#devboard-view .db-cu .lb small a{color:var(--ac);font-weight:600;text-decoration:none}\
-#devboard-view .db-cu .wd{font-size:11.5px;color:var(--ts);white-space:nowrap;min-width:72px;text-align:right}\
+#devboard-view .db-cu .wd{font-size:11.5px;color:var(--ts);flex:0 0 118px;text-align:right;line-height:1.3}\
 #devboard-view .cu-seg{display:flex;flex:1;gap:3px;padding:3px;background:rgba(118,118,128,.12);border-radius:10px}\
 #devboard-view .cu-seg button{flex:1;height:34px;border:none;border-radius:8px;background:transparent;font:inherit;font-size:13px;font-weight:700;color:#6e6e73;cursor:pointer;min-height:0;min-width:0;padding:0}\
 #devboard-view .cu-seg button.on{background:var(--ac);color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15)}#devboard-view .cu-seg.auto button.on{background:#c7c7cc;color:#fff;box-shadow:none}\
@@ -533,7 +536,7 @@
 #devboard-view .db-focus.empty{color:var(--tf)}\
 #devboard-view .db-warn{font-size:12.5px;color:#9a3412;background:#fff6ec;border-radius:10px;padding:8px 12px;margin-top:10px}\
 #devboard-view .db-foot{display:flex;gap:8px;padding:12px 15px 14px;border-top:1px solid var(--bl);background:var(--bgt)}\
-#devboard-view .db-btn{font:inherit;font-size:13px;font-weight:600;padding:9px 16px;border-radius:var(--rb);border:1px solid var(--bd);cursor:pointer;min-height:0;min-width:0;text-transform:none;background:#fff;color:var(--tx);display:inline-flex;align-items:center;gap:6px}\
+#devboard-view .db-btn{font:inherit;font-size:13px;font-weight:600;padding:9px 16px;border-radius:var(--rb);border:1px solid var(--bd);cursor:pointer;min-height:0;min-width:0;text-transform:none;background:#fff;color:var(--tx);display:inline-flex;align-items:center;justify-content:center;text-align:center;gap:6px}\
 #devboard-view .db-btn.primary{background:var(--ac);color:#fff;border-color:transparent}\
 #devboard-view .db-btn.soft{background:var(--acs);color:var(--ac);border-color:transparent;width:100%;justify-content:center}\
 #devboard-view .db-btn:disabled{opacity:.55;cursor:default}\
@@ -669,14 +672,14 @@
     var meta = [a.jersey_number ? '#' + a.jersey_number : '', gradeText(a).replace(' grade', ''), 'Age ' + age].filter(Boolean).join(' \u00b7 ');
     var sh = state.shares[a.id];
     var h = '<article class="db-card" data-id="' + esc(a.id) + '">';
-    h += '<div class="db-head"><div class="db-av">' + esc(a.jersey_number ? String(a.jersey_number) : initials(a)) + '</div><div class="nm"><b>' + esc(a.first_name + ' ' + (a.last_name || '')) + '</b><small>' + esc(meta) + (sh ? ' \u00b7 Shared ' + esc(fmtDay(sh.shared_at)) : '') + '</small></div><div class="pills"><span class="db-pill">' + rc + ' of ' + total + ' scored</span>' + trackPill(a) + callupPill(a) + '</div><button type="button" class="db-toggle" data-act="toggle" aria-label="Show or hide">' + (open ? '&#8963;' : '&#8964;') + '</button></div>';
+    h += '<div class="db-head"><div class="db-av">' + esc(a.jersey_number ? String(a.jersey_number) : initials(a)) + '</div><div class="nm"><b>' + esc(a.first_name + ' ' + (a.last_name || '')) + '</b><small>' + esc(meta) + (sh ? ' \u00b7 Shared ' + esc(fmtDay(sh.shared_at)) : '') + '</small></div><div class="pills"><span class="db-pill">' + rc + ' of ' + total + ' scored</span>' + trackPill(a) + '</div><button type="button" class="db-toggle" data-act="toggle" aria-label="Show or hide">' + (open ? '&#8963;' : '&#8964;') + '</button></div>';
     // rating coverage bar with the age-target marker
     var pct = total ? Math.round(rc / total * 100) : 0;
-    h += '<div class="db-track"><div class="lbl"><span>' + rc + ' of ' + total + ' scored</span><small>' + (started(a) ? esc(overallPhase(a)) : 'Not evaluated') + '</small></div><div class="db-bar2"><i style="width:' + pct + '%"></i></div></div>';
+    h += '<div class="db-track"><div class="lbl"><span>' + rc + ' of ' + total + ' scored</span><span style="display:flex;gap:6px;align-items:center">' + (barApplies(a) && !open ? callupPill(a, true) : '') + '<small>' + (started(a) ? esc(overallPhase(a)) : 'Not evaluated') + '</small></span></div><div class="db-bar2"><i style="width:' + pct + '%"></i></div></div>';
     h += '<div class="db-pos"><span class="k">Position</span>' + POSITIONS.map(function (p) { return '<button type="button" data-pos="' + p + '" class="' + (positionOf(a) === p ? 'on' : '') + '"' + (can ? '' : ' disabled') + '>' + p + '</button>'; }).join('') + '</div>';
     if (open) {
       h += '<div class="db-body">';
-      h += callupHtml(a, can);
+      if (barApplies(a)) h += callupHtml(a, can);
       if (!started(a)) h += '<div class="db-focus empty">Not evaluated yet. Open Evaluate and score what you see; his card fills itself.</div>';
       else {
         h += '<div class="db-sec">Needs next</div>';
@@ -890,8 +893,9 @@
   function readOfWeek(players) { var top = teamNeeds(players)[0]; var key = top ? top.skill : 'handles'; return { skill: key, read: READS[key] || READS.handles }; }
   function callupBoardHtml(ps) {
     var b = barCfg(); var team = b.team || '5th Black'; var min = b.min || 4;
-    var rows = ps.map(function (a) { return { a: a, st: callupStatus(a) }; }).sort(function (x, y) { return (y.st.ready ? 1 : 0) - (x.st.ready ? 1 : 0) || y.st.pass - x.st.pass || y.st.scored - x.st.scored; });
+    var rows = ps.filter(barApplies).map(function (a) { return { a: a, st: callupStatus(a) }; }).sort(function (x, y) { return (y.st.ready ? 1 : 0) - (x.st.ready ? 1 : 0) || y.st.pass - x.st.pass || y.st.scored - x.st.scored; });
     var ready = rows.filter(function (r) { return r.st.ready; }).length; var scored = rows.filter(function (r) { return r.st.scored; }).length;
+    if (!rows.length) return '';
     var h = '<div class="db-panel" style="margin-bottom:14px;border-left:4px solid var(--ac)"><h4>' + esc(team) + ' bar</h4><p class="in">Four pillars at ' + esc(rubric(min)) + ' or better, plus runs the square and the intangibles. ' + ready + ' ready, ' + scored + ' of ' + ps.length + ' scored. Tap a name to score him.</p>';
     if (!scored) return h + '<div class="db-note">Nobody scored yet. Open a player and score the four pillars.</div></div>';
     rows.forEach(function (r) {
@@ -1160,7 +1164,7 @@
     document.querySelectorAll('.team-nav-item.active, .segment-btn.active').forEach(function (n) { n.classList.remove('active'); });
     var item = el('devboard-nav-item'); if (item) item.classList.add('active');
     var tabs = el('view-tabs'); if (tabs) tabs.style.display = 'none';
-    var t = el('view-title'); if (t) t.textContent = 'Development board';
+    var t = el('view-title'); if (t) t.textContent = { players: 'Players', team: 'Team needs', plan: 'Practice plan', bank: 'The Bank', activity: 'Activity' }[state.tab] || 'Development board';
     v.style.display = 'block';
     if (!state.loaded && !state.loading) load(); else { paint(); setSub(); }
     if (window.CoachPortalShell) window.CoachPortalShell.closeDrawer();
@@ -1196,6 +1200,6 @@
     // Captive wifi or a dead link can report "online" while nothing gets through: probe once, then enter from the cache.
     setTimeout(function () { var d = el('coach-dashboard'); if (d && d.style.display && d.style.display !== 'none') return; if (!readJson(CACHE_KEY)) return; fetch('/coach-portal.html?probe=' + Date.now(), { method: 'HEAD', cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('probe'); }).catch(function () { sync.online = false; offlineEntry(true); }); }, 6000);
     // Leaving with changes waiting: the browser keeps them in localStorage; nothing to do but say so.
-    window.CoachDevBoard = { open: open, mountNav: mountNav, reload: function () { state.loaded = false; return load(); }, state: state, sync: sync, flush: flush, queue: queue, commit: commit, toast: toast, sheet: sheet, closeSheet: closeSheet, openStrength: openStrength, ensureConfig: function () { return state.loaded ? Promise.resolve() : load(); } };
+    window.CoachDevBoard = { open: open, mountNav: mountNav, reload: function () { state.loaded = false; return load(); }, state: state, sync: sync, flush: flush, queue: queue, commit: commit, toast: toast, sheet: sheet, closeSheet: closeSheet, openStrength: openStrength, newActivityCount: newActivityCount, openTab: function (tab) { open(tab); try { localStorage.setItem('gs_devboard_tab', tab); } catch (e) { /* optional */ } if (tab === 'activity' && state.isAdmin) { loadHealth(true); loadActivity(true).then(function () { paint(); markActivitySeen(); }); } }, ensureConfig: function () { return state.loaded ? Promise.resolve() : load(); } };
   });
 })();
