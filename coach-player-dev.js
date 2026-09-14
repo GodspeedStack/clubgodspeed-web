@@ -62,7 +62,7 @@
   // Category colors, same as the Command Center bank.
   var TAGS = { 'Culture': '#0071e3', 'Toughness': '#d92d20', 'Bigs': '#7c3aed', 'Guards': '#0d9488', 'Passing/Reads': '#4f46e5', 'Individual': '#64748b', 'Conditioning': '#d97706', 'Strength': '#57534e' };
   var TAG_ORDER = ['Culture', 'Toughness', 'Bigs', 'Guards', 'Passing/Reads', 'Individual', 'Conditioning', 'Strength'];
-  var state = { callup: {}, strength: null, strengthWeek: 1, health: null, healthErr: null, linkParent: '', linkAthlete: '', activity: null, activityErr: null, activitySeen: null, loading: false, loaded: false, error: null, isAdmin: false, myTeams: [], cfg: DEFAULT_CFG, dev: {}, bank: [], shape: null, powerups: null, teamId: null, tab: 'players', q: '', swaps: {}, bankQ: '', bankTag: 'All', expanded: {}, workout: null, shareAccess: [], shares: {}, privileges: null };
+  var state = { home: {}, callup: {}, strength: null, strengthWeek: 1, health: null, healthErr: null, linkParent: '', linkAthlete: '', activity: null, activityErr: null, activitySeen: null, loading: false, loaded: false, error: null, isAdmin: false, myTeams: [], cfg: DEFAULT_CFG, dev: {}, bank: [], shape: null, powerups: null, teamId: null, tab: 'players', q: '', swaps: {}, bankQ: '', bankTag: 'All', expanded: {}, workout: null, shareAccess: [], shares: {}, privileges: null };
 
   // ---------- data ----------
   async function loadAll() {
@@ -72,13 +72,14 @@
     var uid = s.data.session.user.id; state.uid = uid;
     var r = await Promise.all([
       c.from('development_config').select('key,value'),
-      c.from('player_development').select('athlete_id,skills,subs,position,strength_bench,focus,updated_at'),
+      c.from('player_development').select('athlete_id,skills,subs,position,strength_bench,focus,conditioning,updated_at'),
       c.from('program_content').select('slug,body').in('slug', ['drills-bank', 'planner-practice-shape', 'planner-powerups', 'planner-workout', 'strength-program']),
       c.from('coach_profiles').select('team_ids').eq('user_id', uid).maybeSingle(),
       c.rpc('is_program_admin'),
       c.from('coach_access').select('user_id,area,team_id,allowed').eq('area', 'share_development'),
       c.from('player_development_shares').select('athlete_id,shared_at,shared_by,note').order('shared_at', { ascending: false }).limit(400),
-      c.from('call_up_reviews').select('athlete_id,handling,defense,spacing,strength,square_ready,intangibles,notes,on_track,updated_at')
+      c.from('call_up_reviews').select('athlete_id,handling,defense,spacing,strength,square_ready,intangibles,notes,on_track,updated_at'),
+      c.from('home_workouts').select('athlete_id,session_date,week,kind,times').gte('session_date', new Date(Date.now() - 21 * 86400000).toISOString().slice(0, 10)).order('session_date', { ascending: false }).limit(600)
     ]);
     if (r[0].error) throw new Error('config: ' + r[0].error.message);
     if (r[1].error) throw new Error('development: ' + r[1].error.message);
@@ -95,6 +96,7 @@
       if (row.slug === 'strength-program') state.strength = row.body;
     });
     state.callup = {}; ((r[7] && r[7].data) || []).forEach(function (x) { state.callup[x.athlete_id] = x; });
+    state.home = {}; ((r[8] && r[8].data) || []).forEach(function (x) { (state.home[x.athlete_id] = state.home[x.athlete_id] || []).push(x); });
     state.myTeams = (r[3].data && r[3].data.team_ids) || [];
     state.isAdmin = !!(r[4] && r[4].data === true);
     state.shareAccess = (r[5] && r[5].data) ? r[5].data.filter(function (x) { return x.user_id === uid; }) : [];
@@ -153,6 +155,7 @@
       else if (op.rpc === 'set_call_up') { var cu = state.callup[a.p_athlete_id] = state.callup[a.p_athlete_id] || { athlete_id: a.p_athlete_id }; Object.keys(a.p_fields || {}).forEach(function (k) { cu[k] = a.p_fields[k]; }); }
       else if (op.rpc === 'save_practice_plan' || op.rpc === 'log_training_session') return;
       else if (op.rpc === 'set_player_dev_field' && a.p_field === 'focus') d.focus = a.p_value;
+      else if (op.rpc === 'set_player_dev_field' && a.p_field === 'conditioning') d.conditioning = a.p_value;
       else if (op.rpc === 'set_player_dev_field' && a.p_field === 'strength_bench') { d.strength_bench = d.strength_bench || {}; d.strength_bench[a.p_key] = a.p_value; }
     });
   }
@@ -414,7 +417,7 @@
     card.querySelectorAll('.cu-seg [data-v]').forEach(function (btn) { btn.onclick = function () { var k = btn.closest('.cu-seg').getAttribute('data-p'); var v = +btn.getAttribute('data-v'); var cur = +(callupOf(a)[k] || 0); var f = {}; f[k] = cur === v ? 0 : v; setCallup(a, f); }; });
     card.querySelectorAll('.cu-tg').forEach(function (btn) { btn.onclick = function () { var k = btn.getAttribute('data-g'); var f = {}; f[k] = callupOf(a)[k] !== true; setCallup(a, f); }; });
     var n = card.querySelector('.cu-note'); if (n) n.onchange = function () { setCallup(a, { notes: n.value.trim() }); };
-    var sl = card.querySelector('.cu-strength'); if (sl) sl.onclick = function (e) { e.preventDefault(); openStrength(); };
+    card.querySelectorAll('.cu-strength').forEach(function (sl) { sl.onclick = function (e) { e.preventDefault(); openStrength(); }; });
   }
   // The strength program: eight weeks of bodyweight work from program_content.strength-program.
   function openStrength(week) {
@@ -430,14 +433,49 @@
       if (sp.finisher) h += '<div class="sec">Finisher</div><p style="font-size:13.5px;margin:0">' + esc(sp.finisher) + '</p>';
     }
     if (sp.progression) h += '<div class="sec">Progression</div>' + sp.progression.map(function (p) { return '<div class="db-gap grey"><i></i><span><b>' + esc(p[0]) + '</b>: ' + esc(p[1]) + '</span></div>'; }).join('');
-    h += '</div><div class="ft"><button type="button" class="db-btn" data-close>Close</button><button type="button" class="db-btn primary" id="db-strength-print">Print this week</button></div>';
+    var cd = sp.conditioning;
+    if (cd) {
+      h += '<div class="sec" style="margin-top:16px;padding-top:12px;border-top:2px solid #1d1d1f">' + esc(cd.title || 'Home conditioning card') + '</div><p style="font-size:13.5px;color:#6e6e73;margin:0 0 8px">' + esc(cd.when || '') + '</p>';
+      h += (cd.tests || []).map(function (t, i) { return '<div class="db-st"><span class="k">' + (i + 1) + '</span><div><b>' + esc(t.label) + ' <span style="font-weight:700;color:#d92d20">' + esc(t.standard || '') + '</span></b><span>' + esc(t.how || '') + ' ' + esc(t.reps || '') + '</span></div></div>'; }).join('');
+      if (cd.footspeed) h += '<div class="sec">Foot speed, any day</div><ul class="dots">' + cd.footspeed.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul>';
+      if (cd.finisher) h += '<p style="font-size:13.5px;margin:6px 0 0"><b>Finisher.</b> ' + esc(cd.finisher) + '</p>';
+      if (cd.line) h += '<div class="db-gap green" style="margin-top:8px"><i></i><span>' + esc(cd.line) + '</span></div>';
+    }
+    h += '</div><div class="ft"><button type="button" class="db-btn" data-close>Close</button><button type="button" class="db-btn" id="db-kid-card">Kid card</button><button type="button" class="db-btn primary" id="db-strength-print">Print this sheet</button></div>';
     var b = sheet(h, '#57534e');
+    var kc = b.querySelector('#db-kid-card'); if (kc) kc.onclick = function () { openKidCard(wk ? wk.week : 1); };
     b.querySelectorAll('[data-week]').forEach(function (x) { x.onclick = function () { openStrength(+x.getAttribute('data-week')); }; });
     var pr = b.querySelector('#db-strength-print'); if (pr) pr.onclick = function () { window.print(); };
+  }
+  // The kid card: one printed page a player can follow alone, with a box to tick per session and a box for each test time.
+  function openKidCard(week) {
+    var sp = state.strength; if (!sp) return; var wk = (sp.weeks || []).filter(function (w) { return w.week === week; })[0] || sp.weeks[0]; var cd = sp.conditioning || {};
+    var box = '<i style="display:inline-block;width:22px;height:22px;border:2px solid #1d1d1f;border-radius:6px;vertical-align:middle;margin-left:6px"></i>';
+    var h = '<div class="hd"><div class="k">Kid card, week ' + wk.week + '</div><h3>My workout: ' + esc(wk.theme || '') + '</h3><p>Three times this week. Tick a box each time. Ask before you start if anything hurts.</p><button type="button" class="x" aria-label="Close">&times;</button></div><div class="bd" style="font-size:16px">';
+    h += '<div class="sec">1. Warm up</div><ul class="dots" style="font-size:16px">' + (sp.warmup || []).map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul>';
+    h += '<div class="sec">2. The moves. Rest 30 seconds between sets.</div>';
+    h += (wk.blocks || []).map(function (bk, i) { return '<div style="display:grid;grid-template-columns:1fr auto;gap:8px 14px;align-items:center;padding:10px 0;border-bottom:1px solid #ececf0"><div><b style="font-size:17px">' + (i + 1) + '. ' + esc(bk.name) + '</b><div style="color:#48484a;margin-top:2px">' + esc(bk.sets) + ' sets of ' + esc(bk.reps) + '. ' + esc(bk.cue || '') + '</div></div><div style="white-space:nowrap"><small style="color:#6e6e73">Day 1 2 3</small>' + box + box + box + '</div></div>'; }).join('');
+    h += '<div class="sec">3. Finish</div><p style="margin:0">' + esc(sp.finisher || '') + '</p>';
+    if (cd.tests) h += '<div class="sec">4. My times (on a conditioning day)</div>' + cd.tests.map(function (t) { return '<div style="display:grid;grid-template-columns:1fr auto;gap:8px 14px;align-items:center;padding:10px 0;border-bottom:1px solid #ececf0"><div><b style="font-size:17px">' + esc(t.label) + '</b><div style="color:#48484a">' + esc(t.how || '') + ' Goal: <b style="color:#d92d20">' + esc(t.standard || '') + '</b></div></div><div style="display:inline-block;width:110px;height:36px;border:2px solid #1d1d1f;border-radius:8px"></div></div>'; }).join('');
+    if (cd.footspeed) h += '<div class="sec">5. Foot speed, any day</div><ul class="dots" style="font-size:16px">' + cd.footspeed.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul>';
+    h += '<p style="margin-top:14px;color:#6e6e73;font-size:13px">Or open the Training page in the parent portal and press Start: the phone counts the sets and the seconds for you.</p>';
+    h += '</div><div class="ft"><button type="button" class="db-btn" data-close>Close</button><button type="button" class="db-btn primary" id="db-kid-print">Print the kid card</button></div>';
+    var b = sheet(h, '#0071e3');
+    var pr = b.querySelector('#db-kid-print'); if (pr) pr.onclick = function () { window.print(); };
   }
   function strengthPanelHtml() {
     var sp = state.strength; if (!sp) return '';
     return '<div class="db-panel" style="margin-bottom:14px;border-left:4px solid #57534e"><h4>' + esc(sp.title || 'Strength program') + '</h4><p class="in">' + esc(sp.intro || '') + '</p>' + (sp.progression || []).map(function (p, i) { return '<div class="db-st" data-strength-week="' + (i * 2 + 1) + '" style="cursor:pointer"><span class="k" style="background:#57534e">' + (i + 1) + '</span><div><b>' + esc(p[0]) + '</b><span>' + esc(p[1]) + '</span></div></div>'; }).join('') + '<div style="margin-top:10px"><button type="button" class="db-btn primary" id="db-strength-open">Open the program</button></div></div>';
+  }
+  // What the kid logged himself from the parent portal. Self-timed, so it carries a Home tag and never sets a score.
+  function homeOf(a) { return state.home[a.id] || []; }
+  function homeHtml(a) {
+    var hs = homeOf(a); if (!hs.length) return '';
+    var wk = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10); var week = hs.filter(function (h) { return h.session_date >= wk; });
+    var last = {}; hs.forEach(function (h) { Object.keys(h.times || {}).forEach(function (k) { if (!last[k]) last[k] = { v: h.times[k], d: h.session_date }; }); });
+    var labels = { seventeens: 'Seventeens', sprint: 'Forty', agility: 'Pro agility' };
+    var chips = Object.keys(last).map(function (k) { return '<span class="db-chip">' + esc(labels[k] || k) + ' ' + last[k].v + 's <small>Home, ' + esc(fmtDay(last[k].d + 'T12:00:00')) + '</small></span>'; }).join('');
+    return '<div class="db-need" style="grid-template-columns:1fr;padding-top:8px"><small><b>At home:</b> ' + week.filter(function (h) { return h.kind === 'strength'; }).length + ' strength, ' + week.filter(function (h) { return h.kind === 'conditioning'; }).length + ' conditioning in the last 7 days. ' + hs.length + ' sessions in 3 weeks.</small>' + (chips ? '<div class="devs" style="margin-top:6px">' + chips + '</div>' : '') + '</div>';
   }
   function coreDrills() { return visibleBank().filter(function (d) { return d.core; }).sort(function (x, y) { return x.core - y.core; }); }
   function tagChip(t, extra) { return '<span class="db-tag' + (extra ? ' ' + extra : '') + '" style="--tc:' + tagColor(t) + '">' + esc(t || 'Drill') + '</span>'; }
@@ -511,6 +549,7 @@
 #devboard-view .cu-tg.on{background:var(--green);color:#fff;border-color:transparent}#devboard-view .cu-tg:disabled{cursor:default;opacity:.7}\
 #db-backdrop .db-chipbtn{font:inherit;font-size:13px;font-weight:700;width:40px;height:40px;border-radius:10px;border:1px solid #d9d9de;background:#fff;color:#1d1d1f;cursor:pointer;min-height:0;min-width:0;padding:0;margin:0 6px 6px 0}#db-backdrop .db-chipbtn.active{background:#1d1d1f;color:#fff;border-color:#1d1d1f}\
 #db-backdrop .db-st{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;background:#f5f5f7;border-radius:10px;padding:9px 12px;font-size:13px;margin-bottom:6px}#db-backdrop .db-st .k{font-size:12px;font-weight:700;color:#0071e3;padding-top:2px;min-width:14px}#db-backdrop .db-st b{display:block;font-weight:600;font-size:13.5px}#db-backdrop .db-st span:not(.k){display:block;color:#6e6e73;font-size:12.5px;margin-top:2px}\
+@media print{html body.gs-portal-app>*:not(#db-backdrop),html body>*:not(#db-backdrop),html body.gs-portal-app #coach-dashboard{display:none!important}#db-backdrop{position:static!important;background:#fff!important;display:block!important}#db-backdrop .db-sheet{position:static!important;max-height:none!important;box-shadow:none!important;width:100%!important;max-width:100%!important;border-radius:0!important;transform:none!important}#db-backdrop .db-sheet .bd{overflow:visible!important;max-height:none!important}#db-backdrop .ft,#db-backdrop .x,#db-backdrop [data-week]{display:none!important}}\
 #devboard-view .cu-track{font:inherit;font-size:12.5px;font-weight:600;padding:5px 12px;border-radius:999px;border:1px solid var(--bd);background:#fff;color:var(--ts);cursor:pointer;min-height:0;min-width:0;text-transform:none}#devboard-view .cu-track.on{background:var(--green);color:#fff;border-color:transparent}#devboard-view .cu-track:disabled{cursor:default;opacity:.7}\
 #devboard-view .cu-note{font:inherit;font-size:13px;width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;min-height:0;background:#fff}\
 #devboard-view .cu-row .cbs{display:inline-flex;gap:4px}#devboard-view .cu-row .cb{width:24px;height:24px;border-radius:7px;background:var(--bgs);color:var(--tf);font-size:11.5px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}\
@@ -695,6 +734,7 @@
       }
       warn.forEach(function (w) { h += '<div class="db-warn">' + esc(w) + '</div>'; });
       h += '<div class="db-sec" style="margin-top:14px">Coach focus</div><div class="db-focus' + (d.focus ? '' : ' empty') + '">' + esc(d.focus || 'One sentence for this kid. What he hears from every coach this month.') + '</div>';
+      if (d.conditioning || homeOf(a).length) h += '<div class="db-sec" style="margin-top:14px">Conditioning</div><div class="db-focus' + (d.conditioning ? '' : ' empty') + '">' + esc(d.conditioning || 'No conditioning focus yet.') + (state.strength ? ' <a href="#" class="cu-strength" style="color:var(--ac);font-weight:600;text-decoration:none">Open the program</a>' : '') + '</div>' + homeHtml(a);
       h += '</div>';
     }
     h += '<div class="db-foot"><button type="button" class="db-btn primary" data-act="rate"' + (can ? '' : ' disabled title="Only his own coach or the director can evaluate"') + '>' + (started(a) ? 'Evaluate' : 'Evaluate now') + '</button><button type="button" class="db-btn" data-act="drills">All drills for him</button>' + (canShare(teamId) && started(a) ? '<button type="button" class="db-btn" data-act="share" style="margin-left:auto">Share with parent</button>' : '') + '</div>';
@@ -787,6 +827,7 @@
     h += '<div class="sec">Position</div><div class="pos">' + POSITIONS.map(function (p) { return '<button type="button" data-pos="' + p + '" class="' + (positionOf(a) === p ? 'on' : '') + '"' + (editable ? '' : ' disabled') + '>' + p + '</button>'; }).join('') + '</div>';
     skillOrder().forEach(function (sk) { h += '<div class="rt-skill" data-skill="' + sk + '">' + skillHead(a, sk, editable) + subList(sk).map(function (s) { return rateRowHtml(a, sk, s, editable); }).join('') + '</div>'; });
     h += '<div class="sec">Coach focus</div><textarea id="db-focus" maxlength="240"' + (editable ? '' : ' disabled') + ' placeholder="One sentence. What he hears from every coach this month.">' + esc(d.focus || '') + '</textarea>';
+    h += '<div class="sec">Conditioning</div><textarea id="db-cond" maxlength="400"' + (editable ? '' : ' disabled') + ' placeholder="Foot speed, conditioning, strength. What he does at home between practices.">' + esc(d.conditioning || '') + '</textarea>';
     h += '<div class="err" id="db-err"></div><div class="actions"><button type="button" class="btn" data-close>Close</button>' + (editable ? '<button type="button" class="btn primary" id="db-save-focus">Save focus</button>' : '') + '</div></div>';
     var b = sheet(h, '#0071e3');
     var err = function (m) { var e = b.querySelector('#db-err'); if (!e) return; e.textContent = m || ''; e.classList.toggle('on', !!m); };
@@ -834,6 +875,8 @@
       var txt = b.querySelector('#db-focus').value.trim(); sf.disabled = true;
       var r = await commit('set_player_dev_field', { p_athlete_id: a.id, p_field: 'focus', p_key: null, p_value: txt || null });
       if (!r.ok) err(r.error && r.error.message || 'Could not save.'); else { (state.dev[a.id] = state.dev[a.id] || { athlete_id: a.id, skills: {}, subs: {} }).focus = txt || null; toast(r.queued ? 'Focus saved on this device. It sends when you are online.' : 'Focus saved.'); paint(); }
+      var ct = b.querySelector('#db-cond'); var cv = ct ? ct.value.trim() : ''; var d0 = state.dev[a.id] || {};
+      if (ct && cv !== (d0.conditioning || '')) { var r2 = await commit('set_player_dev_field', { p_athlete_id: a.id, p_field: 'conditioning', p_key: null, p_value: cv || null }); if (!r2.ok) err(r2.error && r2.error.message || 'Could not save conditioning.'); else { (state.dev[a.id] = state.dev[a.id] || { athlete_id: a.id, skills: {}, subs: {} }).conditioning = cv || null; paint(); } }
       sf.disabled = false;
     };
   }
