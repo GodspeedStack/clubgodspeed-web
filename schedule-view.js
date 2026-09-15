@@ -660,7 +660,11 @@ const ScheduleView = (() => {
       { key: '6th', label: '6th Grade' }
     ];
     const mine = viewerIsStaff ? ALL_GRADES : ALL_GRADES.filter(g => myGrades.includes(g.key));
-    // One team means nothing to switch between. Do not advertise other grades.
+    // One team means nothing to switch between. Count TEAMS, not grades: a squad
+    // named "Godspeed 4th/5th Grade" parses to two grades but is still one team,
+    // and offering its families a 4th/5th switcher implies two schedules exist.
+    // Staff keep the switcher because they really do cover every team.
+    if (!viewerIsStaff && myTeamIds.length < 2) return '';
     if (mine.length < 2) return '';
     const grades = [{ key: 'all', label: 'All' }].concat(mine);
     return grades.map(g => {
