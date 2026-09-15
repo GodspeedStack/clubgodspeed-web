@@ -1,19 +1,24 @@
 // ============================================================
 // Supabase Edge Function: document-reminder-cron
 // Automated document compliance reminders.
-// Runs Tues & Thurs at 8:00 AM via pg_cron.
+// Runs Tues & Thurs at 7:00 AM Denver via pg_cron.
 //
-// Logic:
-//   1. Scan for user_agreements with status != 'signed'
-//   2. Check if athlete is on active roster
-//   3. Escalate notification type based on days outstanding
-//   4. Mint a one-tap sign-in link that lands on the document (v2)
-//   5. Fire branded emails via Resend
-//   6. Log everything to document_notification_log + document_events
+// Contract (v3, 2026-09-15): ONE email per parent per PLAYER per run.
+//   1. Scan user_agreements with status != 'signed' for active athletes.
+//   2. Per agreement: escalation rule by days outstanding, max sends per rule,
+//      48-hour per-agreement quiet period. Agreements that fail any check are
+//      skipped; the rest are grouped by parent_email + athlete_id.
+//   3. Per parent: mint ONE sign-in link for the whole run (token_hash form,
+//      verified by the portal page) and reuse it in every email to that
+//      parent. Per group: one email listing every document due for THAT player
+//      only, never another player, with the tone of the most urgent document.
+//   4. Send via Resend; idempotent per parent + player + calendar day.
+//   5. Log every agreement in the group to document_notification_log and
+//      document_events with the shared Resend id, and bump user_agreements.
 //
-// v2 (2026-09-03): the email button is a single-use magic link. Parents whose
-// accounts were bulk-created never had a password; the old link dropped them on
-// a password screen. Falls back to the plain portal link if minting fails.
+// Why v3: v2 sent one email per document and minted a fresh link for each.
+// Supabase keeps only the newest link per user, so a parent with five
+// documents received five emails and four dead buttons (seen 2026-09-15).
 //
 // Secrets required:
 //   RESEND_API_KEY, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_URL
@@ -22,7 +27,7 @@
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
-import { documentDeepLink, linkHelpCopy, mintPortalLink, type PortalLink } from "../_shared/portal-signin-link.ts";
+import { documentsTabLink, linkHelpCopy, mintPortalLink, type PortalLink } from "../_shared/portal-signin-link.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -35,20 +40,40 @@ function errMessage(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
 
+function esc(s: string): string {
+  return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
+}
+
 // ── Escalation ladder ─────────────────────────────────────
 const ESCALATION_RULES = [
-  { minDays: 0,  maxDays: 2,  type: "initial",       maxSends: 1, label: "New document" },
-  { minDays: 3,  maxDays: 6,  type: "reminder",       maxSends: 1, label: "Friendly reminder" },
-  { minDays: 7,  maxDays: 13, type: "escalation",     maxSends: 2, label: "Playing time warning" },
-  { minDays: 14, maxDays: 20, type: "final_warning",  maxSends: 1, label: "Final notice" },
+  { minDays: 0,  maxDays: 2,  type: "initial",       maxSends: 1, label: "New document",        rank: 0 },
+  { minDays: 3,  maxDays: 6,  type: "reminder",      maxSends: 1, label: "Friendly reminder",   rank: 1 },
+  { minDays: 7,  maxDays: 13, type: "escalation",    maxSends: 2, label: "Playing time warning", rank: 2 },
+  { minDays: 14, maxDays: 20, type: "final_warning", maxSends: 1, label: "Final notice",        rank: 3 },
   // After 21 days: stop emailing, flag for manual admin action
 ] as const;
+type Rule = typeof ESCALATION_RULES[number];
+
+interface DueItem {
+  agreementId: string;
+  documentId: string;
+  documentTitle: string;
+  documentSlug: string;
+  athleteId: string;
+  athleteName: string;
+  daysOutstanding: number;
+  rule: Rule;
+  status: string;
+  notificationCount: number;
+}
 
 serve(async (_req: Request) => {
-  console.log("[doc-cron] Starting document reminder run...");
+  console.log("[doc-cron] Starting document reminder run (v3, one email per parent per player)...");
 
   const now = new Date();
-  let totalSent = 0;
+  const today = now.toISOString().slice(0, 10);
+  let totalSent = 0;        // emails sent (one per parent per player)
+  let totalAgreements = 0;  // agreements covered by those emails
   let totalSkipped = 0;
   let totalErrors = 0;
   let totalOneTap = 0;
@@ -81,9 +106,17 @@ serve(async (_req: Request) => {
 
   console.log(`[doc-cron] Found ${agreements.length} unsigned mandatory agreements.`);
 
+  // ── Pass 1: decide per agreement, group by parent + player ─
+  // Key is "<parent_email>|<athlete_id>" so an email is only ever about one
+  // player. A parent with two players gets two emails (same link).
+  const groups = new Map<string, DueItem[]>();
+
   for (const agreement of agreements) {
     const doc = agreement.documents;
     const athlete = agreement.athletes;
+    const parentEmail = String(agreement.parent_email || "").trim().toLowerCase();
+    if (!parentEmail) { totalSkipped++; continue; }
+
     const daysOutstanding = Math.floor(
       (now.getTime() - new Date(agreement.assigned_at).getTime()) / (1000 * 60 * 60 * 24)
     );
@@ -111,7 +144,7 @@ serve(async (_req: Request) => {
       continue;
     }
 
-    // Rate-limit: never email the same parent more than once per 48 hours
+    // Quiet period: never nag about the same document more than once per 48 hours
     if (agreement.last_notified_at) {
       const hoursSinceLastNotify = Math.floor(
         (now.getTime() - new Date(agreement.last_notified_at).getTime()) / (1000 * 60 * 60)
@@ -122,18 +155,48 @@ serve(async (_req: Request) => {
       }
     }
 
-    // ── Build link + email ──────────────────────────────
-    const destination = documentDeepLink(doc.slug, agreement.id);
-    const link = await mintPortalLink(supabase, agreement.parent_email, destination);
-    if (link.oneTap) totalOneTap++;
-    const parentFirstName = agreement.parent_email.split("@")[0];
+    const key = `${parentEmail}|${athlete.id}`;
+    const list = groups.get(key) ?? [];
+    list.push({
+      agreementId: agreement.id,
+      documentId: doc.id,
+      documentTitle: doc.title,
+      documentSlug: doc.slug,
+      athleteId: athlete.id,
+      athleteName: athlete.display_name,
+      daysOutstanding,
+      rule,
+      status: agreement.status,
+      notificationCount: agreement.notification_count,
+    });
+    groups.set(key, list);
+  }
+
+  const parentCount = new Set(Array.from(groups.keys()).map((k) => k.split("|")[0])).size;
+  console.log(`[doc-cron] ${groups.size} emails to send across ${parentCount} parents.`);
+
+  // ── Pass 2: one email per parent + player ─────────────────
+  // One sign-in link per parent for the whole run. Minting a second link for
+  // the same parent would kill the first one (Supabase keeps only the newest).
+  const linkByParent = new Map<string, PortalLink>();
+
+  for (const [key, items] of groups) {
+    const parentEmail = key.split("|")[0];
+    // Most urgent document sets the tone. Ties: longest outstanding first.
+    items.sort((a, b) => (b.rule.rank - a.rule.rank) || (b.daysOutstanding - a.daysOutstanding));
+    const lead = items[0];
+
+    let link = linkByParent.get(parentEmail);
+    if (!link) {
+      link = await mintPortalLink(supabase, parentEmail, documentsTabLink());
+      linkByParent.set(parentEmail, link);
+      if (link.oneTap) totalOneTap++;
+    }
 
     const email = buildCronEmail({
-      type: rule.type,
-      parentName: parentFirstName,
-      athleteName: athlete.display_name,
-      documentTitle: doc.title,
-      daysOutstanding,
+      type: lead.rule.type,
+      parentName: parentEmail.split("@")[0],
+      items,
       link,
     });
 
@@ -143,12 +206,12 @@ serve(async (_req: Request) => {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${RESEND_API_KEY}`,
-          // Idempotency: one send per agreement + type + calendar day.
-          "Idempotency-Key": `doc-cron/${agreement.id}/${rule.type}/${now.toISOString().slice(0, 10)}`,
+          // Idempotency: one send per parent + player + calendar day.
+          "Idempotency-Key": `doc-cron/v3/${parentEmail}/${lead.athleteId}/${today}`,
         },
         body: JSON.stringify({
           from: "Godspeed Basketball <documents@clubgodspeed.com>",
-          to: [agreement.parent_email],
+          to: [parentEmail],
           subject: email.subject,
           html: email.html,
         }),
@@ -159,56 +222,62 @@ serve(async (_req: Request) => {
         throw new Error(`resend_${res.status}: ${result?.message ?? "send failed"}`);
       }
 
-      await supabase.from("document_notification_log").insert({
-        agreement_id: agreement.id,
-        document_id: doc.id,
-        notification_type: rule.type,
-        recipient_email: agreement.parent_email,
-        subject: email.subject,
-        message_preview: email.preview,
-        resend_message_id: result.id || null,
-      });
-
-      await supabase.from("document_events").insert({
-        agreement_id: agreement.id,
-        event_type: rule.type === "escalation" || rule.type === "final_warning"
-          ? "escalation_sent"
-          : "reminder_sent",
-        actor_type: "cron",
-        event_metadata: {
-          notification_type: rule.type,
-          days_outstanding: daysOutstanding,
-          escalation_label: rule.label,
+      for (const it of items) {
+        await supabase.from("document_notification_log").insert({
+          agreement_id: it.agreementId,
+          document_id: it.documentId,
+          notification_type: it.rule.type,
+          recipient_email: parentEmail,
+          subject: email.subject,
+          message_preview: email.preview,
           resend_message_id: result.id || null,
-          one_tap_link: link.oneTap,
-        },
-      });
+        });
 
-      const updates: Record<string, unknown> = {
-        last_notified_at: now.toISOString(),
-        notification_count: agreement.notification_count + 1,
-      };
-      if (agreement.status === "pending") {
-        updates.status = "notified";
-        if (agreement.notification_count === 0) {
-          updates.first_notified_at = now.toISOString();
+        await supabase.from("document_events").insert({
+          agreement_id: it.agreementId,
+          event_type: it.rule.type === "escalation" || it.rule.type === "final_warning"
+            ? "escalation_sent"
+            : "reminder_sent",
+          actor_type: "cron",
+          event_metadata: {
+            notification_type: it.rule.type,
+            days_outstanding: it.daysOutstanding,
+            escalation_label: it.rule.label,
+            resend_message_id: result.id || null,
+            one_tap_link: link.oneTap,
+            batched_documents: items.length,
+          },
+        });
+
+        const updates: Record<string, unknown> = {
+          last_notified_at: now.toISOString(),
+          notification_count: it.notificationCount + 1,
+        };
+        if (it.status === "pending") {
+          updates.status = "notified";
+          if (it.notificationCount === 0) {
+            updates.first_notified_at = now.toISOString();
+          }
         }
+        await supabase.from("user_agreements").update(updates).eq("id", it.agreementId);
       }
-      await supabase.from("user_agreements").update(updates).eq("id", agreement.id);
 
       totalSent++;
+      totalAgreements += items.length;
       console.log(
-        `[doc-cron] Sent ${rule.type} for "${doc.title}" (${athlete.display_name}) ` +
-        `${daysOutstanding}d outstanding, one_tap=${link.oneTap}`
+        `[doc-cron] Sent ${lead.rule.type} for ${lead.athleteName}: ` +
+        `${items.length} document(s), one_tap=${link.oneTap}`
       );
     } catch (err) {
-      console.error(`[doc-cron] Failed to send for agreement ${agreement.id}:`, errMessage(err));
+      console.error(`[doc-cron] Failed to send to parent (${items.length} agreements):`, errMessage(err));
       totalErrors++;
     }
   }
 
   const summary = {
     sent: totalSent,
+    parents: parentCount,
+    agreements_covered: totalAgreements,
     one_tap: totalOneTap,
     skipped: totalSkipped,
     errors: totalErrors,
@@ -228,40 +297,49 @@ serve(async (_req: Request) => {
 interface CronEmailContext {
   type: string;
   parentName: string;
-  athleteName: string;
-  documentTitle: string;
-  daysOutstanding: number;
+  items: DueItem[];
   link: PortalLink;
 }
 
 function buildCronEmail(ctx: CronEmailContext): { subject: string; html: string; preview: string } {
+  const n = ctx.items.length;
+  // Every item in ctx.items is for the same player (grouped upstream).
+  const athleteText = ctx.items[0].athleteName;
+  const oldest = Math.max(...ctx.items.map((i) => i.daysOutstanding));
+  const docWord = n === 1 ? "document" : "documents";
+  const countText = n === 1 ? `1 ${docWord}` : `${n} ${docWord}`;
+
+  const listHtml = `
+    <ul style="padding-left:20px;margin:12px 0 0;">
+      ${ctx.items.map((i) => `<li style="margin:6px 0;"><strong>${esc(i.documentTitle)}</strong>${i.daysOutstanding >= 3 ? ` <span style="color:#6b7280;">(waiting ${i.daysOutstanding} days)</span>` : ""}</li>`).join("")}
+    </ul>`;
+
   const messages: Record<string, { subject: string; body: string; preview: string; cta: string }> = {
     initial: {
-      subject: `New document for ${ctx.athleteName}: ${ctx.documentTitle}`,
-      preview: `A new required document is ready for you to sign.`,
-      cta: "OPEN AND SIGN",
+      subject: n === 1 ? `New document for ${athleteText}: ${ctx.items[0].documentTitle}` : `${countText} to sign for ${athleteText}`,
+      preview: n === 1 ? `A new required document is ready for you to sign.` : `${countText} are ready for your signature.`,
+      cta: n === 1 ? "OPEN AND SIGN" : "SIGN MY DOCUMENTS",
       body: `
-        <p>A new document, <strong>${ctx.documentTitle}</strong>, is ready in
-        ${ctx.athleteName}'s Parent Portal. It needs your signature.</p>
-        <p>Tap the button. It signs you in and opens the document. It takes about a minute.</p>
+        <p>${n === 1 ? "A new document is" : `${countText} are`} ready in ${esc(athleteText)}'s Parent Portal and need${n === 1 ? "s" : ""} your signature:</p>
+        ${listHtml}
+        <p>Tap the button. It signs you in and opens your documents. Each one takes about a minute.</p>
       `,
     },
 
     reminder: {
-      subject: `Reminder: ${ctx.documentTitle} needs your signature`,
-      preview: `${ctx.athleteName}'s ${ctx.documentTitle} is still waiting. ${ctx.daysOutstanding} days.`,
+      subject: n === 1 ? `Reminder: ${ctx.items[0].documentTitle} needs your signature` : `Reminder: ${countText} need your signature`,
+      preview: `${athleteText}: ${countText} still waiting. ${oldest} days.`,
       cta: "SIGN NOW",
       body: `
-        <p>Quick follow-up. <strong>${ctx.documentTitle}</strong> for
-        ${ctx.athleteName} has been waiting ${ctx.daysOutstanding} days
-        and still needs your signature.</p>
-        <p>Tap the button below. It signs you in and opens the document. About 60 seconds.</p>
+        <p>Quick follow-up. ${n === 1 ? "This document for" : "These documents for"} ${esc(athleteText)} ${n === 1 ? "has" : "have"} been waiting and still need${n === 1 ? "s" : ""} your signature:</p>
+        ${listHtml}
+        <p>Tap the button below. It signs you in and opens your documents. About 60 seconds each.</p>
       `,
     },
 
     escalation: {
-      subject: `Urgent: ${ctx.athleteName}'s Playing Time. Action Required`,
-      preview: `${ctx.athleteName}'s playing time is at risk. Unsigned document: ${ctx.documentTitle}.`,
+      subject: `Urgent: ${athleteText}'s Playing Time. Action Required`,
+      preview: `${athleteText}'s playing time is at risk. ${countText} unsigned.`,
       cta: "SIGN NOW AND PROTECT PLAYING TIME",
       body: `
         <div style="background:#fef2f2;border:1px solid #fca5a5;padding:16px;border-radius:8px;margin-bottom:16px;">
@@ -270,27 +348,27 @@ function buildCronEmail(ctx: CronEmailContext): { subject: string; html: string;
           required documents may have <strong>limited or no playing time</strong> until
           all documents are signed.</p>
         </div>
-        <p><strong>${ctx.documentTitle}</strong> for ${ctx.athleteName} has been waiting
-        <strong>${ctx.daysOutstanding} days</strong>.</p>
-        <p>We want ${ctx.athleteName} on the court. Tap the button to sign.</p>
+        <p>Still unsigned for ${esc(athleteText)} (longest waiting: <strong>${oldest} days</strong>):</p>
+        ${listHtml}
+        <p>We want ${esc(athleteText)} on the court. Tap the button to sign.</p>
       `,
     },
 
     final_warning: {
-      subject: `FINAL NOTICE: ${ctx.athleteName}. Roster Eligibility at Risk`,
-      preview: `Final notice: ${ctx.athleteName} faces roster removal without a signed ${ctx.documentTitle}.`,
+      subject: `FINAL NOTICE: ${athleteText}. Roster Eligibility at Risk`,
+      preview: `Final notice: ${athleteText} faces roster removal. ${countText} unsigned.`,
       cta: "SIGN NOW",
       body: `
         <div style="background:#1f2937;color:#fff;padding:20px;border-radius:8px;margin-bottom:16px;">
           <strong style="font-size:16px;">FINAL NOTICE</strong>
-          <p style="margin:8px 0 0;color:#d1d5db;">${ctx.athleteName} has an unsigned
-          required document, <strong>${ctx.documentTitle}</strong>, waiting for
-          <strong>${ctx.daysOutstanding} days</strong>.</p>
+          <p style="margin:8px 0 0;color:#d1d5db;">${esc(athleteText)} has ${countText} unsigned,
+          the oldest waiting <strong>${oldest} days</strong>.</p>
           <p style="margin:8px 0 0;color:#fca5a5;">Without action within 48 hours,
-          ${ctx.athleteName} may be moved to inactive roster status.</p>
+          ${esc(athleteText)} may be moved to inactive roster status.</p>
         </div>
+        ${listHtml}
         <p>If something is stopping you from signing, reply to this email or text
-        Coach Scott. We want to keep ${ctx.athleteName} eligible.</p>
+        Coach Scott. We want to keep ${esc(athleteText)} eligible.</p>
       `,
     },
   };
@@ -304,7 +382,7 @@ function buildCronEmail(ctx: CronEmailContext): { subject: string; html: string;
       </div>
 
       <p style="font-size:16px;line-height:1.6;color:#111;">
-        Hey ${ctx.parentName},
+        Hey ${esc(ctx.parentName)},
       </p>
 
       <div style="font-size:16px;line-height:1.6;color:#111;">
@@ -316,7 +394,7 @@ function buildCronEmail(ctx: CronEmailContext): { subject: string; html: string;
       </a>
 
       <p style="font-size:13px;line-height:1.5;color:#6b7280;margin-top:8px;">
-        ${linkHelpCopy(ctx.link, ctx.athleteName)}
+        ${linkHelpCopy(ctx.link, athleteText)}
       </p>
 
       <p style="font-size:14px;line-height:1.6;color:#6b7280;margin-top:24px;">

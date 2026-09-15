@@ -147,27 +147,50 @@
     transform: none;
 }
 
-.btn-magic-link {
+/* Sign-in link is the main way in. Password lives behind a fold. */
+.login-hint {
+    margin: 10px 0 0;
+    font-size: 0.85rem;
+    color: #6e6e73;
+    text-align: center;
+    line-height: 1.4;
+}
+
+.use-password-link {
     display: block;
-    background: transparent;
+    text-align: center;
+    font-size: 0.85rem;
     color: #2563eb;
-    border: none;
-    padding: 0.6rem 1.5rem;
+    margin: 14px 0 4px;
+    text-decoration: underline;
+}
+
+#password-section {
     margin-top: 8px;
+}
+
+.btn-secondary {
+    background: #fff;
+    color: #2563eb;
+    border: 1.5px solid #2563eb;
+    padding: 0.75rem 1.5rem;
     border-radius: 9999px;
-    font-weight: 600;
-    font-size: 0.9rem;
+    font-weight: 700;
+    font-size: 0.95rem;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
-.btn-magic-link:hover {
+.btn-secondary:hover {
     background: #eff6ff;
+    transform: translateY(-1px);
 }
 
-.btn-magic-link:disabled {
+.btn-secondary:disabled,
+#magic-link-btn:disabled {
     opacity: 0.6;
     cursor: default;
+    transform: none;
 }
 
 .mobile-menu-btn {

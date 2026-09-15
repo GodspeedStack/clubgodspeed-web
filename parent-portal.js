@@ -241,6 +241,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // still opens the right document.
     handleExpiredEmailLink();
 
+    // Email buttons built as ?token_hash=...&type=magiclink (reminder emails and
+    // the Supabase Magic Link template). Verified here, in the page, so an email
+    // scanner that pre-opens the link cannot burn it before the parent taps it.
+    handleTokenHashLink();
+
     // Check for existing session and route based on approval status
     if (window.auth && window.auth.isLoggedIn()) {
         routeAuthenticatedUser();
@@ -382,7 +387,26 @@ function showDashboard() {
     document.body.style.overflow = 'hidden';
 }
 
+/**
+ * Password fold. The sign-in link is the main way in; the password box is
+ * hidden until the parent asks for it. While it is hidden, submitting the
+ * form (Enter on the email box) sends the sign-in link instead.
+ */
+function passwordLoginOpen() {
+    const sec = document.getElementById('password-section');
+    return !!(sec && !sec.hidden);
+}
+window.showPasswordLogin = function () {
+    const sec = document.getElementById('password-section');
+    const link = document.getElementById('use-password-link');
+    if (sec) sec.hidden = false;
+    if (link) link.style.display = 'none';
+    const pw = document.getElementById('password');
+    if (pw) { try { pw.focus(); } catch (e) { /* no-op */ } }
+};
+
 async function handleLogin() {
+    if (!passwordLoginOpen()) { return window.handleMagicLink(); }
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
     const email = emailInput ? emailInput.value.trim() : '';
@@ -406,7 +430,7 @@ async function handleLogin() {
     if (hasEmpty) {
         if (errorMsg) {
             setAlertIcon(errorMsg, null);
-            errorMsg.textContent = "You forgot to type your email or password.";
+            errorMsg.textContent = 'Type your email and password, or tap "Email me a sign-in link" to skip the password.';
             errorMsg.style.display = 'block';
         }
         return;
@@ -495,7 +519,7 @@ async function handleLogin() {
 
                 // Provide specific error messages
                 if (authError.message && authError.message.includes('Invalid login credentials')) {
-                    errorMessage = 'Your email or password is wrong. Please try again.';
+                    errorMessage = 'That password is wrong. You do not need it: tap "Email me a sign-in link" above and we will email you a link that signs you in.';
                     setAlertIcon(errorMsg, 'lock');
                 } else if (authError.message && authError.message.includes('Email not confirmed')) {
                     // Show inline resend link (sanitize email to prevent XSS)
@@ -611,7 +635,7 @@ async function handleLogin() {
 
             if (error.message) {
                 if (error.message.includes('Invalid login credentials') || error.message.includes('password')) {
-                    userFriendlyMessage = "Your email or password is wrong. Please try again.";
+                    userFriendlyMessage = 'That password is wrong. You do not need it: tap "Email me a sign-in link" above and we will email you a link that signs you in.';
                     setAlertIcon(errorMsg, 'lock');
                 } else if (error.message.includes('Email not confirmed') || error.message.includes('verify')) {
                     const loginEmail = document.getElementById('email')?.value?.trim() || '';
@@ -865,16 +889,13 @@ window.handleSignup = async function() {
             let userFriendlyMessage = "Something went wrong on our end. Please try again!";
             const msg = (error.message || '').toLowerCase();
             if (msg.includes('already') && (msg.includes('exist') || msg.includes('register'))) {
-                // Duplicate email -- show login/resend links (use event listeners, not inline onclick)
-                setAlertIcon(errorMsg, 'mail');
-                errorMsg.innerHTML = 'An account with this email already exists. <a href="#" id="signup-go-login" style="color:inherit;font-weight:700;text-decoration:underline;">Log in here</a> or <a href="#" id="signup-resend-verify" style="color:inherit;font-weight:700;text-decoration:underline;">resend verification email</a>.';
-                errorMsg.style.display = 'block';
-                const goLogin = document.getElementById('signup-go-login');
-                if (goLogin) goLogin.addEventListener('click', (e) => { e.preventDefault(); showLoginForm(); });
-                const resendV = document.getElementById('signup-resend-verify');
-                if (resendV) resendV.addEventListener('click', (e) => { e.preventDefault(); resendVerificationEmail(email); });
-                const form = document.querySelector('.signup-form');
-                if (form) { form.classList.add('shake'); setTimeout(() => form.classList.remove('shake'), 500); }
+                // The parent already has an account. Do not make them find the
+                // login form or remember a password: switch to login, keep their
+                // email, and send the sign-in link right away.
+                showLoginForm();
+                const loginEmail = document.getElementById('email');
+                if (loginEmail) loginEmail.value = email;
+                await window.handleMagicLink({ intro: 'You already have an account, so we sent a sign-in link to ' + email + '.' });
                 return; // skip textContent assignment below
             } else if (msg.includes('not connected') || msg.includes('failed to fetch') || msg.includes('cannot connect') || msg.includes('network error')) {
                 userFriendlyMessage = "We cannot reach the server. Please check your internet and try again.";
@@ -1021,16 +1042,7 @@ function portalRedirectUrl() {
  * Show the login view with a clear next step and pre-focus the email box so
  * "Email me a sign-in link" is one tap away. Never leaves the error in the URL.
  */
-function handleExpiredEmailLink() {
-    const raw = (window.location.hash || '').replace(/^#/, '');
-    if (!raw || raw.indexOf('error') === -1) return;
-    const h = new URLSearchParams(raw);
-    const code = h.get('error_code') || '';
-    const err = h.get('error') || '';
-    if (!code && !err) return;
-
-    history.replaceState(null, '', window.location.pathname + window.location.search);
-
+function showEmailLinkProblem(code, err) {
     const alertEl = document.querySelector('#portal-login .login-error');
     const emailInput = document.getElementById('email');
     if (!alertEl) return;
@@ -1048,6 +1060,65 @@ function handleExpiredEmailLink() {
         try { emailInput.focus(); } catch (e) { /* no-op */ }
     }
     console.warn('[auth] email link rejected:', code || err);
+}
+
+function handleExpiredEmailLink() {
+    const raw = (window.location.hash || '').replace(/^#/, '');
+    if (!raw || raw.indexOf('error') === -1) return;
+    const h = new URLSearchParams(raw);
+    const code = h.get('error_code') || '';
+    const err = h.get('error') || '';
+    if (!code && !err) return;
+
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+    showEmailLinkProblem(code, err);
+}
+
+/**
+ * ?token_hash=...&type=magiclink|recovery on the portal URL. The token is only
+ * spent when this page calls verifyOtp, so link scanners that GET the URL do
+ * not consume it. On success Supabase fires SIGNED_IN and the normal
+ * gba:authStateChanged routing takes over; routeAuthenticatedUser() is also
+ * called directly in case that event already fired. The token never stays in
+ * the address bar or browser history.
+ */
+async function handleTokenHashLink() {
+    const src = new URLSearchParams(window.location.search);
+    const tokenHash = src.get('token_hash');
+    const type = src.get('type') || 'magiclink';
+    if (!tokenHash) return;
+
+    src.delete('token_hash'); src.delete('type');
+    const qs = src.toString();
+    history.replaceState(null, '', window.location.pathname + (qs ? '?' + qs : ''));
+
+    const alertEl = document.querySelector('#portal-login .login-error');
+    if (alertEl) {
+        setAlertTone(alertEl, 'info');
+        setAlertIcon(alertEl, 'mail');
+        alertEl.textContent = 'Signing you in from your email link...';
+        alertEl.style.display = 'block';
+    }
+
+    try {
+        if (window.auth && typeof window.auth.ensureClient === 'function') { await window.auth.ensureClient(); }
+        const sb = window.auth && window.auth.getSupabaseClient ? window.auth.getSupabaseClient() : null;
+        if (!sb) throw new Error('auth_unavailable');
+        const { data, error } = await sb.auth.verifyOtp({ token_hash: tokenHash, type: type });
+        if (error) throw error;
+        if (!data || !data.session) throw new Error('no_session');
+        if (alertEl) { alertEl.style.display = 'none'; alertEl.textContent = ''; }
+        if (data.session.user && data.session.user.email) {
+            try { localStorage.setItem('gba_user_email', data.session.user.email); } catch (e) { /* no-op */ }
+        }
+        const dashEl = document.getElementById('portal-dashboard');
+        const dashVisible = dashEl && (dashEl.style.display === 'flex' || dashEl.style.display === 'block');
+        if (!dashVisible) routeAuthenticatedUser();
+    } catch (e) {
+        const msg = (e && e.message ? e.message : '').toLowerCase();
+        const expired = msg.includes('expired') || msg.includes('invalid') || msg.includes('not found') || (e && e.code === 'otp_expired');
+        showEmailLinkProblem(expired ? 'otp_expired' : 'verify_failed', '');
+    }
 }
 
 /**
@@ -1094,7 +1165,8 @@ window.handleGoogleSignIn = async function () {
  * the signup form so the player/parent metadata reaches handle_new_user.
  */
 let _lastMagicLinkTime = 0;
-window.handleMagicLink = async function () {
+window.handleMagicLink = async function (opts) {
+    const intro = (opts && opts.intro) ? String(opts.intro) + ' ' : '';
     const emailInput = document.getElementById('email');
     const email = emailInput ? emailInput.value.trim() : '';
     const btn = document.getElementById('magic-link-btn');
@@ -1148,7 +1220,7 @@ window.handleMagicLink = async function () {
         if (visibleAlert) {
             setAlertTone(visibleAlert, 'success');
             setAlertIcon(visibleAlert, 'mail');
-            visibleAlert.textContent = 'Check your email. We sent you a link that signs you in with one tap. Look in spam if you do not see it.';
+            visibleAlert.textContent = intro + 'Check your email for a message from Godspeed and tap the button in it. That signs you in. Look in spam or promotions if you do not see it in a minute.';
             visibleAlert.style.display = 'block';
         }
     } catch (e) {
@@ -1158,7 +1230,7 @@ window.handleMagicLink = async function () {
             const msg = (e && e.message) ? e.message.toLowerCase() : '';
             if (msg.includes('signup') || msg.includes('not allowed') || msg.includes('user not found')) {
                 setAlertIcon(visibleAlert, 'mail');
-                visibleAlert.textContent = 'We could not find an account with that email. Check the spelling, or tap Join below to create one.';
+                visibleAlert.textContent = 'We could not find an account for ' + email + '. Check the spelling, try the email you signed up with, or tap Join below to create one.';
             } else if (msg.includes('rate') || msg.includes('too many')) {
                 setAlertIcon(visibleAlert, 'clock');
                 visibleAlert.textContent = 'You asked for too many links. Please wait a few minutes and try again.';

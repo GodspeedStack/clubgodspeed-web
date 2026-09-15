@@ -41,7 +41,7 @@
     <!-- Portal Specific Styles -->
     <!-- Tailwind CSS (Added to support existing utility classes) -->
     <script src="https://cdn.tailwindcss.com" defer></script>
-    <link rel="stylesheet" href="parent-portal.css?v=20260909">
+    <link rel="stylesheet" href="parent-portal.css?v=20260915">
     <link rel="stylesheet" href="nav-unified.css">
         <style>/* GS Portal Fix v1 */
             @keyframes gs-portal-reveal{to{opacity:1}}
@@ -173,42 +173,54 @@
             <div class="login-card">
                 <div class="login-header">
                     <h2>Parent <span id="login-greeting" style="color: #0071e3;">Login</span></h2>
-                    <p>Access your athlete's schedule, evaluations, and progress.</p>
+                    <p>Sign your documents and see your athlete's schedule and progress.</p>
                 </div>
                 <form id="parent-login-form" class="login-form">
                     <div class="login-error" role="alert" aria-live="assertive" style="display: none;">
                     </div>
                     <div class="form-group">
                         <label for="email">Email Address</label>
-                        <input type="email" id="email" placeholder="name@example.com" required>
+                        <input type="email" id="email" placeholder="name@example.com" autocomplete="email" required>
                     </div>
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        <div style="position: relative;">
-                            <input type="password" id="password" placeholder="••••••••" required
-                                style="padding-right: 45px;">
-                            <button type="button" id="toggle-password"
-                                style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 4px; color: #666; display: flex; align-items: center; justify-content: center;"
-                                aria-label="Toggle password visibility">
-                                <svg id="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                </svg>
-                                <svg id="eye-off-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" style="display: none;">
-                                    <path
-                                        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
-                                    </path>
-                                    <line x1="1" y1="1" x2="23" y2="23"></line>
-                                </svg>
-                            </button>
+
+                    <button type="button" id="magic-link-btn" class="btn-primary full-width"
+                        onclick="handleMagicLink()">
+                        Email me a sign-in link
+                    </button>
+                    <p class="login-hint">No password needed. We email you a link. Tap it and you are in.</p>
+
+                    <a href="#" id="use-password-link" class="use-password-link"
+                        onclick="showPasswordLogin(); return false;">I would rather type my password</a>
+
+                    <div id="password-section" hidden>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <div style="position: relative;">
+                                <input type="password" id="password" placeholder="••••••••" autocomplete="current-password"
+                                    style="padding-right: 45px;">
+                                <button type="button" id="toggle-password"
+                                    style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 4px; color: #666; display: flex; align-items: center; justify-content: center;"
+                                    aria-label="Toggle password visibility">
+                                    <svg id="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                    <svg id="eye-off-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" style="display: none;">
+                                        <path
+                                            d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                                        </path>
+                                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                                    </svg>
+                                </button>
+                            </div>
+                            <a href="#" class="forgot-link" onclick="showPasswordResetForm(); return false;">Forgot password</a>
                         </div>
-                        <a href="#" class="forgot-link" onclick="showPasswordResetForm(); return false;">Forgot password</a>
+                        <button type="submit" class="btn-secondary full-width">Enter Portal</button>
                     </div>
-                    <button type="submit" class="btn-primary full-width">Enter Portal</button>
 
                     <div class="auth-divider" aria-hidden="true">
                         <span></span><em>or</em><span></span>
@@ -223,11 +235,6 @@
                             <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
                         </svg>
                         Continue with Google
-                    </button>
-
-                    <button type="button" id="magic-link-btn" class="btn-magic-link full-width"
-                        onclick="handleMagicLink()">
-                        Email me a sign-in link
                     </button>
 
                     <p class="login-footer">Don't have an account? <a href="#"
@@ -1511,7 +1518,7 @@
     <script src="receipt-view.js" defer></script>
     <script src="account-visibility.js?v=20260630a" defer></script>
     <script src="billing-view.js?v=20260405d" defer></script>
-    <script src="parent-portal.js?v=20260909" defer></script>
+    <script src="parent-portal.js?v=20260915" defer></script>
     <script src="performance-renderer.js?v=5" defer></script>
     <script src="player-cards-renderer.js?v=1" defer></script>
     <script src="parent-development.js?v=1" defer></script>
