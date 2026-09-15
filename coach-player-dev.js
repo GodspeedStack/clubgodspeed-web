@@ -62,7 +62,7 @@
   // Category colors, same as the Command Center bank.
   var TAGS = { 'Culture': '#0071e3', 'Toughness': '#d92d20', 'Bigs': '#7c3aed', 'Guards': '#0d9488', 'Passing/Reads': '#4f46e5', 'Individual': '#64748b', 'Conditioning': '#d97706', 'Strength': '#57534e' };
   var TAG_ORDER = ['Culture', 'Toughness', 'Bigs', 'Guards', 'Passing/Reads', 'Individual', 'Conditioning', 'Strength'];
-  var state = { home: {}, callup: {}, strength: null, strengthWeek: 1, health: null, healthErr: null, linkParent: '', linkAthlete: '', activity: null, activityErr: null, activitySeen: null, loading: false, loaded: false, error: null, isAdmin: false, myTeams: [], cfg: DEFAULT_CFG, dev: {}, bank: [], shape: null, powerups: null, teamId: null, tab: 'players', q: '', swaps: {}, bankQ: '', bankTag: 'All', expanded: {}, workout: null, shareAccess: [], shares: {}, privileges: null };
+  var state = { plans: [], planDate: null, planMode: 'saved', home: {}, callup: {}, strength: null, strengthWeek: 1, health: null, healthErr: null, linkParent: '', linkAthlete: '', activity: null, activityErr: null, activitySeen: null, loading: false, loaded: false, error: null, isAdmin: false, myTeams: [], cfg: DEFAULT_CFG, dev: {}, bank: [], shape: null, powerups: null, teamId: null, tab: 'players', q: '', swaps: {}, bankQ: '', bankTag: 'All', expanded: {}, workout: null, shareAccess: [], shares: {}, privileges: null };
 
   // ---------- data ----------
   async function loadAll() {
@@ -73,13 +73,14 @@
     var r = await Promise.all([
       c.from('development_config').select('key,value'),
       c.from('player_development').select('athlete_id,skills,subs,position,strength_bench,focus,conditioning,updated_at'),
-      c.from('program_content').select('slug,body').in('slug', ['drills-bank', 'planner-practice-shape', 'planner-powerups', 'planner-workout', 'strength-program']),
+      c.from('program_content').select('slug,title,body').in('slug', ['drills-bank', 'planner-practice-shape', 'planner-powerups', 'planner-workout', 'strength-program']),
       c.from('coach_profiles').select('team_ids').eq('user_id', uid).maybeSingle(),
       c.rpc('is_program_admin'),
       c.from('coach_access').select('user_id,area,team_id,allowed').eq('area', 'share_development'),
       c.from('player_development_shares').select('athlete_id,shared_at,shared_by,note').order('shared_at', { ascending: false }).limit(400),
       c.from('call_up_reviews').select('athlete_id,handling,defense,spacing,strength,square_ready,intangibles,notes,on_track,updated_at'),
-      c.from('home_workouts').select('athlete_id,session_date,week,kind,times').gte('session_date', new Date(Date.now() - 21 * 86400000).toISOString().slice(0, 10)).order('session_date', { ascending: false }).limit(600)
+      c.from('home_workouts').select('athlete_id,session_date,week,kind,times').gte('session_date', new Date(Date.now() - 21 * 86400000).toISOString().slice(0, 10)).order('session_date', { ascending: false }).limit(600),
+      c.from('practice_plans').select('id,team_id,plan_date,plan,created_by,updated_at').gte('plan_date', new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10)).order('plan_date').order('updated_at', { ascending: false }).limit(200)
     ]);
     if (r[0].error) throw new Error('config: ' + r[0].error.message);
     if (r[1].error) throw new Error('development: ' + r[1].error.message);
@@ -90,13 +91,14 @@
     state.dev = {}; (r[1].data || []).forEach(function (row) { state.dev[row.athlete_id] = row; });
     (r[2].data || []).forEach(function (row) {
       if (row.slug === 'drills-bank') state.bank = (row.body && row.body.drills) || [];
-      if (row.slug === 'planner-practice-shape') state.shape = row.body;
+      if (row.slug === 'planner-practice-shape') { state.shape = row.body; state.shapeTitle = row.title || (row.body && row.body.title) || ''; }
       if (row.slug === 'planner-powerups') state.powerups = row.body;
       if (row.slug === 'planner-workout') state.workout = row.body;
       if (row.slug === 'strength-program') state.strength = row.body;
     });
     state.callup = {}; ((r[7] && r[7].data) || []).forEach(function (x) { state.callup[x.athlete_id] = x; });
     state.home = {}; ((r[8] && r[8].data) || []).forEach(function (x) { (state.home[x.athlete_id] = state.home[x.athlete_id] || []).push(x); });
+    state.plans = (r[9] && r[9].data) || [];
     state.myTeams = (r[3].data && r[3].data.team_ids) || [];
     state.isAdmin = !!(r[4] && r[4].data === true);
     state.shareAccess = (r[5] && r[5].data) ? r[5].data.filter(function (x) { return x.user_id === uid; }) : [];
@@ -982,8 +984,30 @@
   function stationHtml(k, d, who, block, i, cands) {
     return '<div class="db-st"><span class="k">' + esc(k) + '</span><div data-drill="' + esc(d.name) + '" style="cursor:pointer"><b>' + esc(d.name) + '</b><span>' + esc(d.cue || '') + '</span>' + (who ? '<span class="who">' + esc(who) + '</span>' : '') + '</div>' + (cands && cands.length > 1 ? '<button type="button" class="db-link" data-swap="' + esc(block + '|' + i) + '">Swap</button>' : '<span style="font-size:12px;color:#6e6e73">' + esc(d.min || 5) + ' min</span>') + '</div>';
   }
+  // Saved plans for this team, one per date (latest save wins), today onward first.
+  function savedPlans() { var seen = {}; var today = new Date().toISOString().slice(0, 10); return state.plans.filter(function (p) { return p.team_id === state.teamId; }).filter(function (p) { if (seen[p.plan_date]) return false; seen[p.plan_date] = 1; return true; }).sort(function (a, b) { return (a.plan_date >= today ? 0 : 1) - (b.plan_date >= today ? 0 : 1) || a.plan_date.localeCompare(b.plan_date); }); }
+  function fmtPlanDate(d) { var x = new Date(d + 'T12:00:00'); return isNaN(x) ? d : x.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }); }
+  function savedPlanHtml(row) {
+    var p = row.plan || {}; var blocks = p.blocks || []; var total = blocks.reduce(function (n, b) { return n + (+b.minutes || 0); }, 0);
+    var h = '<div class="db-lead"><div><h4>' + esc(p.title || 'Practice, ' + fmtPlanDate(row.plan_date)) + '</h4><p>' + (p.rule ? esc(p.rule) : 'Saved plan for ' + esc(fmtPlanDate(row.plan_date)) + '.') + '</p></div><div class="st"><div><b>' + blocks.length + '</b><small>Blocks</small></div><div><b>' + total + '</b><small>Minutes</small></div></div></div>';
+    h += '<div class="db-plan-bar"><button type="button" class="db-btn" id="db-plan-generated">Build from the roster instead</button><button type="button" class="db-btn" id="db-print">Print</button><button type="button" class="db-btn" id="db-copy">Copy as text</button><span class="db-note" style="margin:0">Saved ' + esc(ago(row.updated_at)) + '.</span></div>';
+    h += '<div class="db-panel" id="db-plan">';
+    blocks.forEach(function (b, bi) {
+      h += '<div class="db-block"><span class="n">' + (bi + 1) + '</span><div class="tm">' + esc(b.start || '') + '<small>' + esc(b.minutes || '') + ' min</small></div><div><h5>' + esc(b.name) + '</h5><p>' + esc(b.what || '') + '</p>';
+      if ((b.stations || []).length) h += '<div class="db-fill">' + b.stations.map(function (st) { var d = findDrill(st.drill); return '<div class="db-st"><span class="k">' + esc(st.k || '') + '</span><div' + (d ? ' data-drill="' + esc(d.name) + '" style="cursor:pointer"' : '') + '><b>' + esc(st.drill) + '</b>' + (d && d.cue ? '<span>' + esc(d.cue) + '</span>' : '') + (st.who ? '<span class="who">' + esc(st.who) + '</span>' : '') + '</div></div>'; }).join('') + '</div>';
+      (b.notes || []).forEach(function (n) { h += '<div class="nt">' + esc(n) + '</div>'; });
+      h += '</div></div>';
+    });
+    return h + '</div>';
+  }
   function planHtml() {
     var ps = playersOf(state.teamId); var h = teamBar(false);
+    var saved = savedPlans();
+    if (saved.length) {
+      var today = new Date().toISOString().slice(0, 10); var cur = saved.filter(function (p) { return p.plan_date === state.planDate; })[0] || saved.filter(function (p) { return p.plan_date >= today; })[0] || saved[0];
+      h += '<div class="db-bar"><div class="db-teams">' + saved.map(function (p) { return '<button type="button" class="db-chipbtn' + (state.planMode === 'saved' && p.plan_date === cur.plan_date ? ' active' : '') + '" data-plan-date="' + esc(p.plan_date) + '">' + esc(fmtPlanDate(p.plan_date)) + (p.plan_date < today ? ' (past)' : '') + '</button>'; }).join('') + '<button type="button" class="db-chipbtn' + (state.planMode === 'generated' ? ' active' : '') + '" data-plan-date="__generated">Build from the roster</button></div></div>';
+      if (state.planMode === 'saved') return h + savedPlanHtml(cur);
+    }
     if (!state.shape) return h + '<div class="db-empty">The practice shape is not loaded.</div>';
     var rated = ps.filter(started); var wg = workGroups(rated); var row = readOfWeek(rated); var tn = teamNeeds(rated);
     var day = new Date(); var dow = day.getDay(); var next = dow < 2 ? 'Tuesday' : dow < 4 ? 'Thursday' : 'Tuesday';
@@ -1068,6 +1092,7 @@
     btn.disabled = true; var r = await commit('save_practice_plan', { p_team_id: state.teamId, p_plan_date: nextPracticeDate(), p_plan: plan }); btn.disabled = false;
     if (!r.ok) { toast('Could not save the plan: ' + (r.error && r.error.message || 'error')); return; }
     toast(r.queued ? 'Plan saved on this device. It sends when you are online.' : 'Plan saved for ' + plan.title.split(',')[0] + '. ' + plan.stations.length + ' stations.');
+    state.plans.unshift({ id: (r.data && r.data.id) || 'local', team_id: state.teamId, plan_date: nextPracticeDate(), plan: plan, updated_at: new Date().toISOString() }); state.planMode = 'saved'; state.planDate = nextPracticeDate(); paint();
   }
   // ---------- activity (director only) ----------
   async function loadActivity(force) {
@@ -1166,6 +1191,8 @@
     var so = el('db-strength-open'); if (so) so.onclick = function () { openStrength(); };
     v.querySelectorAll('[data-strength-week]').forEach(function (n) { n.onclick = function () { openStrength(+n.getAttribute('data-strength-week')); }; });
     var sp = el('db-save-plan'); if (sp) sp.onclick = function () { savePlan(sp); };
+    v.querySelectorAll('[data-plan-date]').forEach(function (b) { b.onclick = function () { var d = b.getAttribute('data-plan-date'); if (d === '__generated') state.planMode = 'generated'; else { state.planMode = 'saved'; state.planDate = d; } paint(); }; });
+    var pg = el('db-plan-generated'); if (pg) pg.onclick = function () { state.planMode = 'generated'; paint(); };
     var lp = el('db-link-parent'); if (lp) lp.onchange = function () { state.linkParent = lp.value; paint(); };
     var la = el('db-link-athlete'); if (la) la.onchange = function () { state.linkAthlete = la.value; paint(); };
     var lg = el('db-link-go'); if (lg) lg.onclick = linkParent;
