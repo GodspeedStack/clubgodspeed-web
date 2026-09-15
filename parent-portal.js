@@ -681,6 +681,26 @@ async function handleLogin() {
     }
 }
 
+/**
+ * Shown after ANY signup submit that reached the server, new account or not.
+ * Same words both ways (no account enumeration). Clears the form and returns
+ * to the login view with the email kept, so the sign-in link button is one tap.
+ */
+function showSignupCheckEmail(email, inputs) {
+    const body = 'We sent an email to ' + email + '. Open it and tap the button.\n\n' +
+        'New account: the button confirms your email, then Coach Scott approves you and you get a welcome email.\n\n' +
+        'Already had an account: the button signs you in right away.';
+    if (typeof godspeedAlert === 'function') {
+        godspeedAlert(body, 'Check your email');
+    } else {
+        alert('Check your email\n\n' + body);
+    }
+    (inputs || []).forEach(el => { if (el) el.value = ''; });
+    if (typeof showLoginForm === 'function') showLoginForm();
+    const loginEmail = document.getElementById('email');
+    if (loginEmail) loginEmail.value = email;
+}
+
 window.handleSignup = async function() {
     const emailInput = document.getElementById('signup-email');
     const passwordInput = document.getElementById('signup-password');
@@ -862,23 +882,7 @@ window.handleSignup = async function() {
                 console.warn('Admin notification skipped:', notifyErr);
             }
 
-            // Success UI — explain the two-stage process clearly
-            if (typeof godspeedAlert === 'function') {
-                godspeedAlert(
-                    `Step 1: Check your inbox for a verification email from noreply@clubgodspeed.com and click the link to verify your address.\n\nStep 2: After verifying, Coach Scott will review and approve your account. You will receive an email when your portal is unlocked.`,
-                    "Account Created"
-                );
-            } else {
-                alert("Account Created!\n\nStep 1: Check your email for a verification link from noreply@clubgodspeed.com.\n\nStep 2: After verifying, Coach Scott will review and approve your account.");
-            }
-            
-            // Clear inputs
-            [emailInput, passwordInput, parentNameInput, playerNameInput, playerAgeInput, phoneInput].forEach(el => {
-                if (el) el.value = '';
-            });
-            
-            // Switch back to login form naturally
-            if (typeof showLoginForm === 'function') showLoginForm();
+            showSignupCheckEmail(email, [emailInput, passwordInput, parentNameInput, playerNameInput, playerAgeInput, phoneInput]);
         }
     } catch (error) {
         console.error('Signup error:', error);
@@ -889,13 +893,16 @@ window.handleSignup = async function() {
             let userFriendlyMessage = "Something went wrong on our end. Please try again!";
             const msg = (error.message || '').toLowerCase();
             if (msg.includes('already') && (msg.includes('exist') || msg.includes('register'))) {
-                // The parent already has an account. Do not make them find the
-                // login form or remember a password: switch to login, keep their
-                // email, and send the sign-in link right away.
-                showLoginForm();
-                const loginEmail = document.getElementById('email');
-                if (loginEmail) loginEmail.value = email;
-                await window.handleMagicLink({ intro: 'You already have an account, so we sent a sign-in link to ' + email + '.' });
+                // The email already has an account. Send a sign-in link quietly and
+                // show the SAME screen a brand new signup gets, so the page never
+                // reveals whether an address belongs to a Godspeed parent. The
+                // email they receive is what tells them which case they are in.
+                try {
+                    const sb = window.auth && window.auth.getSupabaseClient ? window.auth.getSupabaseClient() : null;
+                    if (sb) await sb.auth.signInWithOtp({ email: email, options: { shouldCreateUser: false, emailRedirectTo: portalRedirectUrl() } });
+                } catch (e) { console.warn('[signup] sign-in link for existing account not sent:', e && e.message); }
+                _lastMagicLinkTime = Date.now();
+                showSignupCheckEmail(email, [emailInput, passwordInput, parentNameInput, playerNameInput, playerAgeInput, phoneInput]);
                 return; // skip textContent assignment below
             } else if (msg.includes('not connected') || msg.includes('failed to fetch') || msg.includes('cannot connect') || msg.includes('network error')) {
                 userFriendlyMessage = "We cannot reach the server. Please check your internet and try again.";
@@ -1165,6 +1172,10 @@ window.handleGoogleSignIn = async function () {
  * the signup form so the player/parent metadata reaches handle_new_user.
  */
 let _lastMagicLinkTime = 0;
+// Same sentence whether or not the email has an account (no account enumeration).
+function LINK_SENT_COPY(email) {
+    return 'If ' + email + ' has a Godspeed account, a sign-in link is on its way. Open the email and tap the button. Nothing after a minute? Check spam, try the email you signed up with, or tap Join below.';
+}
 window.handleMagicLink = async function (opts) {
     const intro = (opts && opts.intro) ? String(opts.intro) + ' ' : '';
     const emailInput = document.getElementById('email');
@@ -1220,7 +1231,7 @@ window.handleMagicLink = async function (opts) {
         if (visibleAlert) {
             setAlertTone(visibleAlert, 'success');
             setAlertIcon(visibleAlert, 'mail');
-            visibleAlert.textContent = intro + 'Check your email for a message from Godspeed and tap the button in it. That signs you in. Look in spam or promotions if you do not see it in a minute.';
+            visibleAlert.textContent = intro + LINK_SENT_COPY(email);
             visibleAlert.style.display = 'block';
         }
     } catch (e) {
@@ -1229,8 +1240,12 @@ window.handleMagicLink = async function (opts) {
             setAlertTone(visibleAlert, null);
             const msg = (e && e.message) ? e.message.toLowerCase() : '';
             if (msg.includes('signup') || msg.includes('not allowed') || msg.includes('user not found')) {
+                // Unknown email. Show exactly what a known email gets so the page
+                // never confirms whether an address belongs to a Godspeed parent.
+                _lastMagicLinkTime = Date.now();
+                setAlertTone(visibleAlert, 'success');
                 setAlertIcon(visibleAlert, 'mail');
-                visibleAlert.textContent = 'We could not find an account for ' + email + '. Check the spelling, try the email you signed up with, or tap Join below to create one.';
+                visibleAlert.textContent = intro + LINK_SENT_COPY(email);
             } else if (msg.includes('rate') || msg.includes('too many')) {
                 setAlertIcon(visibleAlert, 'clock');
                 visibleAlert.textContent = 'You asked for too many links. Please wait a few minutes and try again.';
