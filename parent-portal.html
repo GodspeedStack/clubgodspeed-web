@@ -652,6 +652,10 @@
 
                     <!-- VIEW: DOCUMENTS -->
                     <div id="view-documents" class="portal-view active">
+                        <!-- JERSEY NUMBER PICKER (onboarding) -->
+                        <div id="jersey-picker-card" style="display:none;background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:0 1px 3px rgba(15,23,42,.05);">
+                            <div id="jersey-picker-root"></div>
+                        </div>
                         <div id="dashboard-welcome" class="welcome-banner">
                             <h1 style="display: flex; align-items: center; flex-wrap: wrap;">
                                 Welcome back, <span id="dashboard-user-name" style="margin-left: 6px;">James</span>
@@ -1514,9 +1518,46 @@
     <script src="parent-portal.js?v=20260909" defer></script>
     <script src="performance-renderer.js?v=5" defer></script>
     <script src="player-cards-renderer.js?v=1" defer></script>
+    <script>
+    // Jersey picker boot. Shows the card only when this account actually has a
+    // linked athlete; stays hidden otherwise rather than rendering a dead control.
+    (function () {
+        var tries = 0;
+        function getClient() {
+            try {
+                if (window.auth && typeof window.auth.getSupabaseClient === 'function') {
+                    return window.auth.getSupabaseClient();
+                }
+            } catch (e) { /* fall through */ }
+            return window.supabaseClient || null;
+        }
+        function boot() {
+            try {
+                var sb = getClient();
+                // Auth may still be initialising on a cold load. Retry briefly.
+                if ((!sb || !window.JerseyPicker) && tries++ < 10) {
+                    return setTimeout(boot, 500);
+                }
+                if (!sb || !window.JerseyPicker) return;
+                sb.rpc('get_my_booking_athletes').then(function (r) {
+                    var list = (r && r.data && r.data.ok) ? r.data.athletes : [];
+                    if (!list || !list.length) return;
+                    document.getElementById('jersey-picker-card').style.display = 'block';
+                    window.JerseyPicker.mount('jersey-picker-root', {
+                        client: sb,
+                        athleteId: list[0].athlete_id
+                    });
+                }).catch(function () { /* card stays hidden */ });
+            } catch (e) { /* card stays hidden */ }
+        }
+        if (document.readyState === 'complete') setTimeout(boot, 400);
+        else window.addEventListener('load', function () { setTimeout(boot, 400); });
+    })();
+    </script>
     <script src="parent-development.js?v=1" defer></script>
     <script src="parent-training.js?v=2" defer></script>
     <script src="parent-workout.js?v=1" defer></script>
+    <script src="jersey-picker.js?v=1" defer></script>
     <!-- Non-critical scripts (async for independent loading) -->
     <script src="branded-modal.js" defer></script>
     <script src="documents-view.js" defer></script>
