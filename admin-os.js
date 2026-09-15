@@ -2612,7 +2612,7 @@ function calEventForm(e = {}) {
   const gradeVis = e.event_type === 'tournament' ? '' : 'display:none';
   return `<div class="field"><label>Title</label><input type="text" id="ev-title" value="${e.title || ''}"></div>
     <div class="grid2"><div class="field"><label>Type</label><select id="ev-type" onchange="document.getElementById('ev-grade-wrap').style.display=this.value==='tournament'?'':'none'">${typeOpts}</select></div>
-    <div class="field" id="ev-grade-wrap" style="${gradeVis}"><label>Grade Level</label><select id="ev-grade"><option value="" ${!e.grade_level ? 'selected' : ''}>--</option><option value="4th" ${e.grade_level === '4th' ? 'selected' : ''}>4th Grade</option><option value="5th" ${e.grade_level === '5th' ? 'selected' : ''}>5th Grade</option><option value="both" ${e.grade_level === 'both' ? 'selected' : ''}>Both</option></select></div>
+    <div class="field" id="ev-grade-wrap" style="${gradeVis}"><label>Grade Level</label><select id="ev-grade"><option value="" ${!e.grade_level ? 'selected' : ''}>--</option><option value="4th" ${e.grade_level === '4th' ? 'selected' : ''}>4th Grade</option><option value="5th" ${e.grade_level === '5th' ? 'selected' : ''}>5th Grade</option><option value="6th" ${e.grade_level === '6th' ? 'selected' : ''}>6th Grade</option></select></div>
     <div class="field"><label>Date</label><input type="date" id="ev-date" value="${e.event_date || e.start_date || ''}"></div>
     <div class="field"><label>Start Time</label><input type="time" id="ev-start" value="${e.start_time || ''}"></div>
     <div class="field"><label>End Time</label><input type="time" id="ev-end" value="${e.end_time || ''}"></div></div>
@@ -2749,7 +2749,7 @@ async function addTournaments() {
         const { error } = await osSupabase.rpc('upsert_calendar_event', {
           p_title: t.title, p_event_type: 'tournament', p_start_date: t.start_date,
           p_end_date: t.end_date || null, p_start_time: t.start_time || null, p_location: t.location || '',
-          p_grade_level: t.grade_level || 'both', p_created_by: userId, p_visibility: 'public',
+          p_grade_level: t.grade_level || null, p_created_by: userId, p_visibility: 'public',
           p_cost: t.cost || null, p_registration_deadline: t.registration_deadline || null,
           p_notes: t.notes || null, p_admin_checklist: JSON.stringify(buildTournamentChecklist())
         });
@@ -2766,7 +2766,7 @@ async function addTournaments() {
         <span style="color:#34c759;font-size:16px">&#10003;</span>
         <div style="flex:1;min-width:0">
           <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.title}</div>
-          <div style="font-size:11px;color:var(--muted)">${dateLabel}${t.location ? ' -- ' + t.location : ''}${t.grade_level && t.grade_level !== 'both' ? ' -- ' + t.grade_level + ' grade' : ''}</div>
+          <div style="font-size:11px;color:var(--muted)">${dateLabel}${t.location ? ' -- ' + t.location : ''}${t.grade_level ? ' -- ' + t.grade_level + ' grade' : ' -- no team set'}</div>
         </div>
       </div>`;
     }).join('');
@@ -2831,7 +2831,7 @@ function parseTournamentText(raw) {
   const thisYear = new Date().getFullYear();
   const results = [];
   for (const lines of eventBlocks) {
-    const entry = { title: '', start_date: '', end_date: '', location: '', grade_level: 'both', start_time: null };
+    const entry = { title: '', start_date: '', end_date: '', location: '', grade_level: null, start_time: null };
 
     // Title: first line, strip trailing date portion
     entry.title = lines[0].replace(/^[-*]\s*/, '')
@@ -2871,7 +2871,7 @@ function parseTournamentText(raw) {
       // Grade detection
       if (/4th\s*grade|4th\s*gr|u10.*4|grade\s*4/i.test(line) && !/5th/i.test(line)) entry.grade_level = '4th';
       else if (/5th\s*grade|5th\s*gr|u11.*5|grade\s*5/i.test(line) && !/4th/i.test(line)) entry.grade_level = '5th';
-      else if (/both|all\s*grades|4th.*5th|5th.*4th/i.test(line)) entry.grade_level = 'both';
+      else if (/\b6th\b/i.test(line)) entry.grade_level = '6th';
       // Time detection
       const timeMatch = line.match(/(\d{1,2}:\d{2}\s*(?:am|pm)?)/i);
       if (timeMatch && !entry.start_time) entry.start_time = convertTo24(timeMatch[1]);
@@ -3029,7 +3029,7 @@ function openTournamentDetail(id) {
   </div>`;
   if (e.grade_level) html += `<div style="padding:12px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid var(--border)">
     <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Grade</div>
-    <div style="font-weight:700;margin-top:4px">${e.grade_level === 'both' ? '4th + 5th' : e.grade_level + ' Grade'}</div>
+    <div style="font-weight:700;margin-top:4px">${e.grade_level ? e.grade_level + ' Grade' : 'No team set'}</div>
   </div>`;
   if (deadlineFmt) {
     const deadlineDays = Math.ceil((new Date(e.registration_deadline) - new Date()) / (1000 * 60 * 60 * 24));
