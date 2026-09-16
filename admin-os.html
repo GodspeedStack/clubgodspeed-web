@@ -702,6 +702,16 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
           </div>
           <table id="req-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Grade/Player</th><th>Submitted</th><th>IP</th><th>Actions</th></tr></thead><tbody id="req-tbody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px">Loading...</td></tr></tbody></table>
         </div>
+
+        <!-- Guardian access requests: signups that did not match a pre-authorised email -->
+        <div class="card" style="margin-top:20px">
+          <div class="card-header">
+            <div style="display:flex;align-items:center;gap:12px"><h2>Guardian Access Requests</h2><span id="gr-count-label" style="font-size:12px;color:var(--muted)"></span></div>
+            <button class="btn btn-ghost btn-sm" onclick="loadGuardianRequests()">Refresh</button>
+          </div>
+          <div class="alert alert-warning" style="margin:0 0 12px">A signup lands here when its email was not pre-authorised for a player. Nothing is linked until you approve it. Pick the player the request belongs to, then choose the access level.</div>
+          <table id="gr-table"><thead><tr><th>Requested by</th><th>Email</th><th>Player named</th><th>Submitted</th><th style="width:210px">Link to player</th><th style="width:120px">Access</th><th style="width:150px">Actions</th></tr></thead><tbody id="gr-tbody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px">Loading...</td></tr></tbody></table>
+        </div>
       </div>
     </div>
 

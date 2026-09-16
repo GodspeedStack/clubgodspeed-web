@@ -174,12 +174,12 @@ function switchPanel(id, btn) {
   if (btn) btn.classList.add('active');
   document.getElementById('panel-title').textContent = PANEL_TITLES[id] || id;
   currentPanel = id;
-  const loaders = { players: () => { loadPlayers(); loadRequests(); }, onboarding: loadOnboarding, dues: loadDues, fundraising: loadFundraising, orders: loadOrders, comms: loadComms, dataEntry: loadDataEntry, calendar: () => { loadCalendar(); loadTournaments(); }, blog: loadBlog, memos: loadMemos };
+  const loaders = { players: () => { loadPlayers(); loadRequests(); loadGuardianRequests(); }, onboarding: loadOnboarding, dues: loadDues, fundraising: loadFundraising, orders: loadOrders, comms: loadComms, dataEntry: loadDataEntry, calendar: () => { loadCalendar(); loadTournaments(); }, blog: loadBlog, memos: loadMemos };
   if (loaders[id]) loaders[id]();
 }
 
 function refreshCurrent() {
-  const loaders = { dashboard: loadDashboard, players: () => { loadPlayers(); loadRequests(); }, onboarding: loadOnboarding, dues: loadDues, fundraising: loadFundraising, orders: loadOrders, comms: loadComms, calendar: () => { loadCalendar(); loadTournaments(); }, blog: loadBlog, memos: loadMemos };
+  const loaders = { dashboard: loadDashboard, players: () => { loadPlayers(); loadRequests(); loadGuardianRequests(); }, onboarding: loadOnboarding, dues: loadDues, fundraising: loadFundraising, orders: loadOrders, comms: loadComms, calendar: () => { loadCalendar(); loadTournaments(); }, blog: loadBlog, memos: loadMemos };
   if (loaders[currentPanel]) loaders[currentPanel]();
 }
 
@@ -684,6 +684,106 @@ function renderRequests(arr) {
   }
   document.getElementById('req-tbody').innerHTML = rows;
 }
+// ─── GUARDIAN ACCESS REQUESTS ───────────────────────────────
+// Signups whose email was not pre-authorised for a player. Nothing is linked
+// until a director approves and names the athlete, so this queue is the only
+// way a stranger's signup can ever reach a child's record.
+let allGuardianRequests = [];
+let guardianAthleteOptions = '';
+
+async function loadGuardianRequests() {
+  if (!osSupabase) return;
+  try {
+    const [reqRes, athRes] = await Promise.all([
+      osSupabase.from('guardian_requests')
+        .select('id,invitee_name,invitee_email,requested_player_name,requested_grade,status,created_at,requested_by')
+        .order('created_at', { ascending: false }),
+      osSupabase.from('athletes')
+        .select('id,first_name,last_name')
+        .eq('enrollment_status', 'active')
+        .order('first_name')
+    ]);
+    allGuardianRequests = reqRes.data || [];
+    guardianAthleteOptions = (athRes.data || []).map(a =>
+      `<option value="${a.id}">${esc(((a.first_name || '') + ' ' + (a.last_name || '')).trim())}</option>`
+    ).join('');
+  } catch (e) {
+    console.warn('loadGuardianRequests failed:', e);
+  }
+  renderGuardianRequests();
+}
+
+function renderGuardianRequests() {
+  const tbody = document.getElementById('gr-tbody');
+  if (!tbody) return;
+  const pending = allGuardianRequests.filter(r => r.status === 'pending');
+  const label = document.getElementById('gr-count-label');
+  if (label) label.textContent = `${pending.length} pending`;
+
+  if (!pending.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">No guardian requests waiting.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = pending.map(r => {
+    const named = r.requested_player_name
+      ? esc(r.requested_player_name) + (r.requested_grade ? ' / ' + esc(r.requested_grade) : '')
+      : '<span style="color:var(--muted)">none given</span>';
+    return `<tr>
+      <td style="font-weight:600">${esc(r.invitee_name || '--')}</td>
+      <td style="color:var(--muted)">${esc(r.invitee_email)}</td>
+      <td>${named}</td>
+      <td style="color:var(--muted);font-size:12px">${fmt(r.created_at)}</td>
+      <td><select id="gr-ath-${r.id}" style="width:100%;font-size:12px"><option value="">Select player...</option>${guardianAthleteOptions}</select></td>
+      <td><select id="gr-lvl-${r.id}" style="width:100%;font-size:12px"><option value="full">Full</option><option value="view_only">View only</option></select></td>
+      <td><div style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-xs" style="color:#34c759" onclick="approveGuardianReq('${r.id}')">Approve</button>
+        <button class="btn btn-ghost btn-xs" style="color:#ff3b30" onclick="denyGuardianReq('${r.id}')">Deny</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+async function approveGuardianReq(id) {
+  const athEl = document.getElementById('gr-ath-' + id);
+  const lvlEl = document.getElementById('gr-lvl-' + id);
+  const athleteId = athEl ? athEl.value : '';
+  if (!athleteId) { showToast('Pick the player this request belongs to first.', 'error'); return; }
+  const level = lvlEl ? lvlEl.value : 'full';
+  const req = allGuardianRequests.find(r => r.id === id);
+  const who = req ? (req.invitee_name || req.invitee_email) : 'this person';
+  const playerName = athEl.options[athEl.selectedIndex].text;
+  if (!confirm(`Give ${who} ${level === 'full' ? 'full guardian' : 'view only'} access to ${playerName}?`)) return;
+
+  try {
+    const { data, error } = await osSupabase.rpc('approve_guardian_request', {
+      p_request_id: id, p_athlete_id: athleteId, p_level: level
+    });
+    if (error) throw error;
+    if (data === 'approved') showToast(`Linked to ${playerName}`);
+    else if (data === 'barred') showToast('That email is barred for this player.', 'error');
+    else showToast('Not approved: ' + data, 'error');
+  } catch (e) {
+    showToast('Failed: ' + e.message, 'error');
+  }
+  loadGuardianRequests();
+}
+
+async function denyGuardianReq(id) {
+  const note = prompt('Reason for denying? (internal only, never shown to them)');
+  if (note === null) return;
+  try {
+    const { data, error } = await osSupabase.rpc('deny_guardian_request', {
+      p_request_id: id, p_note: note || null
+    });
+    if (error) throw error;
+    showToast(data === 'denied' ? 'Request denied' : 'Not denied: ' + data, data === 'denied' ? 'success' : 'error');
+  } catch (e) {
+    showToast('Failed: ' + e.message, 'error');
+  }
+  loadGuardianRequests();
+}
+
 function syncDashboardPending() {
   const pending = allRequests.filter(r => r.status === 'pending');
   document.getElementById('m-pending').textContent = pending.length;
