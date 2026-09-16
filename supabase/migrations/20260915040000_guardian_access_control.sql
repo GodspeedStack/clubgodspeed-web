@@ -115,11 +115,19 @@ join public.profiles p on p.id = ppl.profile_id
 where p.email is not null
 on conflict do nothing;
 
--- One payer per athlete: seed from the primary guardian where one exists.
+-- Exactly one payer per athlete, seeded from the primary guardian.
+--
+-- Do NOT guard this with `not exists (... where is_payer)`. Postgres evaluates
+-- that against the pre-update snapshot, so an athlete carrying two is_primary
+-- rows sets BOTH and trips parent_player_links_one_payer_per_athlete. That is
+-- not hypothetical: Quest Scott has two. Pick one deterministically instead.
 update public.parent_player_links ppl set is_payer = true
-where ppl.is_primary
-  and not exists (select 1 from public.parent_player_links x
-                   where x.athlete_id = ppl.athlete_id and x.is_payer);
+where ppl.id in (
+  select distinct on (athlete_id) id
+  from public.parent_player_links
+  where is_primary
+  order by athlete_id, created_at asc, id asc
+);
 
 -- ── The rewritten linker ────────────────────────────────────────────────────
 create or replace function public.auto_link_parent_athlete(p_profile_id uuid)
