@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - 'supabase/functions/**'
+      # verify_jwt per function lives here; a change to it must redeploy or
+      # the gateway keeps enforcing the old setting.
+      - 'supabase/config.toml'
   workflow_dispatch:
 
 jobs:

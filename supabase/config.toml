@@ -23,3 +23,12 @@ verify_jwt = false
 # Invoked client-side to create a Checkout session; matches fundraiser-checkout.
 [functions.create-checkout]
 verify_jwt = false
+
+# Resend and Twilio call this with their own provider signature (Svix HMAC-SHA256
+# for Resend, HMAC-SHA1 for Twilio), never a Supabase JWT. With verify_jwt left at
+# its default of true the gateway returns 401 before our signature check ever runs,
+# so no delivery event is ever recorded. The endpoint is not unprotected: it is
+# fail-closed on RESEND_WEBHOOK_SECRET / TWILIO_AUTH_TOKEN and rejects any request
+# whose signature does not verify.
+[functions.comms-webhook]
+verify_jwt = false
