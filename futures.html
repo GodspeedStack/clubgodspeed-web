@@ -93,7 +93,7 @@
           </label>
         </div>
 
-        <label><span class="q">Your son's name</span>
+        <label><span class="q">Your player's name</span>
           <p class="hint">So we know which family this came from.</p>
           <input id="athlete" name="athlete" type="text" maxlength="120">
         </label>
@@ -125,17 +125,17 @@
           <label>Leave this field empty<input id="company_url" type="text" tabindex="-1" autocomplete="off"></label>
         </div>
 
-        <button type="submit" id="go">Send it to Coach Scott</button>
+        <button type="submit" id="go">Send it in</button>
         <div class="msg" id="err" role="alert"></div>
 
-        <p class="note">Answering is not volunteering yourself or anyone. We are still building this out. Naming a field commits you to nothing, and you can pass on anything at any time. Coach Scott approves every professional before they come near the boys, and anyone working with them directly clears a background check the club pays for.</p>
+        <p class="note">Answering is not volunteering yourself or anyone. We are still building this out. Naming a field commits you to nothing, and you can pass on anything at any time. We approve every professional before they come near the boys, and anyone working with them directly clears a background check the club pays for.</p>
       </form>
     </div>
 
     <div id="done-view" class="done" style="display:none">
       <h2>Got it. Thank you.</h2>
-      <p id="done-line">Coach Scott will read every one of these himself.</p>
-      <p class="note">If you thought of something else, just reply to the email and tell him.</p>
+      <p id="done-line">Every answer goes into the Futures network, and we will reach out when something lines up.</p>
+      <p class="note">Thought of something else? Come back any time.</p>
     </div>
 
   </div>
@@ -168,7 +168,7 @@
 
     var cfg = window.SUPABASE_CONFIG;
     if (!cfg || !cfg.url || !cfg.anonKey) {
-      return fail('Something is wrong on our end. Please reply to the email instead and Coach Scott will add it by hand.');
+      return fail('Something is wrong on our end. Please try again shortly, or send your answers to clubgodspeed@gmail.com and we will add them by hand.');
     }
 
     btn.disabled = true;
@@ -200,7 +200,7 @@
       if (res.status === 409) {
         // the one-per-day guard: they already sent one today
         document.getElementById('done-line').textContent =
-          'We already have an answer from you today. If you need to change it, reply to the email and Coach Scott will update it.';
+          'We already have an answer from you today. If you need to change it, email clubgodspeed@gmail.com and we will update it.';
         document.getElementById('form-view').style.display = 'none';
         document.getElementById('done-view').style.display = 'block';
         return;
@@ -212,8 +212,8 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (e2) {
       btn.disabled = false;
-      btn.textContent = 'Send it to Coach Scott';
-      fail('That did not go through. Please try once more, or just reply to the email and Coach Scott will add it by hand.');
+      btn.textContent = 'Send it in';
+      fail('That did not go through. Please try once more, or send your answers to clubgodspeed@gmail.com and we will add them by hand.');
     }
   });
 })();
