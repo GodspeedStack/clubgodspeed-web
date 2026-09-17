@@ -649,7 +649,85 @@ async function approveProfile(id) {
 }
 
 // ─── LOGIN REQUESTS ─────────────────────────────────────────
+// ─── PLAYER CONNECTIONS (guardian_requests, v22_01) ─────────
+// Contract: rpc list_guardian_requests() -> [{ id, requester_name, requester_email,
+// relationship, player_first, player_last, grade, team, source, created_at,
+// candidates: [{ id, display_name, grade, score, guardians:[{name, relationship, level}] }] }]
+// approve_guardian_request(p_request_id, p_athlete_id, p_level) / deny_guardian_request(p_request_id, p_note)
+let guardianRequests = [];
+function grClient() { return osSupabase || (window.auth && window.auth.getSupabaseClient ? window.auth.getSupabaseClient() : null); }
+async function loadGuardianRequests() {
+  const host = document.getElementById('gr-list'); if (!host) return;
+  const sb = grClient(); if (!sb) return;
+  try {
+    const { data, error } = await sb.rpc('list_guardian_requests');
+    if (error) throw error;
+    guardianRequests = Array.isArray(data) ? data : [];
+  } catch (e) {
+    host.innerHTML = '<div style="color:#ff3b30;padding:12px 0">Could not load player connections: ' + esc(e.message || String(e)) + '</div>';
+    return;
+  }
+  const label = document.getElementById('gr-count-label'); if (label) label.textContent = guardianRequests.length + ' waiting';
+  if (!guardianRequests.length) { host.innerHTML = '<div style="color:var(--muted);padding:12px 0">Everyone is connected. Nothing waiting.</div>'; return; }
+  // Full active roster as the fallback list, so a request with no good match can still be connected here.
+  let roster = [];
+  try { const { data } = await sb.from('athletes').select('id,display_name,first_name,last_name,grade').eq('enrollment_status', 'active').order('first_name'); roster = data || []; } catch (e) { /* optional */ }
+  host.innerHTML = guardianRequests.map(r => {
+    const typed = [r.player_first, r.player_last].filter(Boolean).join(' ') || '(no name given)';
+    const meta = [r.grade ? r.grade + ' grade' : null, r.team || null, r.relationship ? 'as ' + r.relationship : null].filter(Boolean).join(' · ');
+    const cands = r.candidates || [];
+    const candIds = new Set(cands.map(c => c.id));
+    let opts = cands.map((c, i) => {
+      const g = (c.guardians || []).map(x => x.name + (x.relationship ? ' (' + x.relationship + ')' : '')).join(', ');
+      return `<option value="${c.id}" ${i === 0 ? 'selected' : ''}>${esc(c.display_name)}${c.grade ? ' · ' + esc(String(c.grade)) + 'th' : ''}${g ? ' · with ' + esc(g) : ' · no parent yet'}</option>`;
+    }).join('');
+    const rest = roster.filter(a => !candIds.has(a.id)).map(a => `<option value="${a.id}">${esc((a.display_name || '').trim() || ((a.first_name || '') + ' ' + (a.last_name || '')).trim())}${a.grade ? ' · ' + esc(String(a.grade)) + 'th' : ''}</option>`).join('');
+    if (rest) opts += `<optgroup label="${cands.length ? 'Everyone else' : 'Pick the player'}">${rest}</optgroup>`;
+    if (!cands.length) opts = '<option value="" selected>Choose the player</option>' + opts;
+    return `<div class="gr-row" data-id="${r.id}" style="border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start">
+        <div>
+          <div style="font-weight:700">${esc(r.requester_name || r.requester_email || 'Parent')} <span style="color:var(--muted);font-weight:400;font-size:12px">${esc(r.requester_email || '')}</span></div>
+          <div style="margin-top:4px">Says their player is <strong>${esc(typed)}</strong>${meta ? ' <span style="color:var(--muted)">' + esc(meta) + '</span>' : ''}</div>
+          <div style="color:var(--muted);font-size:12px;margin-top:2px">${esc(r.source === 'signup' ? 'From sign-up' : 'From the Connect step')} · ${fmt(r.created_at)}</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <select id="gr-athlete-${r.id}" style="min-width:220px">${opts || '<option value="">No players on the roster yet</option>'}</select>
+          <select id="gr-level-${r.id}"><option value="full">Full guardian</option><option value="view_only">View only</option></select>
+          <button class="btn btn-primary btn-sm" onclick="approveGuardianRequest('${r.id}')">Connect</button>
+          <button class="btn btn-ghost btn-sm" style="color:#ff3b30" onclick="denyGuardianRequest('${r.id}')">Deny</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+async function approveGuardianRequest(id) {
+  const athleteId = (document.getElementById('gr-athlete-' + id) || {}).value || '';
+  const level = (document.getElementById('gr-level-' + id) || {}).value || 'full';
+  if (!athleteId) { showToast('Pick the player first. If they are not on the roster yet, add them in Players, then come back.', 'error'); return; }
+  const req = guardianRequests.find(r => r.id === id);
+  const cand = req && (req.candidates || []).find(c => c.id === athleteId);
+  if (!confirm(`Connect ${req ? (req.requester_name || req.requester_email) : 'this parent'} to ${cand ? cand.display_name : 'the selected player'} as ${level === 'full' ? 'a full guardian' : 'view only'}?`)) return;
+  try {
+    const { error } = await grClient().rpc('approve_guardian_request', { p_request_id: id, p_athlete_id: athleteId, p_level: level });
+    if (error) throw error;
+    showToast('Connected. Their documents and schedule are live now.');
+    loadGuardianRequests(); loadPlayers();
+  } catch (e) { showToast('Connect failed: ' + (e.message || e), 'error'); }
+}
+async function denyGuardianRequest(id) {
+  const note = prompt('Reason (kept private, never shown to the parent):');
+  if (note === null) return;
+  try {
+    const { error } = await grClient().rpc('deny_guardian_request', { p_request_id: id, p_note: note || null });
+    if (error) throw error;
+    showToast('Request denied.');
+    loadGuardianRequests();
+  } catch (e) { showToast('Deny failed: ' + (e.message || e), 'error'); }
+}
+
 async function loadRequests() {
+  loadGuardianRequests();
   try { if (osSupabase) { const { data } = await osSupabase.from('login_requests').select('id,full_name,email,requested_role,grade,player_name,status,created_at,ip_address').order('created_at', { ascending: false }); allRequests = data || []; } } catch (e) { }
   renderRequests(allRequests);
 }

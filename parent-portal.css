@@ -1309,3 +1309,16 @@ body.doc-modal-open .mobile-bottom-nav { display: none !important; }
   .login-error,
   .login-success { animation: none !important; }
 }
+
+/* Two fields side by side on the sign-up and connect forms; stack on phones. */
+.form-row.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 480px) { .form-row.two { grid-template-columns: 1fr; gap: 0; } }
+.login-form select {
+    width: 100%; padding: 0.75rem 1rem; border: 1px solid #d2d2d7; border-radius: 12px;
+    background: #fff; font-size: 1rem; font-family: inherit; color: #111; appearance: auto;
+}
+.btn-magic-link {
+    display: block; width: 100%; background: transparent; color: #2563eb; border: none;
+    padding: 0.6rem 1.5rem; margin-top: 8px; border-radius: 9999px; font-weight: 600; font-size: 0.9rem; cursor: pointer;
+}
+.btn-magic-link:hover { background: #eff6ff; }

@@ -363,6 +363,10 @@ async function routeAuthenticatedUser() {
 
     if (approved) {
         if (loginView) loginView.style.display = 'none';
+        // A parent with no player linked gets the Connect step, not an empty
+        // dashboard. Decided by the server (get_my_connection), never by cache.
+        const connected = await checkConnection(false);
+        if (!connected) return;
         showDashboard();
         updateDashboardProfile(savedEmail);
         loadMyDocuments();
@@ -589,8 +593,10 @@ async function handleLogin() {
                 return;
             }
 
-            // Approved — show dashboard
+            // Approved — show dashboard, unless no player is linked yet
             document.getElementById('portal-login').style.display = 'none';
+            const connected = await checkConnection(false);
+            if (!connected) { btn.innerHTML = 'Sign In'; btn.disabled = false; return; }
             showDashboard();
             updateDashboardProfile(email);
 
@@ -705,16 +711,22 @@ window.handleSignup = async function() {
     const emailInput = document.getElementById('signup-email');
     const passwordInput = document.getElementById('signup-password');
     const parentNameInput = document.getElementById('signup-parent-name');
-    const playerNameInput = document.getElementById('signup-player-name');
-    const playerAgeInput = document.getElementById('signup-player-age');
+    const playerFirstInput = document.getElementById('signup-player-first');
+    const playerLastInput = document.getElementById('signup-player-last');
+    const playerGradeInput = document.getElementById('signup-player-grade');
+    const playerTeamInput = document.getElementById('signup-player-team');
+    const relationshipInput = document.getElementById('signup-relationship');
     const phoneInput = document.getElementById('signup-phone');
 
     const email = emailInput ? emailInput.value.trim() : '';
     const password = passwordInput ? passwordInput.value : '';
     const parentName = parentNameInput ? parentNameInput.value.trim() : '';
-    const playerName = playerNameInput ? playerNameInput.value.trim() : '';
-    const playerAgeRaw = playerAgeInput ? playerAgeInput.value.trim() : '';
-    const playerAge = parseInt(playerAgeRaw, 10);
+    const playerFirst = playerFirstInput ? playerFirstInput.value.trim() : '';
+    const playerLast = playerLastInput ? playerLastInput.value.trim() : '';
+    const playerName = (playerFirst + ' ' + playerLast).trim();
+    const grade = playerGradeInput ? playerGradeInput.value : '';
+    const team = playerTeamInput ? playerTeamInput.value : '';
+    const relationship = relationshipInput ? relationshipInput.value : 'guardian';
     const phone = phoneInput ? phoneInput.value.trim() : '';
 
     const btn = document.querySelector('.signup-form button[type="submit"]') || document.querySelector('#portal-signup button[type="submit"]');
@@ -728,8 +740,10 @@ window.handleSignup = async function() {
         {input: emailInput, val: email},
         {input: passwordInput, val: password},
         {input: parentNameInput, val: parentName},
-        {input: playerNameInput, val: playerName},
-        {input: playerAgeInput, val: playerAgeRaw},
+        {input: playerFirstInput, val: playerFirst},
+        {input: playerLastInput, val: playerLast},
+        {input: playerGradeInput, val: grade},
+        {input: playerTeamInput, val: team},
         {input: phoneInput, val: phone}
     ].forEach(f => {
         if (!f.val) {
@@ -793,18 +807,13 @@ window.handleSignup = async function() {
         return;
     }
 
-    // Validate player age range
-    if (isNaN(playerAge) || playerAge < 5 || playerAge > 19) {
+    // A password pasted into the player name box happened once. Catch the obvious cases.
+    if (/[0-9!@#$%^&*]/.test(playerFirst + playerLast)) {
         if (errorMsg) {
             setAlertTone(errorMsg, null);
             setAlertIcon(errorMsg, null);
-            errorMsg.textContent = "Player age must be between 5 and 19.";
+            errorMsg.textContent = "The player's name should be letters only. Please check the first and last name boxes.";
             errorMsg.style.display = 'block';
-        }
-        if (playerAgeInput) {
-            playerAgeInput.style.borderColor = '#ef4444';
-            playerAgeInput.style.backgroundColor = '#fef2f2';
-            playerAgeInput.addEventListener('input', function() { this.style.borderColor = ''; this.style.backgroundColor = ''; }, { once: true });
         }
         return;
     }
@@ -831,23 +840,17 @@ window.handleSignup = async function() {
 
         let signupSuccess = false;
 
-        // Derive approximate grade from age using current school year month
-        // (Aug-Dec: age-5 is typical; Jan-Jul: age-6 since school year started prior fall)
-        const ageNum = parseInt(playerAge, 10);
-        const currentMonth = new Date().getMonth(); // 0=Jan
-        const gradeNum = currentMonth >= 7 ? ageNum - 5 : ageNum - 6; // Aug+ vs Jan-Jul
-        const gradeSuffix = gradeNum === 1 ? 'st' : gradeNum === 2 ? 'nd' : gradeNum === 3 ? 'rd' : 'th';
-        const grade = (Number.isFinite(gradeNum) && gradeNum >= 0 && gradeNum <= 12)
-            ? `${gradeNum}${gradeSuffix}`
-            : null;
-
-        // Use Supabase Auth if available
+        // Use Supabase Auth if available. player_first_name / player_last_name /
+        // team / relationship feed the director's review queue (v22_01).
         if (window.auth && typeof window.auth.signup === 'function') {
             const metadata = {
                 parent_name: parentName,
                 full_name: parentName,
                 player_name: playerName,
-                player_age: playerAge,
+                player_first_name: playerFirst,
+                player_last_name: playerLast,
+                team: team,
+                relationship: relationship,
                 grade: grade,
                 phone: phone,
                 role: 'parent',
@@ -882,7 +885,7 @@ window.handleSignup = async function() {
                 console.warn('Admin notification skipped:', notifyErr);
             }
 
-            showSignupCheckEmail(email, [emailInput, passwordInput, parentNameInput, playerNameInput, playerAgeInput, phoneInput]);
+            showSignupCheckEmail(email, [emailInput, passwordInput, parentNameInput, playerFirstInput, playerLastInput, playerGradeInput, playerTeamInput, phoneInput]);
         }
     } catch (error) {
         console.error('Signup error:', error);
@@ -902,7 +905,7 @@ window.handleSignup = async function() {
                     if (sb) await sb.auth.signInWithOtp({ email: email, options: { shouldCreateUser: false, emailRedirectTo: portalRedirectUrl() } });
                 } catch (e) { console.warn('[signup] sign-in link for existing account not sent:', e && e.message); }
                 _lastMagicLinkTime = Date.now();
-                showSignupCheckEmail(email, [emailInput, passwordInput, parentNameInput, playerNameInput, playerAgeInput, phoneInput]);
+                showSignupCheckEmail(email, [emailInput, passwordInput, parentNameInput, playerFirstInput, playerLastInput, playerGradeInput, playerTeamInput, phoneInput]);
                 return; // skip textContent assignment below
             } else if (msg.includes('not connected') || msg.includes('failed to fetch') || msg.includes('cannot connect') || msg.includes('network error')) {
                 userFriendlyMessage = "We cannot reach the server. Please check your internet and try again.";
@@ -1786,6 +1789,97 @@ function showComplianceBanner(unsigned){
         el.innerHTML = '<strong>Action required.</strong> You must sign ' + unsigned.length + ' player document' + (unsigned.length===1?'':'s') + ' before your player can play, practice, or train. Please sign each document below.';
     }
 }
+/**
+ * Connect your player. Contract (v22_01):
+ *   rpc get_my_connection() -> { linked, athletes[], pending|null }
+ *   rpc submit_player_connection(first, last, grade, team, relationship)
+ * checkConnection(forceReload) returns true when the parent is linked (and the
+ * caller may show the dashboard); otherwise it shows the Connect view (form,
+ * or the waiting state when a request is already pending) and returns false.
+ * Fails open: if the server cannot be reached the dashboard still shows.
+ */
+window._gsConnection = null;
+async function checkConnection(forceReload) {
+    const sb = (window.auth && window.auth.getSupabaseClient) ? window.auth.getSupabaseClient() : null;
+    if (!sb) return true;
+    try {
+        const { data, error } = await sb.rpc('get_my_connection');
+        if (error) { console.warn('[connect] get_my_connection failed:', error.message); return true; }
+        window._gsConnection = data || null;
+        if (data && data.linked) {
+            const view = document.getElementById('portal-connect');
+            if (view) view.style.display = 'none';
+            if (forceReload) { showDashboard(); updateDashboardProfile(localStorage.getItem('gba_user_email') || ''); loadMyDocuments(); }
+            return true;
+        }
+        showConnectView(data && data.pending);
+        if (forceReload) {
+            const alertEl = document.querySelector('#connect-waiting-wrap p');
+            if (alertEl) alertEl.textContent = 'Not confirmed yet. Coach Scott usually confirms the same day. Text or email him if it has been more than a day.';
+        }
+        return false;
+    } catch (e) { console.warn('[connect] check failed:', e); return true; }
+}
+window.checkConnection = checkConnection;
+
+function showConnectView(pending) {
+    ['portal-login', 'portal-signup', 'portal-waiting-room', 'portal-dashboard'].forEach(function (id) {
+        const el = document.getElementById(id); if (el) el.style.display = 'none';
+    });
+    const nav = document.querySelector('nav.navbar'); if (nav) nav.style.removeProperty('display');
+    document.body.style.overflow = '';
+    const view = document.getElementById('portal-connect');
+    if (!view) return;
+    view.style.display = 'flex';
+    const formWrap = document.getElementById('connect-form-wrap');
+    const waitWrap = document.getElementById('connect-waiting-wrap');
+    if (pending) {
+        if (formWrap) formWrap.style.display = 'none';
+        if (waitWrap) waitWrap.style.display = 'block';
+        const copy = document.getElementById('connect-waiting-copy');
+        const who = [pending.first, pending.last].filter(Boolean).join(' ');
+        if (copy) copy.textContent = 'We sent Coach Scott your request to connect to ' + (who || 'your player') + (pending.grade ? ' (' + pending.grade + ' grade)' : '') + '. He usually confirms the same day. Your documents and schedule appear here the moment he does.';
+        const f = document.getElementById('connect-first'), l = document.getElementById('connect-last'), g = document.getElementById('connect-grade'), t = document.getElementById('connect-team'), r = document.getElementById('connect-relationship');
+        if (f) f.value = pending.first || ''; if (l) l.value = pending.last || ''; if (g) g.value = pending.grade || ''; if (t) t.value = pending.team || ''; if (r) r.value = pending.relationship || 'guardian';
+    } else {
+        if (formWrap) formWrap.style.display = 'block';
+        if (waitWrap) waitWrap.style.display = 'none';
+        const f = document.getElementById('connect-first'); if (f) { try { f.focus(); } catch (e) { /* no-op */ } }
+    }
+}
+window.showConnectForm = function () {
+    const formWrap = document.getElementById('connect-form-wrap');
+    const waitWrap = document.getElementById('connect-waiting-wrap');
+    if (formWrap) formWrap.style.display = 'block';
+    if (waitWrap) waitWrap.style.display = 'none';
+};
+
+window.handleConnectSubmit = async function () {
+    const sb = (window.auth && window.auth.getSupabaseClient) ? window.auth.getSupabaseClient() : null;
+    const errorMsg = document.querySelector('#connect-form .login-error');
+    const btn = document.getElementById('connect-submit');
+    const v = function (id) { const el = document.getElementById(id); return el ? String(el.value || '').trim() : ''; };
+    const first = v('connect-first'), last = v('connect-last'), grade = v('connect-grade'), team = v('connect-team'), rel = v('connect-relationship');
+    const fail = function (msg) { if (errorMsg) { setAlertTone(errorMsg, null); setAlertIcon(errorMsg, null); errorMsg.textContent = msg; errorMsg.style.display = 'block'; } };
+    if (!first || !last || !grade || !team) return fail('Please fill in the player\'s first name, last name, grade, and team.');
+    if (/[0-9!@#$%^&*]/.test(first + last)) return fail('The player\'s name should be letters only. Please check the name boxes.');
+    if (!sb) return fail('We cannot reach the server. Please check your internet and try again.');
+    if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
+    try {
+        const { data, error } = await sb.rpc('submit_player_connection', { p_first: first, p_last: last, p_grade: grade, p_team: team, p_relationship: rel });
+        if (error) throw new Error(error.message);
+        window._gsConnection = data || null;
+        if (errorMsg) errorMsg.style.display = 'none';
+        if (data && data.linked) { await checkConnection(true); return; }
+        showConnectView(data && data.pending ? data.pending : { first: first, last: last, grade: grade, team: team, relationship: rel });
+    } catch (e) {
+        console.error('[connect] submit failed:', e);
+        fail('We could not send that. Please check your internet and try again.');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Send to Coach Scott'; }
+    }
+};
+
 /**
  * A parent whose account is not yet connected to a player has no documents to
  * sign. Say so plainly instead of letting them open an empty signing screen.

@@ -695,6 +695,14 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
       <!-- Sub-panel: Login Requests -->
       <div id="people-requests" class="people-sub" style="display:none">
         <div class="alert alert-warning">New requests are automatically created when a parent/coach signs up. Approve or Deny each one below.</div>
+        <div class="card" id="guardian-requests-card">
+          <div class="card-header">
+            <div style="display:flex;align-items:center;gap:12px"><h2>Player Connections</h2><span id="gr-count-label" style="font-size:12px;color:var(--muted)"></span></div>
+            <button class="btn btn-ghost btn-sm" onclick="loadGuardianRequests()">Refresh</button>
+          </div>
+          <p style="color:var(--muted);font-size:13px;margin:0 0 12px">Parents who signed in but are not connected to a player yet. Pick the matching player and approve. Only you see this.</p>
+          <div id="gr-list"><div style="color:var(--muted);padding:12px 0">Loading...</div></div>
+        </div>
         <div class="card">
           <div class="card-header">
             <div style="display:flex;align-items:center;gap:12px"><h2>Pending Access Requests</h2><span id="req-count-label" style="font-size:12px;color:var(--muted)"></span></div>
@@ -1219,7 +1227,7 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 
 <script type="module" src="src/lib/env-injector.js"></script>
 <script src="auth-supabase.js?v=20260330" defer></script>
-<script src="admin-os.js?v=20260528" defer></script>
+<script src="admin-os.js?v=20260917" defer></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
   function toggleMobileMenu() {

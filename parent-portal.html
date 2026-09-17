@@ -41,7 +41,7 @@
     <!-- Portal Specific Styles -->
     <!-- Tailwind CSS (Added to support existing utility classes) -->
     <script src="https://cdn.tailwindcss.com" defer></script>
-    <link rel="stylesheet" href="parent-portal.css?v=20260915">
+    <link rel="stylesheet" href="parent-portal.css?v=20260917">
     <link rel="stylesheet" href="nav-unified.css">
         <style>/* GS Portal Fix v1 */
             @keyframes gs-portal-reveal{to{opacity:1}}
@@ -265,13 +265,44 @@
                         <label for="signup-password">Password</label>
                         <input type="password" id="signup-password" placeholder="Create a strong password (min 8 characters)" minlength="8" required>
                     </div>
-                    <div class="form-group">
-                        <label for="signup-player-name">Player's Full Name</label>
-                        <input type="text" id="signup-player-name" placeholder="LeBron James Jr." required>
+                    <div class="form-row two">
+                        <div class="form-group">
+                            <label for="signup-player-first">Player's First Name</label>
+                            <input type="text" id="signup-player-first" placeholder="First name" autocomplete="off" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signup-player-last">Player's Last Name</label>
+                            <input type="text" id="signup-player-last" placeholder="Last name" autocomplete="off" required>
+                        </div>
+                    </div>
+                    <div class="form-row two">
+                        <div class="form-group">
+                            <label for="signup-player-grade">Player's Grade</label>
+                            <select id="signup-player-grade" required>
+                                <option value="">Choose</option>
+                                <option>3rd</option><option>4th</option><option>5th</option><option>6th</option><option>7th</option><option>8th</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="signup-player-team">Team</label>
+                            <select id="signup-player-team" class="gs-team-select" required>
+                                <option value="">Choose</option>
+                                <option value="Godspeed 5th Grade Black">5th Grade Black</option>
+                                <option value="Godspeed 5th Grade Bronze">5th Grade Bronze</option>
+                                <option value="Godspeed 6th Grade">6th Grade</option>
+                                <option value="Not sure">Not sure yet</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label for="signup-player-age">Player's Age</label>
-                        <input type="number" id="signup-player-age" placeholder="11" min="5" max="19" required>
+                        <label for="signup-relationship">You are the player's</label>
+                        <select id="signup-relationship" required>
+                            <option value="mother">Mother</option>
+                            <option value="father">Father</option>
+                            <option value="guardian" selected>Guardian</option>
+                            <option value="stepparent">Stepparent</option>
+                            <option value="other">Other family</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="signup-phone">Phone Number</label>
@@ -343,6 +374,71 @@
                     <button type="submit" id="update-password-btn" class="btn-primary full-width">Save New Password</button>
                     <p class="login-footer">Remember your password? <a href="#" onclick="showLoginForm(); return false;">Sign In</a></p>
                 </form>
+            </div>
+        </div>
+
+        <!-- CONNECT YOUR PLAYER (Hidden initially; shown to a signed-in parent with no player linked) -->
+        <div id="portal-connect" class="portal-login-view" style="display: none;">
+            <div class="login-card">
+                <div id="connect-form-wrap">
+                    <div class="login-header">
+                        <h2>Connect Your <span style="color: #0071e3;">Player</span></h2>
+                        <p>Tell us which player is yours. Coach Scott confirms it, then your documents and schedule appear here.</p>
+                    </div>
+                    <form class="login-form" id="connect-form" onsubmit="event.preventDefault(); handleConnectSubmit();">
+                        <div class="login-error" role="alert" aria-live="assertive" style="display: none;"></div>
+                        <div class="form-row two">
+                            <div class="form-group">
+                                <label for="connect-first">Player's First Name</label>
+                                <input type="text" id="connect-first" placeholder="First name" autocomplete="off" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="connect-last">Player's Last Name</label>
+                                <input type="text" id="connect-last" placeholder="Last name" autocomplete="off" required>
+                            </div>
+                        </div>
+                        <div class="form-row two">
+                            <div class="form-group">
+                                <label for="connect-grade">Player's Grade</label>
+                                <select id="connect-grade" required>
+                                    <option value="">Choose</option>
+                                    <option>3rd</option><option>4th</option><option>5th</option><option>6th</option><option>7th</option><option>8th</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="connect-team">Team</label>
+                                <select id="connect-team" class="gs-team-select" required>
+                                    <option value="">Choose</option>
+                                    <option value="Godspeed 5th Grade Black">5th Grade Black</option>
+                                    <option value="Godspeed 5th Grade Bronze">5th Grade Bronze</option>
+                                    <option value="Godspeed 6th Grade">6th Grade</option>
+                                    <option value="Not sure">Not sure yet</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="connect-relationship">You are the player's</label>
+                            <select id="connect-relationship" required>
+                                <option value="mother">Mother</option>
+                                <option value="father">Father</option>
+                                <option value="guardian" selected>Guardian</option>
+                                <option value="stepparent">Stepparent</option>
+                                <option value="other">Other family</option>
+                            </select>
+                        </div>
+                        <button type="submit" id="connect-submit" class="btn-primary full-width">Send to Coach Scott</button>
+                        <p class="login-hint">Only Coach Scott sees this. Other parents never see your name, email, or phone.</p>
+                    </form>
+                </div>
+                <div id="connect-waiting-wrap" style="display: none; text-align: center;">
+                    <div class="login-header">
+                        <h2>Waiting on <span style="color: #0071e3;">Coach Scott</span></h2>
+                        <p id="connect-waiting-copy">We sent your request. Coach Scott usually confirms the same day. Your documents and schedule appear here the moment he does.</p>
+                    </div>
+                    <button type="button" class="btn-secondary full-width" onclick="showConnectForm()">Fix the player's name</button>
+                    <button type="button" class="btn-magic-link full-width" onclick="checkConnection(true)">Check again</button>
+                </div>
+                <p class="login-footer"><a href="#" onclick="handleLogout(); return false;">Sign out</a></p>
             </div>
         </div>
 
@@ -1518,7 +1614,7 @@
     <script src="receipt-view.js" defer></script>
     <script src="account-visibility.js?v=20260630a" defer></script>
     <script src="billing-view.js?v=20260405d" defer></script>
-    <script src="parent-portal.js?v=20260917" defer></script>
+    <script src="parent-portal.js?v=20260917b" defer></script>
     <script src="performance-renderer.js?v=5" defer></script>
     <script src="player-cards-renderer.js?v=1" defer></script>
     <script src="parent-development.js?v=1" defer></script>
