@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { sendParentEmail } from "../_shared/parent-comms.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -131,39 +132,38 @@ Deno.serve(async (req) => {
 
       const results = await Promise.allSettled(
         batch.map(async (recipient) => {
-          const res = await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${RESEND_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              from: FROM_EMAIL,
-              to: recipient.email,
-              subject: message.subject,
-              html,
-            }),
+          const result = await sendParentEmail({
+            source: 'send-broadcast',
+            purpose: 'broadcast',
+            trigger: 'manual',
+            to: recipient.email,
+            profileId: recipient.user_id ?? null,
+            subject: message.subject,
+            html,
+            from: FROM_EMAIL,
+            sentBy: message.sender_id ?? null,
+            relatedTable: 'broadcast_messages',
+            relatedId: message.id,
+            metadata: { campaign_id: message.id },
           })
 
-          if (res.ok) {
-            const resBody = await res.json()
+          if (result.ok) {
             await supabase
               .from('broadcast_recipients')
               .update({
                 status: 'sent',
                 sent_at: new Date().toISOString(),
-                resend_id: resBody.id || null,
+                resend_id: result.providerMessageId || null,
               })
               .eq('id', recipient.id)
             return 'sent'
           } else {
-            const errText = await res.text()
-            console.error(`Resend error for ${recipient.email}: ${errText}`)
+            console.error(`Resend error for ${recipient.email}: ${result.error}`)
             await supabase
               .from('broadcast_recipients')
               .update({ status: 'failed' })
               .eq('id', recipient.id)
-            throw new Error(errText)
+            throw new Error(result.error ?? 'send failed')
           }
         })
       )

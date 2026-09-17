@@ -29,6 +29,7 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import { documentDeepLink, linkHelpCopy, mintPortalLink, portalBaseUrl, type PortalLink } from "../_shared/portal-signin-link.ts";
+import { sendParentEmail } from "../_shared/parent-comms.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -189,23 +190,21 @@ serve(async (req: Request) => {
     });
 
     try {
-      const res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${RESEND_API_KEY}`,
-        },
-        body: JSON.stringify({
-          from: "Godspeed Basketball <documents@clubgodspeed.com>",
-          to: [parentEmail],
-          subject: email.subject,
-          html: email.html,
-        }),
+      const result = await sendParentEmail({
+        source: "send-document-notification",
+        purpose: notificationType,
+        trigger: "automated",
+        to: parentEmail,
+        athleteId: agreement.athlete_id ?? null,
+        subject: email.subject,
+        html: email.html,
+        from: "Godspeed Basketball <documents@clubgodspeed.com>",
+        relatedTable: "document_agreements",
+        relatedId: agreement.id,
       });
 
-      const result = await res.json();
-      if (!res.ok) {
-        throw new Error(`resend_${res.status}: ${result?.message ?? "send failed"}`);
+      if (!result.ok) {
+        throw new Error(`resend_send_failed: ${result.error ?? "send failed"}`);
       }
 
       await supabase.from("document_notification_log").insert({
@@ -215,7 +214,7 @@ serve(async (req: Request) => {
         recipient_email: parentEmail,
         subject: email.subject,
         message_preview: email.preview,
-        resend_message_id: result.id || null,
+        resend_message_id: result.providerMessageId || null,
       });
 
       await supabase.from("document_events").insert({
@@ -224,7 +223,7 @@ serve(async (req: Request) => {
         actor_type: "system",
         event_metadata: {
           notification_type: notificationType,
-          resend_message_id: result.id || null,
+          resend_message_id: result.providerMessageId || null,
           subject: email.subject,
           one_tap_link: link.oneTap,
         },

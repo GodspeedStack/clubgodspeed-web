@@ -8,6 +8,7 @@
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { sendParentEmail } from "../_shared/parent-comms.ts";
 
 const RESEND_API_KEY   = Deno.env.get('RESEND_API_KEY')!
 const SUPABASE_URL     = Deno.env.get('SUPABASE_URL')!
@@ -177,21 +178,19 @@ Deno.serve(async (req) => {
       const batch = parents.slice(i, i + BATCH_SIZE)
       for (const parent of batch) {
         try {
-          const res = await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${RESEND_API_KEY}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              from: FROM_EMAIL,
-              to: [parent.email],
-              subject,
-              html
-            })
+          const result = await sendParentEmail({
+            source: 'send-calendar-update',
+            purpose: 'schedule_update',
+            trigger: 'automated',
+            to: parent.email,
+            recipientName: parent.name ?? null,
+            subject,
+            html,
+            from: FROM_EMAIL,
+            metadata: { event_ids },
           })
-          if (res.ok) sent++
-          else console.error(`Failed to send to ${parent.email}: ${await res.text()}`)
+          if (result.ok) sent++
+          else console.error(`Failed to send to ${parent.email}: ${result.error}`)
         } catch (sendErr) {
           console.error(`Send error for ${parent.email}:`, sendErr)
         }

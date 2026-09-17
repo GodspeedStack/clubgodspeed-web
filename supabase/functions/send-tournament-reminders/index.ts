@@ -9,6 +9,7 @@
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { sendParentEmail } from "../_shared/parent-comms.ts";
 
 const RESEND_API_KEY   = Deno.env.get('RESEND_API_KEY')!
 const SUPABASE_URL     = Deno.env.get('SUPABASE_URL')!
@@ -192,21 +193,20 @@ Deno.serve(async (req) => {
 
       for (const parent of batch) {
         try {
-          const res = await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${RESEND_API_KEY}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              from: FROM_EMAIL,
-              to: [parent.email],
-              subject,
-              html
-            })
+          const result = await sendParentEmail({
+            source: 'send-tournament-reminders',
+            purpose: 'tournament_reminder',
+            trigger: 'cron',
+            to: parent.email,
+            recipientName: parent.name ?? null,
+            subject,
+            html,
+            from: FROM_EMAIL,
+            idempotencyKey: `tourney/${weekKey}/${parent.email}`,
+            metadata: { event_ids: eventIds, week_key: weekKey },
           })
 
-          if (res.ok) {
+          if (result.ok) {
             sent++
             // Log for dedup
             await supabase.from('tournament_reminder_log').insert({
@@ -215,7 +215,7 @@ Deno.serve(async (req) => {
               week_key: weekKey
             })
           } else {
-            console.error(`Failed to send to ${parent.email}: ${await res.text()}`)
+            console.error(`Failed to send to ${parent.email}: ${result.error}`)
           }
         } catch (err) {
           console.error(`Email error for ${parent.email}:`, err)

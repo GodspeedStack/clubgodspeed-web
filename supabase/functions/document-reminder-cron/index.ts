@@ -29,6 +29,7 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import { documentsTabLink, linkHelpCopy, mintPortalLink, type PortalLink } from "../_shared/portal-signin-link.ts";
+import { sendParentEmail } from "../_shared/parent-comms.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -208,25 +209,21 @@ serve(async (_req: Request) => {
     });
 
     try {
-      const res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${RESEND_API_KEY}`,
-          // Idempotency: one send per parent + player + calendar day.
-          "Idempotency-Key": `doc-cron/v3/${parentEmail}/${lead.athleteId}/${today}`,
-        },
-        body: JSON.stringify({
-          from: "Godspeed Basketball <documents@clubgodspeed.com>",
-          to: [parentEmail],
-          subject: email.subject,
-          html: email.html,
-        }),
+      const result = await sendParentEmail({
+        source: "document-reminder-cron",
+        purpose: lead.rule.type,
+        trigger: "cron",
+        to: parentEmail,
+        athleteId: lead.athleteId ?? null,
+        subject: email.subject,
+        html: email.html,
+        from: "Godspeed Basketball <documents@clubgodspeed.com>",
+        // Idempotency: one send per parent + player + calendar day.
+        idempotencyKey: `doc-cron/v3/${parentEmail}/${lead.athleteId}/${today}`,
       });
 
-      const result = await res.json();
-      if (!res.ok) {
-        throw new Error(`resend_${res.status}: ${result?.message ?? "send failed"}`);
+      if (!result.ok) {
+        throw new Error(`resend_send_failed: ${result.error ?? "send failed"}`);
       }
 
       for (const it of items) {
@@ -237,7 +234,7 @@ serve(async (_req: Request) => {
           recipient_email: parentEmail,
           subject: email.subject,
           message_preview: email.preview,
-          resend_message_id: result.id || null,
+          resend_message_id: result.providerMessageId || null,
         });
 
         await supabase.from("document_events").insert({
@@ -250,7 +247,7 @@ serve(async (_req: Request) => {
             notification_type: it.rule.type,
             days_outstanding: it.daysOutstanding,
             escalation_label: it.rule.label,
-            resend_message_id: result.id || null,
+            resend_message_id: result.providerMessageId || null,
             one_tap_link: link.oneTap,
             batched_documents: items.length,
           },
