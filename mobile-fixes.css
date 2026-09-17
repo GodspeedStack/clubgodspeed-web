@@ -471,3 +471,91 @@ body {
         font-size: 16px !important;
     }
 }
+/* =====================================================
+   MOBILE HOME SCREEN FIXES  (2026-09-17)
+   Verified against the live site at 390x844 (iPhone 14).
+   ===================================================== */
+
+/* 1. MOBILE MENU SAT BEHIND THE HEADER.
+   .mobile-menu-overlay is z-index 999 while the sticky .navbar is 1000, so the
+   90px header painted over the top of the open menu. Measured: the first item
+   ("HOME") starts at y=67 and 24px of it was hidden, and the menu's own close
+   button (top: 2rem) was completely covered, leaving no visible way out.
+   The overlay carries its own close button, so it belongs above the header. */
+.mobile-menu-overlay {
+    z-index: 2000 !important;
+    padding-top: calc(2rem + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+    /* Was rgba(0,0,0,.95). Five percent of transparency was enough for the hero
+       photo and the fixed bottom tab bar to ghost through the open menu, which
+       read as a rendering fault rather than a design. A full screen menu wants
+       an opaque ground. */
+    background: #000000 !important;
+}
+.mobile-menu-close {
+    z-index: 2001;
+}
+/* .mobile-bottom-nav sits at z-index 50, so it never covered the menu, but it
+   was visible through it before the background went opaque. Hidden as well so
+   the menu is the only thing on screen while it is open. */
+.mobile-menu-overlay.active ~ .mobile-bottom-nav,
+body:has(.mobile-menu-overlay.active) .mobile-bottom-nav {
+    display: none !important;
+}
+
+@media (max-width: 768px) {
+
+    /* 2. HERO BUTTONS SAT SIDE BY SIDE AND WRAPPED.
+       style.css already has this rule, but it is written inside a nested block,
+       so the browser resolves it as "& .cta-group" and it only matches
+       descendants of that parent. The hero's .cta-group is not one, so it never
+       applied: the buttons stayed in a row at 187x91 and 157x97, three lines of
+       text against two and mismatched heights. These are top level and match. */
+    .cta-group {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+    }
+
+    .cta-group .btn-primary,
+    .cta-group .btn-secondary {
+        width: 100%;
+        text-align: center;
+    }
+
+    /* 3. TAP TARGETS.
+       Apple HIG and WCAG 2.5.5 both want 44px. Buttons were tall enough only
+       because their text wrapped onto extra lines, which is not a size, it is
+       an accident. This sets the floor and lets short labels stay on one line. */
+    .btn-primary,
+    .btn-secondary,
+    .btn-card,
+    a.btn,
+    button.btn {
+        min-height: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+
+    /* 4. FOOTER LINKS WERE 16px TALL.
+       Eleven of them (Training, AAU Club, Fundraise, Skill Assessment, Player
+       Card, Parent Portal, About Us, Contact, Apparel, Footwear, Accessories)
+       plus Privacy and Terms. The text had visual spacing around it but the
+       tappable box was only the line height. */
+    #gs-shared-footer a,
+    footer a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+    }
+
+    /* Legal links sit on one row, so give them horizontal room as well. */
+    #gs-shared-footer .footer-legal a,
+    footer .footer-bottom a {
+        padding: 0 0.75rem;
+    }
+}

@@ -10,6 +10,7 @@
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { sendParentEmail } from "../_shared/parent-comms.ts";
 
 const SUPABASE_URL     = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -92,23 +93,21 @@ Deno.serve(async (req) => {
     if (!confirmUrl) throw new Error('No action_link returned from generateLink')
 
     // Send branded email via Resend
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        from: FROM_EMAIL,
-        to: [email],
-        subject: 'Verify Your Email - Godspeed Basketball',
-        html: buildVerificationHtml(confirmUrl)
-      })
+    const sendResult = await sendParentEmail({
+      source: 'resend-verification',
+      purpose: 'email_verification',
+      trigger: 'manual',
+      to: email,
+      subject: 'Verify Your Email - Godspeed Basketball',
+      // The confirmation link is single-use and identity-bearing, so the body
+      // is not kept in the ledger. The record of the send still is.
+      text: 'Email verification link sent. Link not stored.',
+      html: buildVerificationHtml(confirmUrl),
+      from: FROM_EMAIL,
     })
 
-    if (!res.ok) {
-      const errText = await res.text()
-      throw new Error(`Resend send failed: ${errText}`)
+    if (!sendResult.ok) {
+      throw new Error(`Resend send failed: ${sendResult.error}`)
     }
 
     return new Response(JSON.stringify({ ok: true, status: 'sent' }), {

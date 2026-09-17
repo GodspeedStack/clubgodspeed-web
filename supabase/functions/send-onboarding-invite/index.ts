@@ -13,6 +13,7 @@
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { sendParentEmail } from "../_shared/parent-comms.ts";
 
 const RESEND_API_KEY   = Deno.env.get('RESEND_API_KEY')!
 const SUPABASE_URL     = Deno.env.get('SUPABASE_URL')!
@@ -98,23 +99,21 @@ Deno.serve(async (req) => {
     const athleteName = invite.athlete_name || 'your athlete'
 
     try {
-      const res = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${RESEND_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: FROM_EMAIL,
-          to: [email],
-          subject: `${firstName}, complete your Godspeed Basketball onboarding`,
-          html: buildInviteEmail(firstName, athleteName),
-        }),
+      const sendResult = await sendParentEmail({
+        source: 'send-onboarding-invite',
+        purpose: 'onboarding_invite',
+        trigger: 'automated',
+        to: email,
+        recipientName: invite.parent_name ?? null,
+        subject: `${firstName}, complete your Godspeed Basketball onboarding`,
+        html: buildInviteEmail(firstName, athleteName),
+        from: FROM_EMAIL,
+        relatedTable: 'onboarding_sessions',
+        relatedId: sessionId,
       })
 
-      if (!res.ok) {
-        const err = await res.text()
-        results.push({ email, status: `send_failed: ${err}`, session_id: sessionId })
+      if (!sendResult.ok) {
+        results.push({ email, status: `send_failed: ${sendResult.error}`, session_id: sessionId })
         continue
       }
 

@@ -14,6 +14,7 @@
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { sendParentEmail } from "../_shared/parent-comms.ts";
 
 const RESEND_API_KEY  = Deno.env.get('RESEND_API_KEY')!
 const SUPABASE_URL    = Deno.env.get('SUPABASE_URL')!
@@ -184,18 +185,26 @@ function subjectLine(reminderType: ReminderType, playerName: string, amount: num
   return map[reminderType]
 }
 
-async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ from: FROM_EMAIL, to, subject, html }),
+async function sendEmail(
+  to: string,
+  subject: string,
+  html: string,
+  ctx?: { purpose?: string; athleteId?: string | null; paymentId?: string | null },
+): Promise<boolean> {
+  const result = await sendParentEmail({
+    source: 'send-payment-reminders',
+    purpose: ctx?.purpose ?? 'dues_reminder',
+    trigger: 'cron',
+    to,
+    athleteId: ctx?.athleteId ?? null,
+    subject,
+    html,
+    from: FROM_EMAIL,
+    relatedTable: ctx?.paymentId ? 'payments' : null,
+    relatedId: ctx?.paymentId ?? null,
   })
-  if (!res.ok) {
-    const err = await res.text()
-    console.error(`Resend error for ${to}:`, err)
+  if (!result.ok) {
+    console.error(`Resend error for ${to}:`, result.error)
     return false
   }
   return true
@@ -301,7 +310,10 @@ Deno.serve(async (req) => {
           plan.plan_type
         )
         const subject = subjectLine(reminderType, plan.player_name, payment.amount)
-        const ok      = await sendEmail(recipient.email, subject, html)
+        const ok      = await sendEmail(recipient.email, subject, html, {
+          purpose: reminderType,
+          paymentId: payment.id ?? null,
+        })
 
         if (ok) {
           // Log the send

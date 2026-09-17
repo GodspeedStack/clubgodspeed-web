@@ -227,6 +227,9 @@ async function loadTeamsDropdowns() {
 
 // ─── DASHBOARD ──────────────────────────────────────────────
 async function loadDashboard() {
+  // Surface the unread parent-message count on the sidebar from first paint,
+  // so it is visible without opening Messaging.
+  refreshLedgerBadge();
   let profiles = [], requests = [], dues = [];
   try {
     if (osSupabase) {
@@ -1744,6 +1747,208 @@ async function loadComms() {
   } catch (e) { }
   renderBroadcasts();
   initAvailability();
+  loadMessageLedger();
+}
+
+// ─── MESSAGE LEDGER ─────────────────────────────────────────────────────────
+// Every message that leaves Godspeed for a parent lands here. Rows are written
+// by the edge functions and by the delivery webhook; nothing in this file can
+// create, edit or delete one.
+
+let ledgerRows = [];
+let ledgerOffset = 0;
+let ledgerTotal = 0;
+let ledgerSearchTimer = null;
+const LEDGER_PAGE = 100;
+
+function scheduleLedgerSearch() {
+  clearTimeout(ledgerSearchTimer);
+  ledgerSearchTimer = setTimeout(() => loadMessageLedger(), 300);
+}
+
+function ledgerSinceISO() {
+  const days = document.getElementById('ledger-range')?.value;
+  if (!days) return null;
+  const d = new Date();
+  d.setDate(d.getDate() - parseInt(days, 10));
+  return d.toISOString();
+}
+
+async function loadMessageLedger(append = false) {
+  const tbody = document.getElementById('ledger-tbody');
+  if (!tbody) return;
+  if (!osSupabase) { tbody.innerHTML = emptyLedgerRow('Not connected'); return; }
+
+  if (!append) { ledgerOffset = 0; ledgerRows = []; }
+
+  try {
+    const { data, error } = await osSupabase.rpc('parent_message_search', {
+      p_q: document.getElementById('ledger-q')?.value?.trim() || null,
+      p_channel: document.getElementById('ledger-channel')?.value || null,
+      p_status: document.getElementById('ledger-status')?.value || null,
+      p_since: ledgerSinceISO(),
+      p_bypassed_only: !!document.getElementById('ledger-bypassed')?.checked,
+      p_limit: LEDGER_PAGE,
+      p_offset: ledgerOffset
+    });
+    if (error) throw error;
+
+    const rows = data || [];
+    ledgerTotal = rows.length ? Number(rows[0].total_count) : (append ? ledgerTotal : 0);
+    ledgerRows = append ? ledgerRows.concat(rows) : rows;
+    ledgerOffset = ledgerRows.length;
+  } catch (e) {
+    console.error('[ledger] load failed', e);
+    tbody.innerHTML = emptyLedgerRow('Could not load the ledger: ' + (e.message || 'unknown error'));
+    return;
+  }
+
+  renderLedger();
+  refreshLedgerBadge();
+}
+
+function emptyLedgerRow(msg) {
+  return `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px">${esc(msg)}</td></tr>`;
+}
+
+function ledgerStatusTag(status, bypassed) {
+  const map = {
+    delivered: 'tag-green', opened: 'tag-green', clicked: 'tag-green',
+    sent: 'tag-blue', queued: 'tag-yellow',
+    bounced: 'tag-red', complained: 'tag-red', failed: 'tag-red',
+    unknown: 'tag-gray'
+  };
+  const tag = `<span class="tag ${map[status] || 'tag-gray'}">${esc(status || 'unknown')}</span>`;
+  return bypassed
+    ? tag + ' <span class="tag tag-red" title="This message did not go through the logged send path">unlogged</span>'
+    : tag;
+}
+
+function fmtLedgerTime(iso) {
+  if (!iso) return '--';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' +
+         d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+function renderLedger() {
+  const tbody = document.getElementById('ledger-tbody');
+  if (!tbody) return;
+
+  if (!ledgerRows.length) {
+    tbody.innerHTML = emptyLedgerRow('No messages match these filters');
+    document.getElementById('ledger-more').style.display = 'none';
+    return;
+  }
+
+  tbody.innerHTML = ledgerRows.map(r => {
+    const unseen = !r.admin_notified_at;
+    const to = r.recipient_name || r.recipient_email || r.recipient_phone || '--';
+    const sub = r.subject || (r.channel === 'sms' ? '(text message)' : '--');
+    return `<tr style="cursor:pointer${unseen ? ';font-weight:600' : ''}" onclick="viewLedgerMessage('${esc(r.id)}')">
+      <td style="color:var(--muted);white-space:nowrap">${unseen ? '<span style="color:var(--primary)">&bull;</span> ' : ''}${esc(fmtLedgerTime(r.occurred_at))}</td>
+      <td style="max-width:170px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(to)}</div>${r.recipient_name && r.recipient_email ? `<div style="font-size:11px;color:var(--muted);font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.recipient_email)}</div>` : ''}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.athlete_name || '--')}</td>
+      <td style="max-width:230px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(sub)}">${esc(sub)}</div><div style="font-size:11px;color:var(--muted);font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.purpose || '--')}</div></td>
+      <td style="white-space:nowrap">${esc(r.channel || '--')}</td>
+      <td style="white-space:nowrap">${ledgerStatusTag(r.status, r.bypassed)}</td>
+      <td style="color:var(--muted);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.sent_by_name || (r.trigger_type === 'manual' ? 'staff' : r.trigger_type || 'system'))}</td>
+    </tr>`;
+  }).join('');
+
+  const more = document.getElementById('ledger-more');
+  more.style.display = ledgerRows.length < ledgerTotal ? 'block' : 'none';
+}
+
+async function refreshLedgerBadge() {
+  const el = document.getElementById('ledger-badge');
+  if (!el || !osSupabase) return;
+  try {
+    const { data, error } = await osSupabase.rpc('parent_message_badge');
+    if (error) throw error;
+    const b = Array.isArray(data) ? data[0] : data;
+    if (!b) { el.textContent = ''; return; }
+    const bits = [];
+    if (Number(b.unread) > 0) bits.push(`${b.unread} new`);
+    if (Number(b.failed_24h) > 0) bits.push(`${b.failed_24h} failed in 24h`);
+    if (Number(b.bypassed) > 0) bits.push(`${b.bypassed} unlogged`);
+    el.textContent = bits.join('  \u00b7  ');
+    el.style.color = (Number(b.failed_24h) > 0 || Number(b.bypassed) > 0) ? 'var(--danger, #ef4444)' : 'var(--muted)';
+
+    // Mirror the unread count onto the sidebar so it is visible from any panel
+    const nav = document.getElementById('messages-badge');
+    if (nav) {
+      const n = Number(b.unread) || 0;
+      nav.textContent = n > 99 ? '99+' : String(n);
+      nav.style.display = n > 0 ? '' : 'none';
+    }
+  } catch (e) {
+    el.textContent = '';
+  }
+}
+
+async function markLedgerSeen() {
+  if (!osSupabase) return;
+  try {
+    const { data, error } = await osSupabase.rpc('parent_message_mark_seen', { p_through: new Date().toISOString() });
+    if (error) throw error;
+    showToast(`${data || 0} message${data === 1 ? '' : 's'} marked as seen`);
+    loadMessageLedger();
+  } catch (e) {
+    showToast('Could not mark as seen: ' + (e.message || 'unknown error'), 'error');
+  }
+}
+
+async function viewLedgerMessage(id) {
+  if (!osSupabase) return;
+  document.getElementById('modal-title').textContent = 'Message Record';
+  document.getElementById('modal-body').innerHTML = '<div style="padding:24px;color:var(--muted)">Loading...</div>';
+  document.getElementById('modal-overlay').classList.add('open');
+
+  let m;
+  try {
+    const { data, error } = await osSupabase.rpc('parent_message_detail', { p_id: id });
+    if (error) throw error;
+    m = data;
+  } catch (e) {
+    document.getElementById('modal-body').innerHTML =
+      `<div style="padding:24px;color:var(--danger,#ef4444)">${esc(e.message || 'Could not load this record')}</div>`;
+    return;
+  }
+
+  const row = (label, value) => value
+    ? `<tr><td style="color:var(--muted);padding:5px 14px 5px 0;white-space:nowrap;vertical-align:top">${esc(label)}</td><td style="padding:5px 0">${esc(String(value))}</td></tr>`
+    : '';
+
+  const trail = (m.events || []).map(e =>
+    `<div style="display:flex;gap:10px;font-size:13px;padding:3px 0">
+       <span style="color:var(--muted);min-width:130px">${esc(fmtLedgerTime(e.occurred_at))}</span>
+       <span>${esc(e.event_type)}</span>
+     </div>`).join('') || '<div style="font-size:13px;color:var(--muted)">No provider events recorded yet</div>';
+
+  document.getElementById('modal-body').innerHTML = `
+    ${m.bypassed ? '<div style="padding:10px 14px;border-radius:8px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);font-size:13px;margin-bottom:14px">This message reached a parent without going through the logged send path. The delivery webhook caught it. Find the code path that sent it and route it through the shared helper.</div>' : ''}
+    <table style="font-size:13px;width:100%;margin-bottom:16px">
+      ${row('Sent', fmtLedgerTime(m.occurred_at))}
+      ${row('To', m.recipient_name)}
+      ${row('Email', m.recipient_email)}
+      ${row('Phone', m.recipient_phone)}
+      ${row('Player', m.athlete_name)}
+      ${row('Channel', m.channel)}
+      ${row('Reason', m.purpose)}
+      ${row('Sent by', m.sent_by_name || m.trigger_type)}
+      ${row('Origin', m.source)}
+      ${row('Status', m.status)}
+      ${row('Last update', fmtLedgerTime(m.status_at))}
+      ${row('Error', m.error_text)}
+      ${row('Provider ref', m.provider_message_id)}
+    </table>
+    <h3 style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">SUBJECT</h3>
+    <div style="font-size:14px;margin-bottom:16px">${esc(m.subject || '(none)')}</div>
+    <h3 style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">WHAT THE PARENT RECEIVED</h3>
+    <pre style="white-space:pre-wrap;word-break:break-word;font-family:inherit;font-size:13px;line-height:1.6;background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:10px;padding:14px;max-height:340px;overflow:auto;margin-bottom:16px">${esc(m.body_text || '(not recorded)')}</pre>
+    <h3 style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">DELIVERY TRAIL</h3>
+    ${trail}`;
 }
 function renderBroadcasts() {
   document.getElementById('broadcast-tbody').innerHTML = allBroadcasts.length ? allBroadcasts.map(m => `<tr style="cursor:pointer" onclick="viewBroadcast('${m.id}')">

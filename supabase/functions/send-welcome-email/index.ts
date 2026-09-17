@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { sendParentEmail } from "../_shared/parent-comms.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -61,22 +62,18 @@ function welcomeHtml(name: string): string {
 }
 
 async function sendViaResend(email: string, fullName: string): Promise<{ ok: boolean; error?: string }> {
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from: FROM_EMAIL,
-      to: email,
-      subject: 'Your Godspeed Basketball Account is Ready',
-      html: welcomeHtml(fullName),
-    }),
+  // Routed through the shared helper so the send lands in parent_message_log.
+  const result = await sendParentEmail({
+    source: 'send-welcome-email',
+    purpose: 'account_ready',
+    trigger: 'automated',
+    to: email,
+    recipientName: fullName,
+    subject: 'Your Godspeed Basketball Account is Ready',
+    html: welcomeHtml(fullName),
+    from: FROM_EMAIL,
   })
-  if (res.ok) return { ok: true }
-  const errBody = await res.text()
-  return { ok: false, error: errBody }
+  return result.ok ? { ok: true } : { ok: false, error: result.error ?? 'send failed' }
 }
 
 Deno.serve(async (req) => {
