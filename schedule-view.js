@@ -17,7 +17,10 @@ const ScheduleView = (() => {
   let allEvents = [];
   let currentMonth = new Date().getMonth();
   let currentYear = new Date().getFullYear();
-  let activeGrade = 'all';   // 'all' | '4th' | '5th'
+  let activeGrade = 'all';   // 'all' | '4th' | '5th' | '6th'
+  let viewerIsStaff = false; // staff see every team
+  let myTeamIds = [];        // this family's team ids
+  let myGrades = [];         // grades derived from those teams, e.g. ['6th']
   let activeTab = 0;         // 0=Tournaments, 1=Practice, 2=Full Calendar
   let expandedId = null;     // which tournament card is expanded
   let containerId = null;
@@ -46,14 +49,14 @@ const ScheduleView = (() => {
     // Load team_schedule_view (master tournament source)
     const { data: schedData, error: schedErr } = await supabase
       .from('team_schedule_view')
-      .select('schedule_id,tournament_id,tournament_name,start_date,end_date,city,state,event_type,rank_tier,game_guarantee,status')
+      .select('schedule_id,tournament_id,team_id,tournament_name,start_date,end_date,city,state,event_type,rank_tier,game_guarantee,status')
       .order('start_date', { ascending: true });
     if (schedErr) { console.error('ScheduleView load team_schedule_view:', schedErr); }
 
     // Team scoping: which team(s) does this family belong to. When known, games
     // carrying a team_id are shown only for those teams. Events with no team_id
     // (program-wide) and tournaments stay visible to everyone. If unknown, show all.
-    let myTeamIds = [];
+    myTeamIds = [];
     try {
       const { data: teamData } = await supabase.rpc('get_my_team_ids');
       myTeamIds = (teamData || [])
@@ -84,8 +87,52 @@ const ScheduleView = (() => {
       return true;
     });
 
+    // Staff see every team. Everyone else sees program-wide events plus their
+    // own team(s). FAILS CLOSED: an unresolved roster never falls back to "all".
+    viewerIsStaff = false;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: prof } = await supabase.from('profiles')
+          .select('role').eq('id', user.id).maybeSingle();
+        viewerIsStaff = ['director', 'coach', 'founder'].includes(prof && prof.role);
+      }
+    } catch (e) { /* treat as non-staff */ }
+
+    // Most team-specific events carry a grade_level but NO team_id, so a team-id
+    // filter alone leaks them. Derive this family's grades from their team names
+    // ("Godspeed 4th/5th Grade" -> ['4th','5th']) and scope on grade too.
+    myGrades = [];
+    try {
+      if (myTeamIds.length) {
+        const { data: teamRows } = await supabase.from('teams')
+          .select('id,name').in('id', myTeamIds);
+        const found = new Set();
+        (teamRows || []).forEach(t => {
+          (String(t.name || '').match(/\d+(?:st|nd|rd|th)/gi) || [])
+            .forEach(g => found.add(g.toLowerCase()));
+        });
+        myGrades = Array.from(found);
+      }
+    } catch (e) { /* no grades resolved -> only program-wide events show */ }
+
+    // An event is in scope when it is program-wide, or belongs to one of this
+    // family's teams, or carries one of their grades.
+    // Competitive events belong to one team. If such an event carries neither a
+    // team nor a grade we cannot say whose it is, so it is withheld rather than
+    // shown to every family. Non-competitive items (meetings, club notices) with
+    // no team and no grade stay program-wide, which is what they are.
+    const TEAM_ONLY_TYPES = ['game', 'tournament', 'season', 'scrimmage'];
+    const eventInScope = (e) => {
+      if (viewerIsStaff) return true;
+      if (e.team_id) return myTeamIds.includes(e.team_id);
+      const g = e.grade_level;
+      if (g) return myGrades.includes(g);
+      return !TEAM_ONLY_TYPES.includes(e.event_type);
+    };
+
     // Map team_schedule_view rows to the same shape as calendar_events
-    const schedEvents = (schedData || []).map(t => ({
+    const schedEvents = (schedData || []).filter(t => eventInScope({ team_id: t.team_id, grade_level: null })).map(t => ({
       id: t.schedule_id || t.tournament_id,
       title: t.tournament_name,
       event_type: t.event_type === '3v3' ? 'tournament' : 'tournament',
@@ -103,9 +150,7 @@ const ScheduleView = (() => {
       _source: 'team_schedule'
     }));
 
-    const calEventsScoped = (myTeamIds.length)
-      ? calEvents.filter(e => !e.team_id || myTeamIds.includes(e.team_id))
-      : calEvents;
+    const calEventsScoped = calEvents.filter(eventInScope);
 
     allEvents = [...calEventsScoped, ...schedEvents].sort((a, b) =>
       (a.start_date || '').localeCompare(b.start_date || '')
@@ -183,20 +228,26 @@ const ScheduleView = (() => {
     const [h, m] = t.split(':').map(Number);
     return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
   }
+  // There is no combined team this season. Every event belongs to exactly one
+  // grade. An event with no grade is a data gap, not a "both teams" event, so
+  // it gets no badge rather than a label that claims something untrue.
   function gradeLabel(g) {
     if (g === '4th') return '4th Grade';
     if (g === '5th') return '5th Grade';
-    return 'Both Teams';
+    if (g === '6th') return '6th Grade';
+    return '';
   }
   function gradeBadgeColor(g) {
     if (g === '4th') return { bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' };
     if (g === '5th') return { bg: '#FDF4FF', color: '#7E22CE', border: '#E9D5FF' };
+    if (g === '6th') return { bg: '#FFF7ED', color: '#C2410C', border: '#FED7AA' };
     return { bg: '#F0FDF4', color: '#15803D', border: '#BBF7D0' };
   }
 
+  // Picking a grade means that grade. Ungraded events are not silently re-admitted.
   function filterByGrade(events) {
     if (activeGrade === 'all') return events;
-    return events.filter(e => e.grade_level === activeGrade || e.grade_level === 'both' || !e.grade_level);
+    return events.filter(e => e.grade_level === activeGrade);
   }
 
   function futureEvents() {
@@ -247,7 +298,8 @@ const ScheduleView = (() => {
           lines.push(`DTEND;VALUE=DATE:${endP.toISOString().split('T')[0].replace(/-/g, '')}`);
         }
       }
-      lines.push(`SUMMARY:${escICS(e.title)} (${gradeLabel(e.grade_level)})`);
+      const icsGrade = gradeLabel(e.grade_level);
+      lines.push(`SUMMARY:${escICS(e.title)}${icsGrade ? ` (${icsGrade})` : ''}`);
       if (e.location) lines.push(`LOCATION:${escICS(e.location)}`);
       if (e.description) lines.push(`DESCRIPTION:${escICS(e.description)}`);
       lines.push('END:VEVENT');
@@ -429,7 +481,7 @@ const ScheduleView = (() => {
       rows.push(['Date', fmt(ev.start_date, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) +
         (ev.end_date && ev.end_date !== ev.start_date ? ' - ' + fmt(ev.end_date, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) : '')]);
       if (ev.start_time) rows.push(['Time', fmtTime(ev.start_time) + (ev.end_time ? ' - ' + fmtTime(ev.end_time) : '')]);
-      rows.push(['Division', gradeLabel(ev.grade_level)]);
+      if (gradeLabel(ev.grade_level)) rows.push(['Division', gradeLabel(ev.grade_level)]);
       if (ev.cost) rows.push(['Cost', '$' + parseFloat(ev.cost).toFixed(0)]);
       if (ev.description) rows.push(['Details', ev.description]);
       if (priority) rows.push(['Attendance', '<span style="font-weight:600;color:#111">Full roster required.</span> This is a priority event for our program. We need every player present and ready to compete. Please plan accordingly and communicate early if there is a conflict.']);
@@ -471,7 +523,7 @@ const ScheduleView = (() => {
           <div style="flex:1;min-width:0">
             <div class="sv-card-title-row">
               <span class="sv-card-title">${ev.title}</span>
-              <span style="font-size:10px;font-weight:600;border-radius:4px;padding:2px 7px;background:${gc.bg};color:${gc.color};border:1px solid ${gc.border};white-space:nowrap">${gradeLabel(ev.grade_level)}</span>
+              ${gradeLabel(ev.grade_level) ? `<span style="font-size:10px;font-weight:600;border-radius:4px;padding:2px 7px;background:${gc.bg};color:${gc.color};border:1px solid ${gc.border};white-space:nowrap">${gradeLabel(ev.grade_level)}</span>` : ''}
               ${statusBadge}
             </div>
             <div class="sv-card-meta">
@@ -602,11 +654,19 @@ const ScheduleView = (() => {
 
   // ─── Grade Filter Tabs ──────────────────────────────────────
   function renderGradeFilter() {
-    const grades = [
-      { key: 'all', label: 'All' },
+    const ALL_GRADES = [
       { key: '4th', label: '4th Grade' },
-      { key: '5th', label: '5th Grade' }
+      { key: '5th', label: '5th Grade' },
+      { key: '6th', label: '6th Grade' }
     ];
+    const mine = viewerIsStaff ? ALL_GRADES : ALL_GRADES.filter(g => myGrades.includes(g.key));
+    // One team means nothing to switch between. Count TEAMS, not grades: a squad
+    // named "Godspeed 4th/5th Grade" parses to two grades but is still one team,
+    // and offering its families a 4th/5th switcher implies two schedules exist.
+    // Staff keep the switcher because they really do cover every team.
+    if (!viewerIsStaff && myTeamIds.length < 2) return '';
+    if (mine.length < 2) return '';
+    const grades = [{ key: 'all', label: 'All' }].concat(mine);
     return grades.map(g => {
       const active = activeGrade === g.key;
       return `<button onclick="ScheduleView._setGrade('${g.key}')"
