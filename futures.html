@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Godspeed Futures | Godspeed Basketball</title>
+<meta name="description" content="Godspeed Futures. Tell us your line of work and the fields you can open a door to.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue:#1A3A8F; --orange:#FF5722; --ink:#1d1d1f; --body:#3a3a3c;
+    --muted:#6e6e73; --page:#f5f5f7; --line:#e6e6ea; --danger:#c0392b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--body);
+       font-family:'Inter',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;
+       font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:640px;margin:0 auto;padding:0 16px 64px}
+  header.hero{position:relative;overflow:hidden;color:#fff;padding:44px 0 40px;margin-bottom:28px;
+    background:var(--blue);
+    background:linear-gradient(115deg,#0a1a4a 0%,var(--blue) 52%,#2c56be 100%)}
+  header.hero .stars{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  header.hero .hero-in{position:relative;z-index:1}
+  /* The constellation is decoration. Anyone who prefers less motion or has a
+     high-contrast need loses nothing by not seeing it. */
+  @media (prefers-contrast:more){header.hero .stars{display:none}}
+  .hero-in{max-width:640px;margin:0 auto;padding:0 16px}
+  .eyebrow{font-family:'Syncopate','Inter',sans-serif;font-size:11px;font-weight:700;
+           letter-spacing:.18em;text-transform:uppercase;color:#c3cfea}
+  h1{font-size:30px;line-height:1.14;font-weight:800;letter-spacing:-.02em;color:#fff;margin:14px 0 16px}
+  .rule{width:56px;height:4px;background:var(--orange);border-radius:2px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:28px 26px;
+        box-shadow:0 1px 3px rgba(15,23,42,.05),0 12px 34px rgba(15,23,42,.06)}
+  .lede{font-size:17px;color:var(--ink);margin:0 0 18px}
+  p{margin:0 0 16px}
+  .q{font-weight:700;color:var(--ink);font-size:15px;margin-bottom:6px;display:block}
+  .hint{font-size:13.5px;color:var(--muted);margin:0 0 10px;line-height:1.5}
+  label{display:block;margin-top:22px}
+  input,textarea{width:100%;padding:13px 14px;font:inherit;font-size:16px;color:var(--ink);
+    background:#fff;border:1px solid #d6d6dc;border-radius:11px;margin-top:4px}
+  input:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,58,143,.14)}
+  textarea{min-height:104px;resize:vertical}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:560px){.row{grid-template-columns:1fr}h1{font-size:25px}}
+  .check{display:flex;gap:11px;align-items:flex-start;margin-top:22px;font-size:15px;color:var(--ink)}
+  .check input{width:auto;margin:3px 0 0;flex:0 0 auto}
+  button{margin-top:26px;width:100%;padding:15px 20px;font:inherit;font-weight:700;font-size:15px;
+    color:#fff;background:var(--blue);border:0;border-radius:999px;cursor:pointer}
+  button:hover{background:#16327a}
+  button:disabled{opacity:.55;cursor:not-allowed}
+  .note{font-size:13.5px;color:var(--muted);margin-top:16px;line-height:1.55}
+  .msg{margin-top:18px;padding:14px 16px;border-radius:11px;font-size:15px;display:none}
+  .msg:empty{display:none !important}
+  .msg.err{display:block;background:#fdeceb;border:1px solid #f5c6c2;color:var(--danger)}
+  .done{text-align:center;padding:22px 4px}
+  .done h2{font-size:23px;font-weight:800;color:var(--ink);letter-spacing:-.01em;margin:0 0 12px}
+  .tag{margin-top:34px;text-align:center;font-family:'Syncopate','Inter',sans-serif;
+       font-size:10.5px;font-weight:700;letter-spacing:.16em;color:var(--ink)}
+  .tag span{color:var(--orange)}
+  .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <svg class="stars" viewBox="0 0 600 280" preserveAspectRatio="xMaxYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><line x1="204.2" y1="141.8" x2="189.4" y2="130.6" stroke="#c8deff" stroke-opacity="0.055" stroke-width="1"/><line x1="204.2" y1="141.8" x2="223.2" y2="173.1" stroke="#c8deff" stroke-opacity="0.035" stroke-width="1"/><line x1="204.2" y1="141.8" x2="222.3" y2="106.4" stroke="#c8deff" stroke-opacity="0.032" stroke-width="1"/><line x1="204.2" y1="141.8" x2="222.6" y2="101.2" stroke="#c8deff" stroke-opacity="0.026" stroke-width="1"/><line x1="204.2" y1="141.8" x2="241.1" y2="150.6" stroke="#c8deff" stroke-opacity="0.034" stroke-width="1"/><line x1="575.2" y1="159.0" x2="544.9" y2="196.5" stroke="#c8deff" stroke-opacity="0.039" stroke-width="1"/><line x1="575.2" y1="159.0" x2="573.9" y2="133.6" stroke="#c8deff" stroke-opacity="0.091" stroke-width="1"/><line x1="575.2" y1="159.0" x2="540.0" y2="188.3" stroke="#c8deff" stroke-opacity="0.045" stroke-width="1"/><line x1="575.2" y1="159.0" x2="578.2" y2="106.6" stroke="#c8deff" stroke-opacity="0.03" stroke-width="1"/><line x1="575.2" y1="159.0" x2="530.5" y2="134.9" stroke="#c8deff" stroke-opacity="0.033" stroke-width="1"/><line x1="538.0" y1="88.2" x2="520.3" y2="61.3" stroke="#c8deff" stroke-opacity="0.078" stroke-width="1"/><line x1="538.0" y1="88.2" x2="573.9" y2="133.6" stroke="#c8deff" stroke-opacity="0.019" stroke-width="1"/><line x1="538.0" y1="88.2" x2="500.4" y2="48.7" stroke="#c8deff" stroke-opacity="0.026" stroke-width="1"/><line x1="538.0" y1="88.2" x2="488.5" y2="72.7" stroke="#c8deff" stroke-opacity="0.028" stroke-width="1"/><line x1="538.0" y1="88.2" x2="578.2" y2="106.6" stroke="#c8deff" stroke-opacity="0.05" stroke-width="1"/><line x1="538.0" y1="88.2" x2="530.5" y2="134.9" stroke="#c8deff" stroke-opacity="0.04" stroke-width="1"/><line x1="520.3" y1="61.3" x2="500.4" y2="48.7" stroke="#c8deff" stroke-opacity="0.097" stroke-width="1"/><line x1="520.3" y1="61.3" x2="488.5" y2="72.7" stroke="#c8deff" stroke-opacity="0.064" stroke-width="1"/><line x1="408.4" y1="32.3" x2="425.7" y2="81.5" stroke="#c8deff" stroke-opacity="0.027" stroke-width="1"/><line x1="511.3" y1="189.0" x2="544.9" y2="196.5" stroke="#c8deff" stroke-opacity="0.069" stroke-width="1"/><line x1="511.3" y1="189.0" x2="458.6" y2="205.2" stroke="#c8deff" stroke-opacity="0.022" stroke-width="1"/><line x1="511.3" y1="189.0" x2="469.9" y2="163.3" stroke="#c8deff" stroke-opacity="0.041" stroke-width="1"/><line x1="511.3" y1="189.0" x2="548.4" y2="218.7" stroke="#c8deff" stroke-opacity="0.043" stroke-width="1"/><line x1="511.3" y1="189.0" x2="505.2" y2="232.3" stroke="#c8deff" stroke-opacity="0.05" stroke-width="1"/><line x1="511.3" y1="189.0" x2="540.0" y2="188.3" stroke="#c8deff" stroke-opacity="0.083" stroke-width="1"/><line x1="511.3" y1="189.0" x2="501.9" y2="148.0" stroke="#c8deff" stroke-opacity="0.051" stroke-width="1"/><line x1="511.3" y1="189.0" x2="530.5" y2="134.9" stroke="#c8deff" stroke-opacity="0.018" stroke-width="1"/><line x1="544.9" y1="196.5" x2="548.4" y2="218.7" stroke="#c8deff" stroke-opacity="0.096" stroke-width="1"/><line x1="544.9" y1="196.5" x2="505.2" y2="232.3" stroke="#c8deff" stroke-opacity="0.028" stroke-width="1"/><line x1="544.9" y1="196.5" x2="540.0" y2="188.3" stroke="#c8deff" stroke-opacity="0.124" stroke-width="1"/><line x1="458.6" y1="205.2" x2="469.9" y2="163.3" stroke="#c8deff" stroke-opacity="0.046" stroke-width="1"/><line x1="458.6" y1="205.2" x2="505.2" y2="232.3" stroke="#c8deff" stroke-opacity="0.025" stroke-width="1"/><line x1="469.9" y1="163.3" x2="501.9" y2="148.0" stroke="#c8deff" stroke-opacity="0.065" stroke-width="1"/><line x1="573.9" y1="133.6" x2="578.2" y2="106.6" stroke="#c8deff" stroke-opacity="0.091" stroke-width="1"/><line x1="573.9" y1="133.6" x2="530.5" y2="134.9" stroke="#c8deff" stroke-opacity="0.048" stroke-width="1"/><line x1="189.4" y1="130.6" x2="223.2" y2="173.1" stroke="#c8deff" stroke-opacity="0.014" stroke-width="1"/><line x1="189.4" y1="130.6" x2="222.3" y2="106.4" stroke="#c8deff" stroke-opacity="0.029" stroke-width="1"/><line x1="189.4" y1="130.6" x2="222.6" y2="101.2" stroke="#c8deff" stroke-opacity="0.025" stroke-width="1"/><line x1="189.4" y1="130.6" x2="241.1" y2="150.6" stroke="#c8deff" stroke-opacity="0.012" stroke-width="1"/><line x1="189.4" y1="130.6" x2="191.6" y2="85.6" stroke="#c8deff" stroke-opacity="0.024" stroke-width="1"/><line x1="500.4" y1="48.7" x2="488.5" y2="72.7" stroke="#c8deff" stroke-opacity="0.078" stroke-width="1"/><line x1="548.4" y1="218.7" x2="505.2" y2="232.3" stroke="#c8deff" stroke-opacity="0.047" stroke-width="1"/><line x1="548.4" y1="218.7" x2="534.0" y2="261.5" stroke="#c8deff" stroke-opacity="0.045" stroke-width="1"/><line x1="548.4" y1="218.7" x2="540.0" y2="188.3" stroke="#c8deff" stroke-opacity="0.077" stroke-width="1"/><line x1="548.4" y1="218.7" x2="518.4" y2="259.5" stroke="#c8deff" stroke-opacity="0.037" stroke-width="1"/><line x1="242.9" y1="60.2" x2="247.7" y2="100.6" stroke="#c8deff" stroke-opacity="0.034" stroke-width="1"/><line x1="242.9" y1="60.2" x2="222.3" y2="106.4" stroke="#c8deff" stroke-opacity="0.02" stroke-width="1"/><line x1="242.9" y1="60.2" x2="241.9" y2="79.0" stroke="#c8deff" stroke-opacity="0.062" stroke-width="1"/><line x1="242.9" y1="60.2" x2="222.6" y2="101.2" stroke="#c8deff" stroke-opacity="0.026" stroke-width="1"/><line x1="505.2" y1="232.3" x2="534.0" y2="261.5" stroke="#c8deff" stroke-opacity="0.054" stroke-width="1"/><line x1="505.2" y1="232.3" x2="540.0" y2="188.3" stroke="#c8deff" stroke-opacity="0.022" stroke-width="1"/><line x1="505.2" y1="232.3" x2="518.4" y2="259.5" stroke="#c8deff" stroke-opacity="0.081" stroke-width="1"/><line x1="223.2" y1="173.1" x2="241.1" y2="150.6" stroke="#c8deff" stroke-opacity="0.047" stroke-width="1"/><line x1="247.7" y1="100.6" x2="222.3" y2="106.4" stroke="#c8deff" stroke-opacity="0.052" stroke-width="1"/><line x1="247.7" y1="100.6" x2="241.9" y2="79.0" stroke="#c8deff" stroke-opacity="0.058" stroke-width="1"/><line x1="247.7" y1="100.6" x2="222.6" y2="101.2" stroke="#c8deff" stroke-opacity="0.052" stroke-width="1"/><line x1="247.7" y1="100.6" x2="241.1" y2="150.6" stroke="#c8deff" stroke-opacity="0.021" stroke-width="1"/><line x1="222.3" y1="106.4" x2="241.9" y2="79.0" stroke="#c8deff" stroke-opacity="0.042" stroke-width="1"/><line x1="222.3" y1="106.4" x2="222.6" y2="101.2" stroke="#c8deff" stroke-opacity="0.077" stroke-width="1"/><line x1="222.3" y1="106.4" x2="241.1" y2="150.6" stroke="#c8deff" stroke-opacity="0.023" stroke-width="1"/><line x1="222.3" y1="106.4" x2="191.6" y2="85.6" stroke="#c8deff" stroke-opacity="0.034" stroke-width="1"/><line x1="241.9" y1="79.0" x2="222.6" y2="101.2" stroke="#c8deff" stroke-opacity="0.046" stroke-width="1"/><line x1="241.9" y1="79.0" x2="191.6" y2="85.6" stroke="#c8deff" stroke-opacity="0.018" stroke-width="1"/><line x1="534.0" y1="261.5" x2="518.4" y2="259.5" stroke="#c8deff" stroke-opacity="0.108" stroke-width="1"/><line x1="222.6" y1="101.2" x2="241.1" y2="150.6" stroke="#c8deff" stroke-opacity="0.017" stroke-width="1"/><line x1="222.6" y1="101.2" x2="191.6" y2="85.6" stroke="#c8deff" stroke-opacity="0.037" stroke-width="1"/><line x1="540.0" y1="188.3" x2="501.9" y2="148.0" stroke="#c8deff" stroke-opacity="0.023" stroke-width="1"/><line x1="540.0" y1="188.3" x2="530.5" y2="134.9" stroke="#c8deff" stroke-opacity="0.025" stroke-width="1"/><line x1="501.9" y1="148.0" x2="530.5" y2="134.9" stroke="#c8deff" stroke-opacity="0.074" stroke-width="1"/><line x1="578.2" y1="106.6" x2="530.5" y2="134.9" stroke="#c8deff" stroke-opacity="0.022" stroke-width="1"/><circle cx="204.2" cy="141.8" r="3.3" fill="#a0c4ff" fill-opacity="0.045"/><circle cx="204.2" cy="141.8" r="1.0" fill="#fff" fill-opacity="0.37"/><circle cx="575.2" cy="159.0" r="8.6" fill="#a0c4ff" fill-opacity="0.083"/><circle cx="575.2" cy="159.0" r="2.5" fill="#fff" fill-opacity="0.70"/><circle cx="538.0" cy="88.2" r="3.7" fill="#a0c4ff" fill-opacity="0.086"/><circle cx="538.0" cy="88.2" r="1.1" fill="#fff" fill-opacity="0.72"/><circle cx="520.3" cy="61.3" r="6.3" fill="#a0c4ff" fill-opacity="0.085"/><circle cx="520.3" cy="61.3" r="1.9" fill="#fff" fill-opacity="0.71"/><circle cx="408.4" cy="32.3" r="3.5" fill="#a0c4ff" fill-opacity="0.076"/><circle cx="408.4" cy="32.3" r="1.0" fill="#fff" fill-opacity="0.63"/><circle cx="358.3" cy="94.2" r="4.3" fill="#a0c4ff" fill-opacity="0.064"/><circle cx="358.3" cy="94.2" r="1.3" fill="#fff" fill-opacity="0.53"/><circle cx="511.3" cy="189.0" r="5.9" fill="#a0c4ff" fill-opacity="0.087"/><circle cx="511.3" cy="189.0" r="1.7" fill="#fff" fill-opacity="0.73"/><circle cx="544.9" cy="196.5" r="8.3" fill="#a0c4ff" fill-opacity="0.082"/><circle cx="544.9" cy="196.5" r="2.5" fill="#fff" fill-opacity="0.68"/><circle cx="354.4" cy="203.4" r="4.4" fill="#a0c4ff" fill-opacity="0.060"/><circle cx="354.4" cy="203.4" r="1.3" fill="#fff" fill-opacity="0.50"/><circle cx="458.6" cy="205.2" r="7.0" fill="#a0c4ff" fill-opacity="0.076"/><circle cx="458.6" cy="205.2" r="2.1" fill="#fff" fill-opacity="0.64"/><circle cx="469.9" cy="163.3" r="5.0" fill="#a0c4ff" fill-opacity="0.088"/><circle cx="469.9" cy="163.3" r="1.5" fill="#fff" fill-opacity="0.73"/><circle cx="573.9" cy="133.6" r="3.5" fill="#a0c4ff" fill-opacity="0.101"/><circle cx="573.9" cy="133.6" r="1.0" fill="#fff" fill-opacity="0.84"/><circle cx="189.4" cy="130.6" r="2.2" fill="#a0c4ff" fill-opacity="0.043"/><circle cx="189.4" cy="130.6" r="0.6" fill="#fff" fill-opacity="0.36"/><circle cx="500.4" cy="48.7" r="4.9" fill="#a0c4ff" fill-opacity="0.093"/><circle cx="500.4" cy="48.7" r="1.4" fill="#fff" fill-opacity="0.78"/><circle cx="548.4" cy="218.7" r="4.6" fill="#a0c4ff" fill-opacity="0.090"/><circle cx="548.4" cy="218.7" r="1.3" fill="#fff" fill-opacity="0.75"/><circle cx="242.9" cy="60.2" r="2.8" fill="#a0c4ff" fill-opacity="0.051"/><circle cx="242.9" cy="60.2" r="0.8" fill="#fff" fill-opacity="0.42"/><circle cx="425.7" cy="81.5" r="4.6" fill="#a0c4ff" fill-opacity="0.073"/><circle cx="425.7" cy="81.5" r="1.3" fill="#fff" fill-opacity="0.61"/><circle cx="416.2" cy="251.6" r="5.0" fill="#a0c4ff" fill-opacity="0.076"/><circle cx="416.2" cy="251.6" r="1.5" fill="#fff" fill-opacity="0.63"/><circle cx="505.2" cy="232.3" r="4.9" fill="#a0c4ff" fill-opacity="0.084"/><circle cx="505.2" cy="232.3" r="1.5" fill="#fff" fill-opacity="0.70"/><circle cx="223.2" cy="173.1" r="2.1" fill="#a0c4ff" fill-opacity="0.047"/><circle cx="223.2" cy="173.1" r="0.6" fill="#fff" fill-opacity="0.39"/><circle cx="247.7" cy="100.6" r="2.0" fill="#a0c4ff" fill-opacity="0.050"/><circle cx="247.7" cy="100.6" r="0.6" fill="#fff" fill-opacity="0.42"/><circle cx="222.3" cy="106.4" r="4.9" fill="#a0c4ff" fill-opacity="0.048"/><circle cx="222.3" cy="106.4" r="1.4" fill="#fff" fill-opacity="0.40"/><circle cx="241.9" cy="79.0" r="3.3" fill="#a0c4ff" fill-opacity="0.049"/><circle cx="241.9" cy="79.0" r="1.0" fill="#fff" fill-opacity="0.41"/><circle cx="534.0" cy="261.5" r="5.6" fill="#a0c4ff" fill-opacity="0.080"/><circle cx="534.0" cy="261.5" r="1.6" fill="#fff" fill-opacity="0.67"/><circle cx="222.6" cy="101.2" r="4.7" fill="#a0c4ff" fill-opacity="0.047"/><circle cx="222.6" cy="101.2" r="1.4" fill="#fff" fill-opacity="0.39"/><circle cx="241.1" cy="150.6" r="3.8" fill="#a0c4ff" fill-opacity="0.053"/><circle cx="241.1" cy="150.6" r="1.1" fill="#fff" fill-opacity="0.44"/><circle cx="540.0" cy="188.3" r="5.0" fill="#a0c4ff" fill-opacity="0.083"/><circle cx="540.0" cy="188.3" r="1.5" fill="#fff" fill-opacity="0.69"/><circle cx="501.9" cy="148.0" r="4.6" fill="#a0c4ff" fill-opacity="0.080"/><circle cx="501.9" cy="148.0" r="1.4" fill="#fff" fill-opacity="0.66"/><circle cx="518.4" cy="259.5" r="7.2" fill="#a0c4ff" fill-opacity="0.095"/><circle cx="518.4" cy="259.5" r="2.1" fill="#fff" fill-opacity="0.79"/><circle cx="488.5" cy="72.7" r="4.7" fill="#a0c4ff" fill-opacity="0.074"/><circle cx="488.5" cy="72.7" r="1.4" fill="#fff" fill-opacity="0.62"/><circle cx="191.6" cy="85.6" r="4.0" fill="#a0c4ff" fill-opacity="0.044"/><circle cx="191.6" cy="85.6" r="1.2" fill="#fff" fill-opacity="0.37"/><circle cx="578.2" cy="106.6" r="4.5" fill="#a0c4ff" fill-opacity="0.088"/><circle cx="578.2" cy="106.6" r="1.3" fill="#fff" fill-opacity="0.73"/><circle cx="530.5" cy="134.9" r="7.2" fill="#a0c4ff" fill-opacity="0.080"/><circle cx="530.5" cy="134.9" r="2.1" fill="#fff" fill-opacity="0.66"/><circle cx="543.0" cy="63.0" r="13.5" fill="#FF5722" fill-opacity="0.16"/><circle cx="543.0" cy="63.0" r="2.7" fill="#FF7A4A"/><circle cx="453.0" cy="196.0" r="11.0" fill="#FF5722" fill-opacity="0.16"/><circle cx="453.0" cy="196.0" r="2.2" fill="#FF7A4A"/><circle cx="585.0" cy="168.0" r="9.0" fill="#FF5722" fill-opacity="0.16"/><circle cx="585.0" cy="168.0" r="1.8" fill="#FF7A4A"/></svg>
+  <div class="hero-in">
+    <div class="eyebrow">Godspeed Futures</div>
+    <h1>What do you do for a living?</h1>
+    <div class="rule"></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="card" id="card">
+
+    <div id="form-view">
+      <p class="lede">A very small number of our sons will make a living playing basketball. Every one of them will make a living doing something.</p>
+      <p>Before a boy can picture himself as an engineer, an electrician, a doctor, a lawyer, a pilot, a chef, he has to meet one. The strongest professional network this program has is already sitting in our bleachers on game day. We have just never asked for it.</p>
+      <p>Two questions. About two minutes. A short answer still helps.</p>
+
+      <form id="f" novalidate>
+        <div class="row">
+          <label><span class="q">Your name</span>
+            <input id="name" name="name" type="text" maxlength="120" autocomplete="name" required>
+          </label>
+          <label><span class="q">Your email</span>
+            <input id="email" name="email" type="email" maxlength="200" autocomplete="email" required>
+          </label>
+        </div>
+
+        <label><span class="q">Your son's name</span>
+          <p class="hint">So we know which family this came from.</p>
+          <input id="athlete" name="athlete" type="text" maxlength="120">
+        </label>
+
+        <label><span class="q">1. What is your line of work?</span>
+          <p class="hint">Whatever it is. Trades, medicine, logistics, law, teaching, city work, small business, driving, barbering, IT. There is no job on that list a ten year old would not learn something from.</p>
+          <input id="work" name="work" type="text" maxlength="500" required>
+        </label>
+
+        <label><span class="q">Where do you work? (optional)</span>
+          <input id="employer" name="employer" type="text" maxlength="200">
+        </label>
+
+        <label><span class="q">2. What other fields can you reach?</span>
+          <p class="hint">The cousin who is an architect. The friend from church who runs a fire station. The former coworker at Denver Water. You do not have to ask them anything yet. Just tell us the door exists.</p>
+          <textarea id="reach" name="reach" maxlength="2000"></textarea>
+        </label>
+
+        <label class="check">
+          <input id="speak" type="checkbox">
+          <span>I would be open to speaking to the boys for twenty minutes after a practice.</span>
+        </label>
+
+        <label><span class="q">Anything else (optional)</span>
+          <textarea id="notes" name="notes" maxlength="2000"></textarea>
+        </label>
+
+        <div class="hp" aria-hidden="true">
+          <label>Leave this field empty<input id="company_url" type="text" tabindex="-1" autocomplete="off"></label>
+        </div>
+
+        <button type="submit" id="go">Send it to Coach Scott</button>
+        <div class="msg" id="err" role="alert"></div>
+
+        <p class="note">Answering is not volunteering yourself or anyone. We are still building this out. Naming a field commits you to nothing, and you can pass on anything at any time. Coach Scott approves every professional before they come near the boys, and anyone working with them directly clears a background check the club pays for.</p>
+      </form>
+    </div>
+
+    <div id="done-view" class="done" style="display:none">
+      <h2>Got it. Thank you.</h2>
+      <p id="done-line">Coach Scott will read every one of these himself.</p>
+      <p class="note">If you thought of something else, just reply to the email and tell him.</p>
+    </div>
+
+  </div>
+  <div class="tag">BROTHERHOOD. HABITS. <span>SUCCESS.</span></div>
+</div>
+
+<script src="src/lib/env-injector.js" type="module"></script>
+<script>
+(function () {
+  var form = document.getElementById('f');
+  var btn  = document.getElementById('go');
+  var err  = document.getElementById('err');
+
+  function fail(m) { err.textContent = m; err.className = 'msg err'; }
+  function clear() { err.className = 'msg'; err.textContent = ''; }
+  function val(id) { return (document.getElementById(id).value || '').trim(); }
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    clear();
+
+    // Bot trap. A real person never fills a field they cannot see.
+    if (val('company_url')) { document.getElementById('form-view').style.display = 'none';
+                              document.getElementById('done-view').style.display = 'block'; return; }
+
+    var name = val('name'), email = val('email'), work = val('work');
+    if (!name)  return fail('Please add your name.');
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(email)) return fail('Please check that email address.');
+    if (!work)  return fail('Please tell us your line of work, even briefly.');
+
+    var cfg = window.SUPABASE_CONFIG;
+    if (!cfg || !cfg.url || !cfg.anonKey) {
+      return fail('Something is wrong on our end. Please reply to the email instead and Coach Scott will add it by hand.');
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+
+    try {
+      var res = await fetch(cfg.url + '/rest/v1/futures_network_signups', {
+        method: 'POST',
+        headers: {
+          'apikey': cfg.anonKey,
+          'Authorization': 'Bearer ' + cfg.anonKey,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          parent_name: name,
+          parent_email: email,
+          athlete_name: val('athlete') || null,
+          line_of_work: work,
+          employer: val('employer') || null,
+          fields_i_can_reach: val('reach') || null,
+          willing_to_speak: document.getElementById('speak').checked,
+          notes: val('notes') || null,
+          status: 'new',
+          source: 'futures_form'
+        })
+      });
+
+      if (res.status === 409) {
+        // the one-per-day guard: they already sent one today
+        document.getElementById('done-line').textContent =
+          'We already have an answer from you today. If you need to change it, reply to the email and Coach Scott will update it.';
+        document.getElementById('form-view').style.display = 'none';
+        document.getElementById('done-view').style.display = 'block';
+        return;
+      }
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+
+      document.getElementById('form-view').style.display = 'none';
+      document.getElementById('done-view').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (e2) {
+      btn.disabled = false;
+      btn.textContent = 'Send it to Coach Scott';
+      fail('That did not go through. Please try once more, or just reply to the email and Coach Scott will add it by hand.');
+    }
+  });
+})();
+</script>
+</body>
+</html>

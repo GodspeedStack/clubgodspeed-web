@@ -29,6 +29,14 @@
  *   - training_hours_summary (purchased vs used hours)
  */
 
+// A Postgres `date` column arrives as 'YYYY-MM-DD'. new Date() reads that as
+// UTC midnight, which is the previous evening in Denver, so the calendar day
+// renders one day early. Anchoring at local noon keeps the intended day.
+function asLocalDate(v) {
+  return new Date(typeof v === 'string' && v.length === 10 ? v + 'T12:00:00' : v);
+}
+
+
 window.GS_TrainingReport = (function () {
   'use strict';
 
@@ -395,7 +403,7 @@ window.GS_TrainingReport = (function () {
       notedSessions.forEach(a => {
         checkPageBreak(36);
         const s = a.training_sessions;
-        const d = new Date(s.session_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const d = asLocalDate(s.session_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         doc.setFont(BRAND.font, 'bold');
         doc.setFontSize(8);
         doc.setTextColor(BRAND.black);
@@ -413,7 +421,7 @@ window.GS_TrainingReport = (function () {
     // ── Skill Evaluation ──────────────────────────────────
     if (evaluation) {
       checkPageBreak(200);
-      sectionHeader('Skill Evaluation (' + new Date(evaluation.evaluation_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) + ')');
+      sectionHeader('Skill Evaluation (' + asLocalDate(evaluation.evaluation_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) + ')');
 
       const skills = [
         ['Ball Handling', evaluation.ball_handling],
@@ -466,7 +474,7 @@ window.GS_TrainingReport = (function () {
           // Score
           doc.setFont(BRAND.font, 'bold');
           doc.setFontSize(8);
-          doc.setTextColor+255, 255, 255);
+          doc.setTextColor(255, 255, 255);
           if (fillW > 20) {
             doc.text(String(value), barX + fillW - 14, y + 9);
           } else {

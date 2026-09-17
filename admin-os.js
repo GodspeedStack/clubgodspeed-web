@@ -15,6 +15,13 @@ let teamRosterCache = {};
 
 // ─── SHARED UTILITIES ───────────────────────────────────────
 const fmt = (iso) => iso ? new Date(iso + (iso.length === 10 ? 'T12:00:00' : '')).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '--';
+// A Postgres `date` column arrives as 'YYYY-MM-DD'. new Date() reads that as
+// UTC midnight, which is the previous evening in Denver, so the calendar day
+// renders one day early. Anchoring at local noon keeps the intended day.
+function asLocalDate(v) {
+  return new Date(typeof v === 'string' && v.length === 10 ? v + 'T12:00:00' : v);
+}
+
 const fmtShort = (iso) => iso ? new Date(iso + (iso.length === 10 ? 'T12:00:00' : '')).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '--';
 function fmt12(t) {
   if (!t) return '--';
@@ -3085,7 +3092,7 @@ function openTournamentDetail(id) {
   const startFmt = e.start_date ? fmtShort(e.start_date) : 'TBD';
   const endFmt = e.end_date && e.end_date !== e.start_date ? ' - ' + fmtShort(e.end_date) : '';
   const deadlineFmt = e.registration_deadline ? fmtShort(e.registration_deadline) : null;
-  const daysUntil = e.start_date ? Math.ceil((new Date(e.start_date) - new Date()) / (1000 * 60 * 60 * 24)) : null;
+  const daysUntil = e.start_date ? Math.ceil((asLocalDate(e.start_date) - new Date()) / (1000 * 60 * 60 * 24)) : null;
   const urgencyColor = daysUntil !== null && daysUntil <= 7 ? '#ff3b30' : daysUntil !== null && daysUntil <= 14 ? '#ff9500' : 'var(--muted)';
 
   let html = `<div style="display:flex;flex-direction:column;gap:16px">`;
@@ -3110,7 +3117,7 @@ function openTournamentDetail(id) {
     <div style="font-weight:700;margin-top:4px">${e.grade_level === 'both' ? '4th + 5th' : e.grade_level + ' Grade'}</div>
   </div>`;
   if (deadlineFmt) {
-    const deadlineDays = Math.ceil((new Date(e.registration_deadline) - new Date()) / (1000 * 60 * 60 * 24));
+    const deadlineDays = Math.ceil((asLocalDate(e.registration_deadline) - new Date()) / (1000 * 60 * 60 * 24));
     const dlColor = deadlineDays <= 3 ? '#ff3b30' : deadlineDays <= 7 ? '#ff9500' : 'var(--text)';
     html += `<div style="padding:12px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid var(--border)">
       <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Reg. Deadline</div>

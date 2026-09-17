@@ -1,3 +1,10 @@
+// A Postgres `date` column arrives as 'YYYY-MM-DD'. new Date() reads that as
+// UTC midnight, which is the previous evening in Denver, so the calendar day
+// renders one day early. Anchoring at local noon keeps the intended day.
+function asLocalDate(v) {
+  return new Date(typeof v === 'string' && v.length === 10 ? v + 'T12:00:00' : v);
+}
+
 export default async function handler(req, res) {
   // Verify Cron Request (Vercel specific header)
   if (req.headers.authorization !== \`Bearer \${process.env.CRON_SECRET}\`) {
@@ -28,7 +35,7 @@ export default async function handler(req, res) {
     const results = [];
 
     for (const payment of payments) {
-      const dueDate = new Date(payment.due_date);
+      const dueDate = asLocalDate(payment.due_date);
       const diffTime = dueDate.getTime() - now.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       

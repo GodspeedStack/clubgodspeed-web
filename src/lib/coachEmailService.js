@@ -7,6 +7,14 @@
  * use a backend API endpoint for better security.
  */
 
+// A Postgres `date` column arrives as 'YYYY-MM-DD'. new Date() reads that as
+// UTC midnight, which is the previous evening in Denver, so the calendar day
+// renders one day early. Anchoring at local noon keeps the intended day.
+function asLocalDate(v) {
+  return new Date(typeof v === 'string' && v.length === 10 ? v + 'T12:00:00' : v);
+}
+
+
 /**
  * Get parent email address for an athlete
  * @param {string} athleteId - Athlete ID
@@ -202,7 +210,7 @@ function generateTrainingReportEmail(playerName, trainingData, coachNotes = '') 
                                 <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
                                     ${trainingData.attendance.slice(0, 5).map(att => {
                                         const session = att.training_sessions;
-                                        const date = session?.session_date ? new Date(session.session_date).toLocaleDateString() : 'N/A';
+                                        const date = session?.session_date ? asLocalDate(session.session_date).toLocaleDateString() : 'N/A';
                                         return `
                                         <tr style="border-bottom: 1px solid #e5e7eb;">
                                             <td style="padding: 12px 0; color: #111827; font-size: 14px;">${date}</td>
@@ -229,7 +237,7 @@ function generateTrainingReportEmail(playerName, trainingData, coachNotes = '') 
                                 <h3 style="margin: 0 0 15px 0; color: #111827; font-size: 18px; font-weight: 600;">Upcoming Sessions</h3>
                                 <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
                                     ${trainingData.sessions.map(session => {
-                                        const date = new Date(session.session_date).toLocaleDateString('en-US', { 
+                                        const date = asLocalDate(session.session_date).toLocaleDateString('en-US', { 
                                             weekday: 'short', 
                                             month: 'short', 
                                             day: 'numeric' 

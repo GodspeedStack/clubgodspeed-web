@@ -3,6 +3,14 @@
  * Handles Waiver Signing (Canvas), Navigation (V3 Side Panel), and Authentication.
  */
 
+// A Postgres `date` column arrives as 'YYYY-MM-DD'. new Date() reads that as
+// UTC midnight, which is the previous evening in Denver, so the calendar day
+// renders one day early. Anchoring at local noon keeps the intended day.
+function asLocalDate(v) {
+  return new Date(typeof v === 'string' && v.length === 10 ? v + 'T12:00:00' : v);
+}
+
+
 /**
  * Set the icon shown next to an alert message.
  * @param {HTMLElement|null} el - .login-error or .login-success element
@@ -3192,7 +3200,7 @@ async function loadSkillsPrograms(parentEmail) {
             // Sanitize program data
             const safeProgramName = escapeHTML(program.program_name || program.program_id || '');
             const safeAthleteName = escapeHTML(athlete ? athlete.name : 'Unknown Athlete');
-            const safeStartDate = program.start_date ? new Date(program.start_date).toLocaleDateString() : '';
+            const safeStartDate = program.start_date ? asLocalDate(program.start_date).toLocaleDateString() : '';
 
             html += `
             <div style="background: #f9f9f9; border-radius: 12px; padding: 20px; margin-bottom: 16px;">
@@ -3408,7 +3416,7 @@ async function loadInvoices(parentEmail) {
         invoices.forEach(invoice => {
             // Sanitize invoice data
             const safeInvoiceNumber = escapeHTML(String(invoice.invoice_number || ''));
-            const safeDueDate = escapeHTML(new Date(invoice.due_date).toLocaleDateString());
+            const safeDueDate = escapeHTML(asLocalDate(invoice.due_date).toLocaleDateString());
             const safeAmount = escapeHTML(parseFloat(invoice.total_amount || 0).toFixed(2));
             const safeStatus = escapeHTML(String(invoice.status || '').toUpperCase());
             const statusColor = invoice.status === 'paid' ? '#10b981' : invoice.status === 'overdue' ? '#ef4444' : '#f59e0b';
@@ -4095,7 +4103,7 @@ async function fetchAthletePerformance() {
                     <div style="border-left: 3px solid ${idx === 0 ? '#2563eb' : '#d1d5db'}; padding-left: 1rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                             <div style="font-weight: 700; font-size: 1rem; color: #111;">Coach Note</div>
-                            <div style="font-size: 0.75rem; color: #6b7280; font-weight: 600;">${new Date(ev.evaluation_date).toLocaleDateString()}</div>
+                            <div style="font-size: 0.75rem; color: #6b7280; font-weight: 600;">${asLocalDate(ev.evaluation_date).toLocaleDateString()}</div>
                         </div>
                         <p style="font-size: 0.95rem; color: #374151; line-height: 1.5; margin: 0;">${ev.coach_comments || 'No specific comments provided.'}</p>
                     </div>

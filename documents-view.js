@@ -3,6 +3,14 @@
  * Handles PDF generation for receipts and invoices
  */
 
+// A Postgres `date` column arrives as 'YYYY-MM-DD'. new Date() reads that as
+// UTC midnight, which is the previous evening in Denver, so the calendar day
+// renders one day early. Anchoring at local noon keeps the intended day.
+function asLocalDate(v) {
+  return new Date(typeof v === 'string' && v.length === 10 ? v + 'T12:00:00' : v);
+}
+
+
 // Load jsPDF from CDN if not available
 if (typeof window.jspdf === 'undefined') {
     const script = document.createElement('script');
@@ -312,7 +320,7 @@ function generateInvoicePDFDocument(invoice) {
     doc.setFont(undefined, 'bold');
     doc.text('Due Date:', margin, yPos);
     doc.setFont(undefined, 'normal');
-    doc.text(new Date(invoice.due_date).toLocaleDateString('en-US', {
+    doc.text(asLocalDate(invoice.due_date).toLocaleDateString('en-US', {
         year: 'numeric', month: 'long', day: 'numeric'
     }), margin + 50, yPos);
     yPos += 8;
