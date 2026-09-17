@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { sendParentEmail } from "../_shared/parent-comms.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -284,26 +285,23 @@ Deno.serve(async (req) => {
     })
   }
 
-  const resendRes = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${RESEND_API_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      from: FROM_EMAIL,
-      to: resolvedEmailTo,
-      subject: content.subject,
-      text: content.text,
-      html: content.html
-    })
+  const sendResult = await sendParentEmail({
+    source: 'send-email',
+    purpose: type,
+    trigger: 'manual',
+    to: resolvedEmailTo,
+    subject: content.subject,
+    text: content.text,
+    html: content.html,
+    from: FROM_EMAIL,
+    relatedTable: paymentId ? 'payments' : null,
+    relatedId: paymentId ?? null,
   })
 
-  const resendBody = await resendRes.text()
-  console.log(`Resend ${resendRes.status}: ${resendBody}`)
+  console.log(`Resend send ok=${sendResult.ok} id=${sendResult.providerMessageId ?? '-'}`)
 
-  if (!resendRes.ok) {
-    return new Response(JSON.stringify({ error: 'Resend API error', status: resendRes.status, detail: resendBody }), {
+  if (!sendResult.ok) {
+    return new Response(JSON.stringify({ error: 'Resend API error', detail: sendResult.error }), {
       status: 502,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })

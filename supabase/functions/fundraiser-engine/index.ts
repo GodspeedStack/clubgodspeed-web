@@ -13,6 +13,7 @@
 //   - Receipts make no tax-deductibility claims (LLC, not 501(c)(3)).
 //   - Cadence: launch, 14 days left, 7 days left, 2 days left.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { sendParentEmail } from "../_shared/parent-comms.ts";
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
 const FROM_EMAIL = 'Godspeed Basketball <noreply@clubgodspeed.com>'
@@ -66,15 +67,18 @@ function progressBar(raised: number, goal: number): string {
 const usd = (n: number) => `$${Number(n).toLocaleString('en-US', { minimumFractionDigits: 2 })}`
 const esc = (s: string) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!))
 
-async function sendEmail(to: string, subject: string, html: string): Promise<string | null> {
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${RESEND_API_KEY}` },
-    body: JSON.stringify({ from: FROM_EMAIL, to, subject, html }),
+async function sendEmail(to: string, subject: string, html: string, purpose = 'fundraiser'): Promise<string | null> {
+  const result = await sendParentEmail({
+    source: 'fundraiser-engine',
+    purpose,
+    trigger: 'automated',
+    to,
+    subject,
+    html,
+    from: FROM_EMAIL,
   })
-  if (!res.ok) { console.error('resend failed', to, await res.text()); return null }
-  const data = await res.json()
-  return data.id ?? null
+  if (!result.ok) { console.error('resend failed', to, result.error); return null }
+  return result.providerMessageId ?? null
 }
 
 // Returns false when the ledger already holds this (donation|contact, email_type)

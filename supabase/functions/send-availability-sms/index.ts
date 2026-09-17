@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { sendParentSms } from "../_shared/parent-comms.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,32 +18,25 @@ const TWILIO_FROM_NUMBER = Deno.env.get('TWILIO_FROM_NUMBER')!  // E.164 format
 // ---------------------------------------------------------------------------
 // Send a single SMS via Twilio REST API
 // ---------------------------------------------------------------------------
-async function sendSms(to: string, body: string): Promise<{ ok: boolean; sid?: string; error?: string }> {
-  const url = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`
-  const auth = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)
-
-  const params = new URLSearchParams()
-  params.set('To', to)
-  params.set('From', TWILIO_FROM_NUMBER)
-  params.set('Body', body)
-
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Basic ${auth}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: params.toString(),
-    })
-    const data = await res.json()
-    if (res.ok) {
-      return { ok: true, sid: data.sid }
-    }
-    return { ok: false, error: data.message || `Twilio ${res.status}` }
-  } catch (e) {
-    return { ok: false, error: e.message }
-  }
+// Routed through the shared helper so every text lands in parent_message_log
+// and Twilio's status callbacks attach to the same record.
+async function sendSms(
+  to: string,
+  body: string,
+  ctx?: { profileId?: string | null; name?: string | null; checkId?: string | null },
+): Promise<{ ok: boolean; sid?: string; error?: string }> {
+  const result = await sendParentSms({
+    source: 'send-availability-sms',
+    purpose: 'availability_check',
+    trigger: 'manual',
+    to,
+    recipientName: ctx?.name ?? null,
+    profileId: ctx?.profileId ?? null,
+    body,
+    relatedTable: ctx?.checkId ? 'availability_checks' : null,
+    relatedId: ctx?.checkId ?? null,
+  })
+  return { ok: result.ok, sid: result.providerMessageId ?? undefined, error: result.error ?? undefined }
 }
 
 // ---------------------------------------------------------------------------
@@ -149,7 +143,11 @@ Deno.serve(async (req) => {
         continue
       }
 
-      const result = await sendSms(phone, check.message)
+      const result = await sendSms(phone, check.message, {
+        profileId: parent.profile_id ?? null,
+        name: parent.parent_name ?? null,
+        checkId: checkId ?? null,
+      })
       results.push({ phone, ok: result.ok, error: result.error })
 
       // Pre-seed a response row so admin can see who was texted (status: unknown until they reply)
