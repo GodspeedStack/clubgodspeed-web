@@ -688,8 +688,14 @@
     border-right-color: rgba(37, 99, 235, 0.08);
 }
 
+.portal-dashboard-v3.vault-mode {
+    background: #050505;
+}
+
 .vault-mode .portal-main-v3 {
     background: #050505;
+    padding: 0;
+    /* black bleeds to every edge, no light frame */
 }
 
 .vault-mode .sidebar-header .logo-text {
@@ -777,6 +783,12 @@
         padding: 1rem;
         padding-top: 80px;
         /* Space for mobile header */
+    }
+
+    .vault-mode .portal-main-v3 {
+        padding: 0;
+        padding-top: 80px;
+        /* keep clearance for the mobile header, no side frame */
     }
 
     .mobile-header {

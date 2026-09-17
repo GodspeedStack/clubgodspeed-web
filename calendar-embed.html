@@ -1186,22 +1186,84 @@
             return d.toISOString().split('T')[0];
         }
 
+        // ── Viewer scope: which team(s) may this viewer see ──────────────────
+        // Parents see program-wide events plus their own team(s). Staff see all.
+        // FAILS CLOSED: an unresolved viewer sees only untagged program-wide
+        // events, never another team's games.
+        let _viewerScope = null;
+        async function getViewerScope() {
+            if (_viewerScope) return _viewerScope;
+            const scope = { isStaff: false, teamIds: [], grades: [], resolved: false, accessToken: null };
+            try {
+                const { createClient } = window.supabase;
+                const sb = createClient(
+                    'https://nnqokhqennuxalamnvps.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis'
+                );
+                const { data: { session } } = await sb.auth.getSession();
+                const user = session && session.user;
+                if (user) {
+                    scope.accessToken = session.access_token || null;
+                    const { data: prof } = await sb.from('profiles')
+                        .select('role').eq('id', user.id).maybeSingle();
+                    const role = prof && prof.role;
+                    scope.isStaff = (role === 'director' || role === 'coach' || role === 'founder');
+                    const { data: teamRows } = await sb.rpc('get_my_team_ids');
+                    scope.teamIds = (teamRows || [])
+                        .map(r => (typeof r === 'string') ? r : (r.get_my_team_ids || Object.values(r)[0]))
+                        .filter(Boolean);
+                    // Most team-specific events carry grade_level but no team_id,
+                    // so team-id scoping alone leaks them. Derive grades from the
+                    // family's team names: "Godspeed 4th/5th Grade" -> 4th, 5th.
+                    if (scope.teamIds.length) {
+                        const { data: teamRecs } = await sb.from('teams')
+                            .select('id,name').in('id', scope.teamIds);
+                        const found = new Set();
+                        (teamRecs || []).forEach(t => {
+                            (String(t.name || '').match(/\d+(?:st|nd|rd|th)/gi) || [])
+                                .forEach(g => found.add(g.toLowerCase()));
+                        });
+                        scope.grades = Array.from(found);
+                    }
+                    scope.resolved = true;
+                }
+            } catch (e) {
+                console.warn('Calendar scope unresolved; showing program-wide events only.', e);
+            }
+            _viewerScope = scope;
+            return scope;
+        }
+
+        // This calendar only ever fetches competitive events
+        // (tournament, season, game, camp). Every one of those belongs to a
+        // single team, so an event carrying neither a team nor a grade cannot be
+        // attributed and is withheld rather than shown to every family. There is
+        // no combined team this season, so 'both' is treated as unattributed too.
+        function visibleToViewer(teamId, scope, gradeLevel) {
+            if (scope.isStaff) return true;                          // staff see every team
+            if (teamId) return scope.teamIds.indexOf(teamId) !== -1; // own team only
+            if (!gradeLevel || gradeLevel === 'both') return false;  // cannot attribute: withhold
+            return scope.grades.indexOf(gradeLevel) !== -1;          // own grade only
+        }
+
         async function loadPublishedEvents() {
             const startTime = performance.now();
             try {
                 const SUPA_URL = 'https://nnqokhqennuxalamnvps.supabase.co';
                 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis';
                 const today = new Date().toISOString().split('T')[0];
-                const url = `${SUPA_URL}/rest/v1/calendar_events?select=id,title,event_type,start_date,end_date,start_time,location,visibility,published_at,team_id&published_at=not.is.null&visibility=in.(public,team_only)&event_type=in.(tournament,season,game,camp)&is_cancelled=eq.false&start_date=gte.${calendarWindowStartISO()}&order=start_date.asc`;
+                const scope = await getViewerScope();
+                const url = `${SUPA_URL}/rest/v1/calendar_events?select=id,title,event_type,start_date,end_date,start_time,location,visibility,published_at,team_id,grade_level&published_at=not.is.null&visibility=in.(public,team_only)&event_type=in.(tournament,season,game,camp)&is_cancelled=eq.false&start_date=gte.${calendarWindowStartISO()}&order=start_date.asc`;
                 const res = await fetch(url, {
-                    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
+                    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + (scope.accessToken || SUPA_KEY) }
                 });
                 if (!res.ok) {
                     const duration = performance.now() - startTime;
                     CalendarSyncConfig.logQuery('loadPublishedEvents', Math.round(duration), 0, new Error(`HTTP ${res.status}`));
                     return;
                 }
-                const events = await res.json();
+                const allEvents = await res.json();
+                const events = allEvents.filter(e => visibleToViewer(e.team_id, scope, e.grade_level));
                 const duration = performance.now() - startTime;
                 CalendarSyncConfig.logQuery('loadPublishedEvents', Math.round(duration), events.length);
 
@@ -1284,16 +1346,18 @@
             try {
                 const SUPA_URL = 'https://nnqokhqennuxalamnvps.supabase.co';
                 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis';
-                const url = `${SUPA_URL}/rest/v1/team_schedule_view?select=schedule_id,tournament_id,tournament_name,start_date,end_date,city,state,event_type,rank_tier,game_guarantee,status&order=start_date.asc`;
+                const tScope = await getViewerScope();
+                const url = `${SUPA_URL}/rest/v1/team_schedule_view?select=schedule_id,tournament_id,team_id,tournament_name,start_date,end_date,city,state,event_type,rank_tier,game_guarantee,status&order=start_date.asc`;
                 const res = await fetch(url, {
-                    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
+                    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + (tScope.accessToken || SUPA_KEY) }
                 });
                 if (!res.ok) {
                     const duration = performance.now() - startTime;
                     CalendarSyncConfig.logQuery('loadScheduledTournaments', Math.round(duration), 0, new Error(`HTTP ${res.status}`));
                     return;
                 }
-                const tournaments = await res.json();
+                const allTournaments = await res.json();
+                const tournaments = allTournaments.filter(t => visibleToViewer(t.team_id, tScope, null));
                 const duration = performance.now() - startTime;
                 CalendarSyncConfig.logQuery('loadScheduledTournaments', Math.round(duration), tournaments.length);
 
