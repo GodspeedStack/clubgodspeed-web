@@ -332,7 +332,13 @@ Deno.serve(async (req) => {
   try {
     if (looksLikeResend) {
       if (!(await verifyResend(req, body))) {
-        console.warn("comms-webhook: rejected Resend event with an invalid signature");
+        // Presence only, never the value. Without this an unset secret and a
+        // genuinely bad signature are indistinguishable from outside, which is
+        // correct for an attacker and useless for an operator.
+        console.warn(
+          "comms-webhook: rejected Resend event with an invalid signature " +
+          `(RESEND_WEBHOOK_SECRET configured: ${RESEND_WEBHOOK_SECRET ? "yes" : "NO"})`,
+        );
         return new Response(JSON.stringify({ error: "invalid signature" }), { status: 401 });
       }
       const payload = JSON.parse(body);
@@ -345,7 +351,10 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: "unrecognised payload" }), { status: 400 });
       }
       if (!(await verifyTwilio(req, params))) {
-        console.warn("comms-webhook: rejected Twilio event with an invalid signature");
+        console.warn(
+          "comms-webhook: rejected Twilio event with an invalid signature " +
+          `(TWILIO_AUTH_TOKEN configured: ${TWILIO_AUTH_TOKEN ? "yes" : "NO"})`,
+        );
         return new Response(JSON.stringify({ error: "invalid signature" }), { status: 401 });
       }
       rawPayload = params;
