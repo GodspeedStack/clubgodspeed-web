@@ -1786,6 +1786,27 @@ function showComplianceBanner(unsigned){
         el.innerHTML = '<strong>Action required.</strong> You must sign ' + unsigned.length + ' player document' + (unsigned.length===1?'':'s') + ' before your player can play, practice, or train. Please sign each document below.';
     }
 }
+/**
+ * A parent whose account is not yet connected to a player has no documents to
+ * sign. Say so plainly instead of letting them open an empty signing screen.
+ */
+function showNoAthleteNotice(show) {
+    var host = document.getElementById('view-documents');
+    var id = 'gs-doc-no-athlete';
+    var el = document.getElementById(id);
+    if (!show) { if (el) el.remove(); return; }
+    if (!el && host) {
+        el = document.createElement('div');
+        el.id = id;
+        el.style.cssText = 'background:#fff7e6;border:1px solid #f5d08a;color:#7a4b00;border-radius:12px;padding:14px 16px;margin:0 0 16px;font-family:\'Helvetica Neue\',Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;';
+        host.insertBefore(el, host.firstChild);
+    }
+    if (el) {
+        el.innerHTML = '<strong>One more step.</strong> Your account is not connected to a player yet, so there is nothing to sign here. Coach Scott connects new accounts, usually the same day. Text or email him if it has been more than a day. Your documents appear here as soon as that is done.';
+    }
+}
+window.NO_ATHLETE_COPY = 'Your account is not connected to a player yet, so there is nothing to sign. Coach Scott connects new accounts, usually the same day. Text or email him if it has been more than a day.';
+
 async function loadMyDocuments() {
     const sb = (window.auth && window.auth.getSupabaseClient) ? window.auth.getSupabaseClient() : null;
     if (!sb) return;
@@ -1805,6 +1826,8 @@ async function loadMyDocuments() {
         });
         window._gsAgreementsAll = all;
         window._gsAgreements = map;
+        window._gsNoAthlete = !(data && data.length);
+        showNoAthleteNotice(window._gsNoAthlete);
         ['athletic','medical','practice','conduct','media'].forEach(function (slug) {
             const list = all[slug] || [];
             if (!list.length) return;
@@ -1823,6 +1846,18 @@ window.openDocModal = async function (type) {
     // Load the parent's real agreements (with server content) if not already loaded.
     if (!window._gsAgreements) { try { await loadMyDocuments(); } catch (e) {} }
     const ag = window._gsAgreements && window._gsAgreements[type];
+    if (!ag || !ag.agreement_id) {
+        // No real agreement behind this card: either the account is not linked
+        // to a player yet, or the document list could not load. Never open a
+        // signing screen that cannot record anything.
+        currentDocType = null;
+        if (window._gsNoAthlete) {
+            godspeedAlert(window.NO_ATHLETE_COPY, 'Not connected yet');
+        } else {
+            godspeedAlert('We could not load your documents. Check your internet, refresh the page, and try again.', 'Could not load');
+        }
+        return;
+    }
 
     const pName = (ag && ag.parent_name) || localStorage.getItem('gba_parent_name') || 'Parent Name';
     const cName = (ag && ag.athlete_name) || localStorage.getItem('gba_child_name') || 'Athlete Name';
