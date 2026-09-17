@@ -11,7 +11,7 @@ Nothing here is deployed. Run the steps in order.
 
 | Piece | File | What it does |
 |---|---|---|
-| Ledger tables | `supabase/migrations/v22_01_parent_message_ledger.sql` | `parent_message_log` (one row per message) and `parent_message_events` (one row per provider event). Append-only. Staff read, nobody writes from the browser. |
+| Ledger tables | `supabase/migrations/v24_01_parent_message_ledger.sql` | `parent_message_log` (one row per message) and `parent_message_events` (one row per provider event). Append-only. Staff read, nobody writes from the browser. |
 | Chokepoint | `supabase/functions/_shared/parent-comms.ts` | `sendParentEmail()` / `sendParentSms()`. Opens the ledger row **before** the send and stamps its id onto the provider payload. If the ledger row cannot be written, the message is not sent. |
 | Backstop | `supabase/functions/comms-webhook/index.ts` | Verifies the provider signature, then records **every** event. An event it cannot match to a logged send opens a row flagged `bypassed`, so a sender that skips the helper shows up in red instead of disappearing. |
 | Admin view | `admin-os.html`, `admin-os.js` | Message Ledger card under Messaging: search, filters, unread count on the sidebar, and a per-message record showing exactly what the parent received plus the delivery trail. |
@@ -35,7 +35,7 @@ Left alone on purpose: `notify-admin-signup`, `health-check`,
 supabase db push
 ```
 
-Or paste `supabase/migrations/v22_01_parent_message_ledger.sql` into the SQL
+Or paste `supabase/migrations/v24_01_parent_message_ledger.sql` into the SQL
 editor. It is idempotent: every object uses `if not exists` or
 `create or replace`.
 
