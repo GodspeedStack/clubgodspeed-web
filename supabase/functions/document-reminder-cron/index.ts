@@ -4,7 +4,8 @@
 // Runs Tues & Thurs at 7:00 AM Denver via pg_cron.
 //
 // Contract (v3, 2026-09-15): ONE email per parent per PLAYER per run.
-//   1. Scan user_agreements with status != 'signed' for active athletes.
+//   1. rpc reminder_candidates() (v21_01): unsigned, mandatory, active
+//      athlete, parent still linked, not covered by a co-guardian's signature.
 //   2. Per agreement: escalation rule by days outstanding, max sends per rule,
 //      48-hour per-agreement quiet period. Agreements that fail any check are
 //      skipped; the rest are grouped by parent_email + athlete_id.
@@ -78,18 +79,24 @@ serve(async (_req: Request) => {
   let totalErrors = 0;
   let totalOneTap = 0;
 
-  const { data: agreements, error } = await supabase
-    .from("user_agreements")
-    .select(`
-      id, parent_user_id, parent_email, athlete_id, status,
-      assigned_at, notification_count, last_notified_at,
-      documents!inner(id, title, slug, category, season, is_mandatory),
-      athletes!inner(id, display_name, enrollment_status, team_name)
-    `)
-    .neq("status", "signed")
-    .eq("documents.is_mandatory", true)
-    .eq("documents.is_active", true)
-    .eq("athletes.enrollment_status", "active");
+  // Who still has to sign is decided by Postgres (v21_01 reminder_candidates):
+  // unsigned, mandatory, active athlete, parent still linked, and NOT already
+  // covered by another guardian's signature (unless the document requires
+  // each guardian). Same rule the portal uses, so a parent is never emailed
+  // about a document the portal shows as done.
+  const { data: rows, error } = await supabase.rpc("reminder_candidates");
+  const agreements = (rows ?? []).map((r: Record<string, unknown>) => ({
+    id: r.id as string,
+    parent_user_id: r.parent_user_id as string,
+    parent_email: r.parent_email as string,
+    athlete_id: r.athlete_id as string,
+    status: r.status as string,
+    assigned_at: r.assigned_at as string,
+    notification_count: (r.notification_count as number) ?? 0,
+    last_notified_at: r.last_notified_at as string | null,
+    documents: { id: r.document_id as string, title: r.document_title as string, slug: r.document_slug as string },
+    athletes: { id: r.athlete_id as string, display_name: r.athlete_name as string },
+  }));
 
   if (error) {
     console.error("[doc-cron] Failed to fetch agreements:", error);
@@ -104,7 +111,7 @@ serve(async (_req: Request) => {
     );
   }
 
-  console.log(`[doc-cron] Found ${agreements.length} unsigned mandatory agreements.`);
+  console.log(`[doc-cron] Found ${agreements.length} agreements that still need this parent's signature.`);
 
   // ── Pass 1: decide per agreement, group by parent + player ─
   // Key is "<parent_email>|<athlete_id>" so an email is only ever about one

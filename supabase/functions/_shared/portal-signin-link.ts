@@ -59,17 +59,25 @@ export async function mintPortalLink(
       options: { redirectTo: destination },
     });
     const tokenHash = data?.properties?.hashed_token;
-    if (error || !tokenHash) {
+    const actionLink = data?.properties?.action_link;
+    if (error || (!tokenHash && !actionLink)) {
       console.warn("[portal-link] generateLink failed; using plain portal link.", {
-        code: error?.code ?? error?.name ?? "no_hashed_token",
+        code: error?.code ?? error?.name ?? "no_token",
         // Log the domain only. Never the address or the link.
         domain: email.split("@")[1] ?? "?",
       });
       return fallback;
     }
-    const joiner = destination.includes("?") ? "&" : "?";
-    const url = `${destination}${joiner}token_hash=${encodeURIComponent(tokenHash)}&type=magiclink`;
-    return { url, oneTap: true };
+    // PORTAL_LINK_MODE=token_hash once the portal page verifies token_hash
+    // itself (parent-portal.js handleTokenHashLink). Until then the classic
+    // action_link (auth/v1/verify) keeps working with the live portal.
+    const mode = (Deno.env.get("PORTAL_LINK_MODE") ?? "action_link").toLowerCase();
+    if (mode === "token_hash" && tokenHash) {
+      const joiner = destination.includes("?") ? "&" : "?";
+      return { url: `${destination}${joiner}token_hash=${encodeURIComponent(tokenHash)}&type=magiclink`, oneTap: true };
+    }
+    if (!actionLink) return fallback;
+    return { url: actionLink, oneTap: true };
   } catch (err) {
     console.warn("[portal-link] generateLink threw; using plain portal link.", err instanceof Error ? err.message : String(err));
     return fallback;
