@@ -171,7 +171,7 @@ window.handleAdminLogin = async function () {
 };
 
 // ─── PANEL ROUTING ──────────────────────────────────────────
-const PANEL_TITLES = { dashboard: 'Dashboard', players: 'Players & Parents', onboarding: 'Onboarding', calendar: 'Schedule & Tournaments', dues: 'Season Dues', fundraising: 'Fundraising', orders: 'Pro Shop Orders', comms: 'Messaging', dataEntry: 'Data Entry', blog: 'Blog Posts', memos: 'Coach Memos' };
+const PANEL_TITLES = { dashboard: 'Dashboard', players: 'Players & Parents', onboarding: 'Onboarding', calendar: 'Schedule & Tournaments', dues: 'Season Dues', fundraising: 'Fundraising', orders: 'Pro Shop Orders', comms: 'Messaging', dataEntry: 'Data Entry', futures: 'Godspeed Futures', blog: 'Blog Posts', memos: 'Coach Memos' };
 
 function switchPanel(id, btn) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -181,12 +181,12 @@ function switchPanel(id, btn) {
   if (btn) btn.classList.add('active');
   document.getElementById('panel-title').textContent = PANEL_TITLES[id] || id;
   currentPanel = id;
-  const loaders = { players: () => { loadPlayers(); loadRequests(); loadGuardianRequests(); }, onboarding: loadOnboarding, dues: loadDues, fundraising: loadFundraising, orders: loadOrders, comms: loadComms, dataEntry: loadDataEntry, calendar: () => { loadCalendar(); loadTournaments(); }, blog: loadBlog, memos: loadMemos };
+  const loaders = { players: () => { loadPlayers(); loadRequests(); loadGuardianRequests(); }, onboarding: loadOnboarding, dues: loadDues, fundraising: loadFundraising, orders: loadOrders, comms: loadComms, dataEntry: loadDataEntry, futures: loadFutures, calendar: () => { loadCalendar(); loadTournaments(); }, blog: loadBlog, memos: loadMemos };
   if (loaders[id]) loaders[id]();
 }
 
 function refreshCurrent() {
-  const loaders = { dashboard: loadDashboard, players: () => { loadPlayers(); loadRequests(); loadGuardianRequests(); }, onboarding: loadOnboarding, dues: loadDues, fundraising: loadFundraising, orders: loadOrders, comms: loadComms, calendar: () => { loadCalendar(); loadTournaments(); }, blog: loadBlog, memos: loadMemos };
+  const loaders = { dashboard: loadDashboard, players: () => { loadPlayers(); loadRequests(); loadGuardianRequests(); }, onboarding: loadOnboarding, dues: loadDues, fundraising: loadFundraising, orders: loadOrders, comms: loadComms, futures: loadFutures, calendar: () => { loadCalendar(); loadTournaments(); }, blog: loadBlog, memos: loadMemos };
   if (loaders[currentPanel]) loaders[currentPanel]();
 }
 
@@ -4545,3 +4545,114 @@ async function resolveDuesReview(id) {
   loadDuesReviewRequests();
 }
 window.resolveDuesReview = resolveDuesReview;
+
+
+// ─── GODSPEED FUTURES: the parent professional network ──────────────────────
+// Parents submit at clubgodspeed.com/futures.html with no login, because a
+// third of them have never signed in. Rows are staff-read-only by RLS; the
+// only thing writable here is the triage status.
+
+let futuresRows = [];
+
+async function loadFutures() {
+  const tbody = document.getElementById('futures-tbody');
+  if (!tbody) return;
+  if (!osSupabase) { tbody.innerHTML = futuresEmpty('Not connected'); return; }
+  try {
+    const { data, error } = await osSupabase
+      .from('futures_network_signups')
+      .select('id,submitted_at,parent_name,parent_email,parent_phone,athlete_name,line_of_work,employer,fields_i_can_reach,willing_to_speak,notes,status,matched_profile_id')
+      .order('submitted_at', { ascending: false });
+    if (error) throw error;
+    futuresRows = data || [];
+  } catch (e) {
+    console.error('[futures] load failed', e);
+    tbody.innerHTML = futuresEmpty('Could not load: ' + (e.message || 'unknown error'));
+    return;
+  }
+  renderFutures();
+}
+
+function futuresEmpty(msg) {
+  return `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px">${esc(msg)}</td></tr>`;
+}
+
+function futuresFiltered() {
+  const q = (document.getElementById('fut-q')?.value || '').trim().toLowerCase();
+  const st = document.getElementById('fut-status')?.value || '';
+  const linked = document.getElementById('fut-linked')?.value || '';
+  const speakers = !!document.getElementById('fut-speakers')?.checked;
+  return futuresRows.filter(r => {
+    if (st && r.status !== st) return false;
+    if (speakers && !r.willing_to_speak) return false;
+    if (linked === 'yes' && !r.matched_profile_id) return false;
+    if (linked === 'no' && r.matched_profile_id) return false;
+    if (!q) return true;
+    return [r.parent_name, r.parent_email, r.athlete_name, r.line_of_work, r.employer, r.fields_i_can_reach, r.notes]
+      .some(v => (v || '').toLowerCase().includes(q));
+  });
+}
+
+function renderFutures() {
+  const tbody = document.getElementById('futures-tbody');
+  if (!tbody) return;
+  const rows = futuresFiltered();
+
+  const speaking = futuresRows.filter(r => r.willing_to_speak).length;
+  const unmatched = futuresRows.filter(r => !r.matched_profile_id).length;
+  const sum = document.getElementById('futures-summary');
+  if (sum) {
+    const bits = [`${futuresRows.length} answered`, `${speaking} will speak`];
+    if (unmatched) bits.push(`${unmatched} not matched to a family`);
+    sum.textContent = bits.join('  ·  ');
+    sum.style.color = unmatched ? 'var(--danger, #ef4444)' : 'var(--muted)';
+  }
+  const badge = document.getElementById('futures-badge');
+  if (badge) {
+    const n = futuresRows.filter(r => r.status === 'new').length;
+    badge.textContent = n > 99 ? '99+' : String(n);
+    badge.style.display = n > 0 ? '' : 'none';
+  }
+
+  if (!rows.length) { tbody.innerHTML = futuresEmpty('Nothing matches these filters'); return; }
+
+  const tag = { new: 'tag-yellow', reviewed: 'tag-blue', approved: 'tag-green', declined: 'tag-gray' };
+  tbody.innerHTML = rows.map(r => `<tr>
+    <td style="color:var(--muted);white-space:nowrap">${esc(fmtShort(r.submitted_at))}</td>
+    <td style="max-width:190px">
+      <div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.parent_name || '--')}</div>
+      <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.parent_email || '')}</div>
+    </td>
+    <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.athlete_name || '--')}${r.matched_profile_id ? '' : ' <span class="tag tag-red" title="This email matches no parent account">unmatched</span>'}</td>
+    <td style="max-width:230px">
+      <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(r.line_of_work || '')}">${esc(r.line_of_work || '--')}</div>
+      ${r.employer ? `<div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.employer)}</div>` : ''}
+    </td>
+    <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(r.fields_i_can_reach || '')}">${esc(r.fields_i_can_reach || '--')}</td>
+    <td style="white-space:nowrap">${r.willing_to_speak ? '<span class="tag tag-green">yes</span>' : '<span style="color:var(--muted)">--</span>'}</td>
+    <td style="white-space:nowrap"><span class="tag ${tag[r.status] || 'tag-gray'}">${esc(r.status)}</span></td>
+    <td style="white-space:nowrap;text-align:right">
+      ${r.status !== 'approved' ? `<button class="btn-xs btn-ghost" onclick="setFuturesStatus('${esc(r.id)}','approved')">Approve</button>` : ''}
+      ${r.status !== 'declined' ? `<button class="btn-xs btn-ghost" onclick="setFuturesStatus('${esc(r.id)}','declined')">Decline</button>` : ''}
+    </td>
+  </tr>`).join('');
+}
+
+// Approving is a note to ourselves that this parent is cleared to be
+// approached. It grants nobody any access, and never reaches the parent.
+async function setFuturesStatus(id, status) {
+  if (!osSupabase) return;
+  try {
+    const session = await osSupabase.auth.getSession();
+    const { error } = await osSupabase.from('futures_network_signups')
+      .update({ status, reviewed_at: new Date().toISOString(), reviewed_by: session?.data?.session?.user?.id || null })
+      .eq('id', id);
+    if (error) throw error;
+    const row = futuresRows.find(r => r.id === id);
+    if (row) row.status = status;
+    renderFutures();
+    showToast('Marked ' + status);
+  } catch (e) {
+    showToast('Could not update: ' + (e.message || 'unknown error'), 'error');
+  }
+}
