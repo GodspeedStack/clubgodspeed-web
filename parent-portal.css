@@ -618,6 +618,9 @@
     transition: transform 0.2s, box-shadow 0.2s;
     position: relative;
     cursor: pointer;
+    /* Fill the grid row so every card in a row is the same height, which is
+       what lets the CTA below sit on a shared baseline. */
+    height: 100%;
 }
 
 .doc-card-v3:hover {
@@ -665,6 +668,11 @@
 
 .btn-card {
     width: 100%;
+    /* Pin the CTA to the bottom of the card. The `flex: 1` on the paragraph
+       above already does this when the description wraps, but it fails the
+       moment a card has a shorter description or its display is overridden.
+       An auto top margin does not care why the slack exists. */
+    margin-top: auto;
     padding: 0.75rem;
     background: white;
     border: 1px solid #e5e7eb;

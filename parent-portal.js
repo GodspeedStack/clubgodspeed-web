@@ -2495,7 +2495,10 @@ window.updateUIForCohort = function() {
         if (aauNav) aauNav.style.display = window.__duesExempt ? 'none' : 'flex';
         // CTA is styled as flex, but inline styles in HTML will set it. Reset it back to flex.
         if (ctaBanner) ctaBanner.style.display = window.__duesExempt ? 'none' : 'flex';
-        aauDocs.forEach(el => el.style.display = 'block'); // or flex depending on original
+        // Clear the inline value instead of guessing one. .doc-card-v3 is a flex
+        // column; hardcoding 'block' here killed that on exactly these cards and
+        // left their CTA floating mid-card instead of pinned to the bottom.
+        aauDocs.forEach(el => el.style.display = '');
     }
 }
 
