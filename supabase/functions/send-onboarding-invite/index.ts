@@ -14,6 +14,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { sendParentEmail } from "../_shared/parent-comms.ts";
+import { resolveCaller, canSendClubMail, unauthorized } from "../_shared/caller-auth.ts";
 
 const RESEND_API_KEY   = Deno.env.get('RESEND_API_KEY')!
 const SUPABASE_URL     = Deno.env.get('SUPABASE_URL')!
@@ -28,6 +29,15 @@ interface InviteRequest {
 }
 
 Deno.serve(async (req) => {
+  // Deployed with verify_jwt=false so server callers can reach it. That makes
+  // an in-function check mandatory: without one this is an anonymous relay
+  // that sends mail on the club's domain to any address a stranger supplies.
+  // Admin OS calls this with a staff session; cron uses x-cron-secret.
+  if (req.method !== "OPTIONS") {
+    const caller = await resolveCaller(req);
+    if (!canSendClubMail(caller)) return unauthorized("send-onboarding-invite", caller);
+  }
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
       headers: {

@@ -30,6 +30,7 @@ import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import { documentsTabLink, linkHelpCopy, mintPortalLink, type PortalLink } from "../_shared/portal-signin-link.ts";
 import { sendParentEmail } from "../_shared/parent-comms.ts";
+import { resolveCaller, canSendClubMail, unauthorized } from "../_shared/caller-auth.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -69,7 +70,15 @@ interface DueItem {
   notificationCount: number;
 }
 
-serve(async (_req: Request) => {
+serve(async (req: Request) => {
+  // Deployed with verify_jwt=false so cron can reach it. That makes an
+  // in-function check mandatory: without one this is an anonymous relay that
+  // sends mail on the club's domain to any address a stranger supplies.
+  const caller = await resolveCaller(req);
+  if (!caller || (caller.kind !== "cron" && caller.kind !== "service")) {
+    return unauthorized("document-reminder-cron", caller);
+  }
+
   console.log("[doc-cron] Starting document reminder run (v3, one email per parent per player)...");
 
   const now = new Date();
