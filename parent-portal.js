@@ -2279,8 +2279,10 @@ function loadPerformance(parentEmail) {
         listContainer.innerHTML = '<p style="color: #888;">No grades recorded yet. Check back after next practice.</p>';
         const gpaEl = document.getElementById('stat-gpa');
         const attendanceEl = document.getElementById('stat-attendance');
-        if (gpaEl) gpaEl.textContent = '-';
-        if (attendanceEl) attendanceEl.textContent = '0%';
+        if (gpaEl) gpaEl.textContent = '--';
+        // Do not print 0% here. No grades on file is not the same as a boy who
+        // attended nothing, and a parent cannot tell those apart from "0%".
+        if (attendanceEl && !attendanceEl.textContent.trim()) attendanceEl.textContent = '--';
         return;
     }
 
@@ -2314,18 +2316,19 @@ function loadPerformance(parentEmail) {
     // 4. Update Stats Summary
     const overallGpa = (totalScore / count).toFixed(1);
     const gpaEl = document.getElementById('stat-gpa');
-    const attendanceEl = document.getElementById('stat-attendance');
     if (gpaEl) gpaEl.textContent = overallGpa;
 
-    // Mock Attendance (Grades count vs Expected)
-    // Simple logic: 1 grade = 1 attendance point for now
-    if (attendanceEl) {
-        // Simple attendance estimate: each grade entry counts as one attended session.
-        // Assuming a typical season has 10 sessions, cap at 100%.
-        const totalGrades = grades ? grades.length : 0;
-        const attendancePct = Math.min(100, Math.round((totalGrades / 10) * 100));
-        attendanceEl.textContent = `${attendancePct}%`;
-    }
+    // Attendance is NOT written here.
+    //
+    // This previously derived a percentage from the number of practice GRADE
+    // entries divided by an assumed 10-session season, and displayed it to
+    // parents as attendance. It never measured attendance: a boy graded three
+    // times showed "30%", and a boy graded twelve times showed 100% however
+    // many sessions he had missed.
+    //
+    // It also wrote to #stat-attendance, the same element loadPerformance()
+    // fills from real training_attendance rows, so the number a family saw
+    // depended on which function ran last. loadPerformance() owns that element.
 }
 
 // Hook into View Switching to load data when tab is clicked
@@ -2543,13 +2546,10 @@ async function renderTrainingDashboard() {
         console.warn('No parent email found');
          return;
      } */
-    // For demo "tomorrow", even if no email, show mock data
-    if (!parentEmail) { // Changed `email` to `parentEmail` to match scope
-        document.getElementById('welcome-user-name').textContent = "Demo User";
-        document.getElementById('dashboard-user-name').textContent = "Demo User";
-    }
+    // No "Demo User" fallback. Unreachable past the auth gate, and a portal
+    // that greets a real family by a placeholder name is never the right answer.
 
-    const db = getDB(); // Uses portal-data.js mock if need be
+    const db = getDB(); // portal-data.js holds empty defaults only; live data comes from Supabase
     const data = db.training;
 
     if (!data) {
