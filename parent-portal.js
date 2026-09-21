@@ -4092,10 +4092,12 @@ async function fetchAthletePerformance() {
                 elEff.style.color = grade.includes('A') ? '#059669' : '#d97706';
             }
         } else {
-            // Fallback mock data if DB is unseeded
-            if (elAtt) elAtt.textContent = '98%';
-            if (elEff) elEff.textContent = 'A-';
-            if (elEff) elEff.style.color = '#059669';
+            // No attendance on record. This previously displayed a fabricated
+            // 98% and an A- effort grade, styled identically to real data, so a
+            // parent had no way to know their son had no records at all. A
+            // family must never be shown invented attendance for their child.
+            if (elAtt) elAtt.textContent = '--';
+            if (elEff) { elEff.textContent = '--'; elEff.style.color = '#9ca3af'; }
         }
 
         // Render Coach Notes
@@ -4112,21 +4114,15 @@ async function fetchAthletePerformance() {
                     </div>
                 `).join('');
             } else {
-                // Realistic mock fallback reflecting Coach Scott and Coach True
+                // Honest empty state. This previously rendered two invented notes
+                // attributed to Coach Scott and Coach True, with fabricated dates
+                // and specific feedback. Parents had no way to tell they were not
+                // real. Never show a family coaching feedback about their child
+                // that a coach did not write.
                 notesContainer.innerHTML = `
-                    <div style="border-left: 3px solid #2563eb; padding-left: 1rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                            <div style="font-weight: 700; font-size: 1rem; color: #111;">Coach Scott</div>
-                            <div style="font-size: 0.75rem; color: #6b7280; font-weight: 600;">March 15, 2026</div>
-                        </div>
-                        <p style="font-size: 0.95rem; color: #374151; line-height: 1.5; margin: 0;">Excellent energy closing out passing lanes today. Need to see the same intensity translating to free-throw mechanics under fatigue. Keep working the baseline drive.</p>
-                    </div>
-                    <div style="border-left: 3px solid #d1d5db; padding-left: 1rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                            <div style="font-weight: 700; font-size: 1rem; color: #111;">Coach True</div>
-                            <div style="font-size: 0.75rem; color: #6b7280; font-weight: 600;">February 28, 2026</div>
-                        </div>
-                        <p style="font-size: 0.95rem; color: #374151; line-height: 1.5; margin: 0;">Solid performance in the weekend tournament. Shot selection is improving drastically. Let's focus on boxing out heavier forwards next week in training.</p>
+                    <div style="padding: 1.25rem 0; text-align: center;">
+                        <p style="font-size: 0.95rem; color: #6b7280; line-height: 1.5; margin: 0 0 4px;">No coach notes yet.</p>
+                        <p style="font-size: 0.85rem; color: #9ca3af; line-height: 1.5; margin: 0;">Notes from your coach appear here as the season goes on.</p>
                     </div>
                 `;
             }
