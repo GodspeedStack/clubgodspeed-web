@@ -614,6 +614,7 @@
 #devboard-view .db-block p{margin:0;font-size:13.5px;line-height:1.5;color:var(--ts)}\
 #devboard-view .db-block .nt{font-size:12.5px;color:var(--tf);margin-top:4px}\
 #devboard-view .db-fill{margin-top:8px;display:grid;gap:6px}\
+#devboard-view .db-block h5.db-open{cursor:pointer;display:inline-flex;align-items:center;gap:8px}#devboard-view .db-block h5.db-open:hover{color:var(--ac)}#devboard-view .db-open-ic{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;border:1.5px solid currentColor;font-size:10px;font-weight:700;font-style:italic;opacity:.6}\
 #devboard-view .db-st{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;background:var(--bgs);border-radius:10px;padding:9px 12px;font-size:13px}\
 #devboard-view .db-st .k{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ac);padding-top:3px;white-space:nowrap}\
 #devboard-view .db-st b{display:block;font-weight:600;font-size:13.5px}\
@@ -993,7 +994,7 @@
     h += '<div class="db-plan-bar"><button type="button" class="db-btn" id="db-plan-generated">Build from the roster instead</button><button type="button" class="db-btn" id="db-print">Print</button><button type="button" class="db-btn" id="db-copy">Copy as text</button><span class="db-note" style="margin:0">Saved ' + esc(ago(row.updated_at)) + '.</span></div>';
     h += '<div class="db-panel" id="db-plan">';
     blocks.forEach(function (b, bi) {
-      h += '<div class="db-block"><span class="n">' + (bi + 1) + '</span><div class="tm">' + esc(b.start || '') + '<small>' + esc(b.minutes || '') + ' min</small></div><div><h5>' + esc(b.name) + '</h5><p>' + esc(b.what || '') + '</p>';
+      h += '<div class="db-block"><span class="n">' + (bi + 1) + '</span><div class="tm">' + esc(b.start || '') + '<small>' + esc(b.minutes || '') + ' min</small></div><div>' + (function () { var bd = findDrill(b.name); return bd ? '<h5 class="db-open" data-drill="' + esc(bd.name) + '" title="Open the coaching card">' + esc(b.name) + '<span class="db-open-ic">i</span></h5>' : '<h5>' + esc(b.name) + '</h5>'; })() + '<p>' + esc(b.what || '') + '</p>';
       if ((b.stations || []).length) h += '<div class="db-fill">' + b.stations.map(function (st) { var d = findDrill(st.drill); return '<div class="db-st"><span class="k">' + esc(st.k || '') + '</span><div' + (d ? ' data-drill="' + esc(d.name) + '" style="cursor:pointer"' : '') + '><b>' + esc(st.drill) + '</b>' + (d && d.cue ? '<span>' + esc(d.cue) + '</span>' : '') + (st.who ? '<span class="who">' + esc(st.who) + '</span>' : '') + '</div></div>'; }).join('') + '</div>';
       (b.notes || []).forEach(function (n) { h += '<div class="nt">' + esc(n) + '</div>'; });
       h += '</div></div>';
