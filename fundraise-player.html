@@ -124,6 +124,14 @@
 </head>
 
 <body>
+<div id="auth-gate" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#fff;font-family:'Inter',-apple-system,sans-serif;">
+    <div style="text-align:center;max-width:400px;padding:40px 24px;">
+        <div style="font-size:32px;font-weight:900;letter-spacing:-0.02em;margin-bottom:8px;">GODSPEED<span style="color:#2563eb;">BASKETBALL</span></div>
+        <p style="color:#6e6e73;font-size:15px;margin:0 0 32px;">Sign in to view this player's fundraising page.</p>
+        <a href="parent-portal.html" style="display:inline-block;background:#111;color:#fff;padding:14px 40px;border-radius:999px;font-weight:700;font-size:15px;text-decoration:none;">Parent Login</a>
+    </div>
+</div>
+<div id="fundraise-content" style="display:none;">
     <nav class="navbar">
         <div class="logo">GODSPEED<span style="color: #2563eb;">BASKETBALL</span></div>
         <div class="nav-desktop-unified">
@@ -223,8 +231,36 @@
 
     <script src="fundraise.js"></script>
     <script src="shared-footer.js"></script>
+    </div><!-- /fundraise-content -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script>
-        (async function () {
+    (function () {
+        // Same gate as fundraise.html: the page does not fetch without a
+        // session, so a player's name, goal and donor list are never pulled
+        // down for someone who is not signed in.
+        var sb = supabase.createClient(
+            'https://nnqokhqennuxalamnvps.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis'
+        );
+        function admit() {
+            document.getElementById('auth-gate').style.display = 'none';
+            document.getElementById('fundraise-content').style.display = 'block';
+            window.__gsFundraiseAdmitted = true;
+            if (typeof window.startPlayer === 'function') window.startPlayer();
+        }
+        sb.auth.getSession().then(function (res) {
+            if (res.data && res.data.session) admit();
+        });
+        sb.auth.onAuthStateChange(function (event) {
+            if (event === 'SIGNED_IN') admit();
+        });
+    }());
+    </script>
+    <script>
+        var playerStarted = false;
+        window.startPlayer = async function () {
+            if (playerStarted || !window.__gsFundraiseAdmitted) return;
+            playerStarted = true;
             const R = window.GodspeedRaise;
             R.thanksBanner();
             R.wireDonateForm(document);
@@ -296,7 +332,8 @@
             document.getElementById('share-x').href = links.x;
             document.getElementById('share-fb').href = links.facebook;
             document.getElementById('copy-link').addEventListener('click', function () { R.copyLink(pageUrl, this); });
-        })();
+        };
+        if (window.__gsFundraiseAdmitted) window.startPlayer();
     </script>
 </body>
 

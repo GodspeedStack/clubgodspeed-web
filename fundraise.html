@@ -303,25 +303,35 @@
             'https://nnqokhqennuxalamnvps.supabase.co',
             'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis'
         );
+        // The gate controls whether the page RUNS, not just whether it is
+        // visible. Previously the campaign fetch fired regardless of session,
+        // so participant names, totals and the donor wall were pulled down and
+        // written into hidden DOM for anyone who opened the page.
+        function admit() {
+            document.getElementById('auth-gate').style.display = 'none';
+            document.getElementById('fundraise-content').style.display = 'block';
+            // Mark admitted, then start if the render script has parsed. If it
+            // has not, its own tail reads this flag and starts itself. One
+            // guard inside startFundraise makes a double call harmless.
+            window.__gsFundraiseAdmitted = true;
+            if (typeof window.startFundraise === 'function') window.startFundraise();
+        }
         sb.auth.getSession().then(function(res) {
-            var session = res.data && res.data.session;
-            if (session) {
-                document.getElementById('auth-gate').style.display = 'none';
-                document.getElementById('fundraise-content').style.display = 'block';
-            }
+            if (res.data && res.data.session) admit();
         });
         sb.auth.onAuthStateChange(function(event) {
-            if (event === 'SIGNED_IN') {
-                document.getElementById('auth-gate').style.display = 'none';
-                document.getElementById('fundraise-content').style.display = 'block';
-            }
+            if (event === 'SIGNED_IN') admit();
         });
     })();
     </script>
     <script src="fundraise.js"></script>
     <script src="shared-footer.js"></script>
     <script>
-        (async function () {
+        // Defined, not executed. Only the auth gate above may call it.
+        var fundraiseStarted = false;
+        window.startFundraise = async function () {
+            if (fundraiseStarted || !window.__gsFundraiseAdmitted) return;
+            fundraiseStarted = true;
             const R = window.GodspeedRaise;
             R.thanksBanner();
             R.wireDonateForm(document);
@@ -383,7 +393,9 @@
                         + '</div>';
                 }).join('');
             }
-        })();
+        };
+        // If the session resolved before this script parsed, start now.
+        if (window.__gsFundraiseAdmitted) window.startFundraise();
     </script>
 </body>
 

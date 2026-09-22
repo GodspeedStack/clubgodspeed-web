@@ -9,6 +9,14 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* The footer is black and is always the last thing on the page. On a short
+   page (contact, apply, academy) the document ended above the fold and a white
+   band showed under the footer; on iOS, overscrolling past the end did the
+   same. Painting the canvas black fixes both: the root background covers the
+   viewport, body paints white over its own box, and whatever sits below the
+   end of the document is footer-coloured. */
+html { background: var(--gs-black); }
+
 body {
     margin: 0;
     background: var(--gs-surface);
@@ -16,7 +24,14 @@ body {
     font-family: var(--gs-font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    /* Push the footer to the bottom so the black starts where content ends. */
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
 }
+body > main { flex: 1 0 auto; }
+body > .gs-footer { flex-shrink: 0; }
 
 h1, h2, h3, p, figure { margin: 0; }
 img { display: block; max-width: 100%; }
