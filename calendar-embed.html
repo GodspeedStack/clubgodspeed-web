@@ -1081,7 +1081,11 @@
             }
 
             const scope = _viewerScope;
-            const teams = (scope && scope.resolved && Array.isArray(scope.teams)) ? scope.teams : [];
+            // Staff: every active team. Parents: their own, as before.
+            const roster = (scope && scope.isStaff && Array.isArray(scope.allTeams) && scope.allTeams.length)
+                ? scope.allTeams
+                : (scope && Array.isArray(scope.teams) ? scope.teams : []);
+            const teams = (scope && scope.resolved) ? roster : [];
 
             // Per-team breakdown, but only once we actually know the teams and
             // there is more than one. One team needs no label, and an
@@ -1510,7 +1514,7 @@
         let _viewerScope = null;
         async function getViewerScope() {
             if (_viewerScope) return _viewerScope;
-            const scope = { isStaff: false, teamIds: [], teams: [], grades: [], resolved: false, accessToken: null };
+            const scope = { isStaff: false, teamIds: [], teams: [], allTeams: [], grades: [], resolved: false, accessToken: null };
             try {
                 const { createClient } = window.supabase;
                 const sb = createClient(
@@ -1545,6 +1549,19 @@
                         // team, and most families here span two teams because of
                         // the swing players.
                         scope.teams = (teamRecs || [])
+                            .map(t => ({ id: t.id, name: t.name || '' }))
+                            .sort((a, b) => a.name.localeCompare(b.name));
+                    }
+                    // Staff read this calendar to run the program, not to
+                    // follow one child. Scott and Gene each link to a single
+                    // athlete, so scope.teams was one team and the notice fell
+                    // back to a program-wide total presented as if it were
+                    // theirs. Staff get every active team so an idle one is
+                    // visible instead of implied.
+                    if (scope.isStaff) {
+                        const { data: allRecs } = await sb.from('teams')
+                            .select('id,name').eq('is_active', true);
+                        scope.allTeams = (allRecs || [])
                             .map(t => ({ id: t.id, name: t.name || '' }))
                             .sort((a, b) => a.name.localeCompare(b.name));
                     }
