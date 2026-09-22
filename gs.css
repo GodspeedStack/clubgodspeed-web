@@ -69,6 +69,97 @@ a, button, input, select, textarea { font: inherit; }
 }
 .gs-section--dark .gs-eyebrow { color: rgba(255, 255, 255, 0.66); }
 
+/* --- "New" badge ------------------------------------------------------ */
+/* Solid blue pill so the launch reads at a glance. White on #2563eb
+   measures 5.17:1, over the 4.5:1 floor. */
+.gs-newtag {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--gs-font-display);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gs-ink-soft);
+}
+.gs-newtag__pill {
+    flex: 0 0 auto;
+    padding: 4px 9px;
+    border-radius: var(--gs-radius-pill);
+    background: var(--gs-blue);
+    color: #fff;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    line-height: 1.2;
+}
+.gs-section--dark .gs-newtag { color: rgba(255, 255, 255, 0.78); }
+.gs-card .gs-newtag { font-size: 10px; gap: 6px; }
+.gs-card .gs-newtag__pill { padding: 3px 7px; }
+
+/* Same badge shape as .gs-newtag, inked rather than blue so an open coaching
+   slot does not compete with the team launch sitting directly above it. */
+.gs-hiring {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    font-family: var(--gs-font-display);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gs-ink-soft);
+}
+.gs-hiring__pill {
+    flex: 0 0 auto;
+    padding: 4px 9px;
+    border-radius: var(--gs-radius-pill);
+    background: var(--gs-ink);
+    color: #fff;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    line-height: 1.2;
+}
+.gs-section--dark .gs-hiring { color: rgba(255, 255, 255, 0.78); }
+.gs-section--dark .gs-hiring__pill { background: var(--gs-surface); color: var(--gs-ink); }
+
+/* --- Link to a page that is not open yet ------------------------------ */
+.gs-soon {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--gs-muted);
+    cursor: default;
+}
+.gs-soon em {
+    font-style: normal;
+    font-family: var(--gs-font-display);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--gs-line-soft);
+    color: var(--gs-ink-soft);
+    padding: 2px 5px;
+    border-radius: 4px;
+    line-height: 1.3;
+}
+/* The footer sits on black; the mobile menu does not. */
+.gs-footer .gs-soon { color: rgba(255, 255, 255, 0.5); }
+.gs-footer .gs-soon em {
+    background: rgba(255, 255, 255, 0.14);
+    color: rgba(255, 255, 255, 0.86);
+}
+.gs-footer__col .gs-soon { display: inline-flex; min-height: 44px; }
+/* Match the row rhythm of the links it sits between. */
+.gs-menu__list .gs-soon {
+    display: flex;
+    min-height: 56px;
+    border-bottom: 1px solid var(--gs-line-soft);
+}
+
 .gs-h2 {
     font-size: clamp(26px, 5vw, 38px);
     font-weight: 800;
@@ -451,6 +542,10 @@ details[open] > summary::after {
     letter-spacing: 0.04em;
     text-transform: uppercase;
 }
+/* A spot with nobody in it. Solid rather than tinted so it reads as the
+   answer to "where do we need him", not as one more label. White on
+   #c0392b measures 5.44:1. */
+.gs-sched__tag--need { background: #c0392b; color: #fff; }
 
 @media (min-width: 1024px) {
     .gs-sched__date { font-size: 17px; }
