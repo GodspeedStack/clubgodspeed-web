@@ -1,0 +1,461 @@
+/* ==========================================================================
+   Godspeed component layer. Built on tokens.css, which must load first.
+
+   One nav, one button, one card, one section. Everything here reads a token;
+   no rule in this file hardcodes a brand colour. This is the sheet the
+   rebuilt pages use, and the one style.css and styles.css fold into when the
+   merge in Phase 2 happens.
+   ========================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--gs-surface);
+    color: var(--gs-ink);
+    font-family: var(--gs-font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, p, figure { margin: 0; }
+img { display: block; max-width: 100%; }
+a { color: var(--gs-blue); text-decoration: none; }
+a:hover { color: var(--gs-blue-hover); }
+
+/* Every interactive target clears 44px, the floor for a thumb. */
+a, button, input, select, textarea { font: inherit; }
+
+:focus-visible {
+    outline: 3px solid var(--gs-blue);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+.gs-skip {
+    position: absolute;
+    left: -9999px;
+}
+.gs-skip:focus {
+    left: 16px;
+    top: 16px;
+    z-index: 200;
+    padding: 12px 18px;
+    background: var(--gs-surface);
+    border-radius: var(--gs-radius-sm);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+}
+
+/* --- Layout ----------------------------------------------------------- */
+.gs-wrap {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 16px;
+}
+
+.gs-section { padding: 48px 0; }
+.gs-section--tight { padding: 32px 0; }
+.gs-section--tint { background: var(--gs-bg); }
+.gs-section--dark { background: var(--gs-black); color: var(--gs-surface); }
+
+.gs-eyebrow {
+    font-family: var(--gs-font-display);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gs-grey);
+}
+.gs-section--dark .gs-eyebrow { color: rgba(255, 255, 255, 0.66); }
+
+.gs-h2 {
+    font-size: clamp(26px, 5vw, 38px);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    margin-top: 10px;
+}
+
+.gs-lede {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--gs-muted);
+    max-width: 56ch;
+    margin-top: 12px;
+}
+.gs-section--dark .gs-lede { color: rgba(255, 255, 255, 0.76); }
+
+/* --- Buttons ---------------------------------------------------------- */
+.gs-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 0 24px;
+    border: 1.5px solid transparent;
+    border-radius: var(--gs-radius);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background var(--gs-transition), color var(--gs-transition);
+}
+.gs-btn--primary { background: var(--gs-blue); color: var(--gs-surface); }
+.gs-btn--primary:hover { background: var(--gs-blue-hover); color: var(--gs-surface); }
+.gs-btn--ghost { background: transparent; color: var(--gs-ink); border-color: var(--gs-line); }
+.gs-btn--ghost:hover { border-color: var(--gs-ink); color: var(--gs-ink); }
+.gs-btn--on-dark { background: transparent; color: var(--gs-surface); border-color: rgba(255, 255, 255, 0.6); }
+.gs-btn--on-dark:hover { background: rgba(255, 255, 255, 0.1); color: var(--gs-surface); }
+.gs-btn--block { width: 100%; }
+
+/* A text link that carries weight without becoming a second button. Standalone
+   links are tap targets too, so they clear 44px even though they do not look
+   like buttons. Measured at 19px before this. */
+.gs-textlink {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-weight: 700;
+    font-size: 15px;
+}
+.gs-section--dark .gs-textlink { color: var(--gs-blue-on-dark); }
+
+/* --- Header ----------------------------------------------------------- */
+.gs-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--gs-surface);
+    border-bottom: 1px solid var(--gs-line-soft);
+}
+.gs-header__inner {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    min-height: 60px;
+}
+.gs-logo {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: 15px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: var(--gs-ink);
+    white-space: nowrap;
+}
+.gs-logo span { color: var(--gs-blue); }
+
+.gs-nav { display: none; flex-grow: 1; gap: 22px; }
+.gs-nav a {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gs-ink);
+    padding: 8px 0;
+}
+.gs-nav a:hover, .gs-nav a[aria-current="page"] { color: var(--gs-blue); }
+.gs-header__actions { display: none; align-items: center; gap: 14px; margin-left: auto; }
+
+.gs-burger {
+    margin-left: auto;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+.gs-burger span {
+    width: 20px;
+    height: 2px;
+    background: var(--gs-ink);
+    border-radius: 1px;
+}
+
+/* --- Mobile menu ------------------------------------------------------ */
+.gs-menu {
+    position: fixed;
+    inset: 0;
+    z-index: 150;
+    background: var(--gs-surface);
+    display: none;
+    flex-direction: column;
+}
+.gs-menu[data-open="true"] { display: flex; }
+.gs-menu__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 60px;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--gs-line-soft);
+}
+.gs-menu__close {
+    width: 44px;
+    height: 44px;
+    border: none;
+    background: transparent;
+    font-size: 26px;
+    line-height: 1;
+    color: var(--gs-ink);
+    cursor: pointer;
+}
+.gs-menu__list { padding: 4px 16px; overflow-y: auto; flex-grow: 1; }
+.gs-menu__list a {
+    display: flex;
+    align-items: center;
+    min-height: 56px;
+    border-bottom: 1px solid var(--gs-line-soft);
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--gs-ink);
+}
+.gs-menu__foot { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+
+/* --- Hero ------------------------------------------------------------- */
+.gs-hero { position: relative; overflow: hidden; background: var(--gs-black); }
+.gs-hero__media { position: absolute; inset: 0; }
+.gs-hero__media img { width: 100%; height: 100%; object-fit: cover; object-position: 62% 20%; }
+
+/* The scrim is the reason the copy is readable. It darkens only where type
+   sits, so the photograph stays open on the other side. Without it, legibility
+   depends on whatever the picture happens to be doing at that width. */
+.gs-hero__scrim {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(to top, rgba(5,5,5,0.94) 0%, rgba(5,5,5,0.82) 34%, rgba(5,5,5,0.45) 62%, rgba(5,5,5,0.2) 100%);
+}
+.gs-hero__inner { position: relative; padding: 120px 0 36px; }
+.gs-hero__title {
+    font-size: clamp(34px, 8.4vw, 68px);
+    font-weight: 900;
+    line-height: 0.96;
+    letter-spacing: -0.035em;
+    text-transform: uppercase;
+    color: var(--gs-surface);
+    max-width: 14ch;
+}
+.gs-hero__lede {
+    margin-top: 14px;
+    font-size: 16px;
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.9);
+    max-width: 46ch;
+}
+.gs-hero__cta { margin-top: 22px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+.gs-hero__cta .gs-btn { width: 100%; }
+.gs-hero__alt { color: var(--gs-blue-on-dark); align-self: center; }
+
+/* --- Stat strip ------------------------------------------------------- */
+.gs-stats { display: flex; gap: 8px; }
+.gs-stat { flex: 1 1 0; text-align: center; }
+.gs-stat__n { font-size: clamp(22px, 5vw, 32px); font-weight: 900; letter-spacing: -0.02em; }
+.gs-stat__k { font-size: 12px; color: var(--gs-muted); margin-top: 2px; }
+
+/* --- Rows (replaces three identical cards) ---------------------------- */
+.gs-rows { margin-top: 18px; }
+.gs-row {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--gs-line-soft);
+}
+.gs-row__mark {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--gs-blue-tint);
+    color: var(--gs-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--gs-font-display);
+    font-size: 13px;
+    font-weight: 700;
+}
+.gs-row__t { font-size: 17px; font-weight: 700; }
+.gs-row__d { font-size: 15px; color: var(--gs-muted); margin-top: 4px; line-height: 1.5; }
+
+/* --- Team rail -------------------------------------------------------- */
+.gs-rail {
+    display: flex;
+    gap: 14px;
+    margin-top: 20px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+    scrollbar-width: none;
+}
+.gs-rail::-webkit-scrollbar { display: none; }
+.gs-card {
+    flex: 0 0 236px;
+    scroll-snap-align: start;
+    border: 1px solid var(--gs-line-soft);
+    border-radius: var(--gs-radius-lg);
+    overflow: hidden;
+    background: var(--gs-surface);
+    display: flex;
+    flex-direction: column;
+}
+.gs-card__media { aspect-ratio: 16 / 10; background: var(--gs-bg); }
+.gs-card__media img { width: 100%; height: 100%; object-fit: cover; }
+.gs-card__body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px; flex-grow: 1; }
+.gs-card__t { font-size: 16px; font-weight: 700; }
+.gs-card__m { font-size: 13px; color: var(--gs-muted); }
+.gs-card__cta { margin-top: auto; padding-top: 8px; }
+
+/* --- Standard band ---------------------------------------------------- */
+/* Legible with no script running: the dark surface is the resting state. */
+.gs-standard { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+.gs-standard__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 16px 18px;
+    border-radius: var(--gs-radius);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+}
+.gs-standard__k {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gs-surface);
+}
+.gs-standard__v { font-size: 28px; font-weight: 900; color: var(--gs-surface); line-height: 1; }
+
+/* --- Forms ------------------------------------------------------------ */
+.gs-field { display: flex; flex-direction: column; gap: 6px; }
+.gs-field label { font-size: 13px; font-weight: 700; }
+.gs-field input, .gs-field select {
+    min-height: 48px;
+    padding: 0 14px;
+    border: 1.5px solid var(--gs-line);
+    border-radius: var(--gs-radius-sm);
+    font-size: 16px; /* 16px stops iOS zooming the page on focus */
+    background: var(--gs-surface);
+    color: var(--gs-ink);
+}
+.gs-field input:focus, .gs-field select:focus { border-color: var(--gs-blue); outline: none; }
+.gs-field__hint { font-size: 13px; color: var(--gs-muted); }
+
+.gs-progress { display: flex; gap: 6px; }
+.gs-progress span { flex: 1 1 0; height: 4px; border-radius: 2px; background: var(--gs-line); }
+.gs-progress span[data-on="true"] { background: var(--gs-blue); }
+
+/* --- Bottom tab bar (mobile only) ------------------------------------- */
+.gs-tabs {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 90;
+    display: flex;
+    background: var(--gs-surface);
+    border-top: 1px solid var(--gs-line-soft);
+    padding-bottom: env(safe-area-inset-bottom);
+}
+.gs-tabs a {
+    flex: 1 1 0;
+    min-height: 58px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--gs-muted);
+}
+.gs-tabs a[aria-current="page"] { color: var(--gs-ink); font-weight: 700; }
+.gs-tabs svg { width: 20px; height: 20px; }
+.gs-tabs-pad { height: 58px; }
+
+/* --- Footer ----------------------------------------------------------- */
+.gs-footer { background: var(--gs-black); color: rgba(255, 255, 255, 0.72); padding: 40px 0 32px; }
+.gs-footer a { color: rgba(255, 255, 255, 0.72); font-size: 14px; }
+.gs-footer a:hover { color: var(--gs-surface); }
+.gs-footer__cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 20px; margin-top: 24px; }
+.gs-footer__h {
+    font-family: var(--gs-font-display);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 10px;
+}
+.gs-footer__col a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+}
+.gs-footer__tag {
+    font-family: var(--gs-font-display);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.82);
+    margin-top: 28px;
+}
+.gs-footer__tag span { color: var(--gs-blue-on-dark); }
+
+/* ==========================================================================
+   Desktop. The breakpoint is 1024: below it the mobile layout and the tab bar
+   hold, which covers phones and every tablet.
+   ========================================================================== */
+@media (min-width: 1024px) {
+    .gs-wrap { padding: 0 40px; }
+    .gs-section { padding: 72px 0; }
+    .gs-section--tight { padding: 40px 0; }
+
+    .gs-header__inner { min-height: 72px; }
+    .gs-nav { display: flex; }
+    .gs-header__actions { display: flex; }
+    .gs-burger { display: none; }
+    .gs-menu { display: none !important; }
+
+    .gs-tabs { display: none; }
+    .gs-tabs-pad { display: none; }
+
+    .gs-hero__inner { padding: 150px 0 110px; }
+    .gs-hero__lede { font-size: 18px; }
+    .gs-hero__cta { flex-direction: row; align-items: center; gap: 16px; }
+    .gs-hero__cta .gs-btn { width: auto; }
+    .gs-hero__alt { align-self: auto; }
+    .gs-hero__scrim {
+        background:
+            linear-gradient(to right, rgba(5,5,5,0.92) 0%, rgba(5,5,5,0.78) 38%, rgba(5,5,5,0.28) 68%, rgba(5,5,5,0.1) 100%);
+    }
+
+    .gs-stats { gap: 40px; justify-content: center; }
+    .gs-stat { flex: 0 0 auto; min-width: 150px; }
+
+    /* The three rows become three columns, and stop being three identical
+       cards stacked down the page. */
+    .gs-rows { display: flex; gap: 40px; margin-top: 28px; }
+    .gs-row { flex: 1 1 0; flex-direction: column; border-bottom: none; padding: 0; gap: 12px; }
+    .gs-row__mark { width: 44px; height: 44px; font-size: 15px; }
+
+    .gs-rail { overflow: visible; gap: 20px; margin-top: 28px; }
+    .gs-card { flex: 1 1 0; }
+
+    .gs-standard { flex-direction: row; gap: 20px; margin-top: 28px; }
+    .gs-standard__row { flex: 1 1 0; flex-direction: column; align-items: flex-start; gap: 10px; padding: 24px; }
+    .gs-standard__v { font-size: 44px; }
+
+    .gs-footer__cols { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px; }
+    .gs-split { display: flex; gap: 48px; align-items: center; }
+    .gs-split > * { flex: 1 1 0; }
+}

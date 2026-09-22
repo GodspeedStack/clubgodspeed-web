@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Syncopate:wght@700&display=swap" rel="stylesheet">
+<!-- tokens.css must load before gs.css: gs.css reads its custom properties. -->
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="gs.css">
+    <title>Apply | Godspeed Basketball</title>
+    <meta name="description" content="Start an application for a Godspeed roster spot. Three short steps.">
+    <meta name="robots" content="noindex">
+    <meta property="og:site_name" content="Godspeed Basketball">
+    <meta property="og:title" content="Apply | Godspeed Basketball">
+    <meta property="og:description" content="Start an application for a Godspeed roster spot. Three short steps.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.clubgodspeed.com/apply-v2.html">
+    <meta property="og:image" content="https://www.clubgodspeed.com/assets/godspeed-share.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+<a class="gs-skip" href="#main">Skip to content</a>
+<header class="gs-header">
+    <div class="gs-wrap gs-header__inner">
+        <a class="gs-logo" href="index-v2.html">GODSPEED<span>BASKETBALL</span></a>
+        <nav class="gs-nav" aria-label="Main">
+            <a href="programs-v2.html">Teams</a><a href="training.html">Training</a><a href="calendar.html">Calendar</a><a href="shop.html">Shop</a><a href="about.html">About</a>
+        </nav>
+        <div class="gs-header__actions">
+            <a class="gs-textlink" href="parent-portal.html">Parent portal</a>
+            <a class="gs-btn gs-btn--primary" href="apply-v2.html">Apply</a>
+        </div>
+        <button class="gs-burger" id="gsBurger" aria-label="Open menu" aria-expanded="false" aria-controls="gsMenu">
+            <span></span><span></span>
+        </button>
+    </div>
+</header>
+<div class="gs-menu" id="gsMenu" data-open="false" role="dialog" aria-modal="true" aria-label="Menu">
+    <div class="gs-menu__top">
+        <span class="gs-logo">GODSPEED<span>BASKETBALL</span></span>
+        <button class="gs-menu__close" id="gsMenuClose" aria-label="Close menu">&#215;</button>
+    </div>
+    <div class="gs-menu__list">
+        <a href="programs-v2.html">Teams</a>
+        <a href="training.html">Training</a>
+        <a href="programs-v2.html#open-gym">Open gym</a>
+        <a href="calendar.html">Calendar</a>
+        <a href="shop.html">Shop</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+    </div>
+    <div class="gs-menu__foot">
+        <a class="gs-btn gs-btn--primary gs-btn--block" href="parent-portal.html">Parent portal</a>
+        <a class="gs-btn gs-btn--ghost gs-btn--block" href="coach-portal.html">Coach sign in</a>
+    </div>
+</div>
+
+
+<main id="main">
+    <section class="gs-section gs-section--tight">
+        <div class="gs-wrap" style="max-width: 560px;">
+            <div class="gs-progress" aria-label="Step 1 of 3">
+                <span data-on="true"></span><span></span><span></span>
+            </div>
+            <p class="gs-field__hint" style="margin-top: 10px;">Step 1 of 3 &mdash; about the player</p>
+            <h2 class="gs-h2" style="margin-top: 14px;">Tell us about your athlete</h2>
+
+            <form style="margin-top: 26px; display: flex; flex-direction: column; gap: 18px;" novalidate>
+                <div class="gs-field">
+        <label for="player-name">Player name</label>
+        <input id="player-name" name="player-name" type="text" autocomplete="name">
+        
+    </div><div class="gs-field">
+        <label for="grade">Grade</label>
+        <select id="grade" name="grade"><option value="">Choose one</option><option>4th</option><option>5th</option><option>6th</option><option>7th</option></select>
+        
+    </div><div class="gs-field">
+        <label for="parent-email">Parent email</label>
+        <input id="parent-email" name="parent-email" type="email" autocomplete="email">
+        <p class="gs-field__hint">We send every schedule, document and reminder here.</p>
+    </div><div class="gs-field">
+        <label for="parent-phone">Phone</label>
+        <input id="parent-phone" name="parent-phone" type="tel" autocomplete="tel">
+        
+    </div>
+                <button class="gs-btn gs-btn--primary gs-btn--block" type="submit" style="margin-top: 6px;">Continue</button>
+                <p class="gs-field__hint">Nothing is submitted from this staged page yet. Wiring to the database comes with the swap.</p>
+            </form>
+
+            <div style="margin-top: 32px; padding: 20px; background: var(--gs-bg); border-radius: var(--gs-radius-lg);">
+                <p class="gs-eyebrow">What happens next</p>
+                <p class="gs-row__d" style="margin-top: 10px;">A coach reviews the application and invites your athlete to an open gym. There is no decision made from a form.</p>
+            </div>
+        </div>
+    </section>
+</main>
+
+<nav class="gs-tabs" aria-label="Primary">
+    <a href="index-v2.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+        Home
+    </a>
+    <a href="programs-v2.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3C9 6.5 9 17.5 12 21"/></svg>
+        Teams
+    </a>
+    <a href="calendar.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+        Calendar
+    </a>
+    <a href="parent-portal.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>
+        Portal
+    </a>
+</nav>
+<div class="gs-tabs-pad" aria-hidden="true"></div>
+
+<footer class="gs-footer">
+    <div class="gs-wrap">
+        <div class="gs-logo" style="color: #fff;">GODSPEED<span>BASKETBALL</span></div>
+        <div class="gs-footer__cols">
+            <div class="gs-footer__col">
+                <div class="gs-footer__h">Program</div>
+                <a href="programs-v2.html">Teams</a>
+                <a href="training.html">Training</a>
+                <a href="programs-v2.html#open-gym">Open gym</a>
+            </div>
+            <div class="gs-footer__col">
+                <div class="gs-footer__h">Families</div>
+                <a href="parent-portal.html">Parent portal</a>
+                <a href="calendar.html">Calendar</a>
+                <a href="season-guide.html">Parent guide</a>
+            </div>
+            <div class="gs-footer__col">
+                <div class="gs-footer__h">Club</div>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="fundraise.html">Fundraise</a>
+            </div>
+            <div class="gs-footer__col">
+                <div class="gs-footer__h">Shop</div>
+                <a href="shop.html">Apparel</a>
+                <a href="order-uniform.html">Uniforms</a>
+            </div>
+        </div>
+        <div class="gs-footer__tag">Brotherhood. Habits. <span>Success.</span></div>
+        <div style="margin-top: 14px; font-size: 13px; color: rgba(255,255,255,0.5);">Denver, Colorado</div>
+    </div>
+</footer>
+<script>
+(function () {
+    var menu = document.getElementById('gsMenu');
+    var open = document.getElementById('gsBurger');
+    var close = document.getElementById('gsMenuClose');
+    if (!menu || !open || !close) return;
+    function set(state) {
+        menu.setAttribute('data-open', state ? 'true' : 'false');
+        open.setAttribute('aria-expanded', state ? 'true' : 'false');
+        document.body.style.overflow = state ? 'hidden' : '';
+        (state ? close : open).focus();
+    }
+    open.addEventListener('click', function () { set(true); });
+    close.addEventListener('click', function () { set(false); });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && menu.getAttribute('data-open') === 'true') set(false);
+    });
+}());
+</script>
+
+</body>
+</html>
