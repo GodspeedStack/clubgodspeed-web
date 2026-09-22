@@ -371,6 +371,41 @@ a, button, input, select, textarea { font: inherit; }
 .gs-progress span { flex: 1 1 0; height: 4px; border-radius: 2px; background: var(--gs-line); }
 .gs-progress span[data-on="true"] { background: var(--gs-blue); }
 
+/* A disclosure summary and a link that is the whole value of a row are both
+   tap targets, measured at 20px and 19px before this. Inline links inside a
+   sentence are left alone. */
+details > summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+}
+details > summary::-webkit-details-marker { display: none; }
+
+/* Hiding the native marker removed the only cue that these open, so the
+   chevron replaces it rather than leaving the rows looking like plain text. */
+details > summary::after {
+    content: "";
+    flex: 0 0 auto;
+    margin-left: auto;
+    width: 9px;
+    height: 9px;
+    border-right: 2px solid var(--gs-grey);
+    border-bottom: 2px solid var(--gs-grey);
+    transform: rotate(45deg) translate(-2px, -2px);
+    transition: transform var(--gs-transition);
+}
+details[open] > summary::after {
+    transform: rotate(225deg) translate(-2px, -2px);
+    border-color: var(--gs-blue);
+}
+
+.gs-row__d > a:only-child {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+}
+
 /* --- Schedule list ---------------------------------------------------- */
 .gs-sched__note {
     padding: 20px;

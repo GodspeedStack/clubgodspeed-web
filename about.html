@@ -1,347 +1,183 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About Coach Scott | Godspeed Basketball</title>
-    <meta name="description" content="About Godspeed Basketball. Our mission, our coach, and our philosophy.">
-    <!-- link-preview:start -->
-    <!-- og:image MUST be an absolute https URL. A relative path resolves in a
-         browser but not for the link-preview fetchers behind iMessage, Slack,
-         Facebook and LinkedIn. 1200x630 and under 100KB so Apple does not
-         time out and fall back to no image at all. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Syncopate:wght@700&display=swap" rel="stylesheet">
+<!-- tokens.css must load before gs.css: gs.css reads its custom properties. -->
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="gs.css">
+    <title>About | Godspeed Basketball</title>
+    <meta name="description" content="Three coaches, one standard. The philosophy behind Godspeed Basketball in Denver.">
     <meta property="og:site_name" content="Godspeed Basketball">
-    <meta property="og:title" content="About Coach Scott | Godspeed Basketball">
-    <meta property="og:description" content="About Godspeed Basketball. Our mission, our coach, and our philosophy.">
+    <meta property="og:title" content="About | Godspeed Basketball">
+    <meta property="og:description" content="Three coaches, one standard. The philosophy behind Godspeed Basketball in Denver.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://www.clubgodspeed.com/about.html">
-    <meta property="og:locale" content="en_US">
     <meta property="og:image" content="https://www.clubgodspeed.com/assets/godspeed-share.jpg">
-    <meta property="og:image:secure_url" content="https://www.clubgodspeed.com/assets/godspeed-share.jpg">
-    <meta property="og:image:type" content="image/jpeg">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="Godspeed Basketball, Denver Colorado. Brotherhood. Habits. Success.">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="About Coach Scott | Godspeed Basketball">
-    <meta name="twitter:description" content="About Godspeed Basketball. Our mission, our coach, and our philosophy.">
-    <meta name="twitter:image" content="https://www.clubgodspeed.com/assets/godspeed-share.jpg">
-    <meta name="twitter:image:alt" content="Godspeed Basketball, Denver Colorado. Brotherhood. Habits. Success.">
     <link rel="canonical" href="https://www.clubgodspeed.com/about.html">
-    <!-- link-preview:end -->
-    <!-- Google Fonts: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Design tokens. Must load before any other stylesheet. -->
-    <link rel="stylesheet" href="tokens.css">
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="animations.css">
-    <link rel="stylesheet" href="quote-system.css">
-    <link rel="stylesheet" href="easter-eggs.css">
-    <!-- Without this the nav is unconstrained: the hamburger ran 32px past the
-         right edge at 390px and the cart badge 4px past it at 1440px. -->
-    <link rel="stylesheet" href="responsive-nav.css">
-    <link rel="stylesheet" href="nav-unified.css">
 </head>
-
 <body>
-        <nav class="navbar">
-        <div class="logo">GODSPEED<span style="color: #2563eb;">BASKETBALL</span></div>
-        <div class="nav-desktop-unified">
-            <div class="nav-links-unified">
-                <a href="index.html">Home</a>
-                <a href="training.html">Training</a>
-                <a href="aau.html">AAU</a>
-                <a href="fundraise.html">Fundraise</a>
-                <a href="calendar-grid.html" class="auth-restricted" style="display: none;">Calendar</a>
-                <div style="position: relative; opacity: 0.5; cursor: not-allowed; display: none; align-items: center;">
-                    <span>Academy</span>
-                    <span style="position: absolute; top: -12px; right: -24px; font-size: 9px; background: #f3f4f6; color: #6b7280; padding: 2px 4px; border-radius: 4px; border: 1px solid #e5e7eb;">SOON</span>
-                </div>
-                <div style="position: relative; opacity: 0.5; cursor: not-allowed; display: inline-flex; align-items: center;">
-                    <span>Shop</span>
-                    <span style="position: absolute; top: -12px; right: -24px; font-size: 9px; background: #f3f4f6; color: #6b7280; padding: 2px 4px; border-radius: 4px; border: 1px solid #e5e7eb;">SOON</span>
-                </div>
-                <a href="about.html" style="color: #2563eb;">About</a>
-            </div>
-            <!-- Right Side Icons -->
-            <div class="nav-right-unified">
-                <!-- Cart Icon -->
-                <a href="#" id="cart-btn" class="nav-cart-btn" aria-label="Cart">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                    </svg>
-                    <span class="cart-badge badge-bounce" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: bold; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">0</span>
-                </a>
-                <!-- Member Login Dropdown -->
-                <div class="nav-login-wrapper" style="position: relative; z-index: 50;">
-                    <a href="parent-portal.html" class="nav-cart-btn" aria-label="Sign In">
-                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 4 0 00-7 7h14a7 4 0 00-7-7z" />
-                        </svg>
-                    </a>
-                    <div class="login-dropdown">
-                        <div style="padding: 8px 16px 4px; font-size: 11px; text-transform: uppercase; color: #86868b; font-weight: 600; letter-spacing: 0.05em;">Member Access</div>
-                        <a href="parent-portal.html" class="login-option">
-                            <span style="display: flex; align-items: center; gap: 10px;">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                                Parents
-                            </span>
-                            <span class="login-arrow">›</span>
-                        </a>
-                        <a href="coach-portal.html" class="login-option">
-                            <span style="display: flex; align-items: center; gap: 10px;">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
-                                Coaches
-                            </span>
-                            <span class="login-arrow">›</span>
-                        </a>
-                    </div>
-                </div>
-                <a href="training.html#signup" class="btn-unified-train">TRAIN WITH US</a>
+<a class="gs-skip" href="#main">Skip to content</a>
+<header class="gs-header">
+    <div class="gs-wrap gs-header__inner">
+        <a class="gs-logo" href="index.html">GODSPEED<span>BASKETBALL</span></a>
+        <nav class="gs-nav" aria-label="Main">
+            <a href="programs.html">Teams</a>
+            <a href="training.html">Training</a>
+            <a href="calendar.html">Calendar</a>
+            <a href="shop.html">Shop</a>
+            <a href="about.html" aria-current="page">About</a>
+        </nav>
+        <div class="gs-header__actions">
+            <a class="gs-textlink" href="parent-portal.html">Parent portal</a>
+            <a class="gs-btn gs-btn--primary" href="apply.html">Apply</a>
+        </div>
+        <button class="gs-burger" id="gsBurger" aria-label="Open menu" aria-expanded="false" aria-controls="gsMenu">
+            <span></span><span></span>
+        </button>
+    </div>
+</header>
+<div class="gs-menu" id="gsMenu" data-open="false" role="dialog" aria-modal="true" aria-label="Menu">
+    <div class="gs-menu__top">
+        <span class="gs-logo">GODSPEED<span>BASKETBALL</span></span>
+        <button class="gs-menu__close" id="gsMenuClose" aria-label="Close menu">&#215;</button>
+    </div>
+    <div class="gs-menu__list">
+        <a href="programs.html">Teams</a>
+        <a href="training.html">Training</a>
+        <a href="programs.html#open-gym">Open gym</a>
+        <a href="calendar.html">Calendar</a>
+        <a href="shop.html">Shop</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+    </div>
+    <div class="gs-menu__foot">
+        <a class="gs-btn gs-btn--primary gs-btn--block" href="parent-portal.html">Parent portal</a>
+        <a class="gs-btn gs-btn--ghost gs-btn--block" href="coach-portal.html">Coach sign in</a>
+    </div>
+</div>
+
+<main id="main">
+    <section class="gs-section gs-section--dark gs-section--tight">
+        <div class="gs-wrap">
+            <p class="gs-eyebrow">About</p>
+            <h1 class="gs-h2">A different kind of coach.</h1>
+            <p class="gs-lede">For a different kind of player. Three coaches, one standard, and a program built around what a boy becomes rather than what he wins this season.</p>
+        </div>
+    </section>
+
+    <section class="gs-section">
+        <div class="gs-wrap">
+            <p class="gs-eyebrow">The staff</p>
+            <h2 class="gs-h2">Meet the coaches</h2>
+            <div class="gs-rail">
+                <article class="gs-card"><div class="gs-card__body" style="gap:8px;">
+                    <h3 class="gs-card__t" style="font-size:18px;">Coach Scott</h3>
+                    <p class="gs-card__m">Head coach and founder</p>
+                    <p class="gs-row__d" style="margin-top:2px;">Godspeed was founded to develop young men through movement science, basketball intelligence and identity.</p></div></article><article class="gs-card"><div class="gs-card__body" style="gap:8px;">
+                    <h3 class="gs-card__t" style="font-size:18px;">Coach True</h3>
+                    <p class="gs-card__m">Player development</p>
+                    <p class="gs-row__d" style="margin-top:2px;">Brings intensity and detail to development. Fundamental mastery and game-speed application, so players are ready for any level.</p></div></article><article class="gs-card"><div class="gs-card__body" style="gap:8px;">
+                    <h3 class="gs-card__t" style="font-size:18px;">Coach Gene</h3>
+                    <p class="gs-card__m">Community and mentorship</p>
+                    <p class="gs-row__d" style="margin-top:2px;">Founder alongside Scott. Holds the relationships that keep families connected to the program.</p></div></article>
             </div>
         </div>
-        <button class="mobile-menu-btn" aria-label="Menu" onclick="openMobileMenu()" style="background:none; border:none; font-size:24px; cursor:pointer;">☰</button>
-    </nav>
+    </section>
 
-    <!-- Hero Section -->
-    <header class="relative bg-black min-h-[60vh] flex items-center justify-center overflow-hidden">
-        <!-- Background Overlay -->
-        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent z-10"></div>
-        <div class="absolute inset-0 opacity-40">
-            <!-- Placeholder for hero pattern or image -->
-            <img src="assets/hero-collage.png" alt="Background" class="w-full h-full object-cover">
+    <section class="gs-section gs-section--tint">
+        <div class="gs-wrap">
+            <p class="gs-eyebrow">Training philosophy</p>
+            <h2 class="gs-h2">What the program is built on</h2>
+            <div class="gs-rows"><div class="gs-row"><div class="gs-row__mark">01</div><div><div class="gs-row__t">Movement science</div><div class="gs-row__d">Principles for efficiency, speed and injury prevention, tailored to basketball movement.</div></div></div><div class="gs-row"><div class="gs-row__mark">02</div><div><div class="gs-row__t">Modern IQ</div><div class="gs-row__d">Decision-making for the positionless game, so a player adapts instead of memorising.</div></div></div><div class="gs-row"><div class="gs-row__mark">03</div><div><div class="gs-row__t">Psychology</div><div class="gs-row__d">Confidence built the way performance coaches build it, not by praise alone.</div></div></div><div class="gs-row"><div class="gs-row__mark">04</div><div><div class="gs-row__t">Identity</div><div class="gs-row__d">Purpose-driven mentorship founded on character and personal responsibility.</div></div></div></div>
         </div>
-
-        <div class="relative z-20 container mx-auto px-6 text-center">
-            <h1 class="text-5xl md:text-7xl font-black text-white uppercase tracking-tighter mb-4 leading-none">
-                A Different Kind of <span class="text-blue-600">Coach.</span>
-            </h1>
-            <p class="text-xl md:text-2xl text-gray-300 font-medium max-w-2xl mx-auto">
-                For a different kind of player.
+    </section>
+    <section class="gs-section gs-section--tint">
+        <div class="gs-wrap">
+            <h2 class="gs-h2">Come and see it.</h2>
+            <p class="gs-lede">The fastest way to understand the program is to stand in the gym on a Tuesday. Open gym runs Tuesday and Thursday, 6:00 to 8:00 pm.</p>
+            <p style="margin-top: 22px; display: flex; flex-wrap: wrap; gap: 12px;">
+                <a class="gs-btn gs-btn--primary" href="programs.html#open-gym">See open gym</a>
+                <a class="gs-btn gs-btn--ghost" href="contact.html">Talk to a coach</a>
             </p>
         </div>
-    </header>
-
-    <!-- Coaches Section -->
-    <section class="bg-[#050505] text-white py-24">
-        <div class="container mx-auto px-6 max-w-6xl">
-            <div class="text-center mb-20">
-                <h2 class="text-3xl md:text-4xl font-black uppercase tracking-widest text-white mb-4">Meet the Coaches
-                </h2>
-                <div class="w-24 h-1 bg-blue-600 mx-auto rounded-full"></div>
-            </div>
-
-            <!-- Coach Scott -->
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-12 items-center mb-24">
-                <div class="md:col-span-4 relative group">
-                    <div
-                        class="absolute -inset-2 bg-gradient-to-r from-blue-600 to-blue-400 rounded-3xl opacity-30 group-hover:opacity-60 blur transition duration-500">
-                    </div>
-                    <img src="assets/coach-scott.png" alt="Coach Scott"
-                        class="relative w-full h-auto object-cover rounded-2xl shadow-2xl transform transition duration-500 group-hover:scale-[1.02]">
-                </div>
-                <div class="md:col-span-8 space-y-6">
-                    <div>
-                        <h3 class="text-4xl font-black text-blue-600 uppercase tracking-tight">Coach Scott</h3>
-                        <p class="text-gray-400 font-bold uppercase tracking-wide text-sm mt-1">Head Coach & Founder</p>
-                    </div>
-                    <p class="text-lg text-gray-300 leading-relaxed">
-                        Godspeed Basketball was founded to develop young men through a blend of <span
-                            class="text-white font-bold">movement science</span>, <span
-                            class="text-white font-bold">basketball intelligence</span>, and <span
-                            class="text-white font-bold">identity</span>.
-                    </p>
-                    <p class="text-lg text-gray-300 leading-relaxed">
-                        Coach Scott's coaching bridges biomechanics, cognitive skill-building, and identity-rooted in
-                        purpose. The goal is to create an environment where players learn to move efficiently, think
-                        clearly, and lead boldly.
-                    </p>
-                </div>
-            </div>
-
-            <!-- Coach True -->
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-12 items-center mb-24">
-                <!-- Image on Right for Desktop -->
-                <div class="md:col-span-4 md:order-last relative group">
-                    <div
-                        class="absolute -inset-2 bg-gradient-to-r from-purple-600 to-blue-500 rounded-3xl opacity-30 group-hover:opacity-60 blur transition duration-500">
-                    </div>
-                    <img src="assets/coach-true-v2.png" alt="Coach True"
-                        class="relative w-full h-auto object-cover rounded-2xl shadow-2xl transform transition duration-500 group-hover:scale-[1.02]">
-                </div>
-                <div class="md:col-span-8 space-y-6 text-left md:text-right">
-                    <div>
-                        <h3 class="text-4xl font-black text-blue-600 uppercase tracking-tight">Coach True</h3>
-                        <p class="text-gray-400 font-bold uppercase tracking-wide text-sm mt-1">Player Development</p>
-                    </div>
-                    <p class="text-lg text-gray-300 leading-relaxed">
-                        Coach True brings <span class="text-white font-bold">intensity and detail</span> to player
-                        development. His focus on fundamental mastery and game-speed application ensures players are
-                        ready for any level of competition.
-                    </p>
-                </div>
-            </div>
-
-            <!-- Coach Gene -->
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-12 items-center">
-                <div class="md:col-span-4 relative group">
-                    <div
-                        class="absolute -inset-2 bg-gradient-to-r from-green-500 to-blue-500 rounded-3xl opacity-30 group-hover:opacity-60 blur transition duration-500">
-                    </div>
-                    <img src="assets/coach-gene.png" alt="Coach Gene"
-                        class="relative w-full h-auto object-cover rounded-2xl shadow-2xl transform transition duration-500 group-hover:scale-[1.02]">
-                </div>
-                <div class="md:col-span-8 space-y-6">
-                    <div>
-                        <h3 class="text-4xl font-black text-blue-600 uppercase tracking-tight">Coach Gene</h3>
-                        <p class="text-gray-400 font-bold uppercase tracking-wide text-sm mt-1">Community & Mentorship
-                        </p>
-                    </div>
-                    <p class="text-lg text-gray-300 leading-relaxed">
-                        Coach Gene is a <span class="text-white font-bold">coach and dedicated educator</span> with decades of experience developing athletes both on and off the court. He bridges the gap between the game and life, bringing a wealth of wisdom to mentorship and ensuring every player feels part of the Godspeed family and succeeds beyond the court.
-                    </p>
-                    <div
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10">
-                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                        <span class="text-xs font-bold tracking-wider text-gray-300 uppercase">Community Leader</span>
-                    </div>
-                </div>
-            </div>
-        </div>
     </section>
 
-    <!-- Coaching Style Section -->
-    <section class="bg-white py-24 border-t border-gray-100">
-        <div class="container mx-auto px-6 max-w-6xl">
-            <h2 class="text-3xl md:text-5xl font-black text-black text-center uppercase tracking-tighter mb-16">
-                Coaching Style
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="bg-gray-50 p-8 rounded-3xl border border-gray-100 hover:shadow-xl transition duration-300">
-                    <div class="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center mb-6 text-blue-600">
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold text-black mb-3">Supportive, but Demanding</h3>
-                    <p class="text-gray-600 leading-relaxed text-lg">
-                        We build lasting confidence through accountability. Supportive but firm. No shortcuts. We prioritize precision first, speed second. By holding our athletes to a standard that demands their best effort, we help them discover what they are truly capable of.
-                    </p>
-                </div>
-                <div class="bg-gray-50 p-8 rounded-3xl border border-gray-100 hover:shadow-xl transition duration-300">
-                    <div
-                        class="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center mb-6 text-purple-600">
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold text-black mb-3">Holistic Approach</h3>
-                    <p class="text-gray-600 leading-relaxed text-lg">
-                        Players are coached as complete people. We focus on teaching emotional regulation and empowering each athlete to uplift one another as brothers, fostering a true family atmosphere where no one is left behind.
-                    </p>
-                </div>
-                <div class="bg-gray-50 p-8 rounded-3xl border border-gray-100 hover:shadow-xl transition duration-300">
-                    <div class="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center mb-6">
-                        <svg class="w-6 h-6" viewBox="0 0 256 256" fill="#c2410c">
-                            <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24ZM60,72.17A87.2,87.2,0,0,1,79.63,120H40.37A87.54,87.54,0,0,1,60,72.17ZM136,120V40.37a87.59,87.59,0,0,1,48.68,20.37A103.06,103.06,0,0,0,160.3,120Zm-16,0H95.7A103.06,103.06,0,0,0,71.32,60.74,87.59,87.59,0,0,1,120,40.37ZM79.63,136A87.2,87.2,0,0,1,60,183.83,87.54,87.54,0,0,1,40.37,136Zm16.07,0H120v79.63a87.59,87.59,0,0,1-48.68-20.37A103.09,103.09,0,0,0,95.7,136Zm40.3,0h24.3a103.09,103.09,0,0,0,24.38,59.26A87.59,87.59,0,0,1,136,215.63Zm40.37,0h39.26A87.54,87.54,0,0,1,196,183.83,87.2,87.2,0,0,1,176.37,136Zm0-16A87.2,87.2,0,0,1,196,72.17,87.54,87.54,0,0,1,215.63,120Z"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold text-black mb-3">Play to Your Strengths</h3>
-                    <p class="text-gray-600 leading-relaxed text-lg">
-                        Whatever a player has a knack for, we encourage them to do exactly that. If a big likes to shoot or create plays, that becomes part of their role. Every player must learn to shoot efficiently, and those with a shooter's mindset will be encouraged to develop it -- regardless of how many misses, as long as the shot is within the flow of the game.
-                    </p>
-                </div>
+</main>
+
+<nav class="gs-tabs" aria-label="Primary">
+    <a href="index.html" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+        Home
+    </a>
+    <a href="programs.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3C9 6.5 9 17.5 12 21"/></svg>
+        Teams
+    </a>
+    <a href="calendar.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+        Calendar
+    </a>
+    <a href="parent-portal.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>
+        Portal
+    </a>
+</nav>
+<div class="gs-tabs-pad" aria-hidden="true"></div>
+<footer class="gs-footer">
+    <div class="gs-wrap">
+        <div class="gs-logo" style="color: #fff;">GODSPEED<span>BASKETBALL</span></div>
+        <div class="gs-footer__cols">
+            <div class="gs-footer__col">
+                <div class="gs-footer__h">Program</div>
+                <a href="programs.html">Teams</a>
+                <a href="training.html">Training</a>
+                <a href="programs.html#open-gym">Open gym</a>
+            </div>
+            <div class="gs-footer__col">
+                <div class="gs-footer__h">Families</div>
+                <a href="parent-portal.html">Parent portal</a>
+                <a href="calendar.html">Calendar</a>
+                <a href="season-guide.html">Parent guide</a>
+            </div>
+            <div class="gs-footer__col">
+                <div class="gs-footer__h">Club</div>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="fundraise.html">Fundraise</a>
+            </div>
+            <div class="gs-footer__col">
+                <div class="gs-footer__h">Shop</div>
+                <a href="shop.html">Apparel</a>
+                <a href="order-uniform.html">Uniforms</a>
             </div>
         </div>
-    </section>
-
-    <!-- Training Philosophy -->
-    <section class="bg-[#0a0a0a] text-white py-24">
-        <div class="container mx-auto px-6 max-w-6xl">
-            <h2 class="text-3xl md:text-5xl font-black text-white text-center uppercase tracking-tighter mb-16">
-                Training Philosophy
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <!-- Card 1 -->
-                <div
-                    class="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10 hover:border-blue-600 transition duration-300 group">
-                    <h3 class="text-xl font-bold text-blue-500 mb-3 group-hover:text-blue-400 transition">Movement
-                        Science</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed">
-                        Principles for efficiency, speed, and injury prevention tailored to basketball movements.
-                    </p>
-                </div>
-                <!-- Card 2 -->
-                <div
-                    class="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10 hover:border-blue-600 transition duration-300 group">
-                    <h3 class="text-xl font-bold text-blue-500 mb-3 group-hover:text-blue-400 transition">Modern IQ</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed">
-                        Decision-making training for the modern, positionless game ensuring high adaptability.
-                    </p>
-                </div>
-                <!-- Card 3 -->
-                <div
-                    class="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10 hover:border-blue-600 transition duration-300 group">
-                    <h3 class="text-xl font-bold text-blue-500 mb-3 group-hover:text-blue-400 transition">Psychology
-                    </h3>
-                    <p class="text-gray-400 text-sm leading-relaxed">
-                        Confidence building techniques derived from global performance coaches.
-                    </p>
-                </div>
-                <!-- Card 4 -->
-                <div
-                    class="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10 hover:border-blue-600 transition duration-300 group">
-                    <h3 class="text-xl font-bold text-blue-500 mb-3 group-hover:text-blue-400 transition">Identity</h3>
-                    <p class="text-gray-400 text-sm leading-relaxed">
-                        Purpose-driven mentorship founded on strong character and personal responsibility.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-
-
-    <footer id="gs-shared-footer"></footer>
-    <script src="shared-footer.js" defer></script>
-
-    <!-- Cart Overlay -->
-    <div id="cart-overlay" class="cart-overlay">
-        <div class="cart-sidebar">
-            <div class="cart-header">
-                <h2>Your Cart</h2>
-                <button id="close-cart" class="close-cart-btn">×</button>
-            </div>
-            <div id="cart-items" class="cart-items">
-                <!-- Cart items will be injected here -->
-                <p class="empty-cart-msg">Your cart is empty.</p>
-            </div>
-            <div class="cart-footer">
-                <div class="cart-total">
-                    <span>Total:</span>
-                    <span id="cart-total-price">$0.00</span>
-                </div>
-                <button class="btn-primary checkout-btn">Checkout</button>
-            </div>
-        </div>
+        <div class="gs-footer__tag">Brotherhood. Habits. <span>Success.</span></div>
+        <div style="margin-top: 14px; font-size: 13px; color: rgba(255,255,255,0.5);">Denver, Colorado</div>
     </div>
-
-    <script src="branded-modal.js"></script>
-    <script src="security.js"></script>
-    <script src="script.js"></script>
-    <script src="auth.js"></script>
-    <script src="src/components/MobileBottomNav.js"></script>
-    <script src="nav-security.js"></script>
-    <script src="performance.js"></script>
-    <script src="button-states.js"></script>
-    <script src="scroll-reveal.js"></script>
-    <script src="quote-system.js" defer></script>
-    <script src="easter-eggs.js" defer></script>
-    <script src="mobile-menu.js"></script>
+</footer>
+<script>
+(function () {
+    var menu = document.getElementById('gsMenu');
+    var open = document.getElementById('gsBurger');
+    var close = document.getElementById('gsMenuClose');
+    if (!menu || !open || !close) return;
+    function set(state) {
+        menu.setAttribute('data-open', state ? 'true' : 'false');
+        open.setAttribute('aria-expanded', state ? 'true' : 'false');
+        document.body.style.overflow = state ? 'hidden' : '';
+        (state ? close : open).focus();
+    }
+    open.addEventListener('click', function () { set(true); });
+    close.addEventListener('click', function () { set(false); });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && menu.getAttribute('data-open') === 'true') set(false);
+    });
+}());
+</script>
 </body>
-
 </html>

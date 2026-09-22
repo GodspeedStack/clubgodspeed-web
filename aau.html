@@ -1,428 +1,185 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AAU Club | Godspeed Basketball</title>
-    <meta name="description" content="Join Club Godspeed. Elite AAU basketball teams in Denver. 10U, 11U.">
-    <!-- link-preview:start -->
-    <!-- og:image MUST be an absolute https URL. A relative path resolves in a
-         browser but not for the link-preview fetchers behind iMessage, Slack,
-         Facebook and LinkedIn. 1200x630 and under 100KB so Apple does not
-         time out and fall back to no image at all. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Syncopate:wght@700&display=swap" rel="stylesheet">
+<!-- tokens.css must load before gs.css: gs.css reads its custom properties. -->
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="gs.css">
+    <title>Club Teams | Godspeed Basketball</title>
+    <meta name="description" content="Club Godspeed travel teams in Denver. Three teams, small rosters, September to March.">
     <meta property="og:site_name" content="Godspeed Basketball">
-    <meta property="og:title" content="AAU Club | Godspeed Basketball">
-    <meta property="og:description" content="Join Club Godspeed. Elite AAU basketball teams in Denver. 10U, 11U.">
+    <meta property="og:title" content="Club Teams | Godspeed Basketball">
+    <meta property="og:description" content="Club Godspeed travel teams in Denver. Three teams, small rosters, September to March.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://www.clubgodspeed.com/aau.html">
-    <meta property="og:locale" content="en_US">
     <meta property="og:image" content="https://www.clubgodspeed.com/assets/godspeed-share.jpg">
-    <meta property="og:image:secure_url" content="https://www.clubgodspeed.com/assets/godspeed-share.jpg">
-    <meta property="og:image:type" content="image/jpeg">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="Godspeed Basketball, Denver Colorado. Brotherhood. Habits. Success.">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="AAU Club | Godspeed Basketball">
-    <meta name="twitter:description" content="Join Club Godspeed. Elite AAU basketball teams in Denver. 10U, 11U.">
-    <meta name="twitter:image" content="https://www.clubgodspeed.com/assets/godspeed-share.jpg">
-    <meta name="twitter:image:alt" content="Godspeed Basketball, Denver Colorado. Brotherhood. Habits. Success.">
     <link rel="canonical" href="https://www.clubgodspeed.com/aau.html">
-    <!-- link-preview:end -->
-    <!-- Resource Hints -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
-
-    <!-- Critical CSS -->
-    <!-- Design tokens. Must load before any other stylesheet. -->
-    <link rel="stylesheet" href="tokens.css">
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="responsive-nav.css">
-    <link rel="stylesheet" href="nav-unified.css">
-    <link rel="stylesheet" href="easter-eggs.css">
-
-    <!-- Fonts (async load) -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet"
-        media="print" onload="this.media='all'">
-    <noscript>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
-    </noscript>
-
-    <!-- Non-critical CSS (async load) -->
-    <link rel="preload" href="animations.css?v=2" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript>
-        <link rel="stylesheet" href="animations.css?v=2">
-    </noscript>
-
-
-    <!-- Tailwind CDN (defer) -->
-    <script src="https://cdn.tailwindcss.com" defer></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'brand-blue': '#2563eb',
-                    },
-                    fontFamily: {
-                        'sans': ['Inter', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-
-
-        /* Hero Section with Background Image */
-        .hero-section-aau {
-            position: relative !important;
-            min-height: 90vh !important;
-            display: flex !important;
-            align-items: center !important;
-            overflow: hidden !important;
-            background: transparent !important;
-            background-color: transparent !important;
-        }
-
-        .hero-bg-aau {
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            background-image: url('assets/hero-collage.png') !important;
-            background-size: cover !important;
-            background-position: center top !important;
-            background-repeat: no-repeat !important;
-            z-index: 0 !important;
-        }
-
-        .hero-overlay-aau {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to right, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.5) 40%, rgba(0, 0, 0, 0.3) 100%);
-            z-index: 1;
-        }
-
-        /* The Family Section with Background Image */
-        .family-section-bg {
-            position: relative !important;
-            padding: 6rem 1.5rem !important;
-            overflow: hidden !important;
-            min-height: 600px !important;
-            background: transparent !important;
-            background-color: transparent !important;
-        }
-
-        .family-bg {
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            min-height: 600px !important;
-            background-image: url('assets/hero-collage.png') !important;
-            background-size: cover !important;
-            background-position: center top !important;
-            background-repeat: no-repeat !important;
-            z-index: 0 !important;
-            display: block !important;
-        }
-
-        .family-overlay {
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            min-height: 600px !important;
-            background: linear-gradient(to right, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.7) 40%, rgba(0, 0, 0, 0.5) 100%) !important;
-            z-index: 1 !important;
-            display: block !important;
-        }
-
-        .family-content {
-            position: relative !important;
-            z-index: 2 !important;
-        }
-    </style>
 </head>
+<body>
+<a class="gs-skip" href="#main">Skip to content</a>
+<header class="gs-header">
+    <div class="gs-wrap gs-header__inner">
+        <a class="gs-logo" href="index.html">GODSPEED<span>BASKETBALL</span></a>
+        <nav class="gs-nav" aria-label="Main">
+            <a href="programs.html" aria-current="page">Teams</a>
+            <a href="training.html">Training</a>
+            <a href="calendar.html">Calendar</a>
+            <a href="shop.html">Shop</a>
+            <a href="about.html">About</a>
+        </nav>
+        <div class="gs-header__actions">
+            <a class="gs-textlink" href="parent-portal.html">Parent portal</a>
+            <a class="gs-btn gs-btn--primary" href="apply.html">Apply</a>
+        </div>
+        <button class="gs-burger" id="gsBurger" aria-label="Open menu" aria-expanded="false" aria-controls="gsMenu">
+            <span></span><span></span>
+        </button>
+    </div>
+</header>
+<div class="gs-menu" id="gsMenu" data-open="false" role="dialog" aria-modal="true" aria-label="Menu">
+    <div class="gs-menu__top">
+        <span class="gs-logo">GODSPEED<span>BASKETBALL</span></span>
+        <button class="gs-menu__close" id="gsMenuClose" aria-label="Close menu">&#215;</button>
+    </div>
+    <div class="gs-menu__list">
+        <a href="programs.html">Teams</a>
+        <a href="training.html">Training</a>
+        <a href="programs.html#open-gym">Open gym</a>
+        <a href="calendar.html">Calendar</a>
+        <a href="shop.html">Shop</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+    </div>
+    <div class="gs-menu__foot">
+        <a class="gs-btn gs-btn--primary gs-btn--block" href="parent-portal.html">Parent portal</a>
+        <a class="gs-btn gs-btn--ghost gs-btn--block" href="coach-portal.html">Coach sign in</a>
+    </div>
+</div>
 
-<body class="bg-white text-gray-900 antialiased">
-        <nav class="navbar">
-        <div class="logo">GODSPEED<span style="color: #2563eb;">BASKETBALL</span></div>
-        <div class="nav-desktop-unified">
-            <div class="nav-links-unified">
-                <a href="index.html">Home</a>
+<main id="main">
+    <section class="gs-section gs-section--dark gs-section--tight">
+        <div class="gs-wrap">
+            <p class="gs-eyebrow">Club</p>
+            <h1 class="gs-h2">Club Godspeed.</h1>
+            <p class="gs-lede">Three travel teams out of Denver, September to March. Small rosters on purpose, so minutes are earned rather than rationed.</p>
+        </div>
+    </section>
+
+    <section class="gs-section">
+        <div class="gs-wrap">
+            <p class="gs-eyebrow">Teams</p>
+            <h2 class="gs-h2">This season</h2>
+            <div class="gs-rail"><article class="gs-card"><div class="gs-card__body" style="gap:8px;">
+    <h3 class="gs-card__t" style="font-size:18px;">Godspeed 5th Grade Black</h3>
+    <p class="gs-card__m">10U &middot; 7 players</p>
+    <p class="gs-card__m">Grades 5 and 6</p>
+    <p class="gs-card__cta"><a class="gs-textlink" href="calendar.html">See the schedule</a></p></div></article><article class="gs-card"><div class="gs-card__body" style="gap:8px;">
+    <h3 class="gs-card__t" style="font-size:18px;">Godspeed 5th Grade White</h3>
+    <p class="gs-card__m">10U &middot; 8 players</p>
+    <p class="gs-card__m">Grades 4 and 5</p>
+    <p class="gs-card__cta"><a class="gs-textlink" href="calendar.html">See the schedule</a></p></div></article><article class="gs-card"><div class="gs-card__body" style="gap:8px;">
+    <h3 class="gs-card__t" style="font-size:18px;">Godspeed 6th Grade</h3>
+    <p class="gs-card__m">11U &middot; 9 players</p>
+    <p class="gs-card__m">Grade 6</p>
+    <p class="gs-card__cta"><a class="gs-textlink" href="calendar.html">See the schedule</a></p></div></article></div>
+        </div>
+    </section>
+
+    <section class="gs-section gs-section--tint">
+        <div class="gs-wrap">
+            <p class="gs-eyebrow">The Godspeed family</p>
+            <h2 class="gs-h2">More than a jersey</h2>
+            <p class="gs-lede">When you join Club Godspeed you join a brotherhood dedicated to excellence on and off the court.</p>
+            <div class="gs-rows"><div class="gs-row"><div class="gs-row__mark">01</div><div><div class="gs-row__t">Mentorship first</div><div class="gs-row__d">Coaches are mentors, not just trainers. We guide athletes through competition, school and life.</div></div></div><div class="gs-row"><div class="gs-row__mark">02</div><div><div class="gs-row__t">Long-term vision</div><div class="gs-row__d">We do not chase trophies. We build skills that carry into high school and beyond.</div></div></div><div class="gs-row"><div class="gs-row__mark">03</div><div><div class="gs-row__t">Iron sharpens iron</div><div class="gs-row__d">A deliberately hard schedule, because weaknesses show up against good teams and nowhere else.</div></div></div></div>
+        </div>
+    </section>
+    <section class="gs-section gs-section--tint">
+        <div class="gs-wrap">
+            <h2 class="gs-h2">Ready to join the family?</h2>
+            <p class="gs-lede">Roster spots go to players who show character and work ethic. Tryouts are for the club teams only.</p>
+            <p style="margin-top: 22px; display: flex; flex-wrap: wrap; gap: 12px;">
+                <a class="gs-btn gs-btn--primary" href="apply.html">Start an application</a>
+                <a class="gs-btn gs-btn--ghost" href="contact.html">Talk to a coach</a>
+            </p>
+        </div>
+    </section>
+
+</main>
+
+<nav class="gs-tabs" aria-label="Primary">
+    <a href="index.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+        Home
+    </a>
+    <a href="programs.html" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3C9 6.5 9 17.5 12 21"/></svg>
+        Teams
+    </a>
+    <a href="calendar.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+        Calendar
+    </a>
+    <a href="parent-portal.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>
+        Portal
+    </a>
+</nav>
+<div class="gs-tabs-pad" aria-hidden="true"></div>
+<footer class="gs-footer">
+    <div class="gs-wrap">
+        <div class="gs-logo" style="color: #fff;">GODSPEED<span>BASKETBALL</span></div>
+        <div class="gs-footer__cols">
+            <div class="gs-footer__col">
+                <div class="gs-footer__h">Program</div>
+                <a href="programs.html">Teams</a>
                 <a href="training.html">Training</a>
-                <a href="aau.html" style="color: #2563eb;">AAU</a>
-                <a href="fundraise.html">Fundraise</a>
-                <a href="calendar-grid.html" class="auth-restricted" style="display: none;">Calendar</a>
-                <div style="position: relative; opacity: 0.5; cursor: not-allowed; display: none; align-items: center;">
-                    <span>Academy</span>
-                    <span style="position: absolute; top: -12px; right: -24px; font-size: 9px; background: #f3f4f6; color: #6b7280; padding: 2px 4px; border-radius: 4px; border: 1px solid #e5e7eb;">SOON</span>
-                </div>
-                <div style="position: relative; opacity: 0.5; cursor: not-allowed; display: inline-flex; align-items: center;">
-                    <span>Shop</span>
-                    <span style="position: absolute; top: -12px; right: -24px; font-size: 9px; background: #f3f4f6; color: #6b7280; padding: 2px 4px; border-radius: 4px; border: 1px solid #e5e7eb;">SOON</span>
-                </div>
+                <a href="programs.html#open-gym">Open gym</a>
+            </div>
+            <div class="gs-footer__col">
+                <div class="gs-footer__h">Families</div>
+                <a href="parent-portal.html">Parent portal</a>
+                <a href="calendar.html">Calendar</a>
+                <a href="season-guide.html">Parent guide</a>
+            </div>
+            <div class="gs-footer__col">
+                <div class="gs-footer__h">Club</div>
                 <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="fundraise.html">Fundraise</a>
             </div>
-            <!-- Right Side Icons -->
-            <div class="nav-right-unified">
-                <!-- Cart Icon -->
-                <a href="#" id="cart-btn" class="nav-cart-btn" aria-label="Cart">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                    </svg>
-                    <span class="cart-badge badge-bounce" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; font-size: 10px; font-weight: bold; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">0</span>
-                </a>
-                <!-- Member Login Dropdown -->
-                <div class="nav-login-wrapper" style="position: relative; z-index: 50;">
-                    <a href="parent-portal.html" class="nav-cart-btn" aria-label="Sign In">
-                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:24px;height:24px;">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 4 0 00-7 7h14a7 4 0 00-7-7z" />
-                        </svg>
-                    </a>
-                    <div class="login-dropdown">
-                        <div style="padding: 8px 16px 4px; font-size: 11px; text-transform: uppercase; color: #86868b; font-weight: 600; letter-spacing: 0.05em;">Member Access</div>
-                        <a href="parent-portal.html" class="login-option">
-                            <span style="display: flex; align-items: center; gap: 10px;">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                                Parents
-                            </span>
-                            <span class="login-arrow">›</span>
-                        </a>
-                        <a href="coach-portal.html" class="login-option">
-                            <span style="display: flex; align-items: center; gap: 10px;">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
-                                Coaches
-                            </span>
-                            <span class="login-arrow">›</span>
-                        </a>
-                    </div>
-                </div>
-                <a href="training.html#signup" class="btn-unified-train">TRAIN WITH US</a>
+            <div class="gs-footer__col">
+                <div class="gs-footer__h">Shop</div>
+                <a href="shop.html">Apparel</a>
+                <a href="order-uniform.html">Uniforms</a>
             </div>
         </div>
-        <button class="mobile-menu-btn" aria-label="Menu" onclick="openMobileMenu()" style="background:none; border:none; font-size:24px; cursor:pointer;">☰</button>
-    </nav>
-
-    <!-- Hero Section -->
-    <header class="hero-section-aau">
-        <div class="hero-bg-aau"></div>
-        <div class="hero-overlay-aau"></div>
-        <div class="relative z-10 max-w-6xl mx-auto px-6 py-24" style="text-align: left; padding-left: 1.5rem; padding-right: 1.5rem;">
-            <p class="hero-text-animate text-gray-300 text-xs font-bold tracking-[0.25em] uppercase mb-8">
-                EST. 2024 • DENVER
-            </p>
-            <h1 class="hero-text-animate hero-text-animate-delay-1 font-black leading-[0.85] mb-10 uppercase text-white" style="font-size: clamp(3.5rem, 15vw, 10rem);">
-                CLUB<br>GODSPEED.
-            </h1>
-            <p class="hero-subtitle-animate text-gray-300 mb-14 leading-snug font-medium" style="font-size: clamp(1.1rem, 4vw, 1.75rem); max-width: 36rem;">
-                Travel Teams. Elite Schedule. The next generation of Denver basketball.
-            </p>
-            <a href="training.html?interest=aau#signup" 
-                class="hero-cta-animate btn-glow btn-delight inline-block px-10 py-4 bg-white text-black text-sm font-bold rounded-full uppercase tracking-wider hover:bg-gray-200 transition-all duration-200" style="border: 2px solid #fff; color: #000;">
-                REQUEST ROSTER SPOT
-            </a>
-        </div>
-    </header>
-
-    <!-- Team Divisions -->
-    <section id="club" class="bg-black py-24 px-6">
-        <div class="max-w-7xl mx-auto">
-            <div
-                class="flex flex-col md:flex-row justify-between items-start md:items-end mb-20 pb-10 border-b border-gray-800">
-                <h2 class="scroll-reveal text-5xl md:text-6xl font-black text-white uppercase tracking-tight">TEAM DIVISIONS</h2>
-                <p class="text-gray-600 font-bold text-xs uppercase tracking-widest mt-4 md:mt-0">2025 / 2026 SEASON</p>
-            </div>
-
-            <div class="grid md:grid-cols-2 gap-10 max-w-4xl mx-auto stagger-children">
-                <!-- 10U Card -->
-                <a href="register.html?team=10u"
-                    class="card-spring-hover bg-gray-900 border border-gray-800 rounded-2xl p-12 hover:border-gray-700 transition-all duration-500 group block no-underline cursor-pointer">
-                    <span
-                        class="badge-pulse inline-block px-5 py-2 bg-gray-800 text-white font-black text-xs rounded-full mb-6 uppercase tracking-wider">10U</span>
-                    <h3 class="text-5xl font-black text-white uppercase mb-6 tracking-tighter leading-none">FUTURES</h3>
-                    <p class="text-gray-400 text-base leading-relaxed">
-                        Building the foundation. Focus on biomechanics, spacing, and love for the game.
-                    </p>
-                    <span class="inline-block mt-6 px-6 py-3 bg-white text-black font-bold text-sm rounded-full uppercase tracking-wider group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">Register</span>
-                </a>
-
-                <!-- 11U Card (Featured) -->
-                <a href="register.html?team=11u"
-                    class="card-spring-hover bg-gray-800 border border-gray-700 rounded-2xl p-12 relative overflow-hidden hover:border-gray-600 transition-all duration-500 group transform hover:scale-105 block no-underline cursor-pointer">
-                    <div class="absolute top-0 left-0 right-0 h-1 bg-white"></div>
-                    <span
-                        class="badge-pulse inline-block px-5 py-2 bg-white text-black font-black text-xs rounded-full mb-6 uppercase tracking-wider">11U</span>
-                    <h3 class="text-5xl font-black text-white uppercase mb-6 tracking-tighter leading-none">RISING</h3>
-                    <p class="text-gray-300 text-base leading-relaxed">
-                        Sharpening competitive instincts. Game IQ, defensive rotations, and tournament pressure.
-                    </p>
-                    <span class="inline-block mt-6 px-6 py-3 bg-white text-black font-bold text-sm rounded-full uppercase tracking-wider group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">Register</span>
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- The Craft -->
-    <section class="py-10 md:py-24 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-6 md:mb-16">
-                <h2 class="scroll-reveal text-4xl md:text-6xl font-black uppercase tracking-tight text-gray-900">THE CRAFT</h2>
-            </div>
-
-            <div class="grid md:grid-cols-2 gap-6 md:gap-20 mb-8 md:mb-24 max-w-6xl mx-auto">
-                <div>
-                    <p class="scroll-reveal-parallax text-4xl md:text-5xl font-black leading-tight text-gray-900">
-                        Honoring the game. Elevating the player.
-                    </p>
-                </div>
-                <div class="scroll-reveal-stagger text-base md:text-lg text-gray-600 leading-relaxed space-y-3 md:space-y-5">
-                    <p>
-                        We believe basketball is more than a sport. It's an education. Club Godspeed exists to provide an
-                        environment where players can learn the game and be challenged with age appropriate material.
-                    </p>
-                    <p>
-                        We are building a culture where <strong class="text-gray-900 font-black">character</strong> is
-                        the ultimate talent. Where young athletes learn that true confidence comes from preparation, and
-                        that the process of becoming great is the real victory.
-                    </p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-10 max-w-5xl mx-auto">
-                <div
-                    class="stagger-item bg-white px-10 py-12 rounded-2xl shadow-md text-center group hover:shadow-xl transition-shadow duration-200">
-                    <div class="count-up text-6xl font-black text-gray-900 mb-3" data-count-target="100%">100%</div>
-                    <div class="text-xs font-bold text-gray-500 uppercase tracking-widest">Passion</div>
-                </div>
-                <div
-                    class="stagger-item bg-white px-10 py-12 rounded-2xl shadow-md text-center group hover:shadow-xl transition-shadow duration-200">
-                    <div class="count-up text-6xl font-black text-gray-900 mb-3" data-count-target="Zero">Zero</div>
-                    <div class="text-xs font-bold text-gray-500 uppercase tracking-widest">Shortcuts</div>
-                </div>
-                <div
-                    class="stagger-item bg-white px-10 py-12 rounded-2xl shadow-md text-center group hover:shadow-xl transition-shadow duration-200">
-                    <div class="count-up text-6xl font-black text-gray-900 mb-3" data-count-target="One">One</div>
-                    <div class="text-xs font-bold text-gray-500 uppercase tracking-widest">Family</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- The Family -->
-    <section class="family-section-bg text-center"
-        style="background: transparent !important; background-color: transparent !important;">
-        <div class="family-bg" style="display: block !important;"></div>
-        <div class="family-overlay" style="display: block !important;"></div>
-        <div class="family-content max-w-7xl mx-auto" style="position: relative !important; z-index: 2 !important;">
-            <h2 class="text-4xl md:text-5xl font-black text-white uppercase mb-6">
-                    THE GODSPEED <span class="text-blue-600">FAMILY</span>
-                </h2>
-            <p class="text-gray-300 max-w-2xl mx-auto text-lg mb-16 leading-relaxed">
-                It's more than a jersey. It's a promise. When you join Club Godspeed, you join a brotherhood dedicated
-                to excellence on and off the court.
-                </p>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10 stagger-children">
-                <!-- Card 1: Mentorship -->
-                <div
-                    class="stagger-item bg-white border border-gray-200 rounded-lg overflow-hidden group hover:border-blue-600 transition duration-200">
-                    <div class="overflow-hidden" style="width: 100%; max-width: 405px; height: 256px; margin: 0 auto;">
-                        <img src="https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&q=80" alt="Mentorship First"
-                            style="width: 100%; height: 100%; object-fit: cover; object-position: top center; filter: grayscale(100%);"
-                            class="image-hover-spring group-hover:scale-105 transition duration-500">
-                    </div>
-                    <div class="p-8 text-left">
-                        <h3 class="text-xl font-black text-black uppercase mb-4">MENTORSHIP FIRST</h3>
-                        <p class="text-black text-sm leading-relaxed">
-                            Our coaches are mentors, not just trainers. We guide athletes through the challenges of
-                            competition, school, and life.
-                        </p>
-                    </div>
-                </div>
-                
-                <!-- Card 2: Long-Term Vision -->
-                <div
-                    class="stagger-item bg-white border border-gray-200 rounded-lg overflow-hidden group hover:border-blue-600 transition duration-200">
-                    <div class="overflow-hidden flex items-center justify-center bg-gray-100"
-                        style="width: 100%; max-width: 405px; height: 256px; margin: 0 auto;">
-                        <img src="assets/vision-gold.png" alt="Long-Term Vision"
-                            style="width: 100%; height: 100%; object-fit: cover;"
-                            class="image-hover-spring group-hover:scale-105 transition duration-500">
-                    </div>
-                    <div class="p-8 text-left">
-                        <h3 class="text-xl font-black text-black uppercase mb-4">LONG-TERM VISION</h3>
-                        <p class="text-black text-sm leading-relaxed">
-                            We don't chase trophies. We build skills that translate to high school, college, and beyond.
-                        </p>
-                    </div>
-                </div>
-                
-                <!-- Card 3: Elite Skills -->
-                <div
-                    class="stagger-item bg-white border border-gray-200 rounded-lg overflow-hidden group hover:border-blue-600 transition duration-200">
-                    <div class="overflow-hidden flex items-center justify-center bg-gray-100"
-                        style="width: 100%; max-width: 405px; height: 256px; margin: 0 auto;">
-                        <img src="assets/skills-hand.png" alt="Elite Skills Development"
-                            style="width: 100%; height: 100%; object-fit: cover; object-position: center top;"
-                            class="image-hover-spring group-hover:scale-105 transition duration-500">
-                    </div>
-                    <div class="p-8 text-left">
-                        <h3 class="text-xl font-black text-black uppercase mb-4">ELITE SKILLS DEVELOPMENT</h3>
-                        <p class="text-black text-sm leading-relaxed">
-                            We are preparing kids to play. Iron sharpens iron. We plan to play a highly competitive schedule to
-                            expose weaknesses and accelerate growth.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Ready to Commit CTA -->
-    <section class="bg-black py-16 px-6">
-        <div class="max-w-7xl mx-auto">
-            <div class="max-w-4xl mx-auto text-center bg-gray-900 rounded-2xl p-16 border border-gray-800">
-                <h3 class="text-4xl md:text-5xl font-black text-white uppercase mb-6 tracking-tight">READY TO JOIN THE FAMILY?
-                </h3>
-                <p class="text-gray-400 text-xl mb-10 leading-relaxed max-w-2xl mx-auto">
-                    Godspeed is for athletes who truly love the process of getting better. Roster spots are awarded to those who demonstrate character, work ethic, and a desire to grow. If your athlete is ready to put in the work, we are ready to help them reach their potential.
-                </p>
-                <a href="training.html?interest=aau#signup"
-                    class="inline-block px-12 py-5 bg-blue-600 text-white text-sm font-bold rounded-full uppercase tracking-wider hover:bg-blue-700 transition-all duration-200 shadow-2xl shadow-blue-600/30">APPLY
-                    FOR AAU</a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer id="gs-shared-footer"></footer>
-    <script src="shared-footer.js" defer></script>
-
-    <!-- Scripts with defer for parallel loading -->
-    <script src="branded-modal.js"></script>
-    <script src="security.js"></script>
-    <script src="mobile-menu.js"></script>
-    <script src="script.js" defer></script>
-    <script src="performance.js" defer></script>
-    <script src="button-states.js" defer></script>
-    <script src="scroll-reveal.js?v=2" defer></script>
-    <script src="count-up.js" defer></script>
-    <script src="easter-eggs.js" defer></script>
-    <script src="cart-handler.js" defer></script>
+        <div class="gs-footer__tag">Brotherhood. Habits. <span>Success.</span></div>
+        <div style="margin-top: 14px; font-size: 13px; color: rgba(255,255,255,0.5);">Denver, Colorado</div>
+    </div>
+</footer>
+<script>
+(function () {
+    var menu = document.getElementById('gsMenu');
+    var open = document.getElementById('gsBurger');
+    var close = document.getElementById('gsMenuClose');
+    if (!menu || !open || !close) return;
+    function set(state) {
+        menu.setAttribute('data-open', state ? 'true' : 'false');
+        open.setAttribute('aria-expanded', state ? 'true' : 'false');
+        document.body.style.overflow = state ? 'hidden' : '';
+        (state ? close : open).focus();
+    }
+    open.addEventListener('click', function () { set(true); });
+    close.addEventListener('click', function () { set(false); });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && menu.getAttribute('data-open') === 'true') set(false);
+    });
+}());
+</script>
 </body>
-
 </html>
