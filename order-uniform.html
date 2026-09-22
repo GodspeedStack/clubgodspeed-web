@@ -87,7 +87,7 @@
   <div id="app" class="hide">
     <!-- Player -->
     <div class="card" id="playerCard">
-      <h2>Player</h2>
+      <h2>Which player</h2>
       <div class="row" id="playerRow"></div>
     </div>
 
@@ -158,11 +158,16 @@
       email: session.user.email || null
     };
     // Athletes visible to this parent (RLS scopes to their own players).
+    // Names are deliberately NOT selected. Nothing on this page identifies a
+    // player by name; the picker distinguishes them by current jersey number.
     const { data:aths, error } = await sb.from('athletes')
-      .select('id,first_name,last_name,display_name,jersey_number,enrollment_status')
-      .order('first_name');
+      .select('id,jersey_number,enrollment_status')
+      .order('id');
     if(error){ banner('Could not load your players: '+error.message,'err'); $('loading').classList.add('hide'); return; }
     state.athletes = (aths||[]).filter(a=>a.enrollment_status!=='inactive');
+    state.athletes.forEach((a,i)=>{
+      a._label = (a.jersey_number!=null) ? ('#'+a.jersey_number) : ('Player '+(i+1));
+    });
     if(state.athletes.length===0){
       $('loading').innerHTML='No players are linked to your account yet. Please contact your coach.';
       return;
@@ -173,7 +178,7 @@
     $('app').classList.remove('hide');
   }
 
-  function label(a){ return a.display_name || (a.first_name+' '+(a.last_name?a.last_name[0]+'.':'')); }
+  function label(a){ return a._label || 'Your player'; }
 
   function renderPlayers(){
     const row=$('playerRow'); row.innerHTML='';
@@ -196,7 +201,7 @@
     const teams = data.team_names || [];
     const note = $('scopeNote');
     if (teams.length > 1) {
-      note.innerHTML = `${label(a)} is a swing player. Numbers must be open on <b>both</b> teams: ${teams.join(' and ')}.`;
+      note.innerHTML = `This player is on two rosters, so the number must be open on <b>both</b>: ${teams.join(' and ')}.`;
     } else if (teams.length === 1) {
       note.innerHTML = `Checked against the <b>${teams[0]}</b> roster.`;
     } else {
@@ -285,7 +290,7 @@
 
       if(checkoutUrl){ window.location.href = checkoutUrl; return; }
 
-      banner(`Order ${order.order_number} placed. Number #${order.number} for ${order.player_name} is reserved. We'll follow up with payment details.`,'ok');
+      banner(`Order ${order.order_number} placed. Number #${order.number} is reserved. We'll follow up with payment details.`,'ok');
       btn.textContent='Order placed';
       window.scrollTo({top:0,behavior:'smooth'});
     }catch(e){
