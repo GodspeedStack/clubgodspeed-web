@@ -1,0 +1,51 @@
+<footer class="gs-footer">
+    <div class="gs-wrap">
+        <div class="gs-logo" style="color: #fff;">GODSPEED<span>BASKETBALL</span></div>
+        <div class="gs-footer__cols">
+            <div class="gs-footer__col">
+                <div class="gs-footer__h">Program</div>
+                <a href="programs-v2.html">Teams</a>
+                <a href="training.html">Training</a>
+                <a href="programs-v2.html#open-gym">Open gym</a>
+            </div>
+            <div class="gs-footer__col">
+                <div class="gs-footer__h">Families</div>
+                <a href="parent-portal.html">Parent portal</a>
+                <a href="calendar.html">Calendar</a>
+                <a href="season-guide.html">Parent guide</a>
+            </div>
+            <div class="gs-footer__col">
+                <div class="gs-footer__h">Club</div>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="fundraise.html">Fundraise</a>
+            </div>
+            <div class="gs-footer__col">
+                <div class="gs-footer__h">Shop</div>
+                <a href="shop.html">Apparel</a>
+                <a href="order-uniform.html">Uniforms</a>
+            </div>
+        </div>
+        <div class="gs-footer__tag">Brotherhood. Habits. <span>Success.</span></div>
+        <div style="margin-top: 14px; font-size: 13px; color: rgba(255,255,255,0.5);">Denver, Colorado</div>
+    </div>
+</footer>
+<script>
+(function () {
+    var menu = document.getElementById('gsMenu');
+    var open = document.getElementById('gsBurger');
+    var close = document.getElementById('gsMenuClose');
+    if (!menu || !open || !close) return;
+    function set(state) {
+        menu.setAttribute('data-open', state ? 'true' : 'false');
+        open.setAttribute('aria-expanded', state ? 'true' : 'false');
+        document.body.style.overflow = state ? 'hidden' : '';
+        (state ? close : open).focus();
+    }
+    open.addEventListener('click', function () { set(true); });
+    close.addEventListener('click', function () { set(false); });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && menu.getAttribute('data-open') === 'true') set(false);
+    });
+}());
+</script>

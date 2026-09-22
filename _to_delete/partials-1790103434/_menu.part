@@ -1,0 +1,19 @@
+<div class="gs-menu" id="gsMenu" data-open="false" role="dialog" aria-modal="true" aria-label="Menu">
+    <div class="gs-menu__top">
+        <span class="gs-logo">GODSPEED<span>BASKETBALL</span></span>
+        <button class="gs-menu__close" id="gsMenuClose" aria-label="Close menu">&#215;</button>
+    </div>
+    <div class="gs-menu__list">
+        <a href="programs-v2.html">Teams</a>
+        <a href="training.html">Training</a>
+        <a href="programs-v2.html#open-gym">Open gym</a>
+        <a href="calendar.html">Calendar</a>
+        <a href="shop.html">Shop</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+    </div>
+    <div class="gs-menu__foot">
+        <a class="gs-btn gs-btn--primary gs-btn--block" href="parent-portal.html">Parent portal</a>
+        <a class="gs-btn gs-btn--ghost gs-btn--block" href="coach-portal.html">Coach sign in</a>
+    </div>
+</div>

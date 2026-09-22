@@ -89,6 +89,16 @@
     --radius-pill: var(--gs-radius-pill);
     --radius-card: var(--gs-radius-card);
 
+    /* Carried over verbatim from the sheets these tokens replaced. Rules still
+       reference them, so they keep their original values rather than being
+       re-invented; they fold into the scale above in Phase 2. */
+    --radius-badge: 4px;
+    --radius-input: 12px;
+    --shadow-lift: 0 10px 30px rgba(0, 0, 0, 0.08);
+    --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.05);
+    --transition: all 0.2s ease;
+    --transition-slow: all 0.3s ease;
+
     /* was styles.css */
     --primary-color: var(--gs-black);
     --brand-blue: var(--gs-blue);

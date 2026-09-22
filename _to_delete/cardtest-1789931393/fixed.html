@@ -1,0 +1,96 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+body{font-family:Inter,-apple-system,Helvetica,Arial,sans-serif;background:#f7f8fa;margin:0;padding:28px}
+h2{font-weight:800;font-size:1.35rem;color:#111;letter-spacing:-.02em;text-transform:uppercase;margin:0 0 4px}
+.card-icon svg{display:block}
+.documents-grid-v3 {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.doc-card-v3 {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    border: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    cursor: pointer;
+    /* Fill the grid row so every card in a row is the same height, which is
+       what lets the CTA below sit on a shared baseline. */
+    height: 100%;
+}
+
+.doc-card-v3:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border-color: #d1d5db;
+}
+
+.card-status {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+.card-status.pending {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.card-status.complete {
+    background: #ecfdf5;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+}
+
+.doc-card-v3 h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111;
+    margin: 0;
+}
+
+.doc-card-v3 p {
+    font-size: 0.9rem;
+    color: #6b7280;
+    line-height: 1.4;
+    margin: 0;
+    flex: 1;
+}
+
+.btn-card {
+    width: 100%;
+    /* Pin the CTA to the bottom of the card. The `flex: 1` on the paragraph
+       above already does this when the description wraps, but it fails the
+       moment a card has a shorter description or its display is overridden.
+       An auto top margin does not care why the slack exists. */
+    margin-top: auto;
+    padding: 0.75rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    color: #111;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-card:hover {
+    background: #f9fafb;
+    color: #111;
+    border-color: #d1d5db;
+}
+
+</style></head><body><h2>Required Documents</h2>
+<div class="documents-grid-v3"><div class="doc-card-v3 doc-aau"><div class="card-status signed">Info</div><div class="card-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5"><circle cx="12" cy="12" r="10"/></svg></div><h3>2026 Parent Guide</h3><p>Season info, costs, and expectations.</p><button class="btn-card">View Guide</button></div><div class="doc-card-v3"><div class="card-status signed">Signed</div><div class="card-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5"><circle cx="12" cy="12" r="10"/></svg></div><h3>Athletic Liability Waiver</h3><p>Standard release for participation.</p><button class="btn-card">View Signed Copy</button></div><div class="doc-card-v3"><div class="card-status signed">Signed</div><div class="card-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5"><circle cx="12" cy="12" r="10"/></svg></div><h3>Medical Consent</h3><p>Emergency treatment authorization.</p><button class="btn-card">View Signed Copy</button></div><div class="doc-card-v3 doc-aau"><div class="card-status signed">Signed</div><div class="card-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5"><circle cx="12" cy="12" r="10"/></svg></div><h3>Practice Consent</h3><p>High-intensity training agreement.</p><button class="btn-card">View Signed Copy</button></div><div class="doc-card-v3 doc-aau"><div class="card-status signed">Signed</div><div class="card-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5"><circle cx="12" cy="12" r="10"/></svg></div><h3>Parental Conduct</h3><p>Sideline rules and expectations.</p><button class="btn-card">View Signed Copy</button></div><div class="doc-card-v3"><div class="card-status signed">Signed</div><div class="card-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5"><circle cx="12" cy="12" r="10"/></svg></div><h3>Media Release</h3><p>Photo and video usage consent.</p><button class="btn-card">View Signed Copy</button></div></div></body></html>

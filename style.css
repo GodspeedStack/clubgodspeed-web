@@ -1,34 +1,8 @@
-:root {
-    --color-bg: #f5f5f7;
-    /* Apple-style light gray */
-    --color-surface: #ffffff;
-    --color-primary: #0071e3;
-    /* Apple-style blue */
-    /* Electric Blue */
-    --color-primary-glow: rgba(0, 113, 227, 0.3);
-    --color-text: #1d1d1f;
-    /* Apple-style dark gray/black */
-    --color-text-muted: #86868b;
-    --color-accent: #f59e0b;
-    /* Amber for contrast */
-
-    --font-main: 'Inter', sans-serif;
-
-    --transition-fast: 0.2s ease;
-    --transition-smooth: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-
-    /* Spacing & Radius */
-    --radius-pill: 999px;
-    --radius-card: 24px;
-    /* Standardized Card Radius */
-    --radius-input: 12px;
-    /* Standardized Input Radius */
-    --radius-badge: 4px;
-
-    /* Shadows */
-    --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.05);
-    --shadow-lift: 0 10px 30px rgba(0, 0, 0, 0.08);
-}
+/* The design tokens that used to be declared here now live in tokens.css,
+   which every page loads first. They were duplicated across this sheet and its
+   near-namesake under different names and different values, which is why no
+   rule could be written once. Every var(--...) below still resolves; it just
+   resolves to one palette now. */
 
 /* =====================================================
    GLOBAL SCROLLBAR FIX - Prevent Double Scrollbars
@@ -212,7 +186,7 @@ a {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: #0071e3;
+    background: #2563eb;
     color: #ffffff !important;
     padding: 1rem 2rem;
     padding-left: 2rem;
@@ -225,7 +199,7 @@ a {
     letter-spacing: 0.05em;
     white-space: nowrap;
     transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    box-shadow: 0 4px 12px rgba(0, 113, 227, 0.25);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
     border: none;
     cursor: pointer;
     text-decoration: none;
@@ -233,8 +207,8 @@ a {
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 113, 227, 0.35);
-    background: #0077ed;
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
+    background: #1d4ed8;
 }
 
 .btn-secondary {
@@ -1165,9 +1139,9 @@ img[src*="coach-scott.png"] {
 
 .standard-bar:hover {
     transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(0, 113, 227, 0.15);
+    box-shadow: 0 15px 30px rgba(37, 99, 235, 0.15);
     /* Blue glow */
-    border-color: rgba(0, 113, 227, 0.3);
+    border-color: rgba(37, 99, 235, 0.3);
     height: 140px;
     /* Expand height on hover */
 }
@@ -1297,9 +1271,9 @@ img[src*="coach-scott.png"] {
 
 .feature-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(0, 113, 227, 0.15);
+    box-shadow: 0 15px 30px rgba(37, 99, 235, 0.15);
     /* Blue glow */
-    border-color: rgba(0, 113, 227, 0.3);
+    border-color: rgba(37, 99, 235, 0.3);
 }
 
 /* Footer Accessibility */
@@ -2201,8 +2175,8 @@ img[src*="coach-scott.png"] {
 
 .modal-input:focus {
     background: #fff;
-    border-color: #0071e3;
-    box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
 @keyframes pulse-black {
@@ -2588,7 +2562,7 @@ img[src*="coach-scott.png"] {
     /* Slightly smaller for icon-in-circle ratio */
     height: 22px;
     stroke-width: 1.8px;
-    color: #0071e3;
+    color: #2563eb;
     /* Apple Blue for icon instead of text color, or specific grey */
     color: #1d1d1f;
     /* SF Text */
@@ -2710,7 +2684,7 @@ img[src*="coach-scott.png"] {
 }
 
 .footer-column ul li a:hover {
-    color: #0071e3;
+    color: #2563eb;
     text-decoration: underline;
 }
 
@@ -3010,7 +2984,7 @@ body.audit-body {
 
 /* BUTTONS (iOS Style) */
 .btn-primary {
-    background: #0071e3;
+    background: #2563eb;
     /* Apple Blue */
     color: #fff;
     font-size: 1.1rem;
@@ -3020,14 +2994,14 @@ body.audit-body {
     border: none;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
     margin-bottom: 0.5rem;
 }
 
 .btn-primary:hover {
-    background: #0077ed;
+    background: #1d4ed8;
     transform: scale(1.02);
-    box-shadow: 0 8px 24px rgba(0, 113, 227, 0.5);
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.5);
 }
 
 /* QUIZ INTERFACE */
@@ -3043,7 +3017,7 @@ body.audit-body {
 
 .progress-bar {
     height: 100%;
-    background: #0071e3;
+    background: #2563eb;
     width: 0%;
     transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     border-radius: 10px;
@@ -3088,7 +3062,7 @@ body.audit-body {
 .option-btn:hover {
     background: rgba(44, 44, 46, 0.9);
     transform: scale(1.01);
-    border-color: #0071e3;
+    border-color: #2563eb;
 }
 
 .opt-letter {
@@ -3107,7 +3081,7 @@ body.audit-body {
 
 .option-btn:hover .opt-letter {
     color: #fff;
-    background: #0071e3;
+    background: #2563eb;
 }
 
 /* CALCULATING (Airbnb/iOS Premium Loader) */
@@ -3128,7 +3102,7 @@ body.audit-body {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: #0071e3;
+    background: #2563eb;
     opacity: 0.6;
     animation: ripple 2s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
 }
@@ -3145,7 +3119,7 @@ body.audit-body {
     /* Crisp white center */
     border-radius: 50%;
     z-index: 2;
-    box-shadow: 0 0 20px rgba(0, 113, 227, 0.8);
+    box-shadow: 0 0 20px rgba(37, 99, 235, 0.8);
     display: block !important;
     /* Force show */
     animation: breathe 2s ease-in-out infinite;
@@ -3168,12 +3142,12 @@ body.audit-body {
     0%,
     100% {
         transform: scale(1);
-        box-shadow: 0 0 20px rgba(0, 113, 227, 0.8);
+        box-shadow: 0 0 20px rgba(37, 99, 235, 0.8);
     }
 
     50% {
         transform: scale(1.2);
-        box-shadow: 0 0 35px rgba(0, 113, 227, 1);
+        box-shadow: 0 0 35px rgba(37, 99, 235, 1);
     }
 }
 
@@ -3205,7 +3179,7 @@ body.audit-body {
 .score-circle {
     width: 200px;
     height: 200px;
-    background: conic-gradient(#0071e3 var(--progress), rgba(255, 255, 255, 0.1) 0deg);
+    background: conic-gradient(#2563eb var(--progress), rgba(255, 255, 255, 0.1) 0deg);
     border-radius: 50%;
     display: flex;
     flex-direction: column;
@@ -3720,7 +3694,7 @@ input[type="text"]:focus,
 input[type="email"]:focus,
 input[type="password"]:focus {
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.15);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
     /* Soft Blue Ring */
 }
 
@@ -3735,7 +3709,7 @@ input[type="password"]:focus {
     display: block;
     text-align: right;
     font-size: 0.8rem;
-    color: #0071e3;
+    color: #2563eb;
     text-decoration: none;
     margin-top: 0.5rem;
     font-weight: 500;
@@ -3792,7 +3766,7 @@ input[type="password"]:focus {
 }
 
 .login-footer a {
-    color: #0071e3;
+    color: #2563eb;
     text-decoration: none;
     font-weight: 500;
 }
@@ -4514,7 +4488,7 @@ body:not(.logged-in) .auth-restricted {
 }
 
 .signature-pad-wrapper:hover {
-    border-color: #0071e3;
+    border-color: #2563eb;
 }
 
 .signature-pad-wrapper canvas {
@@ -4537,7 +4511,7 @@ body:not(.logged-in) .auth-restricted {
 .btn-text {
     background: none;
     border: none;
-    color: #0071e3;
+    color: #2563eb;
     font-size: 0.9rem;
     font-weight: 500;
     cursor: pointer;
@@ -4556,7 +4530,7 @@ body:not(.logged-in) .auth-restricted {
     margin-top: 4px;
     width: 18px;
     height: 18px;
-    accent-color: #0071e3;
+    accent-color: #2563eb;
 }
 
 .agreement-checkbox label {
@@ -4706,7 +4680,7 @@ body:not(.logged-in) .auth-restricted {
 }
 
 .login-option:hover .login-arrow {
-    color: #0071e3;
+    color: #2563eb;
 }
 
 

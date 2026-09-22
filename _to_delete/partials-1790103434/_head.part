@@ -1,0 +1,8 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Syncopate:wght@700&display=swap" rel="stylesheet">
+<!-- tokens.css must load before gs.css: gs.css reads its custom properties. -->
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="gs.css">

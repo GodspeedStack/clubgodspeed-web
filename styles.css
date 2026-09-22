@@ -1,3 +1,8 @@
+/* The design tokens that used to be declared here now live in tokens.css,
+   which every page loads first. They were duplicated across this sheet and its
+   near-namesake under different names and different values, which is why no
+   rule could be written once. Every var(--...) below still resolves; it just
+   resolves to one palette now. */
 /* ===========================
    CSS Reset & Base Styles
    =========================== */
@@ -7,21 +12,6 @@
     box-sizing: border-box;
 }
 
-:root {
-    --primary-color: #000000;
-    --brand-blue: #0071e3;
-    /* Godspeed Blue - blue-600 */
-    --interaction-blue: #0077ed;
-    /* Hover state - blue-700 */
-    --accent-color: #FF4500;
-    --text-light: #FFFFFF;
-    --text-dark: #333333;
-    --bg-light: #F5F5F5;
-    --bg-dark: #1A1A1A;
-    --transition: all 0.2s ease;
-    --transition-fast: all 0.15s ease;
-    --transition-slow: all 0.3s ease;
-}
 
 body {
     font-family: 'Inter', 'Arial', 'Helvetica', sans-serif;
@@ -847,10 +837,6 @@ button,
 /* ===========================
    Dark Mode Additions
    =========================== */
-:root {
-    --brand-black: #050505;
-    --brand-dark: #121212;
-}
 
 .bg-brand-dark {
     background-color: var(--brand-dark);
@@ -1097,7 +1083,7 @@ button,
 
 .login-option:hover {
     background: #f5f5f7;
-    color: #0071e3;
+    color: #2563eb;
 }
 
 .login-option svg {
@@ -1278,7 +1264,7 @@ button,
 .godspeed-logo-accent {
     font-size: 1rem;
     font-weight: 900;
-    color: #0071e3;
+    color: #2563eb;
     letter-spacing: -0.02em;
 }
 
@@ -1342,7 +1328,7 @@ button,
 
 .godspeed-modal-input:focus {
     outline: none;
-    border-color: #0071e3;
+    border-color: #2563eb;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
@@ -1369,12 +1355,12 @@ button,
 }
 
 .godspeed-modal-btn-primary {
-    background: #0071e3;
+    background: #2563eb;
     color: white;
 }
 
 .godspeed-modal-btn-primary:hover {
-    background: #0077ed;
+    background: #1d4ed8;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
