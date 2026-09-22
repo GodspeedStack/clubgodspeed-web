@@ -1,0 +1,11 @@
+# clubgodspeed.com
+#
+# Deliberately permissive. Application and admin pages are kept out of search
+# with <meta name="robots" content="noindex,nofollow"> on the pages themselves.
+# Disallowing them here would stop crawlers from ever reading that tag, and a
+# URL blocked in robots.txt can still be indexed from an inbound link.
+
+User-agent: *
+Allow: /
+
+Sitemap: https://www.clubgodspeed.com/sitemap.xml
