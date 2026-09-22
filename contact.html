@@ -19,6 +19,31 @@
     <meta property="og:image" content="https://www.clubgodspeed.com/assets/godspeed-share.jpg">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="canonical" href="https://www.clubgodspeed.com/contact.html">
+<style>
+/* The shared .gs-rows component turns into side-by-side columns at 1024px.
+   Inside .gs-split that happens at half width, so three contact methods were
+   squeezed into narrow columns with headings wrapping over three lines. This
+   section is a plain stacked list at every width instead. */
+.ct-list { margin: 22px 0 0; }
+.ct-item { padding: 18px 0; border-top: 1px solid var(--gs-line-soft); }
+.ct-item:first-child { border-top: none; padding-top: 0; }
+.ct-item dt {
+    font-family: var(--gs-font-display);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gs-grey);
+}
+.ct-item dd { margin: 8px 0 0; font-size: 17px; font-weight: 700; line-height: 1.35; }
+.ct-item dd a { font-weight: 700; }
+.ct-item p { margin: 6px 0 0; font-size: 15px; line-height: 1.55; color: var(--gs-muted); max-width: 46ch; }
+.ct-aside { align-self: start; }
+@media (min-width: 1024px) {
+    /* Top-aligned, not centred: the card was floating beside a ragged list. */
+    .gs-split.ct-split { align-items: flex-start; }
+}
+</style>
 </head>
 <body>
 <a class="gs-skip" href="#main">Skip to content</a>
@@ -67,27 +92,33 @@
         <div class="gs-wrap">
             <p class="gs-eyebrow">Contact</p>
             <h1 class="gs-h2">Let's build a complete player.</h1>
-            <p class="gs-lede">Questions about training, the club teams, or joining the program. We answer within a day or two.</p>
+            <p class="gs-lede">Questions about training, the club teams, or joining the program. We answer within 24 hours.</p>
         </div>
     </section>
 
     <section class="gs-section">
-        <div class="gs-wrap gs-split">
+        <div class="gs-wrap gs-split ct-split">
             <div>
                 <h2 class="gs-h2">Reach us</h2>
-                <div class="gs-rows">
-                    <div class="gs-row"><div class="gs-row__mark">@</div><div>
-                        <div class="gs-row__t">Email</div>
-                        <div class="gs-row__d"><a href="mailto:clubgodspeed@gmail.com">clubgodspeed@gmail.com</a></div></div></div>
-                    <div class="gs-row"><div class="gs-row__mark">GY</div><div>
-                        <div class="gs-row__t">Come to an open gym</div>
-                        <div class="gs-row__d">Tuesday and Thursday, 6:00 to 8:00 pm, doors at 5:55. Green Valley Ranch.</div></div></div>
-                    <div class="gs-row"><div class="gs-row__mark">PP</div><div>
-                        <div class="gs-row__t">Already a Godspeed family</div>
-                        <div class="gs-row__d"><a href="parent-portal.html">Sign in to the parent portal</a> for schedules, documents and messages.</div></div></div>
-                </div>
+                <dl class="ct-list">
+                    <div class="ct-item">
+                        <dt>Email</dt>
+                        <dd><a href="mailto:clubgodspeed@gmail.com">clubgodspeed@gmail.com</a></dd>
+                        <p>The fastest way to reach Coach Scott about anything: training, a roster spot, dues or gear.</p>
+                    </div>
+                    <div class="ct-item">
+                        <dt>Come to an open gym</dt>
+                        <dd>Tuesday and Thursday, 6:00 to 8:00 pm</dd>
+                        <p>Doors at 5:55, Green Valley Ranch. Nothing to sign up for and nothing to pay. Bring him and watch a session.</p>
+                    </div>
+                    <div class="ct-item">
+                        <dt>Already a Godspeed family</dt>
+                        <dd><a href="parent-portal.html">Sign in to the parent portal</a></dd>
+                        <p>Schedules, documents, dues and messages all live there.</p>
+                    </div>
+                </dl>
             </div>
-            <div>
+            <div class="ct-aside">
                 <div style="padding:24px;background:var(--gs-bg);border-radius:var(--gs-radius-lg);">
                     <p class="gs-eyebrow">Fastest route</p>
                     <p class="gs-row__d" style="margin-top:10px;">If you are asking about a roster spot, the application tells us what we need in one pass and a coach replies directly.</p>
