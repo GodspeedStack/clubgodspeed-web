@@ -24,7 +24,7 @@ const corsHeaders = {
 // Company information
 const COMPANY_NAME = "Club Godspeed";
 const COMPANY_ADDRESS = "Training Facility";
-const COMPANY_EMAIL = "info@clubgodspeed.com";
+const COMPANY_EMAIL = "clubgodspeed@gmail.com";
 const COMPANY_PHONE = "(555) 123-4567";
 
 /**

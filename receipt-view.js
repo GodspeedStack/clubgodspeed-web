@@ -142,7 +142,7 @@ function createReceiptModalHTML(receipt) {
             </div>
             
             <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #9ca3af;">
-                Questions? Contact us at support@clubgodspeed.com
+                Questions? Contact us at clubgodspeed@gmail.com
             </div>
         </div>
     `;
