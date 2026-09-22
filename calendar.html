@@ -124,7 +124,7 @@
             <div class="gs-footer__col">
                 <div class="gs-footer__h">Shop</div>
                 <span class="gs-soon" aria-disabled="true">Apparel<em>Soon</em></span>
-                <a href="order-uniform.html">Uniforms</a>
+                <a class="gs-locked" href="order-uniform.html">Uniforms<em>Sign in</em></a>
             </div>
         </div>
         <div class="gs-footer__tag">Brotherhood. Habits. <span>Success.</span></div>
@@ -186,7 +186,11 @@
 
     var q = '/rest/v1/calendar_events?select=title,start_date,start_time,location,event_type,grade_level'
           + '&published_at=not.is.null&visibility=eq.public&is_cancelled=eq.false'
-          + '&event_type=in.(game,tournament,season,scrimmage)'
+          // Games, scrimmages and season blocks always show. A tournament only
+          // shows when a Godspeed team is actually entered in it (team_id set),
+          // so the scraped catalog never leaks onto the parent-facing schedule.
+          + '&or=(event_type.in.(game,scrimmage,season),'
+              + 'and(event_type.eq.tournament,team_id.not.is.null))'
           + '&start_date=gte.' + today() + '&order=start_date.asc,start_time.asc';
 
     fetch(URL_BASE + q, { headers: { apikey: ANON, Authorization: 'Bearer ' + ANON } })

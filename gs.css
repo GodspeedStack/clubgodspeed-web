@@ -166,6 +166,29 @@ a, button, input, select, textarea { font: inherit; }
     border-bottom: 1px solid var(--gs-line-soft);
 }
 
+/* --- Link that needs a signed-in parent ------------------------------- */
+/* Still a link, because it works the moment they are signed in. The chip
+   is there so nobody clicks it from a public page and hits a wall. */
+.gs-locked { display: inline-flex; align-items: center; gap: 6px; }
+.gs-locked em {
+    font-style: normal;
+    font-family: var(--gs-font-display);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--gs-line-soft);
+    color: var(--gs-ink-soft);
+    padding: 2px 5px;
+    border-radius: 4px;
+    line-height: 1.3;
+}
+.gs-footer .gs-locked em {
+    background: rgba(255, 255, 255, 0.14);
+    color: rgba(255, 255, 255, 0.86);
+}
+.gs-footer__col .gs-locked { min-height: 44px; }
+
 .gs-h2 {
     font-size: clamp(26px, 5vw, 38px);
     font-weight: 800;
