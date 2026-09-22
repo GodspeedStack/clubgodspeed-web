@@ -111,6 +111,58 @@
             gap: 0.5rem;
         }
 
+        /* The stat pills are injected as inline-styled spans. Without this they
+           shrink under pressure and break mid-word ("300 / PRACTICE / HOURS"). */
+        #calculated-hours span {
+            white-space: nowrap;
+        }
+
+        /* ── Mobile header ──────────────────────────────────────────────────
+           .calendar-header-cell is a single non-wrapping flex row, so on a
+           phone the title, the stat pills and the four control buttons all
+           competed for one line: the pills broke mid-word and the Sync button
+           and month arrows ran off the right edge with no way to reach them.
+           Stack the header on small screens. Desktop is untouched. */
+        @media (max-width: 767px) {
+            .calendar-header-cell {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 14px;
+                padding: 1.5rem 1.25rem 1rem;
+            }
+
+            .month-title {
+                font-size: 2rem;
+            }
+
+            .year-subtitle {
+                font-size: 1.05rem;
+            }
+
+            #calculated-hours {
+                flex-wrap: wrap;
+                gap: 6px !important;
+                font-size: 0.8rem !important;
+            }
+
+            /* Measured at 390px: the four buttons need 265px and the header
+               column gives 262.6px, so the last arrow wrapped alone. Tightening
+               the gap and the button padding brings the row to ~247px. */
+            .calendar-controls {
+                flex-wrap: wrap;
+                gap: 0.4rem;
+            }
+
+            /* Sized to content, never stretched: a grown button wraps alone
+               onto a full-width row and reads as a broken layout. */
+            .calendar-controls .btn-secondary {
+                flex: 0 1 auto;
+                justify-content: center;
+                white-space: nowrap;
+                padding: 0.5rem 0.8rem !important;
+            }
+        }
+
         /* Import Tool in Header */
         .header-import {
             margin-top: 1rem;
@@ -472,6 +524,108 @@
             background: #f5f5f7;
             transform: scale(1.02);
         }
+
+        /* ── This-week game notice ──────────────────────────────────────────
+           Additive strip above the calendar. Does not touch the grid, the list
+           view, or the month navigation. */
+        .week-notice {
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 0 0 16px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            border-left: 4px solid #2563eb;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            font-size: 0.95rem;
+            line-height: 1.45;
+        }
+
+        .week-notice strong {
+            font-weight: 700;
+        }
+
+        .week-notice span {
+            color: #6e6e73;
+        }
+
+        /* No games is the state parents need to spot at a glance, so it gets
+           the stronger treatment: red rule, red pill. */
+        .week-notice-none {
+            background: #fdf1f0;
+            border-left-color: #c0392b;
+        }
+
+        .week-notice-some {
+            background: #f5f5f7;
+            border-left-color: #d2d2d7;
+        }
+
+        /* Per-team breakdown, used when the family spans more than one team. */
+        .week-notice-multi {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 5px;
+        }
+
+        .week-notice-row {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .week-notice-row strong {
+            flex: 0 0 auto;
+        }
+
+        /* Status pill. The idle state is the one a parent needs to catch from
+           across the room, so it is the only one carrying colour. */
+        .week-notice .week-notice-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 0.74rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            line-height: 1.5;
+        }
+
+        .week-notice .week-notice-pill-none {
+            background: #c0392b;
+            color: #ffffff;
+        }
+
+        .week-notice .week-notice-pill-some {
+            background: rgba(0, 0, 0, 0.06);
+            color: #1d1d1f;
+        }
+
+        .week-notice-range {
+            margin-top: 3px;
+            font-size: 0.85rem;
+            color: #86868b;
+        }
+
+        @media (max-width: 480px) {
+            .week-notice-row {
+                flex-direction: column;
+                gap: 0;
+            }
+
+        }
+
+        @media (max-width: 767px) {
+            .week-notice {
+                margin: 0 0 12px;
+                padding: 12px 14px;
+                font-size: 0.9rem;
+            }
+        }
     </style>
     <link rel="stylesheet" href="mobile-fixes.css">
 </head>
@@ -481,12 +635,16 @@
     <!-- Embedded Calendar Mode: Navbar Removed -->
     <div class="calendar-container">
 
+        <!-- Populated by renderWeekGameNotice(); hidden until it has an answer,
+             so a slow network never flashes a wrong "no games" at a parent. -->
+        <div id="weekGameNotice" class="week-notice" hidden></div>
+
         <div class="calendar-grid">
             <!-- Integrated Header Cell -->
             <div class="calendar-header-cell">
                 <div>
-                    <div class="month-title" id="monthTitle">DECEMBER</div>
-                    <div class="year-subtitle" id="yearSubtitle">2025 Schedule</div>
+                    <div class="month-title" id="monthTitle"></div>
+                    <div class="year-subtitle" id="yearSubtitle"></div>
                     <div id="calculated-hours"
                         style="margin-top: 10px; display: inline-flex; gap: 8px; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
                         <!-- Stats injected by JS -->
@@ -531,8 +689,8 @@
         <div class="calendar-list-view" style="display: none;">
             <div class="calendar-header-cell">
                 <div>
-                    <div class="month-title" id="monthTitle">DECEMBER</div>
-                    <div class="year-subtitle" id="yearSubtitle">2025 Schedule</div>
+                    <div class="month-title" id="monthTitle"></div>
+                    <div class="year-subtitle" id="yearSubtitle"></div>
                     <div id="calculated-hours"
                         style="margin-top: 10px; display: inline-flex; gap: 8px; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
                         <!-- Stats injected by JS -->
@@ -832,14 +990,173 @@
             });
         }
 
+        // ── This-week game notice ──────────────────────────────────────────
+        // Parents kept asking whether their team plays this week, and a month
+        // grid does not answer that: a 5th grade family looking at a month with
+        // six game pills on it cannot tell that all six belong to the 6th.
+        //
+        // The notice is anchored to the REAL current week, never to the month
+        // being browsed. Paging ahead to December must not tell a parent there
+        // are "no games this week" for a week that has not happened.
+        //
+        // Counting goes through getEventsForDate, which is the same call the
+        // grid renders from, so the notice can never disagree with what is on
+        // screen: team and grade scoping, practice cancellations (SKIP) and the
+        // enrolment filter are all already applied by the time we count.
+        function currentWeekBounds() {
+            const t = new Date();
+            // Monday-start week. getDay() is 0 for Sunday, so (day + 6) % 7
+            // gives days since Monday without a special case.
+            const monday = new Date(t.getFullYear(), t.getMonth(), t.getDate() - ((t.getDay() + 6) % 7));
+            const sunday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 6);
+            return { monday, sunday };
+        }
+
+        // Games reach the calendar as type 'game' (hardcoded season results) or
+        // type 'tournament' (published calendar_events and team schedule rows).
+        // Practice, skills and training are never games.
+        function isGameEvent(ev) {
+            return !!ev && (ev.type === 'game' || ev.type === 'tournament');
+        }
+
+        function isPracticeEvent(ev) {
+            return !!ev && (ev.type === 'team-practice' || ev.type === 'practice'
+                || ev.type === 'skills' || ev.type === 'mandatory-skills');
+        }
+
+        // A family with players on two teams is the norm here, not the edge
+        // case: the swing players put 19 parent accounts on more than one
+        // roster. A single combined count would tell such a parent "2 games
+        // this week" while one of their teams sits idle, which is the exact
+        // question this notice exists to answer. So when the viewer has more
+        // than one team, each team gets its own line.
+        function shortTeamName(name) {
+            return String(name || '').replace(/^Godspeed\s+/i, '').trim() || 'Team';
+        }
+
+        function describeGames(count, dayKeys) {
+            if (count === 0) return 'no games this week';
+            const noun = count === 1 ? 'game' : 'games';
+            // Naming the day is only useful while it stays short. Past two
+            // distinct days it is noise and the calendar below says it better.
+            if (dayKeys.length > 0 && dayKeys.length <= 2) {
+                const days = dayKeys.sort().map(k => {
+                    const [y, m, d] = k.split('-').map(Number);
+                    const dt = new Date(y, m - 1, d);
+                    const wd = dt.toLocaleDateString('en-US', { weekday: 'short' });
+                    const md = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    return `${wd} ${md}`;
+                });
+                return `${count} ${noun}, ${days.join(' and ')}`;
+            }
+            return `${count} ${noun} this week`;
+        }
+
+        function renderWeekGameNotice() {
+            const el = document.getElementById('weekGameNotice');
+            if (!el) return;
+
+            const { monday, sunday } = currentWeekBounds();
+            const fmt = (dt) => dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const range = `${fmt(monday)} to ${fmt(sunday)}`;
+
+            // Walk the week once, through the same call the grid renders from.
+            const byTeam = {};      // teamId -> { count, days:Set }
+            let unattributed = 0;   // visible games carrying no team id
+            let games = 0, practices = 0;
+            for (let d = new Date(monday); d <= sunday; d.setDate(d.getDate() + 1)) {
+                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                getEventsForDate(new Date(d)).forEach(ev => {
+                    if (isPracticeEvent(ev)) practices++;
+                    if (!isGameEvent(ev)) return;
+                    games++;
+                    if (ev.teamId) {
+                        if (!byTeam[ev.teamId]) byTeam[ev.teamId] = { count: 0, days: new Set() };
+                        byTeam[ev.teamId].count++;
+                        byTeam[ev.teamId].days.add(key);
+                    } else {
+                        unattributed++;
+                    }
+                });
+            }
+
+            const scope = _viewerScope;
+            const teams = (scope && scope.resolved && Array.isArray(scope.teams)) ? scope.teams : [];
+
+            // Per-team breakdown, but only once we actually know the teams and
+            // there is more than one. One team needs no label, and an
+            // unresolved viewer must not be shown a team list we cannot stand
+            // behind.
+            if (teams.length > 1) {
+                let anyIdle = false;
+                const rows = teams.map(t => {
+                    const hit = byTeam[t.id];
+                    const count = hit ? hit.count : 0;
+                    if (count === 0) anyIdle = true;
+                    const pill = count === 0 ? 'week-notice-pill-none' : 'week-notice-pill-some';
+                    const label = count === 0
+                        ? 'No games'
+                        : describeGames(count, hit ? Array.from(hit.days) : []);
+                    return `<div class="week-notice-row"><strong>${shortTeamName(t.name)}</strong>`
+                         + `<span class="week-notice-pill ${pill}">${label}</span></div>`;
+                });
+                if (unattributed > 0) {
+                    rows.push('<div class="week-notice-row"><strong>Also this week</strong>'
+                            + '<span class="week-notice-pill week-notice-pill-some">'
+                            + `${unattributed} ${unattributed === 1 ? 'game' : 'games'} not assigned to a team yet</span></div>`);
+                }
+                el.className = 'week-notice week-notice-multi '
+                             + (anyIdle ? 'week-notice-none' : 'week-notice-some');
+                el.innerHTML = rows.join('') + `<div class="week-notice-range">${range}</div>`;
+                el.hidden = false;
+                return;
+            }
+
+            // Single team, or a viewer whose teams never resolved.
+            let cls, pill, lead, detail;
+            if (games > 0) {
+                cls = 'week-notice week-notice-some';
+                pill = 'week-notice-pill-some';
+                lead = games === 1 ? '1 game this week' : `${games} games this week`;
+                detail = `${range}. Times and locations are on the calendar below.`;
+            } else if (practices > 0) {
+                cls = 'week-notice week-notice-none';
+                pill = 'week-notice-pill-none';
+                lead = 'No games this week';
+                // Only promised because this week's practice pills survived the
+                // cancellation filter above.
+                detail = `${range}. Practice runs on the regular schedule.`;
+            } else {
+                cls = 'week-notice week-notice-none';
+                pill = 'week-notice-pill-none';
+                lead = 'Nothing scheduled this week';
+                detail = `${range}. No games and no practice on the calendar.`;
+            }
+
+            el.className = cls;
+            el.innerHTML = `<span class="week-notice-pill ${pill}">${lead}</span> <span>${detail}</span>`;
+            el.hidden = false;
+        }
+
         function renderCalendar() {
+            renderWeekGameNotice();
+
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
             const isMobile = window.innerWidth < 768;
 
             // Update Header
-            document.getElementById('monthTitle').innerText = MONTH_NAMES[month];
-            document.getElementById('yearSubtitle').innerText = `${year} Schedule`;
+            // The grid view and the mobile list view each carry their own header
+            // with the SAME id, and getElementById only ever returns the first.
+            // The mobile header was therefore never updated and sat on its
+            // hardcoded "DECEMBER / 2025 Schedule" placeholder no matter what
+            // month a parent was looking at. Update every match.
+            document.querySelectorAll('#monthTitle').forEach(el => {
+                el.innerText = MONTH_NAMES[month];
+            });
+            document.querySelectorAll('#yearSubtitle').forEach(el => {
+                el.innerText = `${year} Schedule`;
+            });
 
             const grid = document.getElementById('calendarGridBody');
             const listContainer = document.getElementById('calendarListBody');
@@ -1193,7 +1510,7 @@
         let _viewerScope = null;
         async function getViewerScope() {
             if (_viewerScope) return _viewerScope;
-            const scope = { isStaff: false, teamIds: [], grades: [], resolved: false, accessToken: null };
+            const scope = { isStaff: false, teamIds: [], teams: [], grades: [], resolved: false, accessToken: null };
             try {
                 const { createClient } = window.supabase;
                 const sb = createClient(
@@ -1224,6 +1541,12 @@
                                 .forEach(g => found.add(g.toLowerCase()));
                         });
                         scope.grades = Array.from(found);
+                        // Names, not just ids: the this-week notice reports per
+                        // team, and most families here span two teams because of
+                        // the swing players.
+                        scope.teams = (teamRecs || [])
+                            .map(t => ({ id: t.id, name: t.name || '' }))
+                            .sort((a, b) => a.name.localeCompare(b.name));
                     }
                     scope.resolved = true;
                 }
