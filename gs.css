@@ -305,8 +305,26 @@ a, button, input, select, textarea { font: inherit; }
     display: flex;
     flex-direction: column;
 }
-.gs-card__media { aspect-ratio: 16 / 10; background: var(--gs-bg); }
-.gs-card__media img { width: 100%; height: 100%; object-fit: cover; }
+/* The ratio has to be authoritative, not advisory. With the image in normal
+   flow, its own intrinsic ratio won -- the source art is 1024x1024, so the
+   box rendered square and the cards towered. Taking the image out of flow
+   makes the ratio the only thing deciding the height, and the crop also hides
+   the seams in the collage art that a full-height frame exposes. */
+.gs-card__media {
+    position: relative;
+    flex: 0 0 auto;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--gs-bg);
+}
+.gs-card__media img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 38%;
+}
 .gs-card__body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px; flex-grow: 1; }
 .gs-card__t { font-size: 16px; font-weight: 700; }
 .gs-card__m { font-size: 13px; color: var(--gs-muted); }
