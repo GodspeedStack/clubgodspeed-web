@@ -2,525 +2,360 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Godspeed Basketball | 2026 Official Parent Guide</title>
-    <meta name="description" content="Everything a Godspeed family needs for the 2026 season. Schedule, expectations, and standards.">
-    <!-- link-preview:start -->
-    <!-- og:image MUST be an absolute https URL. A relative path resolves in a
-         browser but not for the link-preview fetchers behind iMessage, Slack,
-         Facebook and LinkedIn. 1200x630 and under 100KB so Apple does not
-         time out and fall back to no image at all. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Syncopate:wght@700&display=swap" rel="stylesheet">
+<!-- tokens.css must load before gs.css: gs.css reads its custom properties. -->
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="gs.css">
+    <title>Parent guide | Godspeed Basketball</title>
+    <meta name="description" content="How Godspeed works for families: the year, practice, what it costs, game days, and who to contact. Written for parents thinking about joining, parents who just joined, and parents already here.">
     <meta property="og:site_name" content="Godspeed Basketball">
-    <meta property="og:title" content="Godspeed Basketball | 2026 Official Parent Guide">
-    <meta property="og:description" content="Everything a Godspeed family needs for the 2026 season. Schedule, expectations, and standards.">
+    <meta property="og:title" content="Parent guide | Godspeed Basketball">
+    <meta property="og:description" content="How Godspeed works for families: the year, practice, what it costs, game days, and who to contact.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://www.clubgodspeed.com/season-guide.html">
-    <meta property="og:locale" content="en_US">
     <meta property="og:image" content="https://www.clubgodspeed.com/assets/godspeed-share.jpg">
-    <meta property="og:image:secure_url" content="https://www.clubgodspeed.com/assets/godspeed-share.jpg">
-    <meta property="og:image:type" content="image/jpeg">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="Godspeed Basketball, Denver Colorado. Brotherhood. Habits. Success.">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Godspeed Basketball | 2026 Official Parent Guide">
-    <meta name="twitter:description" content="Everything a Godspeed family needs for the 2026 season. Schedule, expectations, and standards.">
-    <meta name="twitter:image" content="https://www.clubgodspeed.com/assets/godspeed-share.jpg">
-    <meta name="twitter:image:alt" content="Godspeed Basketball, Denver Colorado. Brotherhood. Habits. Success.">
     <link rel="canonical" href="https://www.clubgodspeed.com/season-guide.html">
-    <!-- link-preview:end -->
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Bebas+Neue&family=Syncopate:wght@700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root {
-            --black: #0a0a0a;
-            --white: #ffffff;
-            --gray-100: #f4f4f5;
-            --gray-200: #e4e4e7;
-            --gray-300: #d4d4d8;
-            --gray-600: #52525b;
-            --gray-800: #27272a;
-            --accent: #111111;
-            --blue: #1A3A8F;
-            --red: #dc2626;
-        }
-
-        * {
-            box-sizing: border-box;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #ededed;
-            color: var(--black);
-            margin: 0;
-            padding: 40px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .document-wrapper {
-            background-color: var(--white);
-            width: 100%;
-            max-width: 900px;
-            min-height: 1160px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.06);
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        /* Cover & Branding area */
-        .doc-header {
-            padding: 60px 80px 40px 80px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            border-bottom: 2px solid var(--black);
-            margin-bottom: 40px;
-        }
-
-        .brand-logo {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 3.5rem;
-            line-height: 0.9;
-            letter-spacing: 0.05em;
-            color: var(--black);
-            margin: 0;
-        }
-
-        .brand-subtitle {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.65rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.3em;
-            color: var(--blue);
-            margin-top: 8px;
-        }
-
-        .doc-meta {
-            text-align: right;
-            border-right: 4px solid var(--black);
-            padding-right: 16px;
-        }
-
-        .doc-meta h2 {
-            font-family: 'Inter', sans-serif;
-            font-weight: 800;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.15em;
-            margin: 0;
-            color: var(--gray-600);
-        }
-
-        .doc-meta h1 {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 2.2rem;
-            margin: 4px 0 0 0;
-            letter-spacing: 0.05em;
-            color: var(--black);
-        }
-
-        /* Main Content Container */
-        .doc-body {
-            padding: 0 80px 80px 80px;
-            flex-grow: 1;
-        }
-
-        #loading-state {
-            font-weight: 600;
-            color: var(--gray-600);
-            text-align: center;
-            padding: 80px 0;
-        }
-
-        .intro-text {
-            font-size: 1.1rem;
-            line-height: 1.6;
-            font-weight: 500;
-            color: var(--gray-800);
-            max-width: 650px;
-            margin-bottom: 40px;
-        }
-
-        /* Premium Data Grid */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 50px;
-        }
-
-        .metric-card {
-            background: var(--gray-100);
-            padding: 24px;
-            border-left: 2px solid var(--black);
-        }
-
-        .metric-card .label {
-            font-size: 0.65rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--gray-600);
-            margin-bottom: 12px;
-        }
-
-        .metric-card .value {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 2.8rem;
-            color: var(--black);
-            line-height: 1;
-            letter-spacing: 0.02em;
-        }
-
-        /* Section Headings */
-        .section-title {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.8rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.2em;
-            color: var(--black);
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .section-title::after {
-            content: '';
-            flex-grow: 1;
-            height: 1px;
-            background: var(--gray-200);
-        }
-
-        /* Beautiful Tables */
-        .premium-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 40px;
-        }
-
-        .premium-table th {
-            text-align: left;
-            font-size: 0.65rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--gray-600);
-            padding-bottom: 16px;
-            border-bottom: 1px solid var(--black);
-        }
-
-        .premium-table td {
-            padding: 16px 0;
-            border-bottom: 1px solid var(--gray-200);
-            vertical-align: top;
-        }
-
-        .premium-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .row-title {
-            font-weight: 700;
-            font-size: 0.95rem;
-            color: var(--black);
-            margin-bottom: 4px;
-        }
-
-        .row-desc {
-            font-size: 0.85rem;
-            color: var(--gray-600);
-            line-height: 1.5;
-            max-width: 400px;
-        }
-
-        .row-amount {
-            text-align: right;
-            font-family: 'Inter', sans-serif;
-            font-weight: 800;
-            font-size: 1.1rem;
-            color: var(--black);
-            white-space: nowrap;
-        }
-
-        /* Urgent Warning Bar */
-        .warning-band {
-            background: #fff1f2;
-            border-left: 4px solid var(--red);
-            padding: 16px 24px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .warning-band svg {
-            color: var(--red);
-            flex-shrink: 0;
-        }
-
-        .warning-band span {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #991b1b;
-            line-height: 1.4;
-        }
-
-        /* Print Button */
-        .btn-print {
-            position: fixed;
-            bottom: 40px;
-            right: 40px;
-            background: var(--black);
-            color: var(--white);
-            border: none;
-            padding: 16px 32px;
-            border-radius: 99px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 800;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            transition: all 0.2s;
-            z-index: 999;
-        }
-        
-        .btn-print:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
-        }
-
-        @media print {
-            body { background: white; padding: 0; display: block; }
-            .document-wrapper { box-shadow: none; max-width: 100%; border: none; }
-            .btn-print { display: none !important; }
-        }
-    </style>
+<style>
+/* Page-local: the jump rail and the printed version. */
+.pg-jump { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+.pg-jump a {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px; min-height: 44px;
+    border: 1px solid var(--gs-line-soft); border-radius: 14px;
+    background: var(--gs-surface); color: inherit;
+}
+.pg-jump a:hover { border-color: var(--gs-line); }
+.pg-jump b { display: block; font-size: 16px; }
+.pg-jump em { display: block; font-style: normal; font-size: 14px; color: var(--gs-muted); margin-top: 2px; }
+.pg-note {
+    margin-top: 20px; padding: 14px 16px;
+    border-left: 3px solid var(--gs-ink); background: var(--gs-bg); border-radius: 0 10px 10px 0;
+    font-size: 15px; line-height: 1.55;
+}
+.pg-def { margin-top: 18px; }
+.pg-def dt { font-weight: 700; font-size: 16px; margin-top: 16px; }
+.pg-def dd { margin: 4px 0 0; font-size: 15px; line-height: 1.55; color: var(--gs-ink-soft); }
+@media (min-width: 1024px) { .pg-jump { flex-direction: row; } .pg-jump a { flex: 1 1 0; } }
+@media print {
+    .gs-header, .gs-menu, .gs-tabs, .gs-tabs-pad, .gs-footer, .gs-skip, .pg-jump, .pg-print { display: none !important; }
+    .gs-section { padding: 18px 0; break-inside: avoid; }
+    .gs-section--dark { background: #fff !important; color: #000 !important; }
+    .gs-section--dark .gs-eyebrow, .gs-section--dark .gs-lede { color: #333 !important; }
+    a { text-decoration: none; color: #000; }
+}
+</style>
 </head>
 <body>
+<a class="gs-skip" href="#main">Skip to content</a>
+<header class="gs-header">
+    <div class="gs-wrap gs-header__inner">
+        <a class="gs-logo" href="index.html">GODSPEED<span>BASKETBALL</span></a>
+        <nav class="gs-nav" aria-label="Main">
+            <a href="programs.html">Teams</a>
+            <a href="training.html">Training</a>
+            <a href="calendar.html">Calendar</a>
+            <span class="gs-soon" aria-disabled="true">Shop<em>Soon</em></span>
+            <a href="about.html">About</a>
+        </nav>
+        <div class="gs-header__actions">
+            <a class="gs-textlink" href="parent-portal.html">Parent portal</a>
+            <a class="gs-btn gs-btn--primary" href="apply.html">Apply</a>
+        </div>
+        <button class="gs-burger" id="gsBurger" aria-label="Open menu" aria-expanded="false" aria-controls="gsMenu">
+            <span></span><span></span>
+        </button>
+    </div>
+</header>
+<div class="gs-menu" id="gsMenu" data-open="false" role="dialog" aria-modal="true" aria-label="Menu">
+    <div class="gs-menu__top">
+        <span class="gs-logo">GODSPEED<span>BASKETBALL</span></span>
+        <button class="gs-menu__close" id="gsMenuClose" aria-label="Close menu">&#215;</button>
+    </div>
+    <div class="gs-menu__list">
+        <a href="programs.html">Teams</a>
+        <a href="training.html">Training</a>
+        <a href="team-needs.html">Tryouts</a>
+        <a href="programs.html#open-gym">Open gym</a>
+        <a href="calendar.html">Calendar</a>
+        <span class="gs-soon" aria-disabled="true">Shop<em>Soon</em></span>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+    </div>
+    <div class="gs-menu__foot">
+        <a class="gs-btn gs-btn--primary gs-btn--block" href="parent-portal.html">Parent portal</a>
+        <a class="gs-btn gs-btn--ghost gs-btn--block" href="coach-portal.html">Coach sign in</a>
+    </div>
+</div>
 
-    <button class="btn-print" onclick="window.print()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-        Save as PDF
-    </button>
+<main id="main">
 
-    <div class="document-wrapper">
-        <header class="doc-header">
-            <div>
-                <h1 class="brand-logo">GODSPEED</h1>
-                <div class="brand-subtitle">Basketball Club // Official AAU Program</div>
-            </div>
-            <div class="doc-meta">
-                <h2>Godspeed OS</h2>
-                <h1 id="doc-season">2026 Spring/Summer</h1>
-            </div>
-        </header>
+    <section class="gs-section gs-section--dark gs-section--tight">
+        <div class="gs-wrap">
+            <p class="gs-eyebrow">Parent guide</p>
+            <h1 class="gs-h2">How Godspeed works for your family</h1>
+            <p class="gs-lede">Everything a Godspeed parent needs in one place: how the year runs, what practice looks like, what it costs and how to pay, what game days ask of you, and who to reach when you have a question. Start with the part that matches where you are.</p>
+        </div>
+    </section>
 
-        <div class="doc-body">
-            <div id="loading-state">
-                Synthesizing Database Config...
-            </div>
+    <section class="gs-section">
+        <div class="gs-wrap">
+            <nav class="pg-jump" aria-label="Sections">
+                <a href="#considering">
+                    <span class="gs-row__mark">1</span>
+                    <span><b>Thinking about joining</b><em>What you are signing up for</em></span>
+                </a>
+                <a href="#new">
+                    <span class="gs-row__mark">2</span>
+                    <span><b>You just joined</b><em>What to do in your first two weeks</em></span>
+                </a>
+                <a href="#here">
+                    <span class="gs-row__mark">3</span>
+                    <span><b>You are already here</b><em>Game days, money, and the day to day</em></span>
+                </a>
+            </nav>
+        </div>
+    </section>
 
-            <div id="dynamic-content" style="display: none;">
-                <div class="intro-text">
-                    Everything you need to know about this season is right here. This covers what your dues pay for, when tournaments happen, and what to expect. If you have questions, reach out to Coach Scott anytime.
-                </div>
+    <!-- ============================ TRACK 1 ============================ -->
+    <section class="gs-section gs-section--tint" id="considering">
+        <div class="gs-wrap">
+            <p class="gs-eyebrow">Track one</p>
+            <h2 class="gs-h2">Thinking about joining</h2>
+            <p class="gs-lede">Godspeed is a Denver club for boys in roughly fourth through sixth grade. Rosters are small on purpose, so minutes are earned on the floor rather than handed out. We do not recruit finished players. We take boys who are willing to work and we build them.</p>
 
-                <div class="metrics-grid">
-                    <div class="metric-card">
-                        <div class="label">Roster Size</div>
-                        <div class="value" id="val-roster">--</div>
+            <h3 class="gs-h3">The year has three parts</h3>
+            <p class="gs-body">A Godspeed family commits one season at a time, and most families stay for all three.</p>
+            <div class="gs-rows">
+                <div class="gs-row">
+                    <div class="gs-row__mark">F</div>
+                    <div style="flex-grow:1;">
+                        <div class="gs-row__t">Fall</div>
+                        <div class="gs-row__d">League play through the fall, with practice twice a week the whole way.</div>
                     </div>
-                    <!-- PROMINENT DUES BLOCK -->
-                    <div class="metric-card" style="background: var(--blue); border-left: none; box-shadow: 0 10px 20px rgba(26,58,143,0.2);">
-                        <div class="label" style="color: rgba(255,255,255,0.7);">Per Player Dues</div>
-                        <div class="value" id="val-dues" style="color: var(--white); font-size: 3.6rem;">$--</div>
+                </div><div class="gs-row">
+                    <div class="gs-row__mark">W</div>
+                    <div style="flex-grow:1;">
+                        <div class="gs-row__t">Winter</div>
+                        <div class="gs-row__d">The heaviest competitive stretch of the school year, and where new teams usually start.</div>
                     </div>
-                    <div class="metric-card">
-                        <div class="label">Fundraising Minimum</div>
-                        <div class="value" id="val-fundraising">$--</div>
+                </div><div class="gs-row">
+                    <div class="gs-row__mark">S</div>
+                    <div style="flex-grow:1;">
+                        <div class="gs-row__t">Spring and summer AAU</div>
+                        <div class="gs-row__d">Travel tournament season. Most events are around Denver; a few mean a drive and occasionally a night away.</div>
                     </div>
                 </div>
+            </div>
 
-                <!-- NEW SIMPLIFIED SINGLE TABLE -->
-                <div class="section-title">What Your Dues Cover</div>
-                <table class="premium-table">
-                    <thead>
-                        <tr>
-                            <th>Program Inclusions & Coverage</th>
-                            <th style="text-align: right;">Operations Value</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-included">
-                        <!-- Populated by JS -->
-                    </tbody>
-                </table>
+            <h3 class="gs-h3">What the commitment actually is</h3>
+            <p class="gs-body">Practice is <b>Tuesday and Thursday, 6:00 to 8:00 pm</b>, doors at 5:55, at Green Valley Ranch. Two weeknights, about four hours on the floor. Every session is built on the same seven blocks, so your son always knows what the night looks like before he walks in. Games and tournaments sit on top of that, and the <a class="gs-textlink" href="calendar.html">calendar</a> is always the source of truth for what is happening this week.</p>
+            <p class="pg-note">Consistency is the whole method. A boy who is there twice a week for a season improves in ways that a boy who comes when it is convenient does not. That is the single biggest thing you are agreeing to.</p>
 
-                <!-- Tournaments -->
-                <div class="section-title" style="margin-top: 50px;">Tournament Schedule</div>
+            <h3 class="gs-h3">What it costs</h3>
+            <p class="gs-body">Families pay season dues. Dues cover the things it takes to put a season on: gym time, coaching, league and tournament entry, and the club's insurance and registration. Two things are billed separately and are not part of dues:</p>
+            <dl class="pg-def">
+                <dt>Uniforms</dt>
+                <dd>Ordered once and kept. You pick the jersey number and sizes yourself in the <a class="gs-textlink" href="order-uniform.html">uniform order page</a> after your son is rostered.</dd>
+                <dt>Team gear and apparel</dt>
+                <dd>Practice and warmup items, ordered when they go out. Optional unless a coach says otherwise.</dd>
+            </dl>
+            <p class="gs-body">Travel and lodging for out-of-town tournaments are on your family. Fundraising runs alongside dues and lowers what families carry; it is offered, not required.</p>
+            <p class="pg-note">Current dues, due dates and your own balance live in the <a class="gs-textlink" href="parent-portal.html">parent portal</a> rather than on this page, so what you see there is always the real number for the season you are in.</p>
 
-                <div class="warning-band">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                    <span><strong>Heads up:</strong> Dates can shift if other teams drop out or new teams sign up. We will let you know right away if anything changes.</span>
+            <h3 class="gs-h3">How a boy joins</h3>
+            <div class="gs-rows">
+                <div class="gs-row">
+                    <div class="gs-row__mark">1</div>
+                    <div style="flex-grow:1;">
+                        <div class="gs-row__t">Come to an open gym or a tryout</div>
+                        <div class="gs-row__d">No commitment and nothing to pay. A coach watches him play and tells you honestly where he is.</div>
+                    </div>
+                </div><div class="gs-row">
+                    <div class="gs-row__mark">2</div>
+                    <div style="flex-grow:1;">
+                        <div class="gs-row__t">Start an application</div>
+                        <div class="gs-row__d">Takes a few minutes. It tells us his grade, his position, and how to reach you.</div>
+                    </div>
+                </div><div class="gs-row">
+                    <div class="gs-row__mark">3</div>
+                    <div style="flex-grow:1;">
+                        <div class="gs-row__t">We tell you where he fits</div>
+                        <div class="gs-row__d">Which team, which spot, and what he would be working on first. If we are not the right place for him, we say that too.</div>
+                    </div>
                 </div>
+            </div>
+            <p style="margin-top:24px;"><a class="gs-btn gs-btn--primary" href="apply.html">Start an application</a></p>
+        </div>
+    </section>
 
-                <table class="premium-table">
-                    <thead>
-                        <tr>
-                            <th>Event</th>
-                            <th>Date</th>
-                            <th>Location</th>
-                            <th style="text-align: right;">Entry Fee</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><div class="row-title">Super 48</div><div class="row-desc">3 games / Select</div></td>
-                            <td style="white-space:nowrap">Apr 4</td>
-                            <td>Superior, CO</td>
-                            <td class="row-amount">$325</td>
-                        </tr>
-                        <tr>
-                            <td><div class="row-title">Denver Chase for the Chain</div><div class="row-desc">Premier</div></td>
-                            <td style="white-space:nowrap">Apr 11-12</td>
-                            <td>Denver, CO</td>
-                            <td class="row-amount">$495</td>
-                        </tr>
-                        <tr>
-                            <td><div class="row-title">Rocky Mountain Mayhem</div><div class="row-desc">Premier</div></td>
-                            <td style="white-space:nowrap">Apr 17-19</td>
-                            <td>Lakewood, CO</td>
-                            <td class="row-amount">TBD</td>
-                        </tr>
-                        <tr>
-                            <td><div class="row-title">JPS Mile High Invitational</div><div class="row-desc">4 games / Premier</div></td>
-                            <td style="white-space:nowrap">Apr 23-25</td>
-                            <td>Lakewood, CO</td>
-                            <td class="row-amount">$425</td>
-                        </tr>
-                        <tr>
-                            <td><div class="row-title">Spring Hoops Classic</div><div class="row-desc">4 games / Premier</div></td>
-                            <td style="white-space:nowrap">May 1-3</td>
-                            <td>Lakewood, CO</td>
-                            <td class="row-amount">$475</td>
-                        </tr>
-                        <tr>
-                            <td><div class="row-title">JPS Freedom Classic</div><div class="row-desc">4 games / Premier</div></td>
-                            <td style="white-space:nowrap">Jun 25-27</td>
-                            <td>Lakewood, CO</td>
-                            <td class="row-amount">$425</td>
-                        </tr>
-                        <tr>
-                            <td><div class="row-title">JPS Invitational</div><div class="row-desc">4 games / Premier</div></td>
-                            <td style="white-space:nowrap">Jul 16-18</td>
-                            <td>Lakewood, CO</td>
-                            <td class="row-amount">$425</td>
-                        </tr>
-                        <tr>
-                            <td><div class="row-title">JPS 3on3 Championships</div><div class="row-desc">3 games / 3v3 / Select</div></td>
-                            <td style="white-space:nowrap">Aug 14-15</td>
-                            <td>Lakewood, CO</td>
-                            <td class="row-amount">$190</td>
-                        </tr>
-                    </tbody>
-                </table>
+    <!-- ============================ TRACK 2 ============================ -->
+    <section class="gs-section" id="new">
+        <div class="gs-wrap">
+            <p class="gs-eyebrow">Track two</p>
+            <h2 class="gs-h2">You just joined</h2>
+            <p class="gs-lede">Five things in your first two weeks. Do them in this order and nothing will surprise you later.</p>
+
+            <div class="gs-rows">
+                <div class="gs-row">
+                    <div class="gs-row__mark">1</div>
+                    <div style="flex-grow:1;">
+                        <div class="gs-row__t">Set up your parent portal account</div>
+                        <div class="gs-row__d">This is where your son's schedule, documents and dues live. If both parents want access, both should have their own sign-in rather than sharing one.</div>
+                    </div>
+                </div><div class="gs-row">
+                    <div class="gs-row__mark">2</div>
+                    <div style="flex-grow:1;">
+                        <div class="gs-row__t">Sign the documents</div>
+                        <div class="gs-row__d">A short set: participation agreement, medical consent, and the club's policies. The portal shows what is outstanding. Medical consent needs a signature from each guardian; the rest only needs one.</div>
+                    </div>
+                </div><div class="gs-row">
+                    <div class="gs-row__mark">3</div>
+                    <div style="flex-grow:1;">
+                        <div class="gs-row__t">Put practice on your calendar</div>
+                        <div class="gs-row__d">Tuesday and Thursday, 6:00 to 8:00 pm, doors at 5:55 at Green Valley Ranch. Arriving at 5:55 rather than 6:05 is most of what separates a boy who develops from one who does not.</div>
+                    </div>
+                </div><div class="gs-row">
+                    <div class="gs-row__mark">4</div>
+                    <div style="flex-grow:1;">
+                        <div class="gs-row__t">Order his uniform</div>
+                        <div class="gs-row__d">Pick his number and sizes in the portal. Numbers are first come, and a number already taken on his team will show as unavailable.</div>
+                    </div>
+                </div><div class="gs-row">
+                    <div class="gs-row__mark">5</div>
+                    <div style="flex-grow:1;">
+                        <div class="gs-row__t">Sort out dues</div>
+                        <div class="gs-row__d">Your balance and the due date are in the portal. If the timing is hard, tell us early rather than late. We would much rather work something out than lose a boy over it.</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="gs-h3">What he brings to practice</h3>
+            <p class="gs-body">A ball, basketball shoes he can actually move in, a full water bottle, and shorts and a shirt he can sweat in. That is the whole list. No phone on the floor.</p>
+
+            <h3 class="gs-h3">How we reach you</h3>
+            <p class="gs-body">Schedule changes, reminders and anything time-sensitive go out by email and land on the calendar at the same time. Keep the email address on your portal account current, and check the calendar before you drive anywhere. If a session or a game moves, the calendar changes first.</p>
+        </div>
+    </section>
+
+    <!-- ============================ TRACK 3 ============================ -->
+    <section class="gs-section gs-section--tint" id="here">
+        <div class="gs-wrap">
+            <p class="gs-eyebrow">Track three</p>
+            <h2 class="gs-h2">You are already here</h2>
+            <p class="gs-lede">The day-to-day answers, for the season you are in the middle of.</p>
+
+            <h3 class="gs-h3">Game and tournament days</h3>
+            <dl class="pg-def">
+                <dt>Arrive when your coach says, not when the game starts</dt>
+                <dd>Call time comes from your son's coach for each event and is earlier than tip-off. He warms up with his team or he does not start the game ready.</dd>
+                <dt>Take your turn with the scorebook</dt>
+                <dd>Games need a parent on the book or the clock. We set the rotation at the start of the season so nobody is asked to scramble in the parking lot. If your turn lands badly, trade with another family and tell your coach.</dd>
+                <dt>Cheer hard, coach nothing</dt>
+                <dd>Your son can hear you. He can only follow one voice, and on game day it is his coach's. Let the officials work, however the call went.</dd>
+                <dt>Out-of-town events</dt>
+                <dd>Travel and lodging are on your family. Entry is covered by the program. The calendar carries the location and schedule as soon as it is confirmed.</dd>
+            </dl>
+
+            <h3 class="gs-h3">When he has to miss</h3>
+            <p class="gs-body">Life happens and we know it. Tell his coach ahead of time rather than after, and he comes back into the same place he left. What we ask is that missing practice stays the exception. Playing time follows what a boy shows in the gym, and the gym is where coaches see it.</p>
+
+            <h3 class="gs-h3">Money, mid-season</h3>
+            <p class="gs-body">Your balance, what has been paid, and anything outstanding are all in the <a class="gs-textlink" href="parent-portal.html">parent portal</a>. Uniforms and gear are billed separately from dues and show up as their own items. If something on your balance does not look right, send us the question and we will go through it with you.</p>
+
+            <h3 class="gs-h3">What we ask of you</h3>
+            <p class="gs-body">Get him there, on time, twice a week. Let the coaches coach. Talk to us early when something is wrong, whether it is money, school, or how he is doing. And notice out loud when he does the unglamorous things well, because that is what the whole program is built on.</p>
+            <p class="pg-note">What you get from us in return: your son is coached, not managed. He is told the truth about where he stands. He is never embarrassed in front of his teammates. And the same seven blocks run every session, so the work is never a mystery to him.</p>
+        </div>
+    </section>
+
+    <section class="gs-section gs-section--dark">
+        <div class="gs-wrap">
+            <h2 class="gs-h2">Questions</h2>
+            <p class="gs-lede">One address, and it reaches Coach Scott. Anything at all: schedule, dues, gear, or how your son is doing. We answer within 24 hours.</p>
+            <p style="margin-top:20px;"><a class="gs-btn gs-btn--primary" href="mailto:info@clubgodspeed.com">info@clubgodspeed.com</a></p>
+            <p class="pg-print" style="margin-top:16px;"><a class="gs-textlink" href="#" id="pgPrint">Save this guide as a PDF</a></p>
+        </div>
+    </section>
+
+</main>
+
+<nav class="gs-tabs" aria-label="Primary">
+    <a href="index.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+        Home
+    </a>
+    <a href="programs.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3C9 6.5 9 17.5 12 21"/></svg>
+        Teams
+    </a>
+    <a href="calendar.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+        Calendar
+    </a>
+    <a href="parent-portal.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>
+        Portal
+    </a>
+</nav>
+<div class="gs-tabs-pad" aria-hidden="true"></div>
+<footer class="gs-footer">
+    <div class="gs-wrap">
+        <div class="gs-logo" style="color: #fff;">GODSPEED<span>BASKETBALL</span></div>
+        <div class="gs-footer__cols">
+            <div class="gs-footer__col">
+                <div class="gs-footer__h">Program</div>
+                <a href="programs.html">Teams</a>
+                <a href="training.html">Training</a>
+                <a href="team-needs.html">Tryouts</a>
+                <a href="programs.html#open-gym">Open gym</a>
+            </div>
+            <div class="gs-footer__col">
+                <div class="gs-footer__h">Families</div>
+                <a href="parent-portal.html">Parent portal</a>
+                <a href="calendar.html">Calendar</a>
+                <a href="season-guide.html">Parent guide</a>
+            </div>
+            <div class="gs-footer__col">
+                <div class="gs-footer__h">Club</div>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="fundraise.html">Fundraise</a>
+            </div>
+            <div class="gs-footer__col">
+                <div class="gs-footer__h">Shop</div>
+                <span class="gs-soon" aria-disabled="true">Apparel<em>Soon</em></span>
+                <a href="order-uniform.html">Uniforms</a>
             </div>
         </div>
+        <div class="gs-footer__tag">Brotherhood. Habits. <span>Success.</span></div>
+        <div style="margin-top: 14px; font-size: 13px; color: rgba(255,255,255,0.5);">Denver, Colorado</div>
     </div>
-
-    <script type="module">
-        let envUrl = "https://nnqokhqennuxalamnvps.supabase.co";
-        let envKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis";
-        
-        const supabase = window.supabase.createClient(envUrl, envKey);
-
-        async function init() {
-            try {
-                let response = await supabase.from('season_configs').select('config_data').eq('is_active', true).single();
-                if (response.error && response.error.code === 'PGRST205') {
-                    response = await supabase.from('season_config').select('config_data').eq('is_active', true).single();
-                }
-
-                if (response.error) throw response.error;
-
-                const config = response.data.config_data;
-                
-                // Map Core Values
-                document.getElementById('doc-season').innerText = config.seasonInfo?.season || "2026 Spring/Summer";
-                document.getElementById('val-roster').innerText = config.seasonInfo?.totalPlayers || "11";
-                document.getElementById('val-dues').innerText = "$" + (config.seasonInfo?.duesPerPlayer || 745).toLocaleString();
-                document.getElementById('val-fundraising').innerText = "$" + (config.fundraisingGoal?.target || 6040).toLocaleString();
-
-                // 1. Compile Single "What's Included" Table
-                let combinedItems = [];
-                
-                // Gym Sessions explicitly
-                const gymSessions = config.gym_sessions || config.programCosts?.gym_sessions || [
-                    { label: 'Spring Gym Rental', desc: 'Secure weekly practice facility access' },
-                    { label: 'Summer Gym Rental', desc: 'Consistent court time for remainder of season' }
-                ];
-                gymSessions.forEach(g => {
-                    combinedItems.push({ 
-                        name: g.label || g.name, 
-                        desc: g.desc || g.description || 'Facility access',
-                        cost: g.cost || g.amount || g.value || null
-                    });
-                });
-
-                // Other permitted scenarios
-                const scenarios = config.fundraisingGoal?.scenarios || [];
-                const excludedTerms = ['gym', 'coach', 'training staff', 'uniform', 'equipment', 'insurance', 'league', 'registration', 'compensation'];
-                
-                scenarios.forEach(s => {
-                    const sName = (s.description || s.name || '');
-                    if (!excludedTerms.some(term => sName.toLowerCase().includes(term))) {
-                        combinedItems.push({ 
-                            name: sName, 
-                            desc: s.details || s.notes || 'Associated program expense.',
-                            cost: s.amount || s.cost || s.total || s.value || null
-                        });
-                    }
-                });
-
-                const tIncluded = document.getElementById('table-included');
-                if (combinedItems.length === 0) {
-                    tIncluded.innerHTML = `<tr><td colspan="2" style="text-align:center; color:var(--gray-300); padding: 20px;">Pending list synthesis.</td></tr>`;
-                } else {
-                    tIncluded.innerHTML = combinedItems.map(item => `
-                        <tr>
-                            <td>
-                                <div class="row-title">${item.name}</div>
-                                <div class="row-desc">${item.desc}</div>
-                            </td>
-                            <td class="row-amount">${item.cost ? '$' + item.cost.toLocaleString() : 'Included'}</td>
-                        </tr>
-                    `).join('');
-                }
-
-                document.getElementById('loading-state').style.display = 'none';
-                document.getElementById('dynamic-content').style.display = 'block';
-
-            } catch (err) {
-                console.error(err);
-                document.getElementById('loading-state').innerHTML = `<span style="color:var(--red)">System Error: Unable to fetch live financial configuration. Please refresh.</span>`;
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
+</footer>
+<script>
+(function () {
+    var menu = document.getElementById('gsMenu');
+    var open = document.getElementById('gsBurger');
+    var close = document.getElementById('gsMenuClose');
+    if (menu && open && close) {
+        var set = function (state) {
+            menu.setAttribute('data-open', state ? 'true' : 'false');
+            open.setAttribute('aria-expanded', state ? 'true' : 'false');
+            document.body.style.overflow = state ? 'hidden' : '';
+            (state ? close : open).focus();
+        };
+        open.addEventListener('click', function () { set(true); });
+        close.addEventListener('click', function () { set(false); });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && menu.getAttribute('data-open') === 'true') set(false);
+        });
+    }
+    var p = document.getElementById('pgPrint');
+    if (p) p.addEventListener('click', function (e) { e.preventDefault(); window.print(); });
+}());
+</script>
 </body>
 </html>

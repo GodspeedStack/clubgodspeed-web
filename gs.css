@@ -70,8 +70,8 @@ a, button, input, select, textarea { font: inherit; }
 .gs-section--dark .gs-eyebrow { color: rgba(255, 255, 255, 0.66); }
 
 /* --- "New" badge ------------------------------------------------------ */
-/* Solid blue pill so the launch reads at a glance. White on #2563eb
-   measures 5.17:1, over the 4.5:1 floor. */
+/* Solid ink pill so the launch reads at a glance without spending blue,
+   which is reserved for things you can click. White on #1d1d1f is 15.9:1. */
 .gs-newtag {
     display: flex;
     align-items: center;
@@ -87,7 +87,7 @@ a, button, input, select, textarea { font: inherit; }
     flex: 0 0 auto;
     padding: 4px 9px;
     border-radius: var(--gs-radius-pill);
-    background: var(--gs-blue);
+    background: var(--gs-ink);
     color: #fff;
     font-weight: 800;
     letter-spacing: 0.12em;
@@ -97,8 +97,8 @@ a, button, input, select, textarea { font: inherit; }
 .gs-card .gs-newtag { font-size: 10px; gap: 6px; }
 .gs-card .gs-newtag__pill { padding: 3px 7px; }
 
-/* Same badge shape as .gs-newtag, inked rather than blue so an open coaching
-   slot does not compete with the team launch sitting directly above it. */
+/* Same badge shape as .gs-newtag, outlined rather than solid so an open
+   coaching slot does not compete with the team launch directly above it. */
 .gs-hiring {
     display: flex;
     align-items: center;
@@ -114,16 +114,22 @@ a, button, input, select, textarea { font: inherit; }
 }
 .gs-hiring__pill {
     flex: 0 0 auto;
-    padding: 4px 9px;
+    padding: 3px 9px;
     border-radius: var(--gs-radius-pill);
-    background: var(--gs-ink);
-    color: #fff;
+    background: transparent;
+    border: 1.5px solid var(--gs-ink);
+    color: var(--gs-ink);
     font-weight: 800;
     letter-spacing: 0.12em;
     line-height: 1.2;
 }
+/* Underlined ink, not a second blue CTA competing with the tryout button
+   a few lines below it. */
+.gs-hiring .gs-textlink { color: var(--gs-ink); text-decoration: underline; }
+.gs-hiring .gs-textlink:hover { color: var(--gs-blue); }
 .gs-section--dark .gs-hiring { color: rgba(255, 255, 255, 0.78); }
-.gs-section--dark .gs-hiring__pill { background: var(--gs-surface); color: var(--gs-ink); }
+.gs-section--dark .gs-hiring__pill { border-color: var(--gs-surface); color: var(--gs-surface); }
+.gs-section--dark .gs-hiring .gs-textlink { color: var(--gs-surface); }
 
 /* --- Link to a page that is not open yet ------------------------------ */
 .gs-soon {
@@ -176,6 +182,23 @@ a, button, input, select, textarea { font: inherit; }
     margin-top: 12px;
 }
 .gs-section--dark .gs-lede { color: rgba(255, 255, 255, 0.76); }
+
+/* Long-form prose, for document pages like the parent guide. */
+.gs-h3 {
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -0.015em;
+    line-height: 1.25;
+    margin-top: 32px;
+}
+.gs-body {
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--gs-ink-soft);
+    max-width: 68ch;
+    margin-top: 10px;
+}
+.gs-section--dark .gs-body { color: rgba(255, 255, 255, 0.78); }
 
 /* --- Buttons ---------------------------------------------------------- */
 .gs-btn {
@@ -362,8 +385,10 @@ a, button, input, select, textarea { font: inherit; }
     width: 36px;
     height: 36px;
     border-radius: 10px;
-    background: var(--gs-blue-tint);
-    color: var(--gs-blue);
+    /* Neutral, not blue: fifteen of these on the tryouts page was the biggest
+       block of blue on the site, and none of them is clickable. */
+    background: var(--gs-line-soft);
+    color: var(--gs-ink-soft);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -535,8 +560,8 @@ details[open] > summary::after {
     flex: 0 0 auto;
     padding: 4px 10px;
     border-radius: var(--gs-radius-pill);
-    background: var(--gs-blue-tint);
-    color: var(--gs-blue);
+    background: var(--gs-line-soft);
+    color: var(--gs-ink-soft);
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.04em;
