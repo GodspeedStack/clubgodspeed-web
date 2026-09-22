@@ -324,11 +324,17 @@ a {
     left: 0;
     width: 100%;
     height: 100%;
-    /* Create a gradient from white on the left (for text), fading out to the right */
-    background: linear-gradient(90deg, 
-      rgba(245, 245, 247, 1) 0%, 
-      rgba(245, 245, 247, 0.9) 30%, 
-      rgba(245, 245, 247, 0.4) 60%, 
+    /* A white wash on the left so the dark hero copy stays legible over the
+       photograph. The old stops fell away to 0.4 by 60%, but the body copy runs
+       to about 67% of the width on a wide screen, so its right-hand end sat on
+       bare photo: measured 4.10:1 at 1440px, under the 4.5:1 AA floor, while
+       narrower screens passed. Holding the wash further right fixes the wide
+       case without closing the photo down on the right. */
+    background: linear-gradient(90deg,
+      rgba(245, 245, 247, 1) 0%,
+      rgba(245, 245, 247, 0.96) 38%,
+      rgba(245, 245, 247, 0.72) 62%,
+      rgba(245, 245, 247, 0.22) 82%,
       rgba(245, 245, 247, 0) 100%);
     z-index: 1;
 }
@@ -1196,6 +1202,17 @@ img[src*="coach-scott.png"] {
     color: rgba(255, 255, 255, 0.9);
 }
 
+/* A filled bar carries white text from a `filled` class in the static HTML,
+   but the dark backdrop that makes white legible used to come only from the
+   IntersectionObserver in script.js. Any visit where that script did not run,
+   or the observer did not fire, showed white on near-white -- measured at
+   1.30:1 with JavaScript disabled. The resting state now lives in CSS and the
+   wipe is an enhancement over it. */
+.standard-bar.filled {
+    background: #3a3a3c;
+    border-color: rgba(0, 0, 0, 0.25);
+}
+
 .bar-fill {
     position: absolute;
     top: 0;
@@ -1205,6 +1222,12 @@ img[src*="coach-scott.png"] {
     /* Black fill */
     z-index: 0;
     transition: width 1s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bar-fill {
+        transition: none;
+    }
 }
 
 .bar-content {

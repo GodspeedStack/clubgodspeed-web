@@ -172,13 +172,18 @@
         transform: translateY(0) scale(1);
     }
     
-    /* Prevent quotes from appearing over images */
+    /* Prevent quotes from appearing over images.
+       The horizontal insets used to be -10px, which bled the backdrop past the
+       quote on both sides. Where the quote runs the full width of a phone that
+       put 10px outside the document and gave about.html -- the only page that
+       loads this file -- a horizontal scrollbar at every phone width. The
+       vertical bleed is what does the actual work, so only that is kept. */
     .quote-mobile::before {
         content: '';
         position: absolute;
         top: -10px;
-        left: -10px;
-        right: -10px;
+        left: 0;
+        right: 0;
         bottom: -10px;
         z-index: -1;
         background: inherit;

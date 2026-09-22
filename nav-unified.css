@@ -1,3 +1,16 @@
+/* Godspeed renders in Inter. Never a serif.
+   shop.html and academy.html shipped with no base stylesheet and fell back to
+   the browser default, which is Times New Roman. Every page loads this file,
+   so setting the family here means that can never happen again, whatever else
+   a page is or is not loading. Inter and Syncopate only. */
+body,
+input,
+select,
+textarea,
+button {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+}
+
 /* UNIFIED NAVIGATION CSS - GUARANTEES PERFECT ALIGNMENT ACROSS ALL PAGES */
 html, body {
     margin: 0 !important;
@@ -24,15 +37,32 @@ html, body {
     display: none;
 }
 
-@media (min-width: 768px) {
+/* The desktop nav measures about 780px of links and icons, and the navbar adds
+   96px of padding, so it needs roughly 880px before it fits. Switching it on at
+   768px meant that on a 768px tablet the links overflowed the viewport by 390px:
+   the logo sat on top of HOME and SHOP ran off the right edge. Measured, the
+   widest of these navs needs 1164px of content plus the navbar's 96px of
+   padding, so the desktop layout does not fit below about 1260. Hold the mobile
+   nav until there is genuinely room for the desktop one. */
+@media (min-width: 1280px) {
     .nav-desktop-unified {
         display: flex;
         align-items: center;
-        margin-left: auto; /* Push to right slightly if needed, but space-between handles it */
+        margin-left: auto;
     }
     .mobile-menu-btn {
         display: none !important;
     }
+}
+
+/* The cart badge is placed by an inline style repeated in every page's markup
+   (position: absolute; right: -4px). That resolves against the nearest POSITIONED
+   ancestor, and on pages whose base sheet never gave .nav-cart-btn a position it
+   escaped the button entirely and anchored to the page, landing 4px beyond the
+   right edge and putting a horizontal scrollbar on the whole document. Giving
+   the button a positioning context is the actual fix. */
+.nav-cart-btn {
+    position: relative;
 }
 
 .nav-links-unified {
