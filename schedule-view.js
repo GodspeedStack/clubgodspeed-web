@@ -17,10 +17,12 @@ const ScheduleView = (() => {
   let allEvents = [];
   let currentMonth = new Date().getMonth();
   let currentYear = new Date().getFullYear();
-  let activeGrade = 'all';   // 'all' | '4th' | '5th' | '6th'
+  let activeTeam = 'all';    // 'all' | a team id
   let viewerIsStaff = false; // staff see every team
   let myTeamIds = [];        // this family's team ids
   let myGrades = [];         // grades derived from those teams, e.g. ['6th']
+  let visibleTeams = [];     // [{id,name,short,grade}] this viewer may switch between
+  let teamsById = {};        // id -> {id,name,short,grade}
   let activeTab = 0;         // 0=Tournaments, 1=Practice, 2=Full Calendar
   let expandedId = null;     // which tournament card is expanded
   let containerId = null;
@@ -115,6 +117,29 @@ const ScheduleView = (() => {
         myGrades = Array.from(found);
       }
     } catch (e) { /* no grades resolved -> only program-wide events show */ }
+
+    // Team switcher source. Staff cover every active team; a family gets the
+    // teams their own sons are rostered on. Two teams can share a grade
+    // ("5th Black" and "5th White"), which is exactly why the switcher is by
+    // team and not by grade.
+    visibleTeams = []; teamsById = {};
+    try {
+      let rows = null;
+      if (viewerIsStaff) {
+        ({ data: rows } = await supabase.from('teams').select('id,name').eq('is_active', true));
+      } else if (myTeamIds.length) {
+        ({ data: rows } = await supabase.from('teams').select('id,name').in('id', myTeamIds));
+      }
+      visibleTeams = (rows || []).map(t => {
+        const name = String(t.name || '');
+        const grade = ((name.match(/\d+(?:st|nd|rd|th)/i) || [''])[0] || '').toLowerCase();
+        let short = name.replace(/^godspeed\s*/i, '').trim();
+        // "5th Grade Black" -> "5th Black", but "6th Grade" keeps its word.
+        if (/^\d+(?:st|nd|rd|th)\s+grade\s+\S+/i.test(short)) short = short.replace(/\s*grade\s*/i, ' ').trim();
+        return { id: t.id, name, short: short || name, grade };
+      }).sort((a, b) => a.short.localeCompare(b.short));
+      visibleTeams.forEach(t => { teamsById[t.id] = t; });
+    } catch (e) { /* no teams resolved -> the switcher hides, nothing is filtered out */ }
 
     // An event is in scope when it is program-wide, or belongs to one of this
     // family's teams, or carries one of their grades.
@@ -244,10 +269,28 @@ const ScheduleView = (() => {
     return { bg: '#F0FDF4', color: '#15803D', border: '#BBF7D0' };
   }
 
-  // Picking a grade means that grade. Ungraded events are not silently re-admitted.
-  function filterByGrade(events) {
-    if (activeGrade === 'all') return events;
-    return events.filter(e => e.grade_level === activeGrade);
+  // A team's badge and label. Falls back to the grade when an event carries no
+  // team, which is what a program-wide item is.
+  function teamLabel(ev) {
+    const t = ev && ev.team_id ? teamsById[ev.team_id] : null;
+    if (t) return t.short;
+    return gradeLabel(ev && ev.grade_level);
+  }
+  function teamBadgeColor(ev) {
+    const t = ev && ev.team_id ? teamsById[ev.team_id] : null;
+    return gradeBadgeColor(t ? t.grade : (ev && ev.grade_level));
+  }
+
+  // Picking a team means that team. A program-wide event carrying no team but
+  // this team's grade still belongs to them, so it stays. Anything else is
+  // another team's business and is not silently re-admitted.
+  function filterByTeam(events) {
+    if (activeTeam === 'all') return events;
+    const t = teamsById[activeTeam];
+    return events.filter(e => {
+      if (e.team_id) return e.team_id === activeTeam;
+      return !!(t && t.grade && e.grade_level === t.grade);
+    });
   }
 
   function futureEvents() {
@@ -256,13 +299,13 @@ const ScheduleView = (() => {
   }
 
   function tournamentEvents() {
-    return filterByGrade(futureEvents()).filter(e =>
+    return filterByTeam(futureEvents()).filter(e =>
       ['tournament', 'season', 'game', 'camp'].includes(e.event_type)
     );
   }
 
   function practiceEvents() {
-    return filterByGrade(futureEvents()).filter(e =>
+    return filterByTeam(futureEvents()).filter(e =>
       ['practice', 'meeting'].includes(e.event_type) || e.event_type === 'other'
     );
   }
@@ -298,7 +341,7 @@ const ScheduleView = (() => {
           lines.push(`DTEND;VALUE=DATE:${endP.toISOString().split('T')[0].replace(/-/g, '')}`);
         }
       }
-      const icsGrade = gradeLabel(e.grade_level);
+      const icsGrade = teamLabel(e);
       lines.push(`SUMMARY:${escICS(e.title)}${icsGrade ? ` (${icsGrade})` : ''}`);
       if (e.location) lines.push(`LOCATION:${escICS(e.location)}`);
       if (e.description) lines.push(`DESCRIPTION:${escICS(e.description)}`);
@@ -327,7 +370,7 @@ const ScheduleView = (() => {
     // Collect event dates for this month
     const eventDates = new Set();
     const monthStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
-    filterByGrade(allEvents).forEach(e => {
+    filterByTeam(allEvents).forEach(e => {
       if (e.start_date.startsWith(monthStr)) {
         eventDates.add(parseInt(e.start_date.split('-')[2]));
       }
@@ -376,7 +419,7 @@ const ScheduleView = (() => {
 
   // ─── Upcoming Sidebar ───────────────────────────────────────
   function renderUpcoming() {
-    const upcoming = filterByGrade(futureEvents()).slice(0, 6);
+    const upcoming = filterByTeam(futureEvents()).slice(0, 6);
     if (!upcoming.length) return '<div style="font-size:11px;color:#9ca3af;padding:8px 0">No upcoming events</div>';
 
     const typeColor = { tournament: '#ef4444', season: '#059669', game: '#f59e0b', camp: '#7c3aed', practice: '#2563eb', meeting: '#6b7280' };
@@ -426,7 +469,7 @@ const ScheduleView = (() => {
     const dateLabel = ev.end_date && ev.end_date !== ev.start_date
       ? `${fmtShort(ev.start_date)} - ${fmtShort(ev.end_date)}`
       : fmtShort(ev.start_date);
-    const gc = gradeBadgeColor(ev.grade_level);
+    const gc = teamBadgeColor(ev);
     const priority = isPriorityEvent(ev.title);
     const status = statusFromTags(ev.tags);
     const statusBadge = (priority
@@ -481,7 +524,7 @@ const ScheduleView = (() => {
       rows.push(['Date', fmt(ev.start_date, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) +
         (ev.end_date && ev.end_date !== ev.start_date ? ' - ' + fmt(ev.end_date, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) : '')]);
       if (ev.start_time) rows.push(['Time', fmtTime(ev.start_time) + (ev.end_time ? ' - ' + fmtTime(ev.end_time) : '')]);
-      if (gradeLabel(ev.grade_level)) rows.push(['Division', gradeLabel(ev.grade_level)]);
+      if (teamLabel(ev)) rows.push(['Team', teamLabel(ev)]);
       if (ev.cost) rows.push(['Cost', '$' + parseFloat(ev.cost).toFixed(0)]);
       if (ev.description) rows.push(['Details', ev.description]);
       if (priority) rows.push(['Attendance', '<span style="font-weight:600;color:#111">Full roster required.</span> This is a priority event for our program. We need every player present and ready to compete. Please plan accordingly and communicate early if there is a conflict.']);
@@ -523,7 +566,7 @@ const ScheduleView = (() => {
           <div style="flex:1;min-width:0">
             <div class="sv-card-title-row">
               <span class="sv-card-title">${ev.title}</span>
-              ${gradeLabel(ev.grade_level) ? `<span style="font-size:10px;font-weight:600;border-radius:4px;padding:2px 7px;background:${gc.bg};color:${gc.color};border:1px solid ${gc.border};white-space:nowrap">${gradeLabel(ev.grade_level)}</span>` : ''}
+              ${teamLabel(ev) ? `<span style="font-size:10px;font-weight:600;border-radius:4px;padding:2px 7px;background:${gc.bg};color:${gc.color};border:1px solid ${gc.border};white-space:nowrap">${teamLabel(ev)}</span>` : ''}
               ${statusBadge}
             </div>
             <div class="sv-card-meta">
@@ -603,7 +646,7 @@ const ScheduleView = (() => {
 
     // Build day -> events map
     const dayEvents = {};
-    filterByGrade(allEvents).forEach(e => {
+    filterByTeam(allEvents).forEach(e => {
       const s = new Date(e.start_date + 'T12:00:00');
       const end = e.end_date ? new Date(e.end_date + 'T12:00:00') : s;
       const cur = new Date(s);
@@ -652,28 +695,20 @@ const ScheduleView = (() => {
       <div class="sv-cal-grid">${cells}</div>`;
   }
 
-  // ─── Grade Filter Tabs ──────────────────────────────────────
-  function renderGradeFilter() {
-    const ALL_GRADES = [
-      { key: '4th', label: '4th Grade' },
-      { key: '5th', label: '5th Grade' },
-      { key: '6th', label: '6th Grade' }
-    ];
-    const mine = viewerIsStaff ? ALL_GRADES : ALL_GRADES.filter(g => myGrades.includes(g.key));
-    // One team means nothing to switch between. Count TEAMS, not grades: a squad
-    // named "Godspeed 4th/5th Grade" parses to two grades but is still one team,
-    // and offering its families a 4th/5th switcher implies two schedules exist.
-    // Staff keep the switcher because they really do cover every team.
+  // ─── Team Filter Tabs ───────────────────────────────────────
+  function renderTeamFilter() {
+    // One team means nothing to switch between. Staff keep the switcher because
+    // they really do cover every team.
     if (!viewerIsStaff && myTeamIds.length < 2) return '';
-    if (mine.length < 2) return '';
-    const grades = [{ key: 'all', label: 'All' }].concat(mine);
-    return grades.map(g => {
-      const active = activeGrade === g.key;
-      return `<button onclick="ScheduleView._setGrade('${g.key}')"
+    if (visibleTeams.length < 2) return '';
+    const chips = [{ id: 'all', short: 'All' }].concat(visibleTeams);
+    return chips.map(t => {
+      const active = activeTeam === t.id;
+      return `<button onclick="ScheduleView._setTeam('${t.id}')"
         style="padding:4px 12px;border-radius:6px;font-size:11px;font-weight:${active ? '600' : '500'};
         cursor:pointer;border:1px solid ${active ? '#111' : '#e5e7eb'};
         background:${active ? '#111' : '#fff'};color:${active ? '#fff' : '#6b7280'};
-        transition:all 0.12s">${g.label}</button>`;
+        transition:all 0.12s">${t.short}</button>`;
     }).join('');
   }
 
@@ -776,7 +811,7 @@ const ScheduleView = (() => {
               <h3 style="margin:0;font-size:15px;font-weight:700;color:#111">Schedule & Tournaments</h3>
               ${countBadge}
             </div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap">${renderGradeFilter()}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">${renderTeamFilter()}</div>
           </div>
 
           <!-- Tabs -->
@@ -805,7 +840,7 @@ const ScheduleView = (() => {
         <td style="padding:8px 12px;border-bottom:1px solid #ddd">${fmtShort(e.start_date)}${e.end_date && e.end_date !== e.start_date ? ' - ' + fmtShort(e.end_date) : ''}</td>
         <td style="padding:8px 12px;border-bottom:1px solid #ddd">${e.start_time ? fmtTime(e.start_time) : 'TBD'}</td>
         <td style="padding:8px 12px;border-bottom:1px solid #ddd">${e.location || 'TBD'}</td>
-        <td style="padding:8px 12px;border-bottom:1px solid #ddd">${gradeLabel(e.grade_level)}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #ddd">${teamLabel(e)}</td>
       </tr>`).join('');
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Godspeed - Tournament Schedule</title>
 <style>@page{margin:0.75in}body{font-family:Helvetica Neue,Helvetica,Arial,sans-serif;color:#111;margin:0;padding:20px}
@@ -822,7 +857,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}th{background:#f3f4f6;p
 
   // ─── Public callbacks (exposed on window) ───────────────────
   function _toggle(id) { expandedId = expandedId === id ? null : id; render(containerId); }
-  function _setGrade(g) { activeGrade = g; expandedId = null; render(containerId); }
+  function _setTeam(t) { activeTeam = t; expandedId = null; render(containerId); }
   function _setTab(t) { activeTab = t; expandedId = null; render(containerId); }
   function _navMonth(dir) {
     currentMonth += dir;
@@ -843,6 +878,6 @@ table{width:100%;border-collapse:collapse;font-size:13px}th{background:#f3f4f6;p
 
   return {
     init, load, render, downloadICS,
-    _toggle, _setGrade, _setTab, _navMonth, _addToCalendar, _downloadICS, _downloadPDF, _setAvail
+    _toggle, _setTeam, _setTab, _navMonth, _addToCalendar, _downloadICS, _downloadPDF, _setAvail
   };
 })();
