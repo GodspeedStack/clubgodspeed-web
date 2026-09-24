@@ -19,7 +19,6 @@
   var CARD_ART = {
     'Quest':  { image: 'src/assets/athletes/quest_scott_monster.png', lastname: 'Scott' },
     'Ashton': { image: 'src/assets/athletes/ashton_comic.jpg',        lastname: 'Bowman' },
-    'A.D.':   { image: 'src/assets/athletes/ad_tuiono_99.png',        lastname: 'Tuiono' },
     'Anton':  { image: 'src/assets/athletes/anton_mythic_art.png',    lastname: 'Blyakhman' },
   };
 
@@ -28,16 +27,15 @@
   var ROSTER = [
     { name: 'Quest',   jersey: 4,  pos: 'G',  stats: { PPG: '6.5', SPG: '4.0', APG: '5.0', GRD: '8.8' }, games: [{ opp: 'vs. Weeks', stat: '5 PTS, 3 STL' }, { opp: 'Dec 20 Tourney', stat: '8 PTS, 5 STL' }, { opp: 'Trend', stat: 'Rising' }] },
     { name: 'Ashton',  jersey: 2,  pos: 'SG', stats: { PPG: '3.0', STL: '1.0', REB: '1.0', GRD: '7.6' }, games: [{ opp: 'vs. Weeks', stat: '3 PTS, 100% FT' }, { opp: '@ Practice 5', stat: 'Defensive Anchor' }, { opp: 'Trend', stat: 'Steady Growth' }] },
-    { name: 'Aiden',   jersey: 1,  pos: 'G'  },
+    { name: 'Aiden',   jersey: 14, pos: 'G'  },
     { name: 'Cassius', jersey: 3,  pos: 'G'  },
-    { name: 'A.D.',    jersey: 99, pos: 'PF', stats: { PPG: '—', APG: '—', REB: '—', GRD: '—' }, games: [{ opp: 'vs. TBD', stat: '— PTS' }, { opp: '@ TBD', stat: '— PTS' }, { opp: 'Trend', stat: 'Rising' }] },
-    { name: 'Howard',  jersey: 5,  pos: 'C'  },
+    { name: 'Howard',  jersey: 6,  pos: 'C'  },
     { name: 'Anton',   jersey: 12, pos: 'PG', stats: { PPG: '5.5', APG: '1.5', SPG: '1.5', GRD: '8.2' }, games: [{ opp: 'Game 1', stat: '7 PTS, 2 AST, 1 STL' }, { opp: 'Game 2', stat: '4 PTS, 1 AST, 2 STL' }, { opp: 'Trend', stat: 'Floor General' }] },
-    { name: 'Emory',   jersey: 7,  pos: 'SF' },
+    { name: 'Emory',   jersey: 10, pos: 'SF' },
     { name: 'Junior',  jersey: 9,  pos: 'G'  },
-    { name: 'Kyrie',   jersey: 10, pos: 'G'  },
+    { name: 'Khyrie',  jersey: 30, pos: 'G'  },
     { name: 'Oliver',  jersey: 11, pos: 'SF' },
-    { name: 'Khaliq',  jersey: 12, pos: 'PF' },
+    { name: 'Khaliq',  jersey: 99, pos: 'PF' },
   ];
 
   /* ── Inject Styles (once) ────────────────────────────────── */
