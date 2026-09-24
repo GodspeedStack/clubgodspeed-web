@@ -5,8 +5,8 @@
  * Players WITH custom art get full card treatment (3D flip, gloss, stats back).
  * Players WITHOUT art get a metallic steel shimmer placeholder card.
  *
- * Data: hardcoded roster with image paths + stats from card-preview.html.
- * Future: pull stats from Supabase player_game_stats / practice_grades.
+ * Data: roster comes live from get_program_roster() (signed-in only).
+ * Art, last names and stats for commissioned cards live in CARD_ART.
  *
  * No emojis. No decorative icons. Text/SVG/CSS only.
  */
@@ -17,26 +17,51 @@
   /* Only players with custom artwork get an image entry.       */
 
   var CARD_ART = {
-    'Quest':  { image: 'src/assets/athletes/quest_scott_monster.png', lastname: 'Scott' },
-    'Ashton': { image: 'src/assets/athletes/ashton_comic.jpg',        lastname: 'Bowman' },
-    'Anton':  { image: 'src/assets/athletes/anton_mythic_art.png',    lastname: 'Blyakhman' },
+    'Quest': { image: 'src/assets/athletes/quest_scott_monster.png', lastname: 'Scott',
+      stats: { PPG: '6.5', SPG: '4.0', APG: '5.0', GRD: '8.8' }, games: [{ opp: 'vs. Weeks', stat: '5 PTS, 3 STL' }, { opp: 'Dec 20 Tourney', stat: '8 PTS, 5 STL' }, { opp: 'Trend', stat: 'Rising' }] },
+    'Ashton': { image: 'src/assets/athletes/ashton_comic.jpg', lastname: 'Bowman',
+      stats: { PPG: '3.0', STL: '1.0', REB: '1.0', GRD: '7.6' }, games: [{ opp: 'vs. Weeks', stat: '3 PTS, 100% FT' }, { opp: '@ Practice 5', stat: 'Defensive Anchor' }, { opp: 'Trend', stat: 'Steady Growth' }] },
+    'Anton': { image: 'src/assets/athletes/anton_mythic_art.png', lastname: 'Blyakhman',
+      stats: { PPG: '5.5', APG: '1.5', SPG: '1.5', GRD: '8.2' }, games: [{ opp: 'Game 1', stat: '7 PTS, 2 AST, 1 STL' }, { opp: 'Game 2', stat: '4 PTS, 1 AST, 2 STL' }, { opp: 'Trend', stat: 'Floor General' }] },
   };
 
-  /* ── Full Roster ─────────────────────────────────────────── */
+  /* ── Roster (live) ───────────────────────────────────────── */
+  /* Loaded from get_program_roster(): first name, jersey, position,
+     team. Signed-in callers only. Hardcoding this list is what let it
+     drift into phantom players and wrong numbers, so it is not stored
+     here any more. */
 
-  var ROSTER = [
-    { name: 'Quest',   jersey: 4,  pos: 'G',  stats: { PPG: '6.5', SPG: '4.0', APG: '5.0', GRD: '8.8' }, games: [{ opp: 'vs. Weeks', stat: '5 PTS, 3 STL' }, { opp: 'Dec 20 Tourney', stat: '8 PTS, 5 STL' }, { opp: 'Trend', stat: 'Rising' }] },
-    { name: 'Ashton',  jersey: 2,  pos: 'SG', stats: { PPG: '3.0', STL: '1.0', REB: '1.0', GRD: '7.6' }, games: [{ opp: 'vs. Weeks', stat: '3 PTS, 100% FT' }, { opp: '@ Practice 5', stat: 'Defensive Anchor' }, { opp: 'Trend', stat: 'Steady Growth' }] },
-    { name: 'Aiden',   jersey: 14, pos: 'G'  },
-    { name: 'Cassius', jersey: 3,  pos: 'G'  },
-    { name: 'Howard',  jersey: 6,  pos: 'C'  },
-    { name: 'Anton',   jersey: 12, pos: 'PG', stats: { PPG: '5.5', APG: '1.5', SPG: '1.5', GRD: '8.2' }, games: [{ opp: 'Game 1', stat: '7 PTS, 2 AST, 1 STL' }, { opp: 'Game 2', stat: '4 PTS, 1 AST, 2 STL' }, { opp: 'Trend', stat: 'Floor General' }] },
-    { name: 'Emory',   jersey: 10, pos: 'SF' },
-    { name: 'Junior',  jersey: 9,  pos: 'G'  },
-    { name: 'Khyrie',  jersey: 30, pos: 'G'  },
-    { name: 'Oliver',  jersey: 11, pos: 'SF' },
-    { name: 'Khaliq',  jersey: 99, pos: 'PF' },
-  ];
+  var ROSTER = [];
+  var rosterLoaded = false;
+
+  function client() {
+    return window.supabaseClient || window.supabase || null;
+  }
+
+  function loadRoster() {
+    if (rosterLoaded) return Promise.resolve(ROSTER);
+    var sb = client();
+    if (!sb) return Promise.resolve(ROSTER);
+    return sb.rpc('get_program_roster').then(function (res) {
+      if (res.error) { console.error('player cards: roster load failed', res.error); return ROSTER; }
+      ROSTER = (res.data || []).map(function (r) {
+        var art = CARD_ART[r.first_name] || {};
+        return {
+          name: r.first_name,
+          jersey: (r.jersey === null || r.jersey === undefined) ? '--' : r.jersey,
+          pos: r.pos || '--',
+          team: (r.teams && r.teams[0]) || '',
+          stats: art.stats,
+          games: art.games
+        };
+      });
+      rosterLoaded = true;
+      return ROSTER;
+    }).catch(function (e) {
+      console.error('player cards: roster load failed', e);
+      return ROSTER;
+    });
+  }
 
   /* ── Inject Styles (once) ────────────────────────────────── */
 
@@ -196,8 +221,16 @@
     if (!root) return;
 
     injectStyles();
+    loadRoster().then(function () { paint(root, cta); });
+  }
 
+  function paint(root, cta) {
     var html = '';
+    if (!ROSTER.length) {
+      root.innerHTML = '<div style="padding:32px;text-align:center;color:#9ca3af;font-size:13px">'
+        + 'Roster unavailable. Sign in to view player cards.</div>';
+      return;
+    }
     ROSTER.forEach(function (player, idx) {
       var art = CARD_ART[player.name];
       if (art) {
