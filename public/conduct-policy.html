@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Godspeed Basketball - Player Conduct Policy</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background: #f5f5f7;
+    color: #3a3a3c;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page {
+    max-width: 680px;
+    margin: 0 auto;
+    background: #ffffff;
+    min-height: 100vh;
+  }
+  .hero {
+    background: #1A3A8F;
+    padding: 48px 40px 0 40px;
+    text-align: center;
+  }
+  .hero-eyebrow {
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    color: #c3cfea;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .hero h1 {
+    font-size: 26px;
+    font-weight: 800;
+    color: #ffffff;
+    margin-top: 16px;
+    line-height: 1.2;
+  }
+  .hero-sub {
+    font-size: 14px;
+    color: #dbe3f5;
+    margin-top: 6px;
+    font-weight: 400;
+  }
+  .orange-rule-wrap {
+    background: #1A3A8F;
+    padding: 20px 0 36px 0;
+    text-align: center;
+  }
+  .orange-rule {
+    display: inline-block;
+    width: 56px;
+    height: 4px;
+    background: #FF5722;
+    border-radius: 2px;
+  }
+  .body-content {
+    padding: 36px 40px;
+  }
+  .section-label {
+    display: inline-block;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #FF5722;
+    text-transform: uppercase;
+    font-weight: 700;
+    border: 1px solid #FF5722;
+    border-radius: 4px;
+    padding: 4px 10px;
+    margin-bottom: 20px;
+  }
+  .intro {
+    font-size: 15px;
+    color: #3a3a3c;
+    margin-bottom: 24px;
+  }
+  .section-heading {
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    color: #1d1d1f;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 10px;
+    margin-top: 28px;
+  }
+  .section-heading:first-of-type { margin-top: 0; }
+  .policy-text {
+    font-size: 15px;
+    color: #3a3a3c;
+    margin-bottom: 12px;
+  }
+  .policy-text strong { color: #1d1d1f; }
+  .highlight-block {
+    background: #1A3A8F;
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin: 28px 0;
+  }
+  .highlight-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #FF5722;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .highlight-item {
+    font-size: 15px;
+    color: #ffffff;
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+  }
+  .highlight-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+  .highlight-item strong {
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .highlight-item span {
+    font-size: 13px;
+    color: #dbe3f5;
+  }
+  .read-aloud {
+    background: #fef9f5;
+    border-left: 4px solid #FF5722;
+    border-radius: 0 8px 8px 0;
+    padding: 20px 24px;
+    margin: 28px 0;
+  }
+  .read-aloud-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #FF5722;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .read-aloud p {
+    font-size: 15px;
+    color: #1d1d1f;
+    font-weight: 500;
+  }
+
+  /* Signature Section */
+  .sig-section {
+    margin-top: 36px;
+    padding-top: 28px;
+    border-top: 1px solid #e5e5e7;
+  }
+  .sig-block {
+    margin-bottom: 28px;
+    padding: 24px;
+    border: 1px solid #e5e5e7;
+    border-radius: 12px;
+    background: #fafafa;
+  }
+  .sig-block h3 {
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    color: #1d1d1f;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+  .field-row {
+    margin-bottom: 14px;
+  }
+  .field-row label {
+    display: block;
+    font-size: 12px;
+    color: #6e6e73;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .field-row input[type="text"],
+  .field-row input[type="email"],
+  .field-row input[type="date"] {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 15px;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    border: 1px solid #d1d1d6;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #1d1d1f;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .field-row input:focus {
+    border-color: #1A3A8F;
+  }
+  .checkbox-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .checkbox-row input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+    accent-color: #1A3A8F;
+    flex-shrink: 0;
+  }
+  .checkbox-row label {
+    font-size: 14px;
+    color: #1d1d1f;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+    cursor: pointer;
+  }
+  .sig-canvas-wrap {
+    margin-top: 16px;
+  }
+  .sig-canvas-wrap label {
+    display: block;
+    font-size: 12px;
+    color: #6e6e73;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .sig-canvas {
+    width: 100%;
+    height: 100px;
+    border: 1px solid #d1d1d6;
+    border-radius: 8px;
+    background: #ffffff;
+    cursor: crosshair;
+    touch-action: none;
+  }
+  .sig-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 6px;
+  }
+  .sig-actions button {
+    font-size: 12px;
+    color: #6e6e73;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  .submit-btn {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    background: #1A3A8F;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 24px;
+    transition: background 0.15s;
+  }
+  .submit-btn:hover { background: #152e73; }
+  .submit-btn:disabled {
+    background: #b0b0b5;
+    cursor: not-allowed;
+  }
+
+  .success-msg {
+    display: none;
+    text-align: center;
+    padding: 40px;
+  }
+  .success-msg h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1d1d1f;
+    margin-bottom: 10px;
+  }
+  .success-msg p {
+    font-size: 15px;
+    color: #6e6e73;
+  }
+
+  .footer {
+    border-top: 1px solid #e5e5e7;
+    padding: 20px 40px 28px 40px;
+    text-align: center;
+  }
+  .footer-tagline {
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    color: #6e6e73;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .footer-tagline .orange { color: #FF5722; }
+
+  @media (max-width: 600px) {
+    .hero, .body-content, .footer { padding-left: 24px; padding-right: 24px; }
+    .highlight-block { padding: 20px; }
+    .sig-block { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-eyebrow">GODSPEED BASKETBALL &bull; EST. 2023</div>
+    <h1>Player Conduct Policy</h1>
+    <div class="hero-sub">2026-2027 Season</div>
+  </div>
+  <div class="orange-rule-wrap"><div class="orange-rule"></div></div>
+
+  <!-- BODY -->
+  <div class="body-content" id="policyBody">
+    <div class="section-label">TEAM STANDARD</div>
+
+    <p class="intro">
+      Godspeed Basketball is building a program that competes at a national level against the best teams in the country. That standard starts with how our players carry themselves on and off the court. Every player and family must read, understand, and agree to this policy before participating in any Godspeed practice, training, or game.
+    </p>
+
+    <div class="section-heading">Our Standard</div>
+    <p class="policy-text">
+      We represent something bigger than any single game. Brotherhood means holding each other accountable, not tearing each other down. Every player who wears a Godspeed jersey is expected to compete with intensity, discipline, and respect for teammates, opponents, coaches, and officials at all times.
+    </p>
+
+    <div class="section-heading">Fighting and Physical Altercations</div>
+    <p class="policy-text">
+      Any physical fight, whether on the court or off the court, at a practice, game, tournament, or team event, will result in an <strong>immediate 1 to 3 game suspension</strong> and a formal investigation by the coaching staff.
+    </p>
+    <p class="policy-text">
+      The suspended player must continue attending all practices and games during the suspension and investigation period. Suspension means no playing time, not absence from the team.
+    </p>
+
+    <div class="section-heading">Altercations Between Godspeed Players</div>
+    <p class="policy-text">
+      If a fight or act of taunting occurs between two Godspeed players, <strong>both players will be suspended for a minimum of 1 game</strong> regardless of who started it. Both players must attend all practices and games during the investigation.
+    </p>
+    <p class="policy-text">
+      If the investigation determines that further action is needed, the player or players involved will be <strong>excluded from the team indefinitely, with no refund</strong> of any dues, fees, or payments made.
+    </p>
+
+    <div class="section-heading">Taunting and Unsportsmanlike Conduct</div>
+    <p class="policy-text">
+      Taunting opponents or teammates, trash talk that crosses the line, or any behavior that embarrasses the program will be treated with the same seriousness as a physical altercation. The coaching staff determines when that line has been crossed.
+    </p>
+
+    <!-- HIGHLIGHT BLOCK: SUMMARY -->
+    <div class="highlight-block">
+      <div class="highlight-label">CONSEQUENCES AT A GLANCE</div>
+      <div class="highlight-item">
+        <strong>Fighting (any context)</strong>
+        <span>1 to 3 game suspension + investigation. Must attend all team activities.</span>
+      </div>
+      <div class="highlight-item">
+        <strong>Fight or taunting between Godspeed players</strong>
+        <span>Both players suspended 1 game minimum + investigation.</span>
+      </div>
+      <div class="highlight-item">
+        <strong>Investigation finds further action needed</strong>
+        <span>Indefinite exclusion from the team. No refund.</span>
+      </div>
+    </div>
+
+    <!-- READ ALOUD SECTION -->
+    <div class="read-aloud">
+      <div class="read-aloud-label">READ THIS TO YOUR SON</div>
+      <p>
+        "Being on Godspeed means you carry yourself like a professional. We do not fight. We do not taunt. We compete hard and we respect the game. If you fight a teammate or an opponent, you sit. If an investigation shows it goes deeper, you are off the team. There are no second chances on this. The standard is the standard."
+      </p>
+    </div>
+
+    <div class="section-heading">Agreement</div>
+    <p class="policy-text">
+      By signing below, I confirm that I have read this policy in full, that I have read the above statement to my son, and that we both understand the expectations and consequences. I agree to this policy on behalf of myself and my child.
+    </p>
+
+    <!-- SIGNATURE SECTION -->
+    <div class="sig-section" id="sigSection">
+
+      <!-- Parent/Guardian 1 -->
+      <div class="sig-block" id="parent1Block">
+        <h3>Parent / Guardian 1</h3>
+        <div class="field-row">
+          <label for="p1Name">Full Name</label>
+          <input type="text" id="p1Name" placeholder="First and last name" autocomplete="name">
+        </div>
+        <div class="field-row">
+          <label for="p1Email">Email</label>
+          <input type="email" id="p1Email" placeholder="Email address" autocomplete="email">
+        </div>
+        <div class="field-row">
+          <label for="p1Player">Player Name</label>
+          <input type="text" id="p1Player" placeholder="Your son's name" autocomplete="off">
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="p1Agree">
+          <label for="p1Agree">I have read this policy, read the statement above to my son, and agree to these terms.</label>
+        </div>
+        <div class="sig-canvas-wrap">
+          <label>Signature</label>
+          <canvas class="sig-canvas" id="sig1"></canvas>
+          <div class="sig-actions"><button type="button" onclick="clearSig('sig1')">Clear</button></div>
+        </div>
+        <div class="field-row" style="margin-top:12px;">
+          <label for="p1Date">Date</label>
+          <input type="date" id="p1Date">
+        </div>
+      </div>
+
+      <!-- Parent/Guardian 2 -->
+      <div class="sig-block" id="parent2Block">
+        <h3>Parent / Guardian 2</h3>
+        <div class="field-row">
+          <label for="p2Name">Full Name</label>
+          <input type="text" id="p2Name" placeholder="First and last name" autocomplete="name">
+        </div>
+        <div class="field-row">
+          <label for="p2Email">Email</label>
+          <input type="email" id="p2Email" placeholder="Email address" autocomplete="email">
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="p2Agree">
+          <label for="p2Agree">I have read this policy, read the statement above to my son, and agree to these terms.</label>
+        </div>
+        <div class="sig-canvas-wrap">
+          <label>Signature</label>
+          <canvas class="sig-canvas" id="sig2"></canvas>
+          <div class="sig-actions"><button type="button" onclick="clearSig('sig2')">Clear</button></div>
+        </div>
+        <div class="field-row" style="margin-top:12px;">
+          <label for="p2Date">Date</label>
+          <input type="date" id="p2Date">
+        </div>
+      </div>
+
+      <button type="button" class="submit-btn" id="submitBtn" onclick="submitPolicy()">
+        Submit Signed Policy
+      </button>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="success-msg" id="successMsg">
+    <h2>Policy Signed</h2>
+    <p>Thank you. Your signed conduct policy has been submitted to Coach Scott. A confirmation has been sent to the email addresses provided.</p>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-tagline">BROTHERHOOD. HABITS. <span class="orange">SUCCESS.</span></div>
+  </div>
+</div>
+
+<script>
+// Signature pad logic
+function initSigPad(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+  let drawing = false;
+  let hasDrawn = false;
+
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    ctx.strokeStyle = '#1d1d1f';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches ? e.touches[0] : e;
+    return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+  }
+
+  function start(e) {
+    e.preventDefault();
+    drawing = true;
+    const p = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+  }
+  function move(e) {
+    if (!drawing) return;
+    e.preventDefault();
+    hasDrawn = true;
+    const p = getPos(e);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+  }
+  function end() { drawing = false; }
+
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  canvas.addEventListener('mouseup', end);
+  canvas.addEventListener('mouseleave', end);
+  canvas.addEventListener('touchstart', start);
+  canvas.addEventListener('touchmove', move);
+  canvas.addEventListener('touchend', end);
+
+  return {
+    clear() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      hasDrawn = false;
+    },
+    hasSignature() { return hasDrawn; },
+    toDataURL() { return canvas.toDataURL(); }
+  };
+}
+
+const pad1 = initSigPad('sig1');
+const pad2 = initSigPad('sig2');
+
+function clearSig(id) {
+  if (id === 'sig1') pad1.clear();
+  else pad2.clear();
+}
+
+// Set today's date as default
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('p1Date').value = today;
+document.getElementById('p2Date').value = today;
+
+async function submitPolicy() {
+  // Validate Parent 1
+  const p1Name = document.getElementById('p1Name').value.trim();
+  const p1Email = document.getElementById('p1Email').value.trim();
+  const p1Player = document.getElementById('p1Player').value.trim();
+  const p1Agree = document.getElementById('p1Agree').checked;
+  const p1Date = document.getElementById('p1Date').value;
+
+  if (!p1Name || !p1Email || !p1Player || !p1Agree || !pad1.hasSignature() || !p1Date) {
+    alert('Please complete all fields for Parent/Guardian 1, including the signature and checkbox.');
+    return;
+  }
+
+  // Parent 2 is optional but if any field is filled, validate all
+  const p2Name = document.getElementById('p2Name').value.trim();
+  const p2Email = document.getElementById('p2Email').value.trim();
+  const p2Agree = document.getElementById('p2Agree').checked;
+  const p2Date = document.getElementById('p2Date').value;
+  const p2Started = p2Name || p2Email || p2Agree || pad2.hasSignature();
+
+  if (p2Started) {
+    if (!p2Name || !p2Email || !p2Agree || !pad2.hasSignature() || !p2Date) {
+      alert('Please complete all fields for Parent/Guardian 2, or leave the section blank.');
+      return;
+    }
+  }
+
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  try {
+    var res = await fetch('https://nnqokhqennuxalamnvps.supabase.co/functions/v1/conduct-policy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        player_name: p1Player,
+        parent1_name: p1Name,
+        parent1_email: p1Email,
+        parent1_signature: pad1.toDataURL(),
+        parent1_date: p1Date,
+        parent2_name: p2Started ? p2Name : null,
+        parent2_email: p2Started ? p2Email : null,
+        parent2_signature: p2Started ? pad2.toDataURL() : null,
+        parent2_date: p2Started ? p2Date : null
+      })
+    });
+    var data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'Submission failed');
+
+    document.getElementById('policyBody').style.display = 'none';
+    document.getElementById('sigSection').style.display = 'none';
+    document.getElementById('successMsg').style.display = 'block';
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = 'Submit Signed Policy';
+    alert('There was a problem submitting the form. Please try again.');
+  }
+}
+</script>
+
+</body>
+</html>
