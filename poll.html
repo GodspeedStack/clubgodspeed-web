@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Godspeed Basketball - Poll</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Syncopate:wght@700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f5f5f7;
+    color: #1a1a1a;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+  .header { background: #0a0a0a; padding: 20px 24px; text-align: center; }
+  .header .brand { font-family: 'Syncopate', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.14em; color: #fff; text-transform: uppercase; }
+  .header .brand span { color: #2563eb; }
+  .main { flex: 1; max-width: 480px; width: 100%; margin: 0 auto; padding: 24px 20px 40px; }
+  .card { background: #fff; border-radius: 16px; padding: 28px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06); }
+  .card + .card { margin-top: 16px; }
+  .poll-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #2563eb; margin-bottom: 8px; }
+  .poll-title { font-size: 22px; font-weight: 800; line-height: 1.2; letter-spacing: -0.02em; color: #1a1a1a; margin-bottom: 12px; }
+  .poll-desc { font-size: 15px; line-height: 1.6; color: #4b5563; }
+  .field { margin-bottom: 20px; }
+  .field-label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+  .field input[type="email"], .field input[type="text"] { width: 100%; padding: 12px 14px; border: 1.5px solid #e5e7eb; border-radius: 10px; font-family: inherit; font-size: 15px; color: #1a1a1a; background: #fafafa; transition: border-color 0.15s, box-shadow 0.15s; outline: none; }
+  .field input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); background: #fff; }
+  .options { margin-bottom: 24px; }
+  .option-btn { display: flex; align-items: center; width: 100%; padding: 16px; border: 2px solid #e5e7eb; border-radius: 12px; background: #fafafa; cursor: pointer; transition: all 0.15s; text-align: left; }
+  .option-btn + .option-btn { margin-top: 10px; }
+  .option-btn:hover { border-color: #93c5fd; background: #eff6ff; }
+  .option-btn.selected { border-color: #2563eb; background: #eff6ff; box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
+  .option-radio { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #d1d5db; margin-right: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .option-btn.selected .option-radio { border-color: #2563eb; background: #2563eb; }
+  .option-radio-dot { width: 8px; height: 8px; border-radius: 50%; background: #fff; opacity: 0; transition: opacity 0.15s; }
+  .option-btn.selected .option-radio-dot { opacity: 1; }
+  .option-label { font-size: 15px; font-weight: 600; color: #1a1a1a; line-height: 1.4; }
+  .submit-btn { width: 100%; padding: 14px; background: #2563eb; color: #fff; border: none; border-radius: 10px; font-family: inherit; font-size: 15px; font-weight: 700; letter-spacing: 0.02em; cursor: pointer; transition: background 0.15s, opacity 0.15s; }
+  .submit-btn:hover { background: #1d4ed8; }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .error-msg { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px 14px; font-size: 14px; color: #991b1b; margin-bottom: 16px; display: none; }
+  .success-state { text-align: center; padding: 40px 24px; }
+  .success-check { width: 56px; height: 56px; border-radius: 50%; background: #ecfdf5; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+  .success-check svg { width: 28px; height: 28px; color: #059669; }
+  .success-title { font-size: 20px; font-weight: 800; color: #1a1a1a; margin-bottom: 8px; }
+  .success-sub { font-size: 15px; color: #6b7280; line-height: 1.5; }
+  .loading-state { text-align: center; padding: 60px 20px; color: #9ca3af; font-size: 14px; }
+  .spinner { width: 32px; height: 32px; border: 3px solid #e5e7eb; border-top-color: #2563eb; border-radius: 50%; animation: spin 0.6s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .footer { text-align: center; padding: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; color: #9ca3af; text-transform: uppercase; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="header"><div class="brand">GODSPEED<span>BASKETBALL</span></div></div>
+<div class="main">
+  <div id="loading" class="card loading-state"><div class="spinner"></div>Loading poll...</div>
+  <div id="poll-form" class="hidden">
+    <div class="card">
+      <div class="poll-label">Quick Poll</div>
+      <h1 id="poll-title" class="poll-title"></h1>
+      <p id="poll-desc" class="poll-desc"></p>
+    </div>
+    <div class="card">
+      <div id="error" class="error-msg"></div>
+      <div class="field"><label class="field-label" for="email">Your email</label><input type="email" id="email" placeholder="parent@email.com" autocomplete="email"></div>
+      <div class="field"><label class="field-label" for="player">Player name</label><input type="text" id="player" placeholder="Your athlete's name" autocomplete="off"></div>
+      <div class="field"><label class="field-label">Select one</label><div id="options" class="options"></div></div>
+      <button id="submit" class="submit-btn" disabled>Submit</button>
+    </div>
+  </div>
+  <div id="success" class="hidden">
+    <div class="card success-state">
+      <div class="success-check"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg></div>
+      <div class="success-title">Response recorded</div>
+      <p class="success-sub">Thank you for letting us know. We will share the results with the team soon.</p>
+    </div>
+  </div>
+  <div id="poll-error" class="hidden">
+    <div class="card" style="text-align:center;padding:40px 24px;"><div class="poll-title" style="font-size:18px;">Poll not found</div><p class="poll-desc">This poll may have closed or the link is incorrect.</p></div>
+  </div>
+</div>
+<div class="footer">Brotherhood. Habits. Success.</div>
+<script>
+const SUPABASE_URL = 'https://nnqokhqennuxalamnvps.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis';
+let pollData = null;
+let selectedOption = null;
+async function supaFetch(path, opts = {}) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+    headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + SUPABASE_ANON, 'Content-Type': 'application/json', 'Prefer': opts.prefer || 'return=representation', ...opts.headers },
+    method: opts.method || 'GET',
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  if (!res.ok) { const txt = await res.text(); throw new Error(txt); }
+  return res.json();
+}
+async function loadPoll() {
+  const params = new URLSearchParams(location.search);
+  const slug = params.get('p') || 'fall-2026-practice-schedule';
+  try {
+    const polls = await supaFetch('polls?slug=eq.' + encodeURIComponent(slug) + '&status=eq.active&select=*');
+    if (!polls.length) { document.getElementById('loading').classList.add('hidden'); document.getElementById('poll-error').classList.remove('hidden'); return; }
+    pollData = polls[0];
+    document.getElementById('poll-title').textContent = pollData.title;
+    document.getElementById('poll-desc').textContent = pollData.description;
+    const optionsEl = document.getElementById('options');
+    (pollData.options || []).forEach(opt => {
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'option-btn'; btn.dataset.key = opt.key;
+      btn.innerHTML = '<div class="option-radio"><div class="option-radio-dot"></div></div><div class="option-label">' + escHtml(opt.label) + '</div>';
+      btn.addEventListener('click', () => selectOption(btn, opt.key));
+      optionsEl.appendChild(btn);
+    });
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('poll-form').classList.remove('hidden');
+  } catch (e) { console.error(e); document.getElementById('loading').classList.add('hidden'); document.getElementById('poll-error').classList.remove('hidden'); }
+}
+function selectOption(btn, key) { document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); selectedOption = key; updateSubmit(); }
+function updateSubmit() { const email = document.getElementById('email').value.trim(); const player = document.getElementById('player').value.trim(); document.getElementById('submit').disabled = !(email && player && selectedOption); }
+document.getElementById('email').addEventListener('input', updateSubmit);
+document.getElementById('player').addEventListener('input', updateSubmit);
+document.getElementById('submit').addEventListener('click', async () => {
+  const email = document.getElementById('email').value.trim().toLowerCase();
+  const player = document.getElementById('player').value.trim();
+  const errEl = document.getElementById('error');
+  const btn = document.getElementById('submit');
+  if (!email || !email.includes('@')) { errEl.textContent = 'Please enter a valid email address.'; errEl.style.display = 'block'; return; }
+  errEl.style.display = 'none'; btn.disabled = true; btn.textContent = 'Submitting...';
+  try {
+    await supaFetch('poll_responses', { method: 'POST', body: { poll_id: pollData.id, parent_email: email, parent_name: '', player_name: player, response: selectedOption }, headers: { 'Prefer': 'resolution=merge-duplicates' } });
+    document.getElementById('poll-form').classList.add('hidden'); document.getElementById('success').classList.remove('hidden');
+  } catch (e) {
+    console.error(e);
+    if (e.message.includes('duplicate') || e.message.includes('unique') || e.message.includes('23505')) {
+      try { await supaFetch('poll_responses?poll_id=eq.' + pollData.id + '&parent_email=eq.' + encodeURIComponent(email), { method: 'PATCH', body: { response: selectedOption, player_name: player } }); document.getElementById('poll-form').classList.add('hidden'); document.getElementById('success').classList.remove('hidden'); return; } catch (e2) { console.error(e2); }
+    }
+    errEl.textContent = 'Something went wrong. Please try again.'; errEl.style.display = 'block'; btn.disabled = false; btn.textContent = 'Submit';
+  }
+});
+function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+loadPoll();
+</script>
+</body>
+</html>
