@@ -62,35 +62,65 @@
 <main id="main">
     <section class="gs-section gs-section--tight">
         <div class="gs-wrap" style="max-width: 560px;">
-            <div class="gs-progress" aria-label="Step 1 of 3">
+            <div class="gs-progress" id="ap-progress" aria-label="Step 1 of 3">
                 <span data-on="true"></span><span></span><span></span>
             </div>
-            <p class="gs-field__hint" style="margin-top: 10px;">Step 1 of 3 &mdash; about the player</p>
-            <h1 class="gs-h2" style="margin-top: 14px;">Tell us about your athlete</h1>
+            <p class="gs-field__hint" style="margin-top: 10px;" id="ap-steplabel">Step 1 of 3 &mdash; about the player</p>
+            <h1 class="gs-h2" style="margin-top: 14px;" id="ap-heading">Tell us about your athlete</h1>
 
-            <form style="margin-top: 26px; display: flex; flex-direction: column; gap: 18px;" novalidate>
-                <div class="gs-field">
-        <label for="player-name">Player name</label>
-        <input id="player-name" name="player-name" type="text" autocomplete="name">
-        
-    </div><div class="gs-field">
-        <label for="grade">Grade</label>
-        <select id="grade" name="grade"><option value="">Choose one</option><option>4th</option><option>5th</option><option>6th</option><option>7th</option></select>
-        
-    </div><div class="gs-field">
-        <label for="parent-email">Parent email</label>
-        <input id="parent-email" name="parent-email" type="email" autocomplete="email">
-        <p class="gs-field__hint">We send every schedule, document and reminder here.</p>
-    </div><div class="gs-field">
-        <label for="parent-phone">Phone</label>
-        <input id="parent-phone" name="parent-phone" type="tel" autocomplete="tel">
-        
-    </div>
-                <button class="gs-btn gs-btn--primary gs-btn--block" type="submit" style="margin-top: 6px;">Continue</button>
-                <p class="gs-field__hint">Nothing is submitted from this staged page yet. Wiring to the database comes with the swap.</p>
+            <form id="ap-form" style="margin-top: 26px; display: flex; flex-direction: column; gap: 18px;" novalidate>
+
+                <div data-step="1">
+                    <div class="gs-field">
+                        <label for="player-name">Player name</label>
+                        <input id="player-name" name="player-name" type="text" autocomplete="name" required>
+                    </div>
+                    <div class="gs-field" style="margin-top:18px">
+                        <label for="grade">Grade</label>
+                        <select id="grade" name="grade" required><option value="">Choose one</option><option>4th</option><option>5th</option><option>6th</option><option>7th</option></select>
+                    </div>
+                </div>
+
+                <div data-step="2" hidden>
+                    <div class="gs-field">
+                        <label for="parent-name">Parent or guardian name</label>
+                        <input id="parent-name" name="parent-name" type="text" autocomplete="name" required>
+                    </div>
+                    <div class="gs-field" style="margin-top:18px">
+                        <label for="parent-email">Parent email</label>
+                        <input id="parent-email" name="parent-email" type="email" autocomplete="email" required>
+                        <p class="gs-field__hint">We send every schedule, document and reminder here.</p>
+                    </div>
+                    <div class="gs-field" style="margin-top:18px">
+                        <label for="parent-phone">Phone</label>
+                        <input id="parent-phone" name="parent-phone" type="tel" autocomplete="tel">
+                    </div>
+                </div>
+
+                <div data-step="3" hidden>
+                    <div class="gs-field">
+                        <label for="ap-notes">Anything we should know</label>
+                        <textarea id="ap-notes" name="notes" rows="5" maxlength="2000" style="width:100%;font:inherit;padding:12px 14px;border:1px solid var(--gs-line, #d1d1d6);border-radius:10px;background:#fff;color:inherit;resize:vertical"></textarea>
+                        <p class="gs-field__hint">Current team, position, what he is working on. Optional.</p>
+                    </div>
+                    <div id="ap-review" style="margin-top:18px;padding:16px 18px;background:var(--gs-bg);border-radius:var(--gs-radius-lg);font-size:14px;line-height:1.7"></div>
+                </div>
+
+                <p id="ap-error" role="alert" hidden style="margin:0;padding:12px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;color:#991b1b;font-size:14px"></p>
+
+                <div style="display:flex;gap:10px;margin-top:6px">
+                    <button class="gs-btn gs-btn--ghost" type="button" id="ap-back" hidden style="flex:0 0 auto">Back</button>
+                    <button class="gs-btn gs-btn--primary gs-btn--block" type="submit" id="ap-next" style="flex:1">Continue</button>
+                </div>
             </form>
 
-            <div style="margin-top: 32px; padding: 20px; background: var(--gs-bg); border-radius: var(--gs-radius-lg);">
+            <div id="ap-done" hidden style="margin-top: 26px; padding: 28px 24px; background: var(--gs-bg); border-radius: var(--gs-radius-lg); text-align:center;">
+                <p class="gs-eyebrow">Application received</p>
+                <h2 class="gs-h2" style="margin-top:10px">Thank you</h2>
+                <p class="gs-row__d" style="margin-top:12px">A coach will review your application and reach out by email to invite your athlete to an open gym. There is no decision made from a form.</p>
+            </div>
+
+            <div id="ap-next-info" style="margin-top: 32px; padding: 20px; background: var(--gs-bg); border-radius: var(--gs-radius-lg);">
                 <p class="gs-eyebrow">What happens next</p>
                 <p class="gs-row__d" style="margin-top: 10px;">A coach reviews the application and invites your athlete to an open gym. There is no decision made from a form.</p>
             </div>
@@ -152,6 +182,126 @@
         <div style="margin-top: 14px; font-size: 13px; color: rgba(255,255,255,0.5);">Denver, Colorado</div>
     </div>
 </footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* Apply form. Three steps, one insert into player_applications at the end.
+   The anon key is a public, RLS-scoped key: this table lets anon INSERT a new
+   application and nothing else, so no visitor can read another family's data. */
+(function () {
+    var URL  = 'https://nnqokhqennuxalamnvps.supabase.co';
+    var ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis';
+
+    var form = document.getElementById('ap-form');
+    if (!form) return;
+    var steps   = [].slice.call(form.querySelectorAll('[data-step]'));
+    var dots    = document.getElementById('ap-progress');
+    var label   = document.getElementById('ap-steplabel');
+    var heading = document.getElementById('ap-heading');
+    var back    = document.getElementById('ap-back');
+    var next    = document.getElementById('ap-next');
+    var err     = document.getElementById('ap-error');
+    var done    = document.getElementById('ap-done');
+    var review  = document.getElementById('ap-review');
+    var nextBox = document.getElementById('ap-next-info');
+    var at = 0;
+
+    var COPY = [
+        { label: 'Step 1 of 3 — about the player',  heading: 'Tell us about your athlete' },
+        { label: 'Step 2 of 3 — how we reach you',  heading: 'How do we reach you' },
+        { label: 'Step 3 of 3 — anything else',     heading: 'Anything we should know' }
+    ];
+
+    function el(id) { return document.getElementById(id); }
+    function val(id) { var n = el(id); return n ? n.value.trim() : ''; }
+    function esc(t) { var d = document.createElement('div'); d.textContent = t == null ? '' : t; return d.innerHTML; }
+    function showError(m) { err.textContent = m; err.hidden = false; }
+    function clearError() { err.hidden = true; }
+
+    function paint() {
+        steps.forEach(function (s, i) { s.hidden = i !== at; });
+        if (dots) {
+            [].slice.call(dots.children).forEach(function (d, i) {
+                if (i <= at) d.setAttribute('data-on', 'true'); else d.removeAttribute('data-on');
+            });
+            dots.setAttribute('aria-label', 'Step ' + (at + 1) + ' of 3');
+        }
+        label.textContent = COPY[at].label;
+        heading.textContent = COPY[at].heading;
+        back.hidden = at === 0;
+        next.textContent = at === 2 ? 'Submit application' : 'Continue';
+        if (at === 2) {
+            review.innerHTML =
+                '<strong>' + esc(val('player-name')) + '</strong>, ' + esc(val('grade')) + ' grade<br>' +
+                esc(val('parent-name')) + '<br>' +
+                esc(val('parent-email')) + (val('parent-phone') ? '<br>' + esc(val('parent-phone')) : '');
+        }
+        clearError();
+    }
+
+    function validate() {
+        if (at === 0) {
+            if (!val('player-name')) { showError('Please enter the player’s name.'); el('player-name').focus(); return false; }
+            if (!val('grade'))       { showError('Please choose a grade.'); el('grade').focus(); return false; }
+        }
+        if (at === 1) {
+            if (!val('parent-name'))  { showError('Please enter your name.'); el('parent-name').focus(); return false; }
+            var e = val('parent-email');
+            if (!e || e.indexOf('@') < 1 || e.indexOf('.', e.indexOf('@')) < 0) {
+                showError('Please enter a valid email address.'); el('parent-email').focus(); return false;
+            }
+        }
+        return true;
+    }
+
+    function submit() {
+        next.disabled = true;
+        next.textContent = 'Sending...';
+        var sb;
+        try { sb = window.supabase.createClient(URL, ANON); }
+        catch (e) { return fail(); }
+
+        sb.from('player_applications').insert({
+            player_name:  val('player-name'),
+            grade:        val('grade'),
+            parent_name:  val('parent-name'),
+            parent_email: val('parent-email').toLowerCase(),
+            parent_phone: val('parent-phone') || null,
+            notes:        val('ap-notes') || null,
+            status:       'new',
+            source:       'apply_page'
+        }).then(function (res) {
+            if (res.error) { console.error('[apply]', res.error); return fail(); }
+            /* The form carries an inline display:flex, which beats the hidden
+               attribute, so hide it explicitly or it stays on screen above the
+               thank-you with the button stuck on "Sending...". */
+            form.hidden = true; form.style.display = 'none';
+            if (nextBox) { nextBox.hidden = true; nextBox.style.display = 'none'; }
+            if (dots) dots.hidden = true;
+            label.hidden = true;
+            heading.hidden = true;
+            done.hidden = false;
+            done.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }).catch(function (e) { console.error('[apply]', e); fail(); });
+    }
+
+    function fail() {
+        next.disabled = false;
+        next.textContent = 'Submit application';
+        showError('We could not send that. Please try again, or email clubgodspeed@gmail.com and we will take it from there.');
+    }
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (!validate()) return;
+        if (at < 2) { at++; paint(); return; }
+        submit();
+    });
+    back.addEventListener('click', function () { if (at > 0) { at--; paint(); } });
+
+    paint();
+}());
+</script>
+
 <script>
 (function () {
     var menu = document.getElementById('gsMenu');

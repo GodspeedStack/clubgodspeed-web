@@ -600,6 +600,7 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
     <div class="sb-label">People</div>
     <button class="sb-link" onclick="switchPanel('players',this)"><i data-lucide="users" class="icon"></i>Players & Parents<span class="badge" id="pending-badge" style="background:#FF5722">0</span></button>
     <button class="sb-link" onclick="switchPanel('onboarding',this)"><i data-lucide="user-check" class="icon"></i>Onboarding<span class="badge" id="ob-badge" style="display:none">0</span></button>
+    <button class="sb-link" onclick="switchPanel('applications',this)"><i data-lucide="inbox" class="icon"></i>Applications<span class="badge" id="apps-badge" style="background:#FF5722;display:none">0</span></button>
   </div>
 
   <div class="sb-section">
@@ -1157,6 +1158,45 @@ textarea.editor { width: 100%; min-height: 360px; background: rgba(0,0,0,0.2); b
 
     <!-- MEMOS -->
     <!-- GODSPEED FUTURES -->
+    <div class="panel" id="panel-applications">
+      <div class="card">
+        <div class="card-header">
+          <h2>Player Applications</h2>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span id="apps-summary" style="font-size:12px;color:var(--muted)"></span>
+            <button class="btn btn-ghost btn-xs" onclick="loadApplications()">Refresh</button>
+          </div>
+        </div>
+        <div class="card-body" style="padding-bottom:4px">
+          <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px">
+            <div class="field"><label>Search</label><input type="text" id="app-q" placeholder="Player, parent, email, phone..." oninput="renderApplications()"></div>
+            <div class="field"><label>Status</label>
+              <select id="app-status" onchange="renderApplications()">
+                <option value="open">Needs attention</option>
+                <option value="">All</option>
+                <option value="new">New</option>
+                <option value="reviewed">Reviewed</option>
+                <option value="contacted">Contacted</option>
+                <option value="accepted">Accepted</option>
+                <option value="declined">Declined</option>
+              </select>
+            </div>
+            <div class="field"><label>Grade</label>
+              <select id="app-grade" onchange="renderApplications()">
+                <option value="">All</option><option>4th</option><option>5th</option><option>6th</option><option>7th</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div id="apps-table-wrap" style="padding:0;overflow-x:auto">
+          <table>
+            <thead><tr><th>Received</th><th>Player</th><th>Parent</th><th>Contact</th><th>Notes</th><th>Status</th><th></th></tr></thead>
+            <tbody id="apps-tbody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <div class="panel" id="panel-futures">
       <div class="card">
         <div class="card-header">

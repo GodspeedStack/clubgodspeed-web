@@ -171,7 +171,7 @@ window.handleAdminLogin = async function () {
 };
 
 // ─── PANEL ROUTING ──────────────────────────────────────────
-const PANEL_TITLES = { dashboard: 'Dashboard', players: 'Players & Parents', onboarding: 'Onboarding', calendar: 'Schedule & Tournaments', dues: 'Season Dues', fundraising: 'Fundraising', orders: 'Pro Shop Orders', comms: 'Messaging', dataEntry: 'Data Entry', futures: 'Godspeed Futures', blog: 'Blog Posts', memos: 'Coach Memos' };
+const PANEL_TITLES = { dashboard: 'Dashboard', players: 'Players & Parents', onboarding: 'Onboarding', applications: 'Player Applications', calendar: 'Schedule & Tournaments', dues: 'Season Dues', fundraising: 'Fundraising', orders: 'Pro Shop Orders', comms: 'Messaging', dataEntry: 'Data Entry', futures: 'Godspeed Futures', blog: 'Blog Posts', memos: 'Coach Memos' };
 
 function switchPanel(id, btn) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -181,12 +181,12 @@ function switchPanel(id, btn) {
   if (btn) btn.classList.add('active');
   document.getElementById('panel-title').textContent = PANEL_TITLES[id] || id;
   currentPanel = id;
-  const loaders = { players: () => { loadPlayers(); loadRequests(); loadGuardianRequests(); }, onboarding: loadOnboarding, dues: loadDues, fundraising: loadFundraising, orders: loadOrders, comms: loadComms, dataEntry: loadDataEntry, futures: loadFutures, calendar: () => { loadCalendar(); loadTournaments(); }, blog: loadBlog, memos: loadMemos };
+  const loaders = { players: () => { loadPlayers(); loadRequests(); loadGuardianRequests(); }, onboarding: loadOnboarding, dues: loadDues, fundraising: loadFundraising, orders: loadOrders, comms: loadComms, dataEntry: loadDataEntry, applications: loadApplications, futures: loadFutures, calendar: () => { loadCalendar(); loadTournaments(); }, blog: loadBlog, memos: loadMemos };
   if (loaders[id]) loaders[id]();
 }
 
 function refreshCurrent() {
-  const loaders = { dashboard: loadDashboard, players: () => { loadPlayers(); loadRequests(); loadGuardianRequests(); }, onboarding: loadOnboarding, dues: loadDues, fundraising: loadFundraising, orders: loadOrders, comms: loadComms, futures: loadFutures, calendar: () => { loadCalendar(); loadTournaments(); }, blog: loadBlog, memos: loadMemos };
+  const loaders = { dashboard: loadDashboard, players: () => { loadPlayers(); loadRequests(); loadGuardianRequests(); }, onboarding: loadOnboarding, dues: loadDues, fundraising: loadFundraising, orders: loadOrders, comms: loadComms, applications: loadApplications, futures: loadFutures, calendar: () => { loadCalendar(); loadTournaments(); }, blog: loadBlog, memos: loadMemos };
   if (loaders[currentPanel]) loaders[currentPanel]();
 }
 
@@ -4654,5 +4654,109 @@ async function setFuturesStatus(id, status) {
     showToast('Marked ' + status);
   } catch (e) {
     showToast('Could not update: ' + (e.message || 'unknown error'), 'error');
+  }
+}
+
+
+/* ─── PLAYER APPLICATIONS ────────────────────────────────────
+   Submissions from the public apply.html form. Before 2026-10-01 that form
+   posted nowhere, so anything older than this table was never captured. */
+let appsRows = [];
+
+async function loadApplications() {
+  const tbody = document.getElementById('apps-tbody');
+  if (!tbody) return;
+  if (!osSupabase) { tbody.innerHTML = appsEmpty('Not connected'); return; }
+  try {
+    const { data, error } = await osSupabase
+      .from('player_applications')
+      .select('id,submitted_at,player_name,grade,parent_name,parent_email,parent_phone,notes,status,staff_notes')
+      .order('submitted_at', { ascending: false });
+    if (error) throw error;
+    appsRows = data || [];
+  } catch (e) {
+    console.error('[applications] load failed', e);
+    tbody.innerHTML = appsEmpty('Could not load: ' + (e.message || 'unknown error'));
+    return;
+  }
+  renderApplications();
+}
+
+function appsEmpty(msg) {
+  return `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px">${esc(msg)}</td></tr>`;
+}
+
+function appsFiltered() {
+  const q  = (document.getElementById('app-q')?.value || '').trim().toLowerCase();
+  const st = document.getElementById('app-status')?.value ?? 'open';
+  const gr = document.getElementById('app-grade')?.value || '';
+  return appsRows.filter(r => {
+    if (st === 'open') { if (r.status === 'accepted' || r.status === 'declined') return false; }
+    else if (st && r.status !== st) return false;
+    if (gr && r.grade !== gr) return false;
+    if (!q) return true;
+    return [r.player_name, r.parent_name, r.parent_email, r.parent_phone, r.notes]
+      .some(v => (v || '').toLowerCase().includes(q));
+  });
+}
+
+function renderApplications() {
+  const tbody = document.getElementById('apps-tbody');
+  if (!tbody) return;
+  const rows = appsFiltered();
+
+  const fresh = appsRows.filter(r => r.status === 'new').length;
+  const open  = appsRows.filter(r => r.status !== 'accepted' && r.status !== 'declined').length;
+  const sum = document.getElementById('apps-summary');
+  if (sum) {
+    sum.textContent = `${appsRows.length} total  ·  ${open} still open  ·  ${fresh} never looked at`;
+    sum.style.color = fresh ? 'var(--danger, #ef4444)' : 'var(--muted)';
+  }
+  const badge = document.getElementById('apps-badge');
+  if (badge) {
+    badge.textContent = fresh > 99 ? '99+' : String(fresh);
+    badge.style.display = fresh > 0 ? '' : 'none';
+  }
+
+  if (!rows.length) { tbody.innerHTML = appsEmpty('Nothing matches these filters'); return; }
+
+  const tag = { new: 'tag-yellow', reviewed: 'tag-blue', contacted: 'tag-blue', accepted: 'tag-green', declined: 'tag-gray' };
+  tbody.innerHTML = rows.map(r => `<tr>
+    <td style="color:var(--muted);white-space:nowrap">${esc(fmtShort(r.submitted_at))}</td>
+    <td style="max-width:150px">
+      <div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.player_name || '--')}</div>
+      <div style="font-size:11px;color:var(--muted)">${esc(r.grade || '--')} grade</div>
+    </td>
+    <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.parent_name || '--')}</td>
+    <td style="max-width:210px">
+      <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="mailto:${esc(r.parent_email)}">${esc(r.parent_email)}</a></div>
+      ${r.parent_phone ? `<div style="font-size:11px;color:var(--muted)"><a href="tel:${esc(r.parent_phone)}">${esc(r.parent_phone)}</a></div>` : ''}
+    </td>
+    <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(r.notes || '')}">${esc(r.notes || '--')}</td>
+    <td style="white-space:nowrap"><span class="tag ${tag[r.status] || 'tag-gray'}">${esc(r.status)}</span></td>
+    <td style="white-space:nowrap;text-align:right">
+      ${r.status === 'new'       ? `<button class="btn-xs btn-ghost" onclick="setApplicationStatus('${esc(r.id)}','reviewed')">Mark read</button>` : ''}
+      ${r.status !== 'contacted' && r.status !== 'accepted' && r.status !== 'declined' ? `<button class="btn-xs btn-ghost" onclick="setApplicationStatus('${esc(r.id)}','contacted')">Contacted</button>` : ''}
+      ${r.status !== 'accepted'  ? `<button class="btn-xs btn-ghost" onclick="setApplicationStatus('${esc(r.id)}','accepted')">Accept</button>` : ''}
+      ${r.status !== 'declined'  ? `<button class="btn-xs btn-ghost" onclick="setApplicationStatus('${esc(r.id)}','declined')">Decline</button>` : ''}
+    </td>
+  </tr>`).join('');
+}
+
+async function setApplicationStatus(id, status) {
+  if (!osSupabase) return;
+  try {
+    const me = (await osSupabase.auth.getUser())?.data?.user?.id || null;
+    const { error } = await osSupabase
+      .from('player_applications')
+      .update({ status, reviewed_by: me, reviewed_at: new Date().toISOString() })
+      .eq('id', id);
+    if (error) throw error;
+    const row = appsRows.find(r => r.id === id);
+    if (row) row.status = status;
+    renderApplications();
+  } catch (e) {
+    console.error('[applications] status update failed', e);
+    alert('Could not update that application: ' + (e.message || 'unknown error'));
   }
 }

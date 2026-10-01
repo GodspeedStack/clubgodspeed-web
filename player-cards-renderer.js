@@ -34,14 +34,36 @@
   var ROSTER = [];
   var rosterLoaded = false;
 
+  // window.supabaseClient is never set in this portal; auth-supabase.js exposes
+  // window.auth.getSupabaseClient(). The old lookup fell through to
+  // window.supabase, which is the CDN LIBRARY and has no .rpc, so every roster
+  // load threw and the vault painted empty. Resolve the real client, and prove
+  // it is a client before using it.
   function client() {
-    return window.supabaseClient || window.supabase || null;
+    var sb = null;
+    try {
+      if (window.auth && typeof window.auth.getSupabaseClient === 'function') {
+        sb = window.auth.getSupabaseClient();
+      }
+    } catch (e) { sb = null; }
+    if (!sb) sb = window.supabaseClient || null;
+    return (sb && typeof sb.rpc === 'function') ? sb : null;
+  }
+
+  // The vault can be opened before auth has finished booting. Wait for a usable
+  // client rather than failing to an empty roster.
+  function waitForClient(tries) {
+    var sb = client();
+    if (sb) return Promise.resolve(sb);
+    if (tries <= 0) return Promise.resolve(null);
+    return new Promise(function (r) { setTimeout(r, 300); })
+      .then(function () { return waitForClient(tries - 1); });
   }
 
   function loadRoster() {
     if (rosterLoaded) return Promise.resolve(ROSTER);
-    var sb = client();
-    if (!sb) return Promise.resolve(ROSTER);
+    return waitForClient(10).then(function (sb) {
+    if (!sb) { console.error('player cards: no supabase client'); return ROSTER; }
     return sb.rpc('get_program_roster').then(function (res) {
       if (res.error) { console.error('player cards: roster load failed', res.error); return ROSTER; }
       ROSTER = (res.data || []).map(function (r) {
@@ -60,6 +82,7 @@
     }).catch(function (e) {
       console.error('player cards: roster load failed', e);
       return ROSTER;
+    });
     });
   }
 
