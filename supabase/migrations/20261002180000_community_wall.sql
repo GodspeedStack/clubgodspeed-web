@@ -64,6 +64,10 @@ create table public.wall_media (
   width        integer check (width is null or width between 1 and 10000),
   height       integer check (height is null or height between 1 and 10000),
   duration_ms  integer check (duration_ms is null or duration_ms between 0 and 61000),
+  -- Video codec as detected on the uploader's phone. Normally 'avc' (H.264):
+  -- the client converts iPhone HEVC to H.264 so every browser can play it.
+  -- Anything else means the phone could not convert, and players show a save fallback.
+  codec        text check (codec is null or codec ~ '^[a-z0-9]{2,8}$'),
   unique (post_id, position),
   check ((kind = 'image' and mime like 'image/%' and bytes <= 10485760)
       or (kind = 'video' and mime like 'video/%' and bytes <= 52428800 and poster_path is not null))
@@ -230,7 +234,7 @@ returns jsonb language sql stable security definer set search_path = '' as $$
     'media', coalesce((
       select jsonb_agg(jsonb_build_object(
                'id', m.id, 'kind', m.kind, 'path', m.storage_path, 'poster', m.poster_path,
-               'width', m.width, 'height', m.height, 'duration_ms', m.duration_ms)
+               'width', m.width, 'height', m.height, 'duration_ms', m.duration_ms, 'codec', m.codec)
              order by m.position)
       from public.wall_media m where m.post_id = p.id), '[]'::jsonb),
     'tags', coalesce((
@@ -439,20 +443,24 @@ begin
        or (v_kind = 'video' and v_bytes > 52428800) then
       raise exception 'FILE_TOO_LARGE' using detail = 'Photos can be up to 10 MB and videos up to 50 MB.';
     end if;
+    if v_item ->> 'codec' is not null and (v_item ->> 'codec') !~ '^[a-z0-9]{2,8}$' then
+      raise exception 'BAD_MEDIA' using detail = 'Unknown video format.';
+    end if;
     if v_kind = 'video' and coalesce((v_item ->> 'duration_ms')::integer, 0) > 61000 then
       raise exception 'VIDEO_TOO_LONG' using detail = 'Videos can be up to 60 seconds.';
     end if;
 
     v_mid := gen_random_uuid();
     insert into public.wall_media (id, post_id, position, kind, mime, storage_path, poster_path,
-                                   bytes, width, height, duration_ms)
+                                   bytes, width, height, duration_ms, codec)
     values (v_mid, v_post.id, v_pos, v_kind, v_mime,
             v_uid || '/' || v_post.id || '/' || v_mid || '.' || v_ext,
             case when v_kind = 'video' then v_uid || '/' || v_post.id || '/' || v_mid || '-poster.jpg' end,
             v_bytes,
             nullif((v_item ->> 'width')::integer, 0),
             nullif((v_item ->> 'height')::integer, 0),
-            (v_item ->> 'duration_ms')::integer);
+            (v_item ->> 'duration_ms')::integer,
+            case when v_kind = 'video' then v_item ->> 'codec' end);
     v_pos := v_pos + 1;
   end loop;
 

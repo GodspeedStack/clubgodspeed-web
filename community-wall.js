@@ -30,7 +30,6 @@
     maxFiles: 10,
     maxImageEdge: 2048,
     maxImageBytes: 10 * 1024 * 1024,
-    maxVideoBytes: 50 * 1024 * 1024,
     maxVideoMs: 60500,
     captionMax: 500,
     pollMs: 60000
@@ -435,6 +434,7 @@
           if (!v.muted) ensureVideoSrc(v).then(function () { v.play().catch(function () {}); });
         };
         slide.appendChild(snd);
+        watchPlayable(v, slide, p, i, m);
       } else {
         var img = h('img', { alt: p.caption ? 'Photo: ' + p.caption.slice(0, 80) : 'Photo from ' + ((p.author || {}).name || 'a Godspeed family'), decoding: 'async', loading: i === 0 ? 'eager' : 'lazy', draggable: 'false' });
         img.onload = function () { slide.classList.remove('is-loading'); };
@@ -493,11 +493,31 @@
     return t;
   }
 
+  // ------------------------------------------------- unplayable-video fallback
+  // A clip the uploader's phone could not convert (rare: old phones) may use a
+  // codec this browser cannot play. Show the poster with a clear way to save it
+  // instead of a black box.
+  function canPlayCodec(codec) { return !window.CWVideo || window.CWVideo.canPlay(codec); }
+  function watchPlayable(v, slide, p, i, m) {
+    function show() {
+      if (slide.querySelector('.cw-noplay')) return;
+      v.removeAttribute('src'); v.setAttribute('data-noplay', '1'); v.controls = false;
+      var box = h('div', { class: 'cw-noplay' }, I.play + '<p></p>');
+      box.querySelector('p').textContent = "This video can't play in this browser.";
+      box.appendChild(h('button', { class: 'cw-noplay__btn', type: 'button', text: 'Save to watch',
+        onclick: function (e) { e.stopPropagation(); openShare(S.byId.get(p.id) || p, i); } }));
+      slide.appendChild(box);
+      var snd = slide.querySelector('.cw-sound'); if (snd) snd.remove();
+    }
+    if (!canPlayCodec(m.codec)) { show(); return; }
+    v.addEventListener('error', function () { if (v.error && (v.error.code === 3 || v.error.code === 4)) show(); });
+  }
+
   // ------------------------------------------------------- video autoplay
   var reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var saveData = navigator.connection && navigator.connection.saveData;
   function ensureVideoSrc(v) {
-    if (v.src) return Promise.resolve();
+    if (v.src || v.getAttribute('data-noplay')) return Promise.resolve();
     return signed(v.getAttribute('data-path')).then(function (u) { if (u) { v.src = u; v.preload = 'metadata'; } });
   }
   var vio = 'IntersectionObserver' in window ? new IntersectionObserver(function (entries) {
@@ -505,7 +525,7 @@
       var v = en.target;
       if (en.isIntersecting && en.intersectionRatio >= 0.6) {
         if (reduceMotion || saveData) return;
-        ensureVideoSrc(v).then(function () { v.play().catch(function () {}); });
+        ensureVideoSrc(v).then(function () { if (v.src) v.play().catch(function () {}); });
       } else if (!v.paused) v.pause();
     });
   }, { threshold: [0, 0.6] }) : null;
@@ -813,8 +833,9 @@
       if (m.kind === 'video') {
         var v = h('video', { controls: '', playsinline: '', preload: 'metadata', 'aria-label': 'Video' });
         signed(m.poster).then(function (u) { if (u) v.poster = u; });
-        signed(m.path).then(function (u) { if (u) v.src = u; });
+        if (canPlayCodec(m.codec)) signed(m.path).then(function (u) { if (u) v.src = u; });
         s.appendChild(v);
+        watchPlayable(v, s, p, p.media.indexOf(m), m);
       } else {
         var img = h('img', { alt: p.caption ? p.caption.slice(0, 120) : 'Photo', decoding: 'async' });
         signed(m.path).then(function (u) { if (u) img.src = u; });
@@ -923,11 +944,23 @@
     });
   }
 
-  // Video: read metadata, grab a poster frame, scrub ISO 6709 location strings.
-  function processVideo(file) {
-    var mime = file.type === 'video/quicktime' || /\.mov$/i.test(file.name) ? 'video/quicktime' : 'video/mp4';
-    if (!/^video\/(mp4|quicktime)$/.test(file.type || mime)) return Promise.reject({ message: 'Videos must be MP4 or MOV.' });
-    if (file.size > CFG.maxVideoBytes) return Promise.reject({ message: 'Videos can be up to 50 MB. Trim it on your phone and try again.' });
+  // Video: community-wall-video.js converts anything that is not H.264 (iPhone
+  // HEVC, Android WebM, oversized clips) so every family's browser can play it,
+  // and strips location metadata. This wrapper only adapts its result.
+  function processVideo(file, onProgress, signal) {
+    if (file.type && !/^video\//.test(file.type)) return Promise.reject({ message: 'That file is not a video.' });
+    if (!window.CWVideo) return Promise.reject({ message: 'Video tools did not load. Refresh the page and try again.' });
+    return window.CWVideo.prepare(file, { onProgress: onProgress, signal: signal }).then(function (r) {
+      if (r.needsPoster) return legacyPoster(file, r);
+      return { kind: 'video', blob: r.blob, mime: r.mime, codec: r.codec, width: r.width, height: r.height,
+               duration_ms: r.duration_ms, poster: r.poster, preview: URL.createObjectURL(r.poster),
+               transcoded: r.transcoded, audioDropped: r.audioDropped };
+    });
+  }
+
+  // Only used when the converter library could not load: read duration and a
+  // poster frame with a plain <video> element. The blob is already GPS-scrubbed.
+  function legacyPoster(file, r) {
     return new Promise(function (res, rej) {
       var url = URL.createObjectURL(file);
       var v = document.createElement('video');
@@ -935,7 +968,7 @@
       var done = false;
       function fail(m) { if (done) return; done = true; URL.revokeObjectURL(url); rej({ message: m }); }
       var timeout = setTimeout(function () { fail('Could not read that video. Try a shorter clip.'); }, 20000);
-      v.onerror = function () { clearTimeout(timeout); fail('That video format is not supported. Try MP4 or MOV.'); };
+      v.onerror = function () { clearTimeout(timeout); fail('That video format is not supported on this phone.'); };
       v.onloadedmetadata = function () {
         if (v.duration * 1000 > CFG.maxVideoMs) { clearTimeout(timeout); return fail('Videos can be up to 60 seconds. Trim it on your phone and try again.'); }
         try { v.currentTime = Math.min(0.25, v.duration / 3); } catch (e) { /* seeked fallback below */ }
@@ -947,42 +980,11 @@
         var c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(hgt * k);
         c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
         canvasBlob(c, 'image/jpeg', 0.8).then(function (poster) {
-          return scrubVideoLocation(file).then(function (scrubbed) {
-            done = true; URL.revokeObjectURL(url);
-            res({ kind: 'video', blob: scrubbed, mime: mime, width: w, height: hgt, duration_ms: Math.round(v.duration * 1000),
-                  poster: poster, preview: URL.createObjectURL(poster) });
-          });
+          done = true; URL.revokeObjectURL(url);
+          res({ kind: 'video', blob: r.blob, mime: r.mime, codec: null, width: w, height: hgt, duration_ms: Math.round(v.duration * 1000),
+                poster: poster, preview: URL.createObjectURL(poster), transcoded: false, audioDropped: false });
         }).catch(function (e) { fail(e.message || 'Could not process that video.'); });
       };
-    });
-  }
-
-  // Zero out ISO 6709 coordinates ("+39.7392-104.9903+1609.0/") inside the moov box.
-  // Same byte length, so the container stays valid. Covers the QuickTime
-  // com.apple.quicktime.location.ISO6709 key and the classic (c)xyz atom.
-  function scrubVideoLocation(file) {
-    return file.arrayBuffer().then(function (ab) {
-      var buf = new Uint8Array(ab), dv = new DataView(ab), off = 0, start = -1, end = -1;
-      while (off + 8 <= buf.length) {
-        var size = dv.getUint32(off), hdr = 8;
-        var type = String.fromCharCode(buf[off + 4], buf[off + 5], buf[off + 6], buf[off + 7]);
-        if (size === 1 && off + 16 <= buf.length) { size = Number(dv.getBigUint64(off + 8)); hdr = 16; }
-        else if (size === 0) size = buf.length - off;
-        if (size < hdr) break;
-        if (type === 'moov') { start = off; end = Math.min(buf.length, off + size); break; }
-        off += size;
-      }
-      if (start < 0) return new Blob([buf], { type: file.type || 'video/mp4' });
-      var seg = buf.subarray(start, end), text = '';
-      for (var i = 0; i < seg.length; i += 8192) text += String.fromCharCode.apply(null, seg.subarray(i, i + 8192));
-      var re = /[+-]\d{1,3}\.\d+[+-]\d{1,3}\.\d+(?:[+-]\d+(?:\.\d+)?)?/g, m;
-      while ((m = re.exec(text))) {
-        for (var j = 0; j < m[0].length; j++) {
-          var ch = m[0].charCodeAt(j);
-          if (ch >= 48 && ch <= 57) seg[m.index + j] = 48;
-        }
-      }
-      return new Blob([buf], { type: file.type || 'video/mp4' });
     });
   }
 
@@ -1013,7 +1015,8 @@
     var ctx = S.ctx;
     composer = {
       clientId: uuid(), items: [], team: S.team && teamCanPost(S.team) ? S.team : null, tags: new Set(),
-      busy: false, reservation: null, uploaded: new Set()
+      busy: false, reservation: null, uploaded: new Set(), preparing: false,
+      abort: new AbortController()
     };
     var cancel = h('button', { class: 'cw-link cw-link--muted', type: 'button', text: 'Cancel', onclick: closeLayer });
     var shareBtn = h('button', { class: 'cw-link', type: 'button', text: 'Share', disabled: 'disabled' });
@@ -1021,6 +1024,7 @@
     var progress = h('div', { class: 'cw-progress cw-hide' }, '<i></i>');
     x.sheet.insertBefore(progress, x.body);
     var err = h('div', { class: 'cw-error cw-hide', role: 'alert' });
+    var note = h('div', { class: 'cw-note cw-hide', role: 'status' });
 
     var strip = h('div', { class: 'cw-strip', 'aria-label': 'Selected photos and videos' });
     var add = h('button', { class: 'cw-thumb cw-thumb--add', type: 'button', 'aria-label': 'Add photos or videos' }, I.plus + '<span>Add</span>');
@@ -1049,6 +1053,7 @@
     tagWrap.appendChild(tagPills); tagWrap.appendChild(tagHelp);
 
     x.body.appendChild(err);
+    x.body.appendChild(note);
     x.body.appendChild(strip);
     x.body.appendChild(capWrap);
     x.body.appendChild(teamWrap);
@@ -1101,9 +1106,10 @@
         strip.appendChild(t);
       });
       if (!composer.reservation && composer.items.length < CFG.maxFiles) strip.appendChild(add);
-      shareBtn.disabled = !composer.items.length || composer.busy;
+      shareBtn.disabled = !composer.items.length || composer.busy || composer.preparing;
     }
     function showErr(m) { err.textContent = m; err.classList.toggle('cw-hide', !m); }
+    function showNote(m) { note.textContent = m; note.classList.toggle('cw-hide', !m); }
     function setProgress(frac) { progress.classList.toggle('cw-hide', frac === null); progress.firstChild.style.width = Math.round((frac || 0) * 100) + '%'; }
 
     composer.addFiles = function (files) {
@@ -1112,15 +1118,31 @@
       var list = Array.prototype.slice.call(files, 0, room);
       if (files.length > room) toast('Up to ' + CFG.maxFiles + ' per post');
       shareBtn.disabled = true; shareBtn.textContent = 'Preparing';
+      composer.preparing = true;
       var chain = Promise.resolve();
       list.forEach(function (f) {
         chain = chain.then(function () {
-          var isVideo = /^video\//.test(f.type) || /\.(mov|mp4)$/i.test(f.name);
-          return (isVideo ? processVideo(f) : processImage(f)).then(function (it) { composer.items.push(it); renderStrip(); })
-            .catch(function (e) { showErr(e.message || 'Could not add that file.'); });
+          if (!composer || composer.abort.signal.aborted) return;
+          var isVideo = /^video\//.test(f.type) || /\.(mov|mp4|m4v|webm|3gp)$/i.test(f.name);
+          var job = isVideo
+            ? processVideo(f, function (frac, label) {
+                setProgress(Math.max(0.02, frac));
+                shareBtn.textContent = Math.round(frac * 100) + '%';
+                showNote(label + '. Keep this screen open.');
+              }, composer.abort.signal)
+            : processImage(f);
+          return job.then(function (it) {
+            if (!composer) return;
+            composer.items.push(it); renderStrip();
+            if (it.audioDropped) toast('Sound could not be kept on this phone');
+          }).catch(function (e) { if (e && e.code === 'CANCELED') return; showErr(e.message || 'Could not add that file.'); });
         });
       });
-      chain.then(function () { shareBtn.textContent = 'Share'; renderStrip(); });
+      chain.then(function () {
+        if (!composer) return;
+        composer.preparing = false; setProgress(null); showNote('');
+        shareBtn.textContent = 'Share'; renderStrip();
+      });
     };
 
     shareBtn.onclick = function () {
@@ -1135,7 +1157,8 @@
       var reserve = composer.reservation ? Promise.resolve(composer.reservation) : api.createPost({
         p_client_id: composer.clientId, p_team_id: composer.team, p_caption: cap.value.trim(),
         p_media: items.map(function (it) {
-          return { kind: it.kind, mime: it.mime, bytes: it.blob.size, width: it.width, height: it.height, duration_ms: it.duration_ms || null };
+          return { kind: it.kind, mime: it.mime, bytes: it.blob.size, width: it.width, height: it.height,
+                   duration_ms: it.duration_ms || null, codec: it.kind === 'video' ? (it.codec || null) : null };
         }),
         p_athlete_ids: Array.from(composer.tags)
       });
@@ -1188,7 +1211,8 @@
     renderTeams(); renderTags(); renderStrip();
     openLayer(x.scrim, { scrimClose: false, onClose: function () {
       if (composer && composer.busy) { toast('Still uploading. Hang tight.'); return false; }
-      if (composer && !composer.done && composer.items.length && !confirm('Discard this post?')) return false;
+      if (composer && !composer.done && (composer.items.length || composer.preparing) && !confirm('Discard this post?')) return false;
+      if (composer) composer.abort.abort();
       composer = null;
     } });
     if (!composer.items.length) setTimeout(function () { $('cwFileInput').click(); }, 60);
@@ -1313,6 +1337,4 @@
   }
   boot();
 
-  // Test hook (no behaviour change): exposes nothing sensitive.
-  window.__cwScrub = scrubVideoLocation;
 })();
