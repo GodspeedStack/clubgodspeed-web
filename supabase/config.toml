@@ -20,6 +20,12 @@ verify_jwt = false
 [functions.stripe-webhook]
 verify_jwt = false
 
+# Same reasoning as stripe-webhook: Stripe signs with its own secret, never a
+# Supabase JWT. Left at the default of true, Stripe takes the money and the
+# gateway 401s the callback, so the order is never marked paid.
+[functions.uniform-order-webhook]
+verify_jwt = false
+
 # Invoked client-side to create a Checkout session; matches fundraiser-checkout.
 [functions.create-checkout]
 verify_jwt = false

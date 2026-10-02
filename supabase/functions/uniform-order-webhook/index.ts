@@ -49,12 +49,29 @@ Deno.serve(async (req) => {
         })
         .eq('id', orderId)
         .neq('status', 'paid')          // idempotent: ignore duplicate webhook deliveries
-        .select('id')
+        .select('id, athlete_id, jersey_number')
 
       if (error) { console.error('order update failed:', error.message); return new Response('db error', { status: 500 }) }
 
-      // Enqueue a PAID confirmation email (durable + retried by the notifier).
       if (updated && updated.length) {
+        const row = updated[0] as { athlete_id?: string; jersey_number?: number }
+
+        // Paying is what makes the number real. Until this ran, a parent could
+        // pay and still show "no jersey number" and "needs uniform" in the
+        // portal, and the number stayed reserved rather than assigned.
+        if (row.athlete_id) {
+          const { error: aErr } = await supabase
+            .from('athletes')
+            .update({
+              jersey_number: row.jersey_number ?? null,
+              needs_uniform: false,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', row.athlete_id)
+          if (aErr) console.error('athlete update after payment failed:', aErr.message)
+        }
+
+        // Enqueue a PAID confirmation email (durable + retried by the notifier).
         await supabase.from('uniform_order_notifications').insert({ order_id: orderId })
       }
     }

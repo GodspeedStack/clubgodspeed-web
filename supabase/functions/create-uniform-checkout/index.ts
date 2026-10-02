@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
       'metadata[order_id]': order.id,
       'metadata[order_type]': 'uniform',
       'line_items[0][price_data][currency]': 'usd',
-      'line_items[0][price_data][product_data][name]': 'Godspeed Uniform Set (Jersey + Shorts)',
+      'line_items[0][price_data][product_data][name]': 'Godspeed Uniform Kit (2 Jerseys, Shorts, Practice Penny)',
       'line_items[0][price_data][product_data][description]': desc,
       'line_items[0][price_data][unit_amount]': String(amountCents),
       'line_items[0][quantity]': '1',
