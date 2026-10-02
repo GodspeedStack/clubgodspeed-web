@@ -525,7 +525,7 @@
                                 <line x1="1" y1="10" x2="23" y2="10"></line>
                             </svg>
                         </span>
-                        <span class="label">AAU Season Dues</span>
+                        <span class="label js-season-label" data-season-format="short">AAU Season Dues</span>
                     </a>
                     <a href="#" id="nav-calendar" class="nav-item" onclick="switchPortalView('calendar', this)">
                         <span class="icon">
@@ -782,7 +782,7 @@
                                         <div style="font-family: 'DM Sans', sans-serif; font-size: 0.85rem; color: #FF3B30; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
                                             <span style="display: inline-block; width: 8px; height: 8px; background: #FF3B30; border-radius: 50%; box-shadow: 0 0 8px #FF3B30;"></span> Action Required
                                         </div>
-                                        <h3 id="aau-dues-cta-title" style="margin: 0; font-family: 'Bebas Neue', sans-serif; font-size: 2.25rem; color: #FFFFFF; letter-spacing: 0.05em; line-height: 1.1;">AAU Season Dues</h3>
+                                        <h3 id="aau-dues-cta-title" class="js-season-label" style="margin: 0; font-family: 'Bebas Neue', sans-serif; font-size: 2.25rem; color: #FFFFFF; letter-spacing: 0.05em; line-height: 1.1;">AAU Season Dues</h3>
                                         <p style="margin: 8px 0 0 0; font-family: 'Inter', sans-serif; font-size: 1rem; color: rgba(255,255,255,0.85); font-weight: 500;">Please select and lock in your season payment plan.</p>
                                     </div>
                                     <button onclick="switchPortalView('aau-billing', document.getElementById('nav-aau-billing'))" style="margin-top: 8px; background: #FF3B30; color: #FFFFFF; font-family: 'Inter', sans-serif; font-weight: 800; padding: 14px 32px; border-radius: 99px; border: none; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 15px rgba(255,59,48,0.4); text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255,59,48,0.6)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(255,59,48,0.4)'">Access Billing</button>
@@ -1131,7 +1131,7 @@
                     <div id="view-aau-billing" class="portal-view"
                         style="display: none; background-color: #F2F2F7; min-height: 100%; padding: 20px;">
                         <div class="section-header" style="margin-bottom: 20px;">
-                            <h2 style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 1.35rem; color: #111; letter-spacing: -0.02em; text-transform: uppercase; margin: 0;">AAU Season Dues</h2>
+                            <h2 class="js-season-label" style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 1.35rem; color: #111; letter-spacing: -0.02em; text-transform: uppercase; margin: 0;">AAU Season Dues</h2>
                         </div>
 
                         <div
@@ -1417,7 +1417,7 @@
         <div style="background:#111;padding:24px 28px;display:flex;align-items:center;justify-content:space-between;">
           <div>
             <div style="font-size:0.7rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:4px;">Club Godspeed</div>
-            <div style="font-size:1.2rem;font-weight:900;color:#fff;letter-spacing:-0.02em;">AAU Season Dues</div>
+            <div class="js-season-label" style="font-size:1.2rem;font-weight:900;color:#fff;letter-spacing:-0.02em;">AAU Season Dues</div>
           </div>
           <button onclick="closeTuitionPaymentModal()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">&#10005;</button>
         </div>
@@ -1533,6 +1533,7 @@
     <script src="parent-workout.js?v=1" defer></script>
     <script src="jersey-picker.js?v=1" defer></script>
     <script src="gear-price-sheet.js?v=1" defer></script>
+    <script src="season-header.js?v=1" defer></script>
     <!-- Non-critical scripts (async for independent loading) -->
     <script src="branded-modal.js" defer></script>
     <script src="documents-view.js" defer></script>

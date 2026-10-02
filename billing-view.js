@@ -973,7 +973,7 @@ window._startStripeDuesCheckout = async function(btn, opts) {
                 paymentType: 'aau_dues',
                 amount: opts.amount,
                 playerName,
-                label: opts.label || 'AAU Season Dues',
+                label: opts.label || window.__seasonLabel || 'Season Dues',
                 // Which athlete's bill to settle. The function still verifies this
                 // parent is linked to it before charging anything, so naming a
                 // sibling -- or another family's row -- gets rejected, not honoured.
