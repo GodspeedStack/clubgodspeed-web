@@ -18,7 +18,7 @@ window.JerseyPicker = (function () {
 
   var POLL_MS = 6000;
   var sb = null, athleteId = null, rootEl = null, timer = null;
-  var state = { rows: [], mine: null, busy: false, error: null };
+  var state = { rows: [], mine: null, busy: false, error: null, expanded: false };
 
   function h(tag, attrs, children) {
     var el = document.createElement(tag);
@@ -60,6 +60,7 @@ window.JerseyPicker = (function () {
         state.error = 'That number is not allowed.';
       } else {
         state.error = null;
+        state.expanded = false;   // claimed: fall back to the confirmed summary
       }
     } catch (e) {
       state.error = 'Could not save that number. Try again.';
@@ -111,21 +112,55 @@ window.JerseyPicker = (function () {
     if (!rootEl) return;
     rootEl.innerHTML = '';
 
-    var header = h('div', {
-      style: 'display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:6px;'
+    var done = state.mine !== null;
+
+    var pill = done
+      ? h('span', { style: 'font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;'
+          + 'background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;padding:4px 10px;border-radius:999px;' },
+          ['Set'])
+      : h('span', { style: 'font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;'
+          + 'background:#FF5722;color:#fff;padding:4px 10px;border-radius:999px;' },
+          ['Action needed']);
+
+    rootEl.appendChild(h('div', {
+      style: 'display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px;'
     }, [
-      h('h3', {
-        style: 'margin:0;font-size:1.05rem;font-weight:800;letter-spacing:-.01em;color:#111;'
-      }, ['Jersey number']),
-      h('span', {
-        style: 'font-size:12px;color:#6b7280;font-weight:600;'
-      }, [state.mine === null ? 'Not chosen yet' : 'Currently ' + state.mine])
-    ]);
-    rootEl.appendChild(header);
+      h('h3', { style: 'margin:0;font-size:1.05rem;font-weight:800;letter-spacing:-.01em;color:#111;' },
+        ['Jersey number']),
+      pill
+    ]));
+
+    // Finished and not being changed: one quiet line, not a wall of 100 tiles.
+    // A task that still looks like a task after it is done trains parents to
+    // ignore the card, and the next real action gets ignored with it.
+    if (done && !state.expanded) {
+      rootEl.appendChild(h('div', {
+        style: 'display:flex;align-items:center;gap:14px;margin-top:10px;'
+      }, [
+        h('div', { style: 'flex:0 0 auto;width:52px;height:52px;border-radius:12px;background:#2563eb;'
+            + 'color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;' },
+          [String(state.mine)]),
+        h('div', { style: 'flex:1 1 auto;min-width:0;' }, [
+          h('div', { style: 'font-size:14px;color:#111;font-weight:600;' },
+            ['Your player wears number ' + state.mine + '.']),
+          h('div', { style: 'font-size:13px;color:#6b7280;margin-top:2px;' },
+            ['You can change it until uniforms are ordered.'])
+        ]),
+        h('button', {
+          type: 'button',
+          style: 'flex:0 0 auto;appearance:none;background:none;border:none;padding:6px 2px;'
+            + 'font-family:inherit;font-size:13.5px;font-weight:700;color:#2563eb;cursor:pointer;',
+          onclick: function () { state.expanded = true; render(); }
+        }, ['Change'])
+      ]));
+      return;
+    }
 
     rootEl.appendChild(h('p', {
       style: 'margin:0 0 16px;font-size:13.5px;line-height:1.5;color:#6b7280;'
-    }, ['Pick any open number. Greyed out numbers are already worn by someone on your team or the team you share a grade with. You can change it until uniforms are ordered.']));
+    }, [done
+        ? 'Pick a different number. Greyed out numbers are already worn by someone on your team or the team you share a grade with.'
+        : 'Choose a number for your player before uniforms are ordered. Greyed out numbers are already worn by someone on your team or the team you share a grade with.']));
 
     if (state.error) {
       rootEl.appendChild(h('div', {
