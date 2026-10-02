@@ -1506,9 +1506,19 @@
                     var list = (r && r.data && r.data.ok) ? r.data.athletes : [];
                     if (!list || !list.length) return;
                     document.getElementById('jersey-picker-card').style.display = 'block';
+                    // Follow the athlete the parent picked elsewhere in the portal
+                    // instead of always taking list[0]. A family with two kids could
+                    // otherwise only ever set a number for the first one.
+                    var saved = null;
+                    try { saved = localStorage.getItem('gba_selected_athlete_id'); } catch (e) { saved = null; }
+                    var chosen = null;
+                    for (var i = 0; i < list.length; i++) {
+                        if (list[i] && list[i].athlete_id === saved) { chosen = list[i]; break; }
+                    }
+                    if (!chosen) chosen = list[0];
                     window.JerseyPicker.mount('jersey-picker-root', {
                         client: sb,
-                        athleteId: list[0].athlete_id
+                        athleteId: chosen.athlete_id
                     });
                 }).catch(function () { /* card stays hidden */ });
             } catch (e) { /* card stays hidden */ }
