@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="same-origin">
+<title>The Wall &middot; Godspeed Basketball</title>
+<link rel="preconnect" href="https://nnqokhqennuxalamnvps.supabase.co">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syncopate:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="community-wall.css?v=20261002">
+</head>
+<body>
+<a class="cw-skip" href="#cw-main">Skip to posts</a>
+
+<header class="cw-top" role="banner">
+  <a class="cw-top__back" href="parent-portal.html" aria-label="Back to the parent portal">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span>Portal</span>
+  </a>
+  <h1 class="cw-top__title">The Wall</h1>
+  <div class="cw-top__actions">
+    <button class="cw-icon-btn cw-hide" id="cwReviewBtn" type="button" aria-label="Review reported posts">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4h11l-1.5 4L16 12H5"/></svg>
+      <span class="cw-count" id="cwReviewCount"></span>
+    </button>
+    <button class="cw-icon-btn" id="cwViewBtn" type="button" aria-label="Switch to grid view" aria-pressed="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true" id="cwViewIcon"></svg>
+    </button>
+  </div>
+</header>
+
+<nav class="cw-filters cw-hide" id="cwFilters" aria-label="Filter posts">
+  <div class="cw-filters__row" id="cwFilterRow" role="tablist"></div>
+</nav>
+
+<button class="cw-newpill cw-hide" id="cwNewPill" type="button">New posts</button>
+
+<main id="cw-main" class="cw-main" tabindex="-1">
+  <div id="cwState" class="cw-state" aria-live="polite"></div>
+  <div id="cwReview" class="cw-review cw-hide"></div>
+  <div id="cwFeed" class="cw-feed" aria-busy="true"></div>
+  <div id="cwSentinel" class="cw-sentinel" aria-hidden="true"></div>
+  <p id="cwEnd" class="cw-end cw-hide">You're all caught up.</p>
+</main>
+
+<button class="cw-fab cw-hide" id="cwFab" type="button" aria-label="New post">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
+<input type="file" id="cwFileInput" class="cw-hide" accept="image/*,video/mp4,video/quicktime" multiple>
+
+<div id="cwLayer"></div>
+<div id="cwToast" class="cw-toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="community-wall.js?v=20261002"></script>
+</body>
+</html>
