@@ -169,6 +169,39 @@ not 15.
   every recipient query excludes them, and the admin counts show 37.
 - **Gate:** apply to production.
 
+### N9. One payment route per uniform kit · STAGED, GATED
+The kit can be paid two ways and nothing recorded which, so both were possible at once. Kyra
+Gale's dues of $680.68 already contain the $207.78 kit **and** she has an open $207.78 uniform
+order. The moment a live Stripe key is set she could pay $888.46 against a $680.68 obligation.
+
+**The invariant:** `parent_dues_enrollment.total_owed` includes the kit price if and only if that
+athlete's uniform order has `payment_method = 'dues'`. `status` answers "has the money arrived";
+`payment_method` answers "by which route". Overloading `status` with a `covered_by_dues` value
+would break every query that treats `'paid'` as settled.
+
+Staged, not applied:
+
+- `supabase/migrations/v30_01_uniform_payment_method.sql` adds `payment_method text not null
+  default 'dues'` with a CHECK on `('dues','stripe')`. Default `'dues'` is the state every
+  current family is already in, needs no live key, and cannot double-charge anyone. Choosing
+  `'stripe'` is the deliberate act.
+- `create-uniform-checkout` now **fails closed**: any order whose `payment_method` is not an
+  explicit `'stripe'` returns `{ url: null, reason: 'covered_by_dues' }` and never reaches
+  Stripe. The column alone was documentation; this is the guard.
+- `order-uniform.html` tells a dues-covered family the kit is included rather than promising
+  them a bill.
+
+**Order of operations matters.** Apply the migration *before* the push. The function now selects
+`payment_method`, and without that column every call returns 404.
+
+Still missing, and the reason the card route is inert rather than ready: there is **no UI for a
+parent to choose `'stripe'`**. Until that exists every order stays on the dues route, which is
+correct and safe, but "pay the kit by card" is not yet something a parent can do.
+
+- **Done when:** the migration is applied, the guard is deployed, and a parent can pick a route
+  at checkout with their dues total adjusting to match the choice.
+- **Gate:** apply migration to production, then push and deploy.
+
 ---
 
 ## NEXT — make it scale
@@ -201,17 +234,31 @@ has signed in, so the auth mechanism is fine — this is a cohort, not a bug.
 - **Done when:** Scott has reviewed and sent one re-invite run. Drafts only, never sent by Claude.
 - **Blocked on:** N1–N4 landing, so they arrive to a portal that works.
 
-### X6. Jersey number picker · BLOCKED
-`supabase/migrations/20260915030000_jersey_number_picker.sql` is written but never applied —
-`teams.jersey_pool` does not exist live.
-- **Gate:** apply to production.
+### X6. Jersey number picker · DONE 2026-10-02
+Shipped on a different design than the blocked migration assumed. `teams.jersey_pool` was never
+created; numbers pool by **grade band** instead, read from the roster rather than from
+`athletes.grade`, so a 4th grader rostered on a 5th-grade team draws from the 5th-grade pool.
+
+- Applied: `supabase/migrations/v28_01_jersey_grade_band.sql` (`athlete_grade_bands`,
+  `get_jersey_availability`, `claim_jersey_number`), revoked from `public`/`anon`, granted to
+  `authenticated` only. Concurrent claims serialised by
+  `pg_advisory_xact_lock(hashtext('jersey_band:' || band))`.
+- Shipped: `jersey-picker.js` (`9e86b02`) with an orange "Action needed" state until a number is
+  set, and a collapsed confirmed state with a Change link.
+- Committed on payment: `uniform-order-webhook` writes `athletes.jersey_number` and clears
+  `needs_uniform` when Stripe confirms (`970991f`, live version 8).
+- Superseded: `20260915030000_jersey_number_picker.sql` was never applied. Delete it under L4
+  rather than renumber it.
 
 ---
 
 ## LATER — durability
 
-### L1. Stripe and a real payer-of-record · BLOCKED (needs EIN)
-Replaces Venmo reconciliation. Gated on LLC → EIN → Stripe.
+### L1. Stripe and a real payer-of-record · PREMISE CORRECTED 2026-10-02
+Replaces Venmo reconciliation. **This was never gated on an EIN.** Stripe activates a sole
+proprietor on an SSN; only a company or LLC account requires an EIN. The entity decision
+(`claude/DECISION-entity-structure.md`) is a tax and liability question and does not block
+taking card payments. The real remaining work is now tracked at **N9**.
 
 ### L2. Test coverage on the three paths that keep breaking · TODO
 Auth, documents, dues. There is currently no automated test on any of them, which is why the same

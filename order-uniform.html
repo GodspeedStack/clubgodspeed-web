@@ -282,15 +282,22 @@
 
       // Try to open Stripe checkout. If checkout isn't live yet, the order is still
       // safely placed and the number is reserved.
-      let checkoutUrl=null;
+      let checkoutUrl=null, checkoutReason=null;
       try{
         const { data:co } = await sb.functions.invoke('create-uniform-checkout', { body:{ order_id: order.order_id } });
         checkoutUrl = co && co.url;
+        checkoutReason = co && co.reason;
       }catch(_){ /* fall through to reserved-confirmation */ }
 
       if(checkoutUrl){ window.location.href = checkoutUrl; return; }
 
-      banner(`Order ${order.order_number} placed. Number #${order.number} is reserved. We'll follow up with payment details.`,'ok');
+      // 'covered_by_dues' is not a failure. The kit price already sits in this
+      // family's season dues, so telling them to expect a bill would be wrong.
+      banner(
+        checkoutReason === 'covered_by_dues'
+          ? `Order ${order.order_number} placed. Number #${order.number} is reserved. The kit is included in your season dues, so there is nothing more to pay for it.`
+          : `Order ${order.order_number} placed. Number #${order.number} is reserved. We'll follow up with payment details.`,
+        'ok');
       btn.textContent='Order placed';
       window.scrollTo({top:0,behavior:'smooth'});
     }catch(e){

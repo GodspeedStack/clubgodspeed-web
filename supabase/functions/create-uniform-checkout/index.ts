@@ -8,6 +8,9 @@
 // Graceful degradation: if STRIPE_SECRET_KEY is not set (live keys pending),
 // returns 200 { url:null, reason:'stripe_not_configured' } so the parent page
 // keeps the reserved order and shows a follow-up-for-payment confirmation.
+// Double-charge guard: refuses any order whose payment_method is not 'stripe'.
+// REQUIRES migration v30_01_uniform_payment_method.sql to have been applied.
+// Without that column this select fails and every call returns 404.
 // Zero-dependency raw fetch to Stripe (mirrors create-checkout-session).
 // -----------------------------------------------------------------------------
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -38,12 +41,20 @@ Deno.serve(async (req) => {
 
     const { data: order, error } = await supabase
       .from('uniform_orders')
-      .select('id,order_number,player_name,jersey_number,jersey_size,shorts_size,total_amount,status,customer_email,stripe_checkout_session_id')
+      .select('id,order_number,player_name,jersey_number,jersey_size,shorts_size,total_amount,status,customer_email,stripe_checkout_session_id,payment_method')
       .eq('id', order_id)
       .single()
 
     if (error || !order) return json({ error: 'order not found' }, 404)
     if (order.status === 'paid') return json({ url: null, reason: 'already_paid' })
+
+    // The kit is paid ONE way: inside season dues, or by card here. Never both.
+    // v30_01 records which in payment_method. Fail closed: anything that is not
+    // an explicit 'stripe' (including null) means the price already sits in
+    // parent_dues_enrollment.total_owed and this order must never be charged.
+    if (order.payment_method !== 'stripe') {
+      return json({ url: null, reason: 'covered_by_dues' })
+    }
 
     // No live Stripe key yet: order stays reserved, parent sees follow-up message.
     if (!STRIPE_SECRET_KEY) return json({ url: null, reason: 'stripe_not_configured' })
