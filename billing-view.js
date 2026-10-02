@@ -556,29 +556,48 @@ async function loadBillingTrainingSchedule() {
   } catch (e) { console.error('Training schedule load:', e); }
 }
 
-async function renderPlanSelectionUI(container, parentId, supabase, email, enrolledOwed, enrolledPaid, athlete) {
-    // Resolve fundraising credit to calculate adjusted total
-    const BASE_DUES = enrolledOwed || 745;
-    let fundraisingCredit = 0;
-    const athleteName = athlete ? athlete.name : '';
-    try {
-        if (athlete && athlete.firstName) {
-            const { data: ft } = await supabase
-                .from('fundraising_totals')
-                .select('total_raised')
-                .ilike('athlete_name', athlete.firstName + '%')
-                .limit(1);
-            if (ft && ft.length) fundraisingCredit = parseFloat(ft[0].total_raised) || 0;
+/** The next few 15ths, starting with the one at least a week out. */
+function planDueDates(count) {
+    var out = [], d = new Date();
+    d.setHours(0,0,0,0);
+    // If the 15th is already past, or within a week, start next month.
+    if (d.getDate() >= 8) d.setMonth(d.getMonth() + 1);
+    d.setDate(15);
+    for (var i = 0; i < count; i++) {
+        out.push(new Date(d.getFullYear(), d.getMonth() + i, 15));
         }
-    } catch (e) { console.warn('Fundraising lookup in plan selection:', e); }
+    return out;
+}
 
-    const adjustedTotal = Math.max(BASE_DUES - fundraisingCredit, 0);
+function fmtDue(d) {
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+async function renderPlanSelectionUI(container, parentId, supabase, email, enrolledOwed, enrolledPaid, athlete) {
+    // What this family actually owes. No invented fallback: a missing enrolment
+    // is a bug to surface, not a number to guess. The old `|| 745` quietly
+    // showed last season's Summer price to anyone whose enrolment failed to load.
+    const BASE_DUES = Number(enrolledOwed);
+    const athleteName = athlete ? athlete.name : '';
+
+    if (!isFinite(BASE_DUES) || BASE_DUES <= 0) {
+        container.innerHTML = '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:20px;">'
+          + '<div style="font-weight:700;color:#111;">We could not load your balance</div>'
+          + '<div style="font-size:0.9rem;color:#6b7280;margin-top:6px;">Please refresh. If it keeps happening, reply to any Godspeed email and we will sort it out.</div>'
+          + '</div>';
+        return;
+    }
+
+    // Fundraising is NOT a dues credit. fundraising_totals holds 2025-26 season
+    // results; subtracting it here showed four families less than they owed
+    // (Khaliq $47.90 against a real $507.90). Season dues are settled on their
+    // own ledger. Removed deliberately -- do not reinstate without a real
+    // per-season credit table.
+    const adjustedTotal = BASE_DUES;
     const inst2 = Math.round(adjustedTotal / 2 * 100) / 100;
     const inst3First = Math.round(adjustedTotal / 3 * 100) / 100;
     const inst3Last = Math.round((adjustedTotal - inst3First * 2) * 100) / 100;
-    const creditNote = fundraisingCredit > 0
-        ? `<div style="background:#d1fae5;border:1px solid #a7f3d0;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:0.85rem;color:#065f46;font-weight:500;">Fundraising credit of $${fundraisingCredit.toFixed(2)} applied -- your adjusted total is $${adjustedTotal.toFixed(2)}</div>`
-        : '';
+    const creditNote = '';
 
     // Store adjusted total on window for selectPaymentPlan to use
     window._gsAdjustedDues = adjustedTotal;
@@ -587,9 +606,14 @@ async function renderPlanSelectionUI(container, parentId, supabase, email, enrol
 
     // Name the athlete in the heading -- with siblings, "your plan" is ambiguous
     // and a parent could easily enroll the wrong kid.
+    // season-header.js resolves this from season_dues_config by today's date.
+    const seasonName = (window.__seasonLabel || '').replace(/\s*Season\s+Dues\s*$/i, '').replace(/\s*Dues\s*$/i, '').trim();
+    const seasonBit = seasonName ? escapeHTML(seasonName) + ' ' : '';
     const planHeading = athleteName
-        ? `Select ${escapeHTML(athleteName)}'s Spring/Summer 2026 Payment Plan`
-        : 'Select your Spring/Summer 2026 Payment Plan';
+        ? `Select ${escapeHTML(athleteName)}'s ${seasonBit}Payment Plan`
+        : `Select your ${seasonBit}Payment Plan`;
+
+    const d2 = planDueDates(2), d3 = planDueDates(3);
 
     container.innerHTML = `
         <div style="background: white; border-radius: 12px; padding: 20px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
@@ -614,7 +638,7 @@ async function renderPlanSelectionUI(container, parentId, supabase, email, enrol
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <div style="font-weight: 800; font-size: 1.05rem; color: #111;">2 Installments</div>
-                            <div style="font-size: 0.85rem; color: #666; margin-top: 4px;">Two payments of $${inst2.toFixed(2)} (April 15th, May 15th)</div>
+                            <div style="font-size: 0.85rem; color: #666; margin-top: 4px;">Two payments of $${inst2.toFixed(2)} (${fmtDue(d2[0])}, ${fmtDue(d2[1])})</div>
                         </div>
                         <div style="font-size: 1.25rem; font-weight: 800; color: #0071e3;">$${inst2.toFixed(0)}</div>
                     </div>
@@ -625,7 +649,7 @@ async function renderPlanSelectionUI(container, parentId, supabase, email, enrol
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <div style="font-weight: 800; font-size: 1.05rem; color: #111;">3 Installments</div>
-                            <div style="font-size: 0.85rem; color: #666; margin-top: 4px;">$${inst3First.toFixed(2)} (Apr 15th), $${inst3First.toFixed(2)} (May 15th), $${inst3Last.toFixed(2)} (Jun 15th)</div>
+                            <div style="font-size: 0.85rem; color: #666; margin-top: 4px;">$${inst3First.toFixed(2)} (${fmtDue(d3[0])}), $${inst3First.toFixed(2)} (${fmtDue(d3[1])}), $${inst3Last.toFixed(2)} (${fmtDue(d3[2])})</div>
                         </div>
                         <div style="font-size: 1.25rem; font-weight: 800; color: #0071e3;">$${inst3First.toFixed(0)}</div>
                     </div>
