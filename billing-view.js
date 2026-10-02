@@ -573,6 +573,13 @@ function fmtDue(d) {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
+/** YYYY-MM-DD in local time. toISOString() would shift the day back in MST. */
+function isoDue(d) {
+    var m = String(d.getMonth() + 1).padStart(2, '0');
+    var day = String(d.getDate()).padStart(2, '0');
+    return d.getFullYear() + '-' + m + '-' + day;
+}
+
 async function renderPlanSelectionUI(container, parentId, supabase, email, enrolledOwed, enrolledPaid, athlete) {
     // What this family actually owes. No invented fallback: a missing enrolment
     // is a bug to surface, not a number to guess. The old `|| 745` quietly
@@ -736,27 +743,40 @@ async function renderPlanSelectionUI(container, parentId, supabase, email, enrol
             setStep(3, 'idle');
 
             try {
-                // Use fundraising-adjusted total from renderPlanSelectionUI
-                const adjustedTotal = window._gsAdjustedDues || 745;
+                // No 745 fallback. Enrolling someone at last season's Summer price
+                // because a balance failed to load is worse than refusing to enrol.
+                const adjustedTotal = Number(window._gsAdjustedDues);
+                if (!isFinite(adjustedTotal) || adjustedTotal <= 0) {
+                    throw new Error('Balance unavailable; refusing to create a plan.');
+                }
                 const athleteName = window._gsAthleteName || 'Your Athlete';
 
-                // Calculate installments from adjusted total
+                // The SAME helper that produced the dates on screen. These used to be
+                // hardcoded to April/May/June 2026, so a parent was shown one schedule
+                // and saved another -- already months overdue the moment it wrote.
                 let installmentsArray = [];
                 if (planType === 'full') {
-                    installmentsArray = [{ number: 1, amount: adjustedTotal, dueDate: '2026-04-15' }];
+                    installmentsArray = [
+                        { number: 1, amount: adjustedTotal, dueDate: isoDue(planDueDates(1)[0]) }
+                    ];
                 } else if (planType === '2-installment') {
+                    const dd = planDueDates(2);
                     const half = Math.round(adjustedTotal / 2 * 100) / 100;
                     installmentsArray = [
-                        { number: 1, amount: half, dueDate: '2026-04-15' },
-                        { number: 2, amount: Math.round((adjustedTotal - half) * 100) / 100, dueDate: '2026-05-15' }
+                        { number: 1, amount: half, dueDate: isoDue(dd[0]) },
+                        { number: 2, amount: Math.round((adjustedTotal - half) * 100) / 100, dueDate: isoDue(dd[1]) }
                     ];
                 } else if (planType === '3-installment') {
+                    const dd = planDueDates(3);
                     const third = Math.round(adjustedTotal / 3 * 100) / 100;
                     installmentsArray = [
-                        { number: 1, amount: third, dueDate: '2026-04-15' },
-                        { number: 2, amount: third, dueDate: '2026-05-15' },
-                        { number: 3, amount: Math.round((adjustedTotal - third * 2) * 100) / 100, dueDate: '2026-06-15' }
+                        { number: 1, amount: third, dueDate: isoDue(dd[0]) },
+                        { number: 2, amount: third, dueDate: isoDue(dd[1]) },
+                        { number: 3, amount: Math.round((adjustedTotal - third * 2) * 100) / 100, dueDate: isoDue(dd[2]) }
                     ];
+                }
+                if (!installmentsArray.length) {
+                    throw new Error('Unrecognised plan type: ' + planType);
                 }
 
                 const totalAmount = installmentsArray.reduce((sum, i) => sum + i.amount, 0);
