@@ -11,6 +11,7 @@
 // in the admin dashboard regardless of email state.
 // -----------------------------------------------------------------------------
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { safeFrom } from "../_shared/parent-comms.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,7 +24,10 @@ const supabase = createClient(
 )
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
-const FROM_EMAIL     = Deno.env.get('RESEND_FROM_EMAIL')!
+// A bad RESEND_FROM_EMAIL used to take this function down entirely:
+// Resend answers 422 Invalid from field and nothing sends. Fall back to
+// the club sender instead of trusting the secret blindly.
+const FROM_EMAIL     = safeFrom(Deno.env.get('RESEND_FROM_EMAIL'))
 const ADMIN_EMAIL    = Deno.env.get('ADMIN_NOTIFY_EMAIL') || 'jewellsco@gmail.com'
 const ADMIN_URL      = 'https://www.clubgodspeed.com/admin-uniform-orders.html'
 const MAX_ATTEMPTS   = 5

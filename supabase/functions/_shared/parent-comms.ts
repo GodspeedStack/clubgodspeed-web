@@ -85,6 +85,62 @@ export interface SendResult {
 // ─── constants ──────────────────────────────────────────────────────────────
 
 const DEFAULT_FROM = "Godspeed Basketball <noreply@clubgodspeed.com>";
+
+/**
+ * A sender address Resend will accept, always.
+ *
+ * RESEND_FROM_EMAIL is a project secret, and a malformed value in it took the
+ * whole mail pipeline down: Resend answers 422 "Invalid from field" and every
+ * send fails, silently, for as long as the secret stays bad. Four functions read
+ * that secret with a bare non-null assertion and hand the result straight to
+ * this helper, so one bad character in the dashboard broke signature alerts,
+ * broadcasts, signup notices and uniform-order notices at the same time.
+ *
+ * So a caller-supplied sender is now a suggestion, not an instruction. It is
+ * used only if it parses as an address or as "Display Name <address>".
+ * Otherwise this falls back to the club default and says so in the logs. A
+ * misconfigured secret should degrade to the right sender, never to no email.
+ */
+const ADDRESS_RE = /^[^\s<>@,"]+@[^\s<>@,"]+\.[^\s<>@,"]{2,}$/;
+const DISPLAY_RE = /^[^<>]{1,100}<\s*([^\s<>@,"]+@[^\s<>@,"]+\.[^\s<>@,"]{2,})\s*>$/;
+
+/**
+ * Domains this platform must never send as, however it is configured.
+ *
+ * Godspeed mail went out from a bagequity.com address once, because a send was
+ * routed through a Gmail account whose default alias is on that domain. A parent
+ * should only ever see a Godspeed sender, so the domain is refused here rather
+ * than left to whoever edits the secret next.
+ */
+const BLOCKED_SENDER_DOMAINS = ["bagequity.com"];
+
+function senderDomain(raw: string): string | null {
+  const m = raw.match(DISPLAY_RE);
+  const addr = m ? m[1] : (ADDRESS_RE.test(raw) ? raw : null);
+  if (!addr) return null;
+  return addr.split("@").pop()!.toLowerCase();
+}
+
+export function safeFrom(candidate: string | null | undefined): string {
+  const raw = (candidate ?? "").trim();
+  if (!raw) return DEFAULT_FROM;
+
+  const domain = senderDomain(raw);
+  if (domain && BLOCKED_SENDER_DOMAINS.includes(domain)) {
+    console.warn(
+      `[parent-comms] refusing blocked sender domain ${domain}; using ${DEFAULT_FROM}`,
+    );
+    return DEFAULT_FROM;
+  }
+
+  if (ADDRESS_RE.test(raw)) return raw;
+  const m = raw.match(DISPLAY_RE);
+  if (m) return raw;
+  console.warn(
+    `[parent-comms] ignoring malformed sender ${JSON.stringify(raw)}; using ${DEFAULT_FROM}`,
+  );
+  return DEFAULT_FROM;
+}
 const BODY_CAP = 20000;   // matches parent_message_log_body_capped
 const SUBJECT_CAP = 500;  // matches parent_message_log_subject_capped
 
@@ -242,7 +298,7 @@ export async function sendParentEmail(input: ParentEmailInput): Promise<SendResu
         ...(input.idempotencyKey ? { "Idempotency-Key": input.idempotencyKey } : {}),
       },
       body: JSON.stringify({
-        from: input.from ?? DEFAULT_FROM,
+        from: safeFrom(input.from),
         to: [input.to],
         ...(input.replyTo ? { reply_to: input.replyTo } : {}),
         subject: input.subject,
