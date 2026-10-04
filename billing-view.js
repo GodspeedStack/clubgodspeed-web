@@ -285,6 +285,18 @@ window.renderBilling = async function (email) {
 
         // 0. Resolve actual dues from enrollment table (replaces hardcoded $745)
         const enrollment = await resolveEnrollmentData(supabase, athlete);
+
+        // No bill visible to this login (e.g. a second parent whose email is not
+        // on the bill). Never invent a balance: say so plainly instead.
+        if (!enrollment.id) {
+            if (totalDueEl) totalDueEl.textContent = '--';
+            statusTextEl.textContent = 'No bill on this login';
+            statusTextEl.style.color = '#6b7280';
+            statusCard.style.borderLeftColor = '#d1d5db';
+            container.innerHTML = '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:18px;color:#374151;">We don\'t see a bill on this login. If another parent pays for your family, their login shows the balance. Questions? Text Coach Scott.</div>';
+            return;
+        }
+
         const baseDues = enrollment.totalOwed;
         const paidSoFar = enrollment.totalPaid;
 
