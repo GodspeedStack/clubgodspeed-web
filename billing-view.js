@@ -179,6 +179,55 @@ async function loadPlanForAthlete(supabase, userId, athlete, athleteCount) {
 }
 
 /**
+ * Open installments on THIS season's enrollment (the dues ledger the reminders
+ * and the admin use). Never read payment_plans / payments for the invoice list:
+ * those hold last spring's plans, and showing them told families they owed money
+ * from a finished season (Anton: $124.17 "overdue since May 15" against a real
+ * Fall balance of $52.90).
+ * Returns null when the rows cannot be read, so the caller can fall back to the
+ * enrollment balance instead of showing an empty or wrong list.
+ */
+async function loadOpenInstallments(supabase, enrollmentId) {
+  if (!enrollmentId) return null;
+  try {
+    const { data, error } = await supabase
+      .from('dues_installments')
+      .select('id, installment_number, amount, due_date, status')
+      .eq('enrollment_id', enrollmentId)
+      .not('status', 'in', '(paid,waived)')
+      .order('due_date', { ascending: true });
+    if (error) { console.warn('[billing] installments read failed:', error.message); return null; }
+    return data || [];
+  } catch (e) { console.warn('[billing] installments read failed:', e); return null; }
+}
+
+/**
+ * Turn ledger rows into the shape renderPaymentsTimeline draws. Numbering is by
+ * position (1, 2, 3) so a family never sees "Installment 4" on their first bill.
+ * When the ledger cannot be read but money is owed, show the balance as one line.
+ */
+function invoiceRowsFromLedger(rows, balance, enrollmentId) {
+  // Invariant: the rows shown must add up to the balance in the header.
+  // If open installments do not match the enrollment balance (partial payment,
+  // manual adjustment), show one row for the true balance instead.
+  const sum = (rows || []).reduce((t, r) => t + Number(r.amount || 0), 0);
+  if (rows && rows.length && Math.abs(sum - balance) > 0.01) {
+    const dated = rows.find(r => r.due_date);
+    return [{ id: enrollmentId || 'balance', amount: balance, due_date: dated ? dated.due_date : null, installment_number: 1, status: 'pending' }];
+  }
+  if (rows && rows.length) {
+    return rows.map((r, i) => ({
+      id: r.id, amount: Number(r.amount), due_date: r.due_date,
+      installment_number: i + 1, status: 'pending'
+    }));
+  }
+  if (balance > 0) {
+    return [{ id: enrollmentId || 'balance', amount: balance, due_date: null, installment_number: 1, status: 'pending' }];
+  }
+  return [];
+}
+
+/**
  * Render Billing Dashboard
  */
 window.renderBilling = async function (email) {
@@ -239,60 +288,36 @@ window.renderBilling = async function (email) {
         const baseDues = enrollment.totalOwed;
         const paidSoFar = enrollment.totalPaid;
 
-        // 1. Fetch the payment plan for THIS athlete
-        const currentPlan = await loadPlanForAthlete(supabase, user.id, athlete, athletes.length);
-
-        // Helper: update the section header label above billing-invoices-list
+        // 1. Invoices come from this season's dues ledger, not from old payment plans.
         const sectionHeaderEl = document.querySelector('#view-aau-billing h3');
+        const balance = Math.max(Math.round((baseDues - paidSoFar) * 100) / 100, 0);
+        if (totalDueEl) totalDueEl.textContent = '$' + balance.toFixed(2);
+        if (sectionHeaderEl) sectionHeaderEl.textContent = 'Outstanding Invoices';
 
-        if (!currentPlan) {
-            // No plan for this athlete yet — show plan selection UI
-            statusTextEl.textContent = 'Action Required';
-            statusTextEl.style.color = '#ef4444';
-            statusCard.style.borderLeftColor = '#ef4444';
-            if (sectionHeaderEl) sectionHeaderEl.textContent = 'Payment Plan';
-            await renderPlanSelectionUI(container, user.id, supabase, email, baseDues, paidSoFar, athlete);
-            if (totalDueEl) totalDueEl.textContent = '$' + Math.max(baseDues - paidSoFar, 0).toFixed(2);
+        if (balance <= 0) {
+            statusTextEl.textContent = 'Paid in Full';
+            statusTextEl.style.color = '#10b981';
+            statusCard.style.borderLeftColor = '#10b981';
+            container.innerHTML = '<div style="background:#fff;border:1px solid #d1fae5;border-radius:12px;padding:18px;color:#065f46;font-weight:600;">You are all paid up for this season. Thank you.</div>';
             loadFundraisingCredit(supabase, baseDues, paidSoFar, athlete);
             return;
         }
 
-        // 2. Fetch Payments for the Plan
-        const { data: payments, error: paymentsError } = await supabase
-            .from('payments')
-            .select('*')
-            .eq('plan_id', currentPlan.id)
-            .order('installment_number', { ascending: true });
+        const ledgerRows = await loadOpenInstallments(supabase, enrollment.id);
+        const invoices = invoiceRowsFromLedger(ledgerRows, balance, enrollment.id);
+        const plan = { plan_type: invoices.length === 1 ? 'full' : 'installments' };
+        renderPaymentsTimeline(container, invoices, plan, supabase, enrollment, athlete);
 
-        if (paymentsError) throw paymentsError;
-
-        // Section header: "Payment Plan" before April 1, "Outstanding Invoices" on/after
-        const aprilFirst = new Date('2026-04-01T00:00:00');
-        const now = new Date();
-        if (sectionHeaderEl) {
-            sectionHeaderEl.textContent = now < aprilFirst ? 'Payment Plan' : 'Outstanding Invoices';
-        }
-
-        // Always render the payments timeline — parents can pay early at any time
-        renderPaymentsTimeline(container, payments, currentPlan, supabase, enrollment, athlete);
-
-        // Update status card
-        const pendingPayments = payments.filter(p => p.status !== 'confirmed');
-        let displayTotal = 0;
-        if (pendingPayments.length > 0) {
-            const nextPayment = pendingPayments[0];
-            const isOverdue = new Date(nextPayment.due_date + 'T00:00:00') < now;
-            displayTotal = pendingPayments.reduce((s, p) => s + parseFloat(p.amount), 0);
-            statusTextEl.textContent = isOverdue ? 'Payment Overdue' : 'Payment Due ' + (now < aprilFirst ? 'Apr 1' : 'Soon');
-            statusTextEl.style.color = isOverdue ? '#ef4444' : '#f59e0b';
-            statusCard.style.borderLeftColor = isOverdue ? '#ef4444' : '#f59e0b';
-            if (totalDueEl) totalDueEl.textContent = '$' + Math.max(baseDues - paidSoFar, 0).toFixed(2);
-        } else {
-            statusTextEl.textContent = 'Paid in Full';
-            statusTextEl.style.color = '#10b981';
-            statusCard.style.borderLeftColor = '#10b981';
-            if (totalDueEl) totalDueEl.textContent = '$0.00';
-        }
+        // Status: overdue only when a dated invoice is actually past due.
+        const now = new Date(); now.setHours(0, 0, 0, 0);
+        const next = invoices.find(r => r.due_date) || null;
+        const nextDue = next ? new Date(next.due_date + 'T00:00:00') : null;
+        const isOverdue = !!(nextDue && nextDue < now);
+        statusTextEl.textContent = isOverdue ? 'Payment Overdue'
+            : nextDue ? 'Payment Due ' + nextDue.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+            : 'Balance Due';
+        statusTextEl.style.color = isOverdue ? '#ef4444' : '#f59e0b';
+        statusCard.style.borderLeftColor = isOverdue ? '#ef4444' : '#f59e0b';
 
         // Load fundraising credit — pass real base dues and payments so the
         // breakdown and header reflect the actual remaining balance.
@@ -884,9 +909,9 @@ function renderPaymentsTimeline(container, payments, plan, supabase, enrollment,
 
     payments.forEach(payment => {
         const isPaid    = payment.status === 'confirmed';
-        const dueDate   = new Date(payment.due_date + 'T00:00:00');
-        const isOverdue = !isPaid && dueDate < new Date();
-        const rowLabel  = isFullPay ? 'Full Payment' : `Installment ${payment.installment_number}`;
+        const dueDate   = payment.due_date ? new Date(payment.due_date + 'T00:00:00') : null;
+        const isOverdue = !isPaid && !!dueDate && dueDate < new Date(new Date().setHours(0, 0, 0, 0));
+        const rowLabel  = isFullPay ? 'Season Balance' : `Payment ${payment.installment_number} of ${payments.length}`;
         const btnId     = `gs-pay-btn-${payment.id}`;
 
         let statusBadge = '';
@@ -901,7 +926,7 @@ function renderPaymentsTimeline(container, payments, plan, supabase, enrollment,
             borderColor = '#ef4444';
             actionBtn   = `<button id="${btnId}" class="btn-primary" style="padding:8px 18px;font-size:0.85rem;background:#0a0a0a;color:#fff;font-weight:700;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;min-width:100px;justify-content:center;" data-payment-id="${payment.id}" data-amount="${payment.amount}" data-installment="${payment.installment_number}" data-label="${rowLabel}"${payTarget} onclick="window._directCheckout(this)">Pay Now</button>`;
         } else {
-            statusBadge = `<span style="background:#fef3c7;color:#d97706;padding:3px 8px;border-radius:4px;font-size:0.7rem;font-weight:700;text-transform:uppercase;">Upcoming</span>`;
+            statusBadge = `<span style="background:#fef3c7;color:#d97706;padding:3px 8px;border-radius:4px;font-size:0.7rem;font-weight:700;text-transform:uppercase;">${dueDate ? 'Upcoming' : 'Due'}</span>`;
             borderColor = '#f59e0b';
             const btnBg = isFullPay ? '#0a0a0a' : '#6b7280';
             const btnLabel = isFullPay ? 'Pay Now' : 'Pay Early';
@@ -921,10 +946,10 @@ function renderPaymentsTimeline(container, payments, plan, supabase, enrollment,
                         <span style="margin:0;font-size:0.9rem;font-weight:700;color:#111;">${rowLabel}</span>
                         ${statusBadge}
                     </div>
-                    <div style="font-size:0.8rem;color:#888;">${dueDate.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+                    <div style="font-size:0.8rem;color:#888;">${dueDate ? 'Due ' + dueDate.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : 'Due now'}</div>
                 </div>
                 <div style="display:flex;align-items:center;gap:14px;">
-                    <div style="font-size:1.1rem;font-weight:800;color:#111;">$${payment.amount.toFixed(2)}</div>
+                    <div style="font-size:1.1rem;font-weight:800;color:#111;">$${Number(payment.amount).toFixed(2)}</div>
                     ${actionBtn}
                 </div>
             </div>`;
