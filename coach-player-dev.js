@@ -621,6 +621,19 @@
 #devboard-view .db-st span{color:var(--ts)}\
 #devboard-view .db-st .who{display:block;font-size:12px;color:var(--ts);margin-top:2px}\
 #devboard-view .db-plan-bar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}\
+#coach-dashboard .dashboard-header .text-sub:empty{display:none}\
+#devboard-view .db-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 18px}\
+#devboard-view .db-toolbar .db-tabs,#devboard-view .db-toolbar .gs-seg{margin:0}\
+#devboard-view .db-teampick{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ts)}\
+#devboard-view .db-teampick select{font:inherit;font-size:14px;font-weight:600;color:var(--tx);background:#fff;border:1px solid var(--bd);border-radius:10px;padding:8px 32px 8px 12px;min-height:38px;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%236e6e73%27 stroke-width=%272.5%27 stroke-linecap=%27round%27%3E%3Cpath d=%27M6 9l6 6 6-6%27/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center}\
+#devboard-view .db-planhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 14px}\
+#devboard-view .db-step{display:flex;align-items:center;gap:6px}\
+#devboard-view .db-step-btn{font:inherit;font-size:22px;line-height:1;width:36px;height:36px;border-radius:50%;border:0;background:transparent;color:#2563eb;cursor:pointer;min-height:0;min-width:0;padding:0}\
+#devboard-view .db-step-btn:hover{background:rgba(37,99,235,.08)}#devboard-view .db-step-btn:disabled{color:#c7c7cc;cursor:default;background:transparent}\
+#devboard-view .db-step-lbl{padding:0 4px}#devboard-view .db-step-lbl b{display:block;font-size:17px;font-weight:700;letter-spacing:-.01em;color:var(--tx)}#devboard-view .db-step-lbl small{display:block;font-size:12.5px;color:var(--ts);margin-top:1px}\
+#devboard-view .db-acts{display:flex;align-items:center;gap:18px}\
+#devboard-view .db-link{font:inherit;font-size:14px;font-weight:600;color:#2563eb;background:none;border:0;padding:6px 0;cursor:pointer;min-height:0;min-width:0;text-transform:none}#devboard-view .db-link:hover{text-decoration:underline}\
+@media (max-width:600px){#devboard-view .db-toolbar{gap:10px}#devboard-view .db-teampick{width:100%}#devboard-view .db-teampick select{flex:1}#devboard-view .db-planhead{align-items:flex-start}}\
 #devboard-view .db-tabs button .db-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#d92d20;margin-left:6px;vertical-align:2px}\
 #devboard-view .db-act{display:grid;grid-template-columns:44px 1fr auto;gap:4px 12px;align-items:start;padding:12px 0;border-bottom:1px solid var(--bl)}\
 #devboard-view .db-act .ic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;letter-spacing:.04em;color:#fff;background:var(--ac)}#devboard-view .db-act .ic.plan{background:#7c3aed}#devboard-view .db-act .ic.share{background:#159a52}#devboard-view .db-act .ic.training{background:#d97706;font-size:9.5px}\
@@ -697,7 +710,7 @@
 @media (max-width:640px){#devboard-view .db-grid{grid-template-columns:1fr}#devboard-view .db-block{grid-template-columns:auto 52px 1fr;gap:10px}#devboard-view .db-st{grid-template-columns:1fr auto}#devboard-view .db-st .k{grid-column:1/-1;padding-top:0}\
 #db-backdrop{padding:0;align-items:flex-end}#db-backdrop .db-sheet{border-radius:20px 20px 0 0;max-height:94vh;max-height:94dvh}#db-backdrop .db-sheet .hd{padding:22px 20px 16px}#db-backdrop .db-sheet .bd{padding:4px 20px calc(18px + env(safe-area-inset-bottom))}\
 #db-backdrop .rt-row{grid-template-columns:1fr;gap:6px}#db-backdrop .rt-word{grid-column:1;text-align:left}#db-backdrop .rt-seg{width:100%}#db-backdrop .rt-seg button{flex:1;height:40px}}\
-@media print{#devboard-view .db-tabs,#devboard-view .db-bar,#devboard-view .db-plan-bar,#devboard-view .db-foot{display:none}}';
+@media print{#devboard-view .db-toolbar,#devboard-view .db-planhead,#devboard-view .db-tabs,#devboard-view .db-bar,#devboard-view .db-plan-bar,#devboard-view .db-foot{display:none}}';
   function injectCss() { if (el('coach-devboard-css')) return; var s = document.createElement('style'); s.id = 'coach-devboard-css'; s.textContent = CSS; document.head.appendChild(s); }
   function toast(msg) { var t = document.createElement('div'); t.className = 'db-toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 2600); }
 
@@ -743,13 +756,14 @@
     h += '<div class="db-foot"><button type="button" class="db-btn primary" data-act="rate"' + (can ? '' : ' disabled title="Only his own coach or the director can evaluate"') + '>' + (started(a) ? 'Evaluate' : 'Evaluate now') + '</button><button type="button" class="db-btn" data-act="drills">All drills for him</button>' + (canShare(teamId) && started(a) ? '<button type="button" class="db-btn" data-act="share" style="margin-left:auto">Share with parent</button>' : '') + '</div>';
     return h + '</article>';
   }
+  // The team is context, not navigation: one compact picker in the toolbar (see html()).
+  function teamPicker() {
+    var ts = teams().filter(function (t) { return playersOf(t.id).length || state.isAdmin; }); if (!ts.length) return '';
+    return '<label class="db-teampick"><span>Team</span><select id="db-team-select" aria-label="Team">' + ts.map(function (t) { var n = playersOf(t.id).length; return '<option value="' + esc(t.id) + '"' + (t.id === state.teamId ? ' selected' : '') + '>' + esc(t.name.replace(/^Godspeed /, '')) + ' (' + n + ')</option>'; }).join('') + '</select></label>';
+  }
   function teamBar(withSearch) {
-    var ts = teams(); if (!ts.length) return '';
-    var h = '<div class="db-bar"><div class="db-teams">';
-    ts.forEach(function (t) { var n = playersOf(t.id).length; if (!n && !state.isAdmin) return; h += '<button type="button" data-team="' + esc(t.id) + '"' + (t.id === state.teamId ? ' class="active"' : '') + '>' + esc(t.name.replace(/^Godspeed /, '')) + '<span class="ro">' + n + '</span></button>'; });
-    h += '</div>';
-    if (withSearch) h += '<input class="db-search" type="search" placeholder="Find a player" value="' + esc(state.q) + '" aria-label="Find a player">';
-    return h + '</div>';
+    if (!withSearch) return '';
+    return '<div class="db-bar"><input class="db-search" type="search" placeholder="Find a player" value="' + esc(state.q) + '" aria-label="Find a player"></div>';
   }
   function playersHtml() {
     var ps = playersOf(state.teamId); var q = state.q.trim().toLowerCase();
@@ -991,7 +1005,6 @@
   function savedPlanHtml(row) {
     var p = row.plan || {}; var blocks = p.blocks || []; var total = blocks.reduce(function (n, b) { return n + (+b.minutes || 0); }, 0);
     var h = '<div class="db-lead"><div><h4>' + esc(p.title || 'Practice, ' + fmtPlanDate(row.plan_date)) + '</h4><p>' + (p.rule ? esc(p.rule) : 'Saved plan for ' + esc(fmtPlanDate(row.plan_date)) + '.') + '</p></div><div class="st"><div><b>' + blocks.length + '</b><small>Blocks</small></div><div><b>' + total + '</b><small>Minutes</small></div></div></div>';
-    h += '<div class="db-plan-bar"><button type="button" class="db-btn" id="db-plan-generated">Build from the roster instead</button><button type="button" class="db-btn" id="db-print">Print</button><button type="button" class="db-btn" id="db-copy">Copy as text</button><span class="db-note" style="margin:0">Saved ' + esc(ago(row.updated_at)) + '.</span></div>';
     h += '<div class="db-panel" id="db-plan">';
     blocks.forEach(function (b, bi) {
       h += '<div class="db-block"><span class="n">' + (bi + 1) + '</span><div class="tm">' + esc(b.start || '') + '<small>' + esc(b.minutes || '') + ' min</small></div><div>' + (function () { var bd = findDrill(b.name); return bd ? '<h5 class="db-open" data-drill="' + esc(bd.name) + '" title="Open the coaching card">' + esc(b.name) + '<span class="db-open-ic">i</span></h5>' : '<h5>' + esc(b.name) + '</h5>'; })() + '<p>' + esc(b.what || '') + '</p>';
@@ -1001,19 +1014,40 @@
     });
     return h + '</div>';
   }
-  function planHtml() {
-    var ps = playersOf(state.teamId); var h = teamBar(false);
-    var saved = savedPlans();
-    if (saved.length) {
-      var today = new Date().toISOString().slice(0, 10); var cur = saved.filter(function (p) { return p.plan_date === state.planDate; })[0] || saved.filter(function (p) { return p.plan_date >= today; })[0] || saved[0];
-      h += '<div class="db-bar"><div class="db-teams">' + saved.map(function (p) { return '<button type="button" class="db-chipbtn' + (state.planMode === 'saved' && p.plan_date === cur.plan_date ? ' active' : '') + '" data-plan-date="' + esc(p.plan_date) + '">' + esc(fmtPlanDate(p.plan_date)) + (p.plan_date < today ? ' (past)' : '') + '</button>'; }).join('') + '<button type="button" class="db-chipbtn' + (state.planMode === 'generated' ? ' active' : '') + '" data-plan-date="__generated">Build from the roster</button></div></div>';
-      if (state.planMode === 'saved') return h + savedPlanHtml(cur);
+  function planWhen(d, upcoming) {
+    var today = new Date().toISOString().slice(0, 10);
+    if (d === today) return 'Today';
+    if (d < today) return 'Past practice';
+    return upcoming && upcoming.plan_date === d ? 'Next practice' : 'Upcoming';
+  }
+  function planHead(saved, cur) {
+    var h = '<div class="db-planhead">';
+    if (state.planMode === 'saved' && cur) {
+      var byDate = saved.slice().sort(function (a, b) { return a.plan_date.localeCompare(b.plan_date); });
+      var i = byDate.indexOf(cur); var prev = byDate[i - 1]; var next = byDate[i + 1];
+      var today = new Date().toISOString().slice(0, 10); var up = byDate.filter(function (p) { return p.plan_date >= today; })[0];
+      h += '<div class="db-step"><button type="button" class="db-step-btn"' + (prev ? ' data-plan-date="' + esc(prev.plan_date) + '"' : ' disabled') + ' aria-label="Earlier plan">&#8249;</button>'
+        + '<div class="db-step-lbl"><b>' + esc(fmtPlanDate(cur.plan_date)) + '</b><small>' + esc(planWhen(cur.plan_date, up)) + ' \u00b7 saved ' + esc(ago(cur.updated_at)) + '</small></div>'
+        + '<button type="button" class="db-step-btn"' + (next ? ' data-plan-date="' + esc(next.plan_date) + '"' : ' disabled') + ' aria-label="Later plan">&#8250;</button></div>';
+      h += '<div class="db-acts"><button type="button" class="db-link" data-plan-date="__generated">Rebuild from roster</button>';
+    } else {
+      h += '<div class="db-step"><div class="db-step-lbl"><b>New plan</b><small>Built from this roster</small></div></div><div class="db-acts">';
+      if (saved.length) h += '<button type="button" class="db-link" data-plan-date="' + esc((cur || saved[0]).plan_date) + '">Back to saved plan</button>';
     }
+    return h + '<button type="button" class="db-link" id="db-print">Print</button><button type="button" class="db-link" id="db-copy">Copy</button></div></div>';
+  }
+  function planHtml() {
+    var ps = playersOf(state.teamId); var h = '';
+    var saved = savedPlans();
+    var today0 = new Date().toISOString().slice(0, 10);
+    var cur = saved.length ? (saved.filter(function (p) { return p.plan_date === state.planDate; })[0] || saved.filter(function (p) { return p.plan_date >= today0; })[0] || saved[0]) : null;
+    h += planHead(saved, cur);
+    if (cur && state.planMode === 'saved') return h + savedPlanHtml(cur);
     if (!state.shape) return h + '<div class="db-empty">The practice shape is not loaded.</div>';
     var rated = ps.filter(started); var wg = workGroups(rated); var row = readOfWeek(rated); var tn = teamNeeds(rated);
     var day = new Date(); var dow = day.getDay(); var next = dow < 2 ? 'Tuesday' : dow < 4 ? 'Thursday' : 'Tuesday';
     h += '<div class="db-lead"><div><h4>' + esc(next) + ', doors 5:55, ball at 6:00.</h4><p>Seven blocks from How we practice. Power-ups and the finishing bridge are filled from this roster\'s needs; the guided block teaches this week\'s read. Swap a drill if the gym says so.</p></div><div class="st"><div><b style="font-size:18px">' + esc(row.read[0]) + '</b><small>Read of the week</small></div></div></div>';
-    h += '<div class="db-plan-bar">' + (canEdit(state.teamId) ? '<button type="button" class="db-btn primary" id="db-save-plan">Save plan</button>' : '') + '<button type="button" class="db-btn' + (canEdit(state.teamId) ? '' : ' primary') + '" id="db-print">Print</button><button type="button" class="db-btn" id="db-copy">Copy as text</button><span class="db-note" style="margin:0">' + (rated.length ? rated.length + ' evaluated players shape this plan.' : 'Nobody is evaluated yet, so the stations are the default power-ups.') + '</span></div>';
+    h += '<div class="db-plan-bar">' + (canEdit(state.teamId) ? '<button type="button" class="db-btn primary" id="db-save-plan">Save plan</button>' : '') + '<span class="db-note" style="margin:0">' + (rated.length ? rated.length + ' evaluated players shape this plan.' : 'Nobody is evaluated yet, so the stations are the default power-ups.') + '</span></div>';
     h += '<div class="db-panel" id="db-plan">';
     var coreAt = -1; state.shape.blocks.forEach(function (b, bi) { if (coreAt < 0 && /handl|warm|skill|fundamental/i.test(b.name + ' ' + (b.what || ''))) coreAt = bi; }); if (coreAt < 0) coreAt = 0;
     state.shape.blocks.forEach(function (b, bi) {
@@ -1153,7 +1187,7 @@
     }).join('') + '</div>';
     return h;
   }
-  var TABS = [['players', 'Players'], ['team', 'Team'], ['plan', 'Practice plan'], ['bank', 'The Bank']];
+  var TABS = [['players', 'Players'], ['team', 'Team'], ['plan', 'Plan'], ['bank', 'The Bank']];
   function html() {
     if (state.error) return '<div class="db-empty">' + esc(state.error) + '</div>';
     if (!state.loaded || !raw()) return '<div class="db-empty">Loading players and the bank...</div>';
@@ -1162,7 +1196,8 @@
     var tabs = '<div class="db-tabs" role="tablist">' + tabList.map(function (t) { return '<button type="button" role="tab" data-tab="' + t[0] + '"' + (t[0] === state.tab ? ' class="active"' : '') + '>' + t[1] + (t[0] === 'activity' && nn && state.tab !== 'activity' ? '<span class="db-dot" title="' + nn + ' new"></span>' : '') + '</button>'; }).join('') + '</div>';
     if (state.tab === 'activity' && !state.isAdmin) state.tab = 'players';
     var body = state.tab === 'team' ? teamHtml() : state.tab === 'plan' ? planHtml() : state.tab === 'bank' ? bankHtml() : state.tab === 'activity' ? activityHtml() : playersHtml();
-    return tabs + '<div id="db-status">' + statusHtml() + '</div>' + body;
+    var pick = (state.tab === 'players' || state.tab === 'team' || state.tab === 'plan') ? teamPicker() : '';
+    return '<div class="db-toolbar">' + tabs + pick + '</div><div id="db-status">' + statusHtml() + '</div>' + body;
   }
   function paint() {
     var v = el('devboard-view'); if (!v) return;
@@ -1171,7 +1206,7 @@
     if (typeof scrollTop === 'number') { var m = document.querySelector('.dashboard-main'); if (m) m.scrollTop = scrollTop; }
     var sn = v.querySelector('#db-sync-now'); if (sn) sn.onclick = flush;
     v.querySelectorAll('.db-tabs button').forEach(function (b) { b.onclick = function () { state.tab = b.getAttribute('data-tab'); try { localStorage.setItem('gs_devboard_tab', state.tab); } catch (e) { /* optional */ } if (state.tab === 'activity') { loadHealth(true); loadActivity(true).then(function () { paint(); markActivitySeen(); }); } paint(); setSub(); var mm = document.querySelector('.dashboard-main'); if (mm) mm.scrollTop = 0; }; });
-    v.querySelectorAll('.db-teams [data-team]').forEach(function (b) { b.onclick = function () { state.teamId = b.getAttribute('data-team'); paint(); }; });
+    var tsel = el('db-team-select'); if (tsel) tsel.onchange = function () { state.teamId = tsel.value; paint(); };
     v.querySelectorAll('.db-teams [data-tag]').forEach(function (b) { b.onclick = function () { state.bankTag = b.getAttribute('data-tag'); paint(); }; });
     var q = v.querySelector('.db-search'); if (q) { q.oninput = function () { if (state.tab === 'bank') state.bankQ = q.value; else state.q = q.value; paint(); }; if (focusQ) { q.focus(); try { q.setSelectionRange(pos, pos); } catch (e) { /* fine */ } } }
     v.querySelectorAll('.db-card').forEach(function (card) {
@@ -1202,7 +1237,8 @@
   }
   function setSub() {
     var s = document.querySelector('#coach-dashboard .dashboard-header .text-sub');
-    if (s) s.textContent = { players: 'Needs and drills, per player.', team: 'Top needs, the read of the week, work groups.', plan: 'Tuesday and Thursday, built from the roster.', bank: 'Every drill and what it develops.', activity: 'What the coaches did.' }[state.tab] || 'Development board';
+    var subs = { players: 'Needs and drills, per player.', team: 'Top needs, the read of the week, work groups.', plan: '', bank: '', activity: 'What the coaches did.' };
+    if (s) s.textContent = Object.prototype.hasOwnProperty.call(subs, state.tab) ? subs[state.tab] : 'Development board';
   }
 
   function ensureView() {
@@ -1238,7 +1274,7 @@
     document.querySelectorAll('.team-nav-item.active, .segment-btn.active').forEach(function (n) { n.classList.remove('active'); });
     var item = el('devboard-nav-item'); if (item) item.classList.add('active');
     var tabs = el('view-tabs'); if (tabs) tabs.style.display = 'none';
-    var t = el('view-title'); if (t) t.textContent = { players: 'Players', team: 'Team needs', plan: 'Practice plan', bank: 'The Bank', activity: 'Activity' }[state.tab] || 'Development board';
+    var t = el('view-title'); if (t) t.textContent = { players: 'Players', team: 'Team needs', plan: 'Practice', bank: 'Practice', activity: 'Activity' }[state.tab] || 'Development board';
     v.style.display = 'block';
     if (!state.loaded && !state.loading) load(); else { paint(); setSub(); }
     if (window.CoachPortalShell) window.CoachPortalShell.closeDrawer();
