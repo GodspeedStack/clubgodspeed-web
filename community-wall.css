@@ -417,3 +417,11 @@ svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width:
   height: 40px; padding: 0 18px; border-radius: var(--gs-radius-pill); border: 0; cursor: pointer;
   background: #fff; color: var(--gs-ink); font-weight: 600; font-size: 14px;
 }
+
+/* One-time welcome card (first visit). */
+.cw-intro { margin: 12px 16px 4px; padding: 20px; background: #fff; border-radius: var(--gs-radius-lg, 16px); box-shadow: 0 0 0 1px var(--gs-line-soft, #e5e7eb); }
+.cw-intro h2 { margin: 0 0 6px; font-size: 18px; font-weight: 700; color: var(--gs-ink, #111827); letter-spacing: -0.01em; }
+.cw-intro p { margin: 0 0 16px; color: var(--gs-ink-soft, #4b5563); line-height: 1.5; }
+.cw-intro__row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.cw-intro__later { background: none; border: 0; padding: 8px 4px; font: inherit; font-weight: 600; color: var(--gs-ink-soft, #4b5563); cursor: pointer; }
+@media (min-width: 600px) { .cw-intro { max-width: 600px; margin: 16px auto 4px; } }

@@ -386,8 +386,38 @@ async function routeAuthenticatedUser() {
     }
 }
 
+/**
+ * Return-to after sign-in. Only fixed, known destinations are allowed (no
+ * open redirect). ?next=wall is remembered for 30 minutes so it survives the
+ * sign-in email opening in a new tab.
+ */
+const RETURN_TO = { wall: 'community-wall.html' };
+(function captureReturnTo() {
+    const params = new URLSearchParams(window.location.search);
+    const next = params.get('next');
+    if (!next) return;
+    if (Object.prototype.hasOwnProperty.call(RETURN_TO, next)) {
+        try { localStorage.setItem('gs_return_to', JSON.stringify({ to: next, at: Date.now() })); } catch (e) { /* optional */ }
+    }
+    params.delete('next');
+    const qs = params.toString();
+    history.replaceState(null, '', window.location.pathname + (qs ? '?' + qs : '') + window.location.hash);
+})();
+function takeReturnTo() {
+    try {
+        const raw = localStorage.getItem('gs_return_to');
+        if (!raw) return null;
+        localStorage.removeItem('gs_return_to');
+        const v = JSON.parse(raw);
+        if (!v || Date.now() - v.at > 30 * 60 * 1000) return null;
+        return Object.prototype.hasOwnProperty.call(RETURN_TO, v.to) ? RETURN_TO[v.to] : null;
+    } catch (e) { return null; }
+}
+
 /** Show the portal dashboard and hide the site nav so it doesn't overlap. */
 function showDashboard() {
+    const returnTo = takeReturnTo();
+    if (returnTo) { window.location.replace(returnTo); return; }
     const dash = document.getElementById('portal-dashboard');
     if (dash) dash.style.display = 'flex';
     // Apply per-profile visibility flags (dues-exempt / hide-calendar). Fire-and-forget;

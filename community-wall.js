@@ -93,6 +93,13 @@
     var x = Array.prototype.map.call(b, function (n) { return (n + 256).toString(16).slice(1); }).join('');
     return x.slice(0, 8) + '-' + x.slice(8, 12) + '-' + x.slice(12, 16) + '-' + x.slice(16, 20) + '-' + x.slice(20);
   }
+  // Coaches show by first name with a plain "Coach" tag (Scott, 2026-10-07):
+  // never a last initial, never a profile title like "Founder & Director".
+  function shownName(a) {
+    if (!a) return '';
+    var n = a.name || '';
+    return a.is_staff ? n.split(' ')[0] : n;
+  }
   function initials(name) {
     var p = String(name || '').replace(/\./g, '').trim().split(/\s+/);
     return ((p[0] || '')[0] || 'G').toUpperCase() + ((p[1] || '')[0] || '').toUpperCase();
@@ -233,7 +240,7 @@
     $('cwFeed').setAttribute('aria-busy', 'false');
     if (!kind) { el.innerHTML = ''; return; }
     var m = {
-      signin: [I.lock, 'Sign in to see The Wall', 'Photos and videos here are only for Godspeed families.', '<a class="cw-btn" href="parent-portal.html">Sign in</a>'],
+      signin: [I.lock, 'Sign in to see The Wall', 'Photos and videos here are only for Godspeed families.', '<a class="cw-btn" href="parent-portal.html?next=wall">Sign in</a>'],
       member: [I.lock, 'Almost there', 'The Wall opens once your player is on a current Godspeed roster. Reach out to your coach if that looks wrong.', '<a class="cw-btn" href="parent-portal.html">Back to portal</a>'],
       empty: [I.photo, 'No posts yet', S.filter === 'my_players' ? 'Nobody has tagged your player yet.' : S.filter === 'mine' ? 'You have not posted yet.' : 'Be the first to share a moment from practice or game day.', '<button class="cw-btn" type="button" data-act="compose">Share a moment</button>'],
       error: [I.photo, 'Could not load The Wall', 'Check your connection and try again.', '<button class="cw-btn" type="button" data-act="retry">Try again</button>']
@@ -346,11 +353,11 @@
   function authorHead(p, withMore) {
     var a = p.author || {};
     var head = h('div', { class: 'cw-post__head' });
-    head.appendChild(h('span', { class: 'cw-avatar' + (a.is_staff ? ' cw-avatar--staff' : ''), 'aria-hidden': 'true', text: initials(a.name) }));
+    head.appendChild(h('span', { class: 'cw-avatar' + (a.is_staff ? ' cw-avatar--staff' : ''), 'aria-hidden': 'true', text: initials(shownName(a)) }));
     var who = h('div', { class: 'cw-post__who' });
     var name = h('div', { class: 'cw-post__name' });
-    name.appendChild(h('span', { text: a.name || 'Godspeed Family' }));
-    if (a.is_staff) name.appendChild(h('span', { class: 'cw-badge cw-badge--ink', text: a.title || 'Coach' }));
+    name.appendChild(h('span', { text: shownName(a) || 'Godspeed Family' }));
+    if (a.is_staff) name.appendChild(h('span', { class: 'cw-badge cw-badge--ink', text: 'Coach' }));
     who.appendChild(name);
     var meta = [p.team ? teamShort(p.team.name) : 'All Godspeed', ago(p.published_at)].join(' · ');
     who.appendChild(h('div', { class: 'cw-post__meta', text: meta }));
@@ -740,10 +747,10 @@
   }
   function commentRow(c, p, pending) {
     var li = h('li', { class: 'cw-comment' + (pending ? ' is-pending' : ''), 'data-comment': c.id });
-    li.appendChild(h('span', { class: 'cw-avatar' + (c.author && c.author.is_staff ? ' cw-avatar--staff' : ''), 'aria-hidden': 'true', text: initials(c.author && c.author.name) }));
+    li.appendChild(h('span', { class: 'cw-avatar' + (c.author && c.author.is_staff ? ' cw-avatar--staff' : ''), 'aria-hidden': 'true', text: initials(shownName(c.author)) }));
     var main = h('div', { class: 'cw-comment__main' });
     var lineEl = h('p', { class: 'cw-comment__line' });
-    lineEl.appendChild(h('b', { text: (c.author && c.author.name) || '' }));
+    lineEl.appendChild(h('b', { text: shownName(c.author) }));
     lineEl.appendChild(document.createTextNode(c.body));
     main.appendChild(lineEl);
     var meta = h('div', { class: 'cw-comment__meta' });
@@ -1297,8 +1304,43 @@
     }).catch(function () { /* silent */ });
   }
 
+  // ------------------------------------------------- portal dot + first visit
+  // The parent portal shows a dot on "The Wall" when anything is newer than this.
+  function markSeen() {
+    var newest = S.pinned.concat(S.posts).reduce(function (m, p) {
+      return p.published_at && p.published_at > m ? p.published_at : m;
+    }, '');
+    try { localStorage.setItem('gs_wall_seen_at', newest || new Date().toISOString()); } catch (e) { /* optional */ }
+  }
+  // One-time welcome card. Shown once per device, then never again.
+  function maybeIntro() {
+    try { if (localStorage.getItem('gs_wall_intro_seen')) return; localStorage.setItem('gs_wall_intro_seen', '1'); } catch (e) { return; }
+    var card = h('section', { class: 'cw-intro', 'aria-label': 'Welcome to The Wall' });
+    card.appendChild(h('h2', { text: 'Welcome to The Wall' }));
+    card.appendChild(h('p', { text: 'Share photos and videos with Godspeed families. Only current families can see them.' }));
+    var row = h('div', { class: 'cw-intro__row' });
+    var go = h('button', { class: 'cw-btn', type: 'button', text: 'Post your first photo' });
+    var later = h('button', { class: 'cw-intro__later', type: 'button', text: 'Not now' });
+    go.onclick = function () { card.remove(); openComposer(); };
+    later.onclick = function () { card.remove(); };
+    row.appendChild(go); row.appendChild(later); card.appendChild(row);
+    $('cw-main').insertBefore(card, $('cw-main').firstChild);
+  }
+  // Coaches arrive from the coach portal; send "< Portal" back there.
+  function setBackLink() {
+    var from = '';
+    try {
+      if (/coach-portal\.html/.test(document.referrer)) sessionStorage.setItem('gs_wall_from', 'coach');
+      else if (/parent-portal\.html/.test(document.referrer)) sessionStorage.setItem('gs_wall_from', 'parent');
+      from = sessionStorage.getItem('gs_wall_from') || '';
+    } catch (e) { /* optional */ }
+    var back = document.querySelector('.cw-top__back');
+    if (back && from === 'coach') { back.href = 'coach-portal.html'; back.setAttribute('aria-label', 'Back to the coach portal'); }
+  }
+
   // -------------------------------------------------------------------- boot
   function boot() {
+    setBackLink();
     $('cwViewIcon').innerHTML = S.view === 'grid' ? I.list : I.grid;
     $('cwFeed').classList.toggle('is-grid', S.view === 'grid');
     $('cw-main').classList.toggle('is-grid', S.view === 'grid');
@@ -1318,7 +1360,7 @@
           $('cwReviewBtn').classList.remove('cw-hide');
           $('cwReviewCount').textContent = ctx.pending_review ? String(ctx.pending_review) : '';
         }
-        return reload();
+        return reload().then(function () { markSeen(); maybeIntro(); });
       });
     }).catch(function () { $('cwFeed').innerHTML = ''; showState('error'); });
 

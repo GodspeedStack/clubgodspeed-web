@@ -37,14 +37,14 @@ html, body {
     display: none;
 }
 
-/* The desktop nav measures about 780px of links and icons, and the navbar adds
-   96px of padding, so it needs roughly 880px before it fits. Switching it on at
-   768px meant that on a 768px tablet the links overflowed the viewport by 390px:
-   the logo sat on top of HOME and SHOP ran off the right edge. Measured, the
-   widest of these navs needs 1164px of content plus the navbar's 96px of
-   padding, so the desktop layout does not fit below about 1260. Hold the mobile
-   nav until there is genuinely room for the desktop one. */
-@media (min-width: 1280px) {
+/* Desktop shows every nav item (Scott, 2026-10-07: never hide buttons on desktop).
+   From 1024px the full nav is on; 1024-1279 uses tighter spacing so it fits.
+   Measured on all 20 pages that load this file: no overflow, no wrapping, no
+   overlap with the logo at 1024, 1150, 1279 and 1440.
+   Below 1024 the menu button takes over. responsive-nav.css hides that button
+   from 768px with !important, which left 768-1279 with no nav at all; the
+   rule below wins because this file loads later. */
+@media (min-width: 1024px) {
     .nav-desktop-unified {
         display: flex;
         align-items: center;
@@ -52,6 +52,26 @@ html, body {
     }
     .mobile-menu-btn {
         display: none !important;
+    }
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+    .navbar { padding: 16px 24px !important; }
+    .navbar .logo { font-size: 1.05rem; white-space: nowrap; }
+    .nav-links-unified { gap: 1.1rem; font-size: 0.78rem; letter-spacing: 0.03em; }
+    .nav-right-unified { gap: 0.9rem; margin-left: 1.25rem; }
+    .btn-unified-train { padding: 0.5rem 1rem; font-size: 0.78rem; white-space: nowrap; }
+}
+@media (max-width: 1023px) {
+    .navbar .nav-desktop-unified { display: none !important; }
+    .navbar .mobile-menu-btn { display: flex !important; }
+}
+/* Pages whose nav is a few links and no menu button (fundraise pages) keep
+   their links visible on tablets instead of showing nothing. */
+@media (min-width: 700px) and (max-width: 1023px) {
+    .navbar:not(:has(.mobile-menu-btn)) .nav-desktop-unified {
+        display: flex !important;
+        align-items: center;
+        margin-left: auto;
     }
 }
 

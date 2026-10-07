@@ -66,6 +66,11 @@
     var rl = roleLabel(role);
     if (rl) { var r = document.createElement('em'); r.className = 'gs-role'; r.style.fontStyle = 'normal'; r.textContent = rl; user.appendChild(r); }
 
+    var wall = document.createElement('a');
+    wall.className = 'gs-link gs-wall-link';
+    wall.href = 'community-wall.html';
+    wall.textContent = 'The Wall';
+
     var site = document.createElement('a');
     site.className = 'gs-link';
     site.href = 'index.html';
@@ -81,7 +86,7 @@
     });
 
     bar.appendChild(menu); bar.appendChild(brand); bar.appendChild(spacer);
-    bar.appendChild(user); bar.appendChild(site); bar.appendChild(out);
+    bar.appendChild(user); bar.appendChild(wall); bar.appendChild(site); bar.appendChild(out);
     dash.insertBefore(bar, dash.firstChild);
 
     var overlay = document.createElement('div');

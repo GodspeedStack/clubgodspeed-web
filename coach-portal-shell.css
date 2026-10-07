@@ -225,6 +225,7 @@ body.gs-drawer-open .gs-drawer-overlay { display: block; }
   .gs-portal-bar .gs-menu-btn { display: inline-flex; }
   .gs-portal-bar .gs-brand-app, .gs-portal-bar .gs-brand-sep, .gs-portal-bar .gs-user span, .gs-portal-bar .gs-user .gs-role, .gs-portal-bar .gs-link { display: none; }
   .gs-portal-bar .gs-brand { font-size: 14px; }
+  .gs-portal-bar .gs-link.gs-wall-link { display: inline-flex; }
   #coach-dashboard .dashboard-wrapper { position: relative; }
   #coach-dashboard .dashboard-sidebar {
     position: fixed !important; top: var(--gs-bar-h); bottom: 0; left: 0;
