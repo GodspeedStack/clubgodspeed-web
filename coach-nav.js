@@ -1,10 +1,10 @@
-/* coach-nav.js v2
+/* coach-nav.js v3
  * One owner for the coach portal sidebar. Loaded last.
  *
  * Contract
  *   Five items, nothing else in the sidebar:
  *     HOME       (coach-home)
- *     PLAYERS    development board, players screen; a small in-screen row: Players | Team needs | Roster (the old team page)
+ *     PLAYERS    development board, players screen; a small in-screen row: Players | Team needs | Roster (the old team page) | Defense (coach-defense.js)
  *     PRACTICE   development board, plan screen; row: Practice plan | The Bank | Training log
  *     PLAYBOOK   5th Grade Playbook; row: Playbook | Player development | Coaching IQ | Coach Academy (coming) | Reading list (coming)
  *     DIRECTOR   (Scott only) activity; row: Activity | Import CSV | Download Data
@@ -25,7 +25,7 @@
     director: ICON('<path d="M22 12h-4l-3 8-6-16-3 8H2"/>')
   };
   var SECTIONS = {
-    players: { tabs: ['players', 'team'], chips: [{ id: 'gs-chip-roster', label: 'Roster', go: openRoster }] },
+    players: { tabs: ['players', 'team'], chips: [{ id: 'gs-chip-roster', label: 'Roster', go: openRoster }, { id: 'gs-chip-defense', label: 'Defense', go: function () { if (window.CoachDefense) window.CoachDefense.open(); } }] },
     practice: { tabs: ['plan', 'bank'], chips: [{ id: 'gs-chip-trainlog', label: 'Training log', go: function () { if (window.CoachTrainingLog) window.CoachTrainingLog.open(); } }] },
     director: { tabs: ['activity'], chips: [{ id: 'gs-chip-import', label: 'Import CSV', go: function () { if (typeof showBulkUpload === 'function') showBulkUpload(); } }, { id: 'gs-chip-export', label: 'Download Data', go: function () { if (typeof exportData === 'function') exportData(); } }] }
   };
