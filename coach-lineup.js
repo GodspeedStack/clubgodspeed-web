@@ -256,7 +256,12 @@
 #lineup-view .lu-foot{margin-top:18px;font-size:12.5px;color:#6e6e73;line-height:1.5}\
 \
 #lineup-view .lu-tbl{padding:0;overflow-x:auto}\
-#lineup-view .lu-tbl table{border-collapse:collapse;width:100%;font-size:13px}\
+/* mobile-fixes.css sets a global table{display:block}, which collapses the header row. Put the table layout back, scoped. */\
+#lineup-view .lu-tbl table{display:table!important;border-collapse:collapse;width:100%;min-width:max-content;font-size:13px;overflow:visible!important;max-width:none}\
+#lineup-view .lu-tbl thead{display:table-header-group!important}\
+#lineup-view .lu-tbl tbody{display:table-row-group!important}\
+#lineup-view .lu-tbl tr{display:table-row!important}\
+#lineup-view .lu-tbl th,#lineup-view .lu-tbl td{display:table-cell!important}\
 #lineup-view .lu-tbl th{text-align:left;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#a1a1a6;padding:12px 10px;border-bottom:1px solid #ececf0;white-space:nowrap;vertical-align:bottom}\
 #lineup-view .lu-tbl th i{font-style:normal;display:block;font-size:9.5px;color:#c7c7cc;font-weight:600}\
 #lineup-view .lu-tbl th.sortable{cursor:pointer}#lineup-view .lu-tbl th.sortable:hover{color:#1A3A8F}\
