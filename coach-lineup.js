@@ -277,6 +277,27 @@
 #lineup-view .lu-tbl tr.dim td{opacity:.5}#lineup-view .lu-tbl .nod{color:#c7c7cc}\
 #lineup-view .lu-tbl .mini{min-height:30px;padding:0 11px;border-radius:999px;border:1px solid #d9d9de;background:#fff;font:inherit;font-size:12px;font-weight:600;cursor:pointer}\
 #lineup-view .lu-tbl .mini:hover{border-color:#1A3A8F;color:#1A3A8F}\
+\
+/* A phone should scroll DOWN, not sideways. The fives table is 13 columns wide, which is a long\
+   drag on a 390px screen. Under 760px keep only the columns a call actually turns on and let the\
+   names wrap instead of forcing the row wide. Everything hidden here is still on desktop. */\
+@media (max-width:760px){\
+#lineup-view .lu-tbl table{min-width:0}\
+#lineup-view .lu-tbl td,#lineup-view .lu-tbl th{white-space:normal;padding:9px 7px}\
+#lineup-view .lu-tbl th{font-size:9.5px;letter-spacing:.03em}\
+#lineup-view .lu-tbl th i{display:none}\
+/* Players: #, Player, Stopper, Helper, Role. Hide press/shoot/box/motor/talk. */\
+#lineup-view .lu-tbl-players th:nth-child(n+5):nth-child(-n+9),\
+#lineup-view .lu-tbl-players td:nth-child(n+5):nth-child(-n+9){display:none!important}\
+/* Fives: #, Five, Total, Weak link, They attack, Open. Hide the component breakdown. */\
+#lineup-view .lu-tbl-fives th:nth-child(4){display:none!important}#lineup-view .lu-tbl-fives td:nth-child(4){display:none!important}\
+#lineup-view .lu-tbl-fives th:nth-child(n+6):nth-child(-n+11),\
+#lineup-view .lu-tbl-fives td:nth-child(n+6):nth-child(-n+11){display:none!important}\
+#lineup-view .lu-tbl-fives td:nth-child(2){min-width:0;line-height:1.35;word-break:break-word}\
+#lineup-view .lu-tbl-fives td:last-child,#lineup-view .lu-tbl-fives th:last-child{padding-left:2px;padding-right:4px}\
+#lineup-view .lu-tbl td.tot{font-size:15px}\
+#lineup-view .lu-tbl .mini{padding:0 9px;font-size:11.5px}\
+}\
 @media (max-width:900px){#lineup-view .lu-grid,#lineup-view .lu-cmp{grid-template-columns:1fr}#lineup-view .lu-slots{grid-template-columns:repeat(3,1fr)}}';
   function injectCss() { if (el('lineup-css')) return; var s = document.createElement('style'); s.id = 'lineup-css'; s.textContent = CSS; document.head.appendChild(s); }
 
@@ -474,7 +495,7 @@
     var ratedIds = rows.filter(function (i) { return pval(i, sortK) != null; });
     var noneIds = rows.filter(function (i) { return pval(i, sortK) == null; });
     ratedIds.sort(function (a, b) { return pval(b, sortK) - pval(a, sortK) || (stopper(b) || 0) - (stopper(a) || 0) || nm(a).localeCompare(nm(b)); });
-    h += '<div class="lu-panel lu-tbl"><table><thead><tr><th class="r">#</th><th>Player</th>';
+    h += '<div class="lu-panel lu-tbl lu-tbl-players"><table><thead><tr><th class="r">#</th><th>Player</th>';
     PCOLS.forEach(function (c) { h += '<th class="r sortable' + (sortK === c.k ? ' on' : '') + '" data-psort="' + c.k + '" title="' + esc(c.hint) + '">' + esc(c.label) + '</th>'; });
     h += '<th>Role</th></tr></thead><tbody>';
     ratedIds.concat(noneIds).forEach(function (id, n) {
@@ -504,7 +525,7 @@
     h += '<button type="button" data-rmust="" class="' + (must ? '' : 'on') + '">Anyone</button>';
     r.pool.forEach(function (i) { h += '<button type="button" data-rmust="' + esc(i) + '" class="' + (must === i ? 'on' : '') + '">' + esc(nm(i)) + '</button>'; });
     h += '</div>';
-    h += '<div class="lu-panel lu-tbl"><table><thead><tr><th class="r">#</th><th>Five</th><th class="r">Total</th>';
+    h += '<div class="lu-panel lu-tbl lu-tbl-fives"><table><thead><tr><th class="r">#</th><th>Five</th><th class="r">Total</th>';
     WEIGHTS.forEach(function (w) { h += '<th class="r' + (mode === w.k ? ' on' : '') + '" title="' + esc(w.why) + '">' + esc(w.label) + '<i>/' + w.w + '</i></th>'; });
     h += '<th>Stopper</th><th>They attack</th><th></th></tr></thead><tbody>';
     all.slice(0, 25).forEach(function (x, n) {
