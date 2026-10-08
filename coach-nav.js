@@ -1,4 +1,4 @@
-/* coach-nav.js v4
+/* coach-nav.js v5
  * One owner for the coach portal sidebar. Loaded last.
  *
  * Contract
@@ -33,6 +33,11 @@
   var section = null;
 
   var CSS = '#coach-dashboard .dashboard-sidebar #gs-nav-hidden{display:none!important}\
+/* Each module mounts its own sidebar item as it loads, and build() sweeps them into the hidden\
+   holder only once the dashboard is up. CSS applies at parse time, so hide them from the start\
+   and reveal the five-item nav when it is built. Without this the coach sees eleven links appear\
+   and then vanish. The failsafe in the poller puts them back if build() never runs. */\
+#coach-dashboard .dashboard-sidebar:not(.gs-nav-ready) > *:not(.gs-nav-main){display:none!important}\
 #coach-dashboard .dashboard-sidebar > .sidebar-title{display:none}\
 #coach-dashboard .dashboard-sidebar .gs-nav-main{margin-bottom:22px}\
 #coach-dashboard .dashboard-sidebar .gs-nav-main .team-nav-item{display:flex;align-items:center;gap:12px;font-size:15px;padding:11px 12px}\
@@ -139,6 +144,12 @@
   function ready() {
     return el('home-nav-item') && el('develop-nav-item') && el('devboard-nav-item') && el('trainlog-nav-item') && el('playbook-nav-item') && el('iq-nav-item') && el('academy-nav') && el('team-list');
   }
+  // Director is admin only. Safe to call repeatedly: it adds the item once, when isAdmin() is true.
+  function addDirector(into) {
+    var main = into || el('gs-nav-main');
+    if (!main || el('nav-director') || !isAdmin()) return;
+    main.appendChild(item('nav-director', 'Director', ICONS.director, function () { openBoard('activity'); }));
+  }
   function build() {
     if (el('gs-nav-main')) return;
     var side = document.querySelector('#coach-dashboard .dashboard-sidebar'); if (!side) return;
@@ -148,12 +159,13 @@
     main.appendChild(item('nav-players', 'Players', ICONS.players, function () { openBoard('players'); }));
     main.appendChild(item('nav-practice', 'Practice', ICONS.practice, function () { openBoard('plan'); }));
     main.appendChild(item('nav-playbook', 'Playbook', ICONS.playbook, function () { if (window.CoachPlaybook) window.CoachPlaybook.open(); setTimeout(function () { placeChapterRow('playbook'); }, 60); }));
-    if (isAdmin()) main.appendChild(item('nav-director', 'Director', ICONS.director, function () { openBoard('activity'); }));
+    addDirector(main);
     // Everything the modules mounted goes into a hidden holder; they keep working, the coach never sees them.
     var hidden = document.createElement('div'); hidden.id = 'gs-nav-hidden';
     [].slice.call(side.children).forEach(function (n) { if (n !== main) hidden.appendChild(n); });
     if (homeWrap && homeWrap.parentNode === hidden && !homeWrap.children.length) homeWrap.remove();
     side.insertBefore(main, side.firstChild); side.appendChild(hidden);
+    side.classList.add('gs-nav-ready');
 
     var b = board();
     if (b && b.state) {
@@ -182,11 +194,17 @@
   document.addEventListener('DOMContentLoaded', function () {
     injectCss();
     var tries = 0;
+    var reveal = function () { var sd = document.querySelector('#coach-dashboard .dashboard-sidebar'); if (sd) sd.classList.add('gs-nav-ready'); };
     var timer = setInterval(function () {
       var d = el('coach-dashboard'); if (!d || !d.style.display || d.style.display === 'none') return;
-      if (!ready()) { if (++tries > 40) clearInterval(timer); return; }
-      var b = board(); clearInterval(timer);
-      (b && b.ensureConfig ? b.ensureConfig() : Promise.resolve()).then(build, build);
+      // Failsafe: if the modules never finish mounting, show what is there rather than an empty sidebar.
+      if (!ready()) { if (++tries > 40) { clearInterval(timer); reveal(); } return; }
+      clearInterval(timer);
+      // Build immediately. Waiting on ensureConfig here put a network round trip in front of the
+      // sidebar, which is how the wrong links stayed on screen long enough to be seen.
+      build();
+      var b = board();
+      (b && b.ensureConfig ? b.ensureConfig() : Promise.resolve()).then(function () { addDirector(); }, function () { addDirector(); });
     }, 500);
     window.CoachNav = { build: build, setActive: setActive, openRoster: openRoster, section: function () { return section; } };
   });
