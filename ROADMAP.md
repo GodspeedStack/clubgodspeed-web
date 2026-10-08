@@ -280,6 +280,25 @@ responsibility to the defensive liabilities.
   adds the trapper, and covers pressure release, where V1 would have shown a minus. The 1-3-1
   assignment matched an independent brute force of all 120 arrangements, and the highlighted slot
   was the lowest fit every time. Zero console errors.
+- **Rankings tab added 2026-10-08.** Scott: "give me numbers and rank players and lineups, I need
+  numbers in order to make the right call." Two ranked tables, both sortable:
+  - **Players**, with the Stopper index (on ball, slides, stance, closeouts) and the Helper index
+    (help position, recover, deflections, transition), plus press, shoot, box, motor and talk.
+    Both indices are a roll-up of ONE player's own related sub-skills, which is legitimate; the V1
+    mistake was averaging across five different players.
+  - **Fives**, all 2002 combinations of the 14 rated players scored out of 100 on seven named
+    jobs: point of attack 20, weak link 25, trap ready 15, rim 10, help 10, press break 10,
+    spacing 10. Every component is its own column so the rank is auditable. Modes: best overall,
+    hardest to attack, best point of attack, best against a press, most spacing, best help. A
+    "must include" filter per player, and Open loads a five straight into Floor A.
+  - Weak link carries the most weight because he is the man they attack every possession, and he
+    is exactly what the V1 average hid.
+  - **Verified** against an independent Python implementation over all 2002 combinations: same
+    #1 five, same total, same components. Zero console errors.
+- **What the ranking exposed:** the two rim safeties, Kai and Zach, are two of the four weakest
+  stoppers on the roster. Every top-ranked five therefore reads "they will attack Kai." The five
+  with the strongest weak link has no rim safety at all. That trade-off is the real roster
+  problem, and no lineup solves it.
 - **Open:** roles are matched by athlete id in the file. Moving them into `program_content` so
   Scott can change a trapper without a deploy is the obvious follow-on.
 

@@ -106,7 +106,7 @@
     { key: 'tail', label: 'Tail', need: ['lateEffort', 'slides', 'deflect'], why: 'Runs the baseline corner to corner' }
   ];
 
-  var state = { teamId: null, floors: { A: [], B: [] }, active: 'A', tab: 'A' };
+  var state = { teamId: null, floors: { A: [], B: [] }, active: 'A', tab: 'A', rankMode: 'total', rankMust: null, psort: 'stopper' };
 
   // ---------- model ----------
   function teams() { var rw = raw(); return rw ? rw.teams.slice().sort(function (a, b) { return a.name.localeCompare(b.name); }) : []; }
@@ -254,6 +254,24 @@
 #lineup-view .lu-note{font-size:12.5px;color:#6e6e73;margin-top:10px;line-height:1.5}\
 #lineup-view .lu-empty{color:#6e6e73;font-size:14px;padding:6px 0;line-height:1.5}\
 #lineup-view .lu-foot{margin-top:18px;font-size:12.5px;color:#6e6e73;line-height:1.5}\
+\
+#lineup-view .lu-tbl{padding:0;overflow-x:auto}\
+#lineup-view .lu-tbl table{border-collapse:collapse;width:100%;font-size:13px}\
+#lineup-view .lu-tbl th{text-align:left;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#a1a1a6;padding:12px 10px;border-bottom:1px solid #ececf0;white-space:nowrap;vertical-align:bottom}\
+#lineup-view .lu-tbl th i{font-style:normal;display:block;font-size:9.5px;color:#c7c7cc;font-weight:600}\
+#lineup-view .lu-tbl th.sortable{cursor:pointer}#lineup-view .lu-tbl th.sortable:hover{color:#1A3A8F}\
+#lineup-view .lu-tbl th.on,#lineup-view .lu-tbl td.on{background:#f4f6fd;color:#1A3A8F}\
+#lineup-view .lu-tbl td{padding:10px;border-bottom:1px solid #f2f2f5;white-space:nowrap}\
+#lineup-view .lu-tbl tr:last-child td{border-bottom:0}\
+#lineup-view .lu-tbl td.r,#lineup-view .lu-tbl th.r{text-align:right}\
+#lineup-view .lu-tbl td b{font-weight:700}#lineup-view .lu-tbl td small{color:#a1a1a6;font-size:11.5px}\
+#lineup-view .lu-tbl td.tot{font-size:16px;font-weight:800;letter-spacing:-.01em}\
+#lineup-view .lu-tbl td.bad{color:#c2410c;font-weight:600}\
+#lineup-view .lu-tbl td.rl{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#1A3A8F}\
+#lineup-view .lu-tbl td.rl i{font-style:normal;color:#c2410c}\
+#lineup-view .lu-tbl tr.dim td{opacity:.5}#lineup-view .lu-tbl .nod{color:#c7c7cc}\
+#lineup-view .lu-tbl .mini{min-height:30px;padding:0 11px;border-radius:999px;border:1px solid #d9d9de;background:#fff;font:inherit;font-size:12px;font-weight:600;cursor:pointer}\
+#lineup-view .lu-tbl .mini:hover{border-color:#1A3A8F;color:#1A3A8F}\
 @media (max-width:900px){#lineup-view .lu-grid,#lineup-view .lu-cmp{grid-template-columns:1fr}#lineup-view .lu-slots{grid-template-columns:repeat(3,1fr)}}';
   function injectCss() { if (el('lineup-css')) return; var s = document.createElement('style'); s.id = 'lineup-css'; s.textContent = CSS; document.head.appendChild(s); }
 
@@ -348,6 +366,155 @@
     return h;
   }
 
+
+  // ---------- ranking ----------
+  // Two indices per player, each the mean of that player's OWN related sub-skills.
+  // This is not an average across players, which is what V1 got wrong. It is the
+  // roll-up of one boy's four stopper scores into one number so he can be ranked.
+  var STOP_KEYS = ['ballPressure', 'slides', 'stance', 'closeout'];
+  var HELP_KEYS = ['helpPos', 'helpRec', 'deflect', 'transD'];
+  function idx(id, keys) {
+    var v = keys.map(function (k) { return sub(id, k); }).filter(function (x) { return x != null; });
+    return v.length ? v.reduce(function (a, b) { return a + b; }, 0) / v.length : null;
+  }
+  function stopper(id) { return idx(id, STOP_KEYS); }
+  function helper(id) { return idx(id, HELP_KEYS); }
+  function sc01(v) { return (v - 1) / 4; }
+  function topMean(arr, n) {
+    var s = arr.slice().sort(function (a, b) { return b - a; }).slice(0, n);
+    return s.reduce(function (a, b) { return a + b; }, 0) / s.length;
+  }
+
+  // A five scored out of 100. Seven named jobs, each weighted by what it costs
+  // when it is missing. The weak link carries the most, 25, because he is the
+  // man they will attack every possession and he is exactly what an average hid.
+  var WEIGHTS = [
+    { k: 'poa', w: 20, label: 'Point of attack', why: 'Best stopper on the floor. He takes their Star.' },
+    { k: 'weak', w: 25, label: 'Weak link', why: 'Worst stopper on the floor. The higher this is, the fewer places they can go.' },
+    { k: 'trap', w: 15, label: 'Trap ready', why: 'Two trappers or the Star and Green ball calls are off.' },
+    { k: 'rim', w: 10, label: 'Rim', why: 'A safety behind the trap. Without it a broken trap is a layup.' },
+    { k: 'help', w: 10, label: 'Help', why: 'Best two help defenders on the floor.' },
+    { k: 'press', w: 10, label: 'Press break', why: 'Best two at handling pressure.' },
+    { k: 'spc', w: 10, label: 'Spacing', why: 'Best two in catch and shoot. Keeps them out of the paint.' }
+  ];
+  function scoreFive(ids) {
+    var st = ids.map(stopper);
+    if (st.some(function (v) { return v == null; })) return null;
+    var hp = ids.map(function (i) { var v = helper(i); return v == null ? 1 : v; });
+    var pr = ids.map(function (i) { var v = sub(i, 'hPressure'); return v == null ? 1 : v; });
+    var sh = ids.map(function (i) { var v = sub(i, 'catchShoot'); return v == null ? 1 : v; });
+    var tr = trappersOn(ids).length;
+    var best = Math.max.apply(null, st), worst = Math.min.apply(null, st);
+    var o = {
+      poa: sc01(best) * 20, weak: sc01(worst) * 25,
+      trap: tr >= 2 ? 15 : tr === 1 ? 5 : 0,
+      rim: rimOn(ids).length ? 10 : 0,
+      help: sc01(topMean(hp, 2)) * 10,
+      press: sc01(topMean(pr, 2)) * 10,
+      spc: sc01(topMean(sh, 2)) * 10,
+      best: best, worst: worst, ntrap: tr,
+      stopId: ids[st.indexOf(best)], weakId: ids[st.indexOf(worst)]
+    };
+    o.total = o.poa + o.weak + o.trap + o.rim + o.help + o.press + o.spc;
+    return o;
+  }
+  function combos5(pool) {
+    var out = [];
+    (function rec(start, acc) {
+      if (acc.length === FLOOR_MAX) { out.push(acc.slice()); return; }
+      for (var i = start; i < pool.length; i++) { acc.push(pool[i]); rec(i + 1, acc); acc.pop(); }
+    })(0, []);
+    return out;
+  }
+  var _rankCache = { key: null, rows: [], pool: [] };
+  function rankedFives() {
+    var pool = playersOf(state.teamId).map(function (a) { return a.id; }).filter(function (i) { return stopper(i) != null; });
+    var key = state.teamId + '|' + pool.join(',');
+    if (_rankCache.key === key) return _rankCache;
+    var rows = [];
+    if (pool.length >= FLOOR_MAX && pool.length <= 22) {
+      rows = combos5(pool).map(function (c) { var s = scoreFive(c); return s ? { ids: c, s: s } : null; })
+        .filter(function (x) { return x; });
+    }
+    _rankCache = { key: key, rows: rows, pool: pool };
+    return _rankCache;
+  }
+  var RANK_MODES = [
+    { k: 'total', label: 'Best overall' },
+    { k: 'weak', label: 'Hardest to attack' },
+    { k: 'poa', label: 'Best point of attack' },
+    { k: 'press', label: 'Best against a press' },
+    { k: 'spc', label: 'Most spacing' },
+    { k: 'help', label: 'Best help and rotation' }
+  ];
+  var PCOLS = [
+    { k: 'stopper', label: 'Stopper', hint: 'on ball, slides, stance, closeouts' },
+    { k: 'helper', label: 'Helper', hint: 'help position, recover, deflections, transition' },
+    { k: 'hPressure', label: 'Press', hint: 'handling pressure' },
+    { k: 'catchShoot', label: 'Shoot', hint: 'catch and shoot' },
+    { k: 'boxOut', label: 'Box', hint: 'box out' },
+    { k: 'lateEffort', label: 'Motor', hint: 'late effort' },
+    { k: 'comms', label: 'Talk', hint: 'communication' }
+  ];
+  function pval(id, k) { return k === 'stopper' ? stopper(id) : k === 'helper' ? helper(id) : sub(id, k); }
+
+  function rankHtml() {
+    var r = rankedFives();
+    var h = '';
+    // --- players ---
+    h += '<div class="lu-sec">Players, ranked<small>every number is a score you entered, 1 to 5. Tap a column to sort.</small></div>';
+    var list = playersOf(state.teamId);
+    var rows = list.map(function (a) { return a.id; });
+    var sortK = state.psort || 'stopper';
+    var ratedIds = rows.filter(function (i) { return pval(i, sortK) != null; });
+    var noneIds = rows.filter(function (i) { return pval(i, sortK) == null; });
+    ratedIds.sort(function (a, b) { return pval(b, sortK) - pval(a, sortK) || (stopper(b) || 0) - (stopper(a) || 0) || nm(a).localeCompare(nm(b)); });
+    h += '<div class="lu-panel lu-tbl"><table><thead><tr><th class="r">#</th><th>Player</th>';
+    PCOLS.forEach(function (c) { h += '<th class="r sortable' + (sortK === c.k ? ' on' : '') + '" data-psort="' + c.k + '" title="' + esc(c.hint) + '">' + esc(c.label) + '</th>'; });
+    h += '<th>Role</th></tr></thead><tbody>';
+    ratedIds.concat(noneIds).forEach(function (id, n) {
+      var none = pval(id, sortK) == null;
+      h += '<tr' + (none ? ' class="dim"' : '') + '><td class="r">' + (none ? '-' : n + 1) + '</td><td><b>' + esc(fullName(athlete(id))) + '</b></td>';
+      PCOLS.forEach(function (c) {
+        var v = pval(id, c.k);
+        h += '<td class="r' + (c.k === sortK ? ' on' : '') + '">' + (v == null ? '<span class="nod">-</span>' : (v % 1 ? v.toFixed(2) : v)) + '</td>';
+      });
+      h += '<td class="rl">' + (TRAPPERS[id] ? 'Trapper' : NEVER_TRAP[id] ? '<i>Never traps</i>' : '') + (RIM[id] ? (TRAPPERS[id] || NEVER_TRAP[id] ? ', ' : '') + 'Rim' : '') + '</td></tr>';
+    });
+    h += '</tbody></table></div>';
+    if (noneIds.length) h += '<div class="lu-note">' + noneIds.map(function (i) { return esc(fullName(athlete(i))); }).join(', ') + ' not scored on this, so not ranked and not in any five below.</div>';
+
+    // --- fives ---
+    if (!r.rows.length) {
+      h += '<div class="lu-sec">Fives, ranked</div><div class="lu-panel lu-empty">Needs at least five rated players on the team' + (r.pool.length > 22 ? ', and this roster is too large to rank every five' : '') + '.</div>';
+      return h;
+    }
+    var mode = state.rankMode || 'total';
+    var must = state.rankMust || null;
+    var all = r.rows.filter(function (x) { return !must || x.ids.indexOf(must) >= 0; });
+    all = all.slice().sort(function (a, b) { return b.s[mode] - a.s[mode] || b.s.total - a.s.total; });
+    h += '<div class="lu-sec">Fives, ranked<small>all ' + r.rows.length + ' possible fives from the ' + r.pool.length + ' rated players, scored out of 100</small></div>';
+    h += '<div class="lu-bar">' + RANK_MODES.map(function (m) { return '<button type="button" data-rmode="' + m.k + '" class="' + (mode === m.k ? 'on' : '') + '">' + esc(m.label) + '</button>'; }).join('') + '</div>';
+    h += '<div class="lu-bar"><span style="font-size:12.5px;color:#6e6e73;font-weight:600">Must include</span>';
+    h += '<button type="button" data-rmust="" class="' + (must ? '' : 'on') + '">Anyone</button>';
+    r.pool.forEach(function (i) { h += '<button type="button" data-rmust="' + esc(i) + '" class="' + (must === i ? 'on' : '') + '">' + esc(nm(i)) + '</button>'; });
+    h += '</div>';
+    h += '<div class="lu-panel lu-tbl"><table><thead><tr><th class="r">#</th><th>Five</th><th class="r">Total</th>';
+    WEIGHTS.forEach(function (w) { h += '<th class="r' + (mode === w.k ? ' on' : '') + '" title="' + esc(w.why) + '">' + esc(w.label) + '<i>/' + w.w + '</i></th>'; });
+    h += '<th>Stopper</th><th>They attack</th><th></th></tr></thead><tbody>';
+    all.slice(0, 25).forEach(function (x, n) {
+      h += '<tr><td class="r">' + (n + 1) + '</td><td><b>' + x.ids.map(function (i) { return esc(nm(i)); }).join(', ') + '</b></td>';
+      h += '<td class="r tot">' + x.s.total.toFixed(1) + '</td>';
+      WEIGHTS.forEach(function (w) { h += '<td class="r' + (mode === w.k ? ' on' : '') + '">' + x.s[w.k].toFixed(1) + '</td>'; });
+      h += '<td>' + esc(nm(x.s.stopId)) + ' <small>' + x.s.best.toFixed(2) + '</small></td>';
+      h += '<td class="bad">' + esc(nm(x.s.weakId)) + ' <small>' + x.s.worst.toFixed(2) + '</small></td>';
+      h += '<td><button type="button" class="mini" data-load="' + esc(x.ids.join(',')) + '">Open</button></td></tr>';
+    });
+    h += '</tbody></table></div>';
+    h += '<div class="lu-note"><b>How a five is scored.</b> ' + WEIGHTS.map(function (w) { return esc(w.label) + ' ' + w.w + ': ' + esc(w.why); }).join(' ') + ' Nothing here is an average across the five. Each job is measured on the man who does it, and the weak link carries the most weight because he is the one they will attack.</div>';
+    return h;
+  }
+
   // ---------- render ----------
   function seg() {
     var labels = ['Players', 'Team needs', 'Roster', 'Defense', 'Lineup'];
@@ -427,8 +594,10 @@
       h += '<button type="button" data-tab="' + k + '" class="' + (state.tab === k ? 'on' : '') + '">Floor ' + k + (floorOf(k).length ? ' (' + floorOf(k).length + ')' : '') + '</button>';
     });
     h += '<button type="button" data-tab="C" class="' + (state.tab === 'C' ? 'on' : '') + '">Compare A and B</button>';
+    h += '<button type="button" data-tab="R" class="' + (state.tab === 'R' ? 'on' : '') + '">Rankings</button>';
     h += '<span class="sp"></span><button type="button" data-act="clear">Clear this five</button></div>';
 
+    if (state.tab === 'R') return h + rankHtml() + '<div class="lu-foot">Read only. Never shown to parents. Trappers, safeties and the named 1-3-1 come from your Team Black playbook.</div>';
     if (state.tab === 'C') return h + compareHtml() + '<div class="lu-foot">Read only. Never shown to parents. Trappers, safeties and the named 1-3-1 come from your Team Black playbook.</div>';
 
     state.active = state.tab;
@@ -460,6 +629,10 @@
       b.onclick = go; b.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
     });
     v.querySelectorAll('[data-act]').forEach(function (b) { b.onclick = function () { state.floors[state.active] = []; paint(); }; });
+    v.querySelectorAll('[data-psort]').forEach(function (b) { b.onclick = function () { state.psort = b.getAttribute('data-psort'); paint(); }; });
+    v.querySelectorAll('[data-rmode]').forEach(function (b) { b.onclick = function () { state.rankMode = b.getAttribute('data-rmode'); paint(); }; });
+    v.querySelectorAll('[data-rmust]').forEach(function (b) { b.onclick = function () { state.rankMust = b.getAttribute('data-rmust') || null; paint(); }; });
+    v.querySelectorAll('[data-load]').forEach(function (b) { b.onclick = function () { state.floors.A = b.getAttribute('data-load').split(','); state.tab = 'A'; state.active = 'A'; paint(); }; });
   }
 
   function ensureView() {
