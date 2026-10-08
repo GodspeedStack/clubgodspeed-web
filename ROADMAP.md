@@ -252,6 +252,39 @@ created; numbers pool by **grade band** instead, read from the roster rather tha
 
 ---
 
+### X7. Lineup builder · DONE 2026-10-07
+`coach-lineup.js`, in the Coach Portal under Players. Pick five, see the unit averages on the
+Godspeed 1 to 5 rubric, and see in a change column exactly what the last player added did to each
+one. Position mix with a warning when there is no Big or four guards. Biggest lift still on the
+bench, per metric. Read only, no writes, never shown to parents.
+- **Evidence:** headless render against the live 5th Grade Black roster and the live
+  `player_development` rows. All 10 metric averages and all 10 deltas matched an independent
+  recomputation in a separate script, across two lineups. Zero console errors.
+- **The honesty rule it enforces:** an unrated player is excluded from an average and named under
+  it, never counted as zero. Proved: adding Greylan Knoblock, who has no ratings, moved every
+  average by exactly 0.00 and printed "Not counted, no rating: Greylan K." on all ten rows.
+- **Strength is absent by design** — every player carries n = 0 on it, so there is nothing to
+  average.
+
+### X8. Capture plus/minus · TODO
+Scott asked for plus/minus on the lineup screen. It cannot be shown: `player_game_stats.plus_minus`
+is null in all 38 rows and `minutes_played` is null in all 38, so it cannot be derived either.
+Plus/minus needs to know who was on the floor and when, and nothing in the database records that.
+- **Done when:** substitutions are logged with a clock time, or each stint is scored, and
+  `plus_minus` is computed from that rather than typed in. The lineup screen then adds the row.
+
+### X9. Measure speed once · TODO
+No sprint or agility number exists for any of the 21 rated players; `strength_bench` is empty for
+all of them. The development board already has the fields (sprint, agility, vertical, seventeens)
+and the age norms to score them against.
+- **Done when:** one timed session fills `strength_bench` for the roster and the lineup screen
+  shows speed alongside the rest.
+
+### X10. Rate the two players who have no ratings · TODO
+Nehemiah Fields has no `player_development` row at all. Greylan Knoblock has a row with no skills
+scored. Both are now on 5th Grade Black, so they appear on the lineup screen as "no data" and are
+excluded from every average until they are rated.
+
 ## LATER — durability
 
 ### L1. Stripe and a real payer-of-record · PREMISE CORRECTED 2026-10-02

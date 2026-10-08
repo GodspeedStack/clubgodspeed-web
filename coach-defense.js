@@ -66,14 +66,15 @@
   function injectCss() { if (el('defense-css')) return; var s = document.createElement('style'); s.id = 'defense-css'; s.textContent = CSS; document.head.appendChild(s); }
 
   function seg() {
-    var labels = ['Players', 'Team needs', 'Roster', 'Defense'];
+    var labels = ['Players', 'Team needs', 'Roster', 'Defense', 'Lineup'];
     return '<div class="gs-seg df-seg">' + labels.map(function (l, i) { return '<button type="button" data-seg="' + i + '" class="' + (i === 3 ? 'active' : '') + '">' + l + '</button>'; }).join('') + '</div>';
   }
   var SEG_GO = [
     function () { if (window.CoachDevBoard) window.CoachDevBoard.openTab('players'); },
     function () { if (window.CoachDevBoard) window.CoachDevBoard.openTab('team'); },
     function () { if (window.CoachNav && window.CoachNav.openRoster) window.CoachNav.openRoster(); },
-    null
+    null,
+    function () { if (window.CoachLineup) window.CoachLineup.open(); }
   ];
 
   function html() {

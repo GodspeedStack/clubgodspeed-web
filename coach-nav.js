@@ -1,10 +1,10 @@
-/* coach-nav.js v3
+/* coach-nav.js v4
  * One owner for the coach portal sidebar. Loaded last.
  *
  * Contract
  *   Five items, nothing else in the sidebar:
  *     HOME       (coach-home)
- *     PLAYERS    development board, players screen; a small in-screen row: Players | Team needs | Roster (the old team page) | Defense (coach-defense.js)
+ *     PLAYERS    development board, players screen; a small in-screen row: Players | Team needs | Roster (the old team page) | Defense (coach-defense.js) | Lineup (coach-lineup.js)
  *     PRACTICE   development board, plan screen; row: Practice plan | The Bank | Training log
  *     PLAYBOOK   5th Grade Playbook; row: Playbook | Player development | Coaching IQ | Coach Academy (coming) | Reading list (coming)
  *     DIRECTOR   (Scott only) activity; row: Activity | Import CSV | Download Data
@@ -12,7 +12,7 @@
  *   that looks them up keeps working (#team-list, #devboard-nav-item, #trainlog-nav-item, ...). The team is picked on Home
  *   or on the team bar inside Players and Practice, not in the sidebar.
  *   The board's own tab row is reused as the in-screen row: the buttons for the current section stay, the rest hide,
- *   and extra chips (Roster, Training log, Import CSV, Download Data) are appended. Nothing here talks to the database.
+ *   and extra chips (Roster, Defense, Lineup, Training log, Import CSV, Download Data) are appended. Nothing here talks to the database.
  */
 (function () {
   'use strict';
@@ -25,7 +25,7 @@
     director: ICON('<path d="M22 12h-4l-3 8-6-16-3 8H2"/>')
   };
   var SECTIONS = {
-    players: { tabs: ['players', 'team'], chips: [{ id: 'gs-chip-roster', label: 'Roster', go: openRoster }, { id: 'gs-chip-defense', label: 'Defense', go: function () { if (window.CoachDefense) window.CoachDefense.open(); } }] },
+    players: { tabs: ['players', 'team'], chips: [{ id: 'gs-chip-roster', label: 'Roster', go: openRoster }, { id: 'gs-chip-defense', label: 'Defense', go: function () { if (window.CoachDefense) window.CoachDefense.open(); } }, { id: 'gs-chip-lineup', label: 'Lineup', go: function () { if (window.CoachLineup) window.CoachLineup.open(); } }] },
     practice: { tabs: ['plan', 'bank'], chips: [{ id: 'gs-chip-trainlog', label: 'Training log', go: function () { if (window.CoachTrainingLog) window.CoachTrainingLog.open(); } }] },
     director: { tabs: ['activity'], chips: [{ id: 'gs-chip-import', label: 'Import CSV', go: function () { if (typeof showBulkUpload === 'function') showBulkUpload(); } }, { id: 'gs-chip-export', label: 'Download Data', go: function () { if (typeof exportData === 'function') exportData(); } }] }
   };
