@@ -252,19 +252,36 @@ created; numbers pool by **grade band** instead, read from the roster rather tha
 
 ---
 
-### X7. Lineup builder · DONE 2026-10-07
-`coach-lineup.js`, in the Coach Portal under Players. Pick five, see the unit averages on the
-Godspeed 1 to 5 rubric, and see in a change column exactly what the last player added did to each
-one. Position mix with a warning when there is no Big or four guards. Biggest lift still on the
-bench, per metric. Read only, no writes, never shown to parents.
-- **Evidence:** headless render against the live 5th Grade Black roster and the live
-  `player_development` rows. All 10 metric averages and all 10 deltas matched an independent
-  recomputation in a separate script, across two lineups. Zero console errors.
-- **The honesty rule it enforces:** an unrated player is excluded from an average and named under
-  it, never counted as zero. Proved: adding Greylan Knoblock, who has no ratings, moved every
-  average by exactly 0.00 and printed "Not counted, no rating: Greylan K." on all ten rows.
-- **Strength is absent by design** — every player carries n = 0 on it, so there is nothing to
-  average.
+### X7. Lineup board · REBUILT 2026-10-08
+V1 showed the average of the five players' skill ratings plus the change when you added one.
+Scott rejected it, correctly: an average of five drops when you add a player below the current
+mean even when he is the best man left on the bench, and a mean hides the one defender who gets
+beaten every possession. Neither helps in a timeout. V2 has no averages on it at all.
+
+V2 reads a five against the Team Black playbook, using the 47 sub-skills already scored 1 to 5:
+- **Pack line.** Who takes the Star. Where they will attack us. Trappers on the floor, which both
+  Star and "Green ball, go" require two of. Rim safety behind the trap. Weakest closeout (rule 4)
+  and weakest hit and get (rule 5). Who can break a press. Who they have to stay attached to.
+- **1-3-1.** Best fit of these five to Top, Wing, Middle, Wing, Tail, chosen by brute force over
+  all 120 arrangements and scored on the sub-skills each slot actually runs on. The weakest slot
+  is named, because that is where the zone breaks. Scott's named 1-3-1 is honoured verbatim when
+  all five of those players are on the floor.
+- **Compare.** Floor A against Floor B side by side on the same checklist. This replaces the
+  change column.
+
+Trappers, per the playbook plus Scott's 2026-10-08 call: Jr, Quest, Anton, Emory, Zayne Smith,
+Jazsias Ware. Never-trap safeties: Kai, Ashton. Rim: Kai, Zach. A player in neither list is
+treated as contain-and-safety, the conservative reading of Scott's own rule not to give more
+responsibility to the defensive liabilities.
+
+- **Evidence:** headless render against the live Black roster and live `player_development.subs`.
+  Every read matched an independent recomputation across five scenarios, including the one Scott's
+  complaint demanded: adding the best available defender to four weak ones now makes him the Star,
+  adds the trapper, and covers pressure release, where V1 would have shown a minus. The 1-3-1
+  assignment matched an independent brute force of all 120 arrangements, and the highlighted slot
+  was the lowest fit every time. Zero console errors.
+- **Open:** roles are matched by athlete id in the file. Moving them into `program_content` so
+  Scott can change a trapper without a deploy is the obvious follow-on.
 
 ### X8. Capture plus/minus · TODO
 Scott asked for plus/minus on the lineup screen. It cannot be shown: `player_game_stats.plus_minus`
