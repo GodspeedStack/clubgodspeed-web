@@ -336,5 +336,62 @@ window.GS_TrainingStatement = (function () {
     return out;
   }
 
-  return { generate: generate, fetchStatementData: fetchStatementData, buildPDF: buildPDF, filenameFor: filenameFor };
+  /**
+   * Staff only. Builds the statement, stores the PDF in the private `documents`
+   * bucket at statements/<athlete_id>/<filename>.pdf, and records a row in
+   * athlete_statements so the parent portal can list it. RLS does the gating:
+   * only coaches and directors can write, only that athlete's guardians can read.
+   * Re-running for the same filename replaces the file and updates the row.
+   */
+  async function publish(athleteId, opts) {
+    opts = opts || {};
+    var client = getClient();
+    if (!client) throw new Error('No Supabase client available. Ensure auth is initialized.');
+    if (!window.jspdf || !window.jspdf.jsPDF) throw new Error('jsPDF not loaded.');
+
+    var data = await fetchStatementData(athleteId);
+    var doc = buildPDF(data);
+    var blob = doc.output('blob');
+    var filename = filenameFor(data.athlete);
+    var path = 'statements/' + athleteId + '/' + filename;
+
+    var up = await client.storage.from('documents').upload(path, blob, {
+      contentType: 'application/pdf',
+      upsert: true
+    });
+    if (up.error) throw new Error('Upload failed: ' + up.error.message);
+
+    var uid = null;
+    try {
+      var sess = await client.auth.getSession();
+      uid = sess && sess.data && sess.data.session ? sess.data.session.user.id : null;
+    } catch (_) {}
+
+    var today = new Date();
+    var period = today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+    var row = {
+      athlete_id: athleteId,
+      kind: 'training',
+      title: opts.title || ('Training Statement, ' + period),
+      storage_path: path,
+      statement_date: today.toISOString().slice(0, 10),
+      period_label: opts.periodLabel || period,
+      hours_purchased: data.totals.purchased,
+      hours_used: data.totals.used,
+      hours_remaining: data.totals.remaining,
+      byte_size: blob.size,
+      created_by: uid
+    };
+
+    var ins = await client.from('athlete_statements')
+      .upsert(row, { onConflict: 'storage_path' })
+      .select()
+      .single();
+    if (ins.error) throw new Error('Stored the file but could not record it: ' + ins.error.message);
+
+    return { path: path, filename: filename, row: ins.data, data: data };
+  }
+
+  return { generate: generate, fetchStatementData: fetchStatementData, buildPDF: buildPDF, filenameFor: filenameFor, publish: publish };
 })();

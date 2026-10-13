@@ -1048,6 +1048,16 @@
                         <div class="bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition-shadow duration-200">
                             <h3 class="text-xl font-semibold mb-5">Training Documents</h3>
 
+                            <!-- Training Statements (PDF, guardian-gated via RLS) -->
+                            <div class="mb-6">
+                                <div class="flex justify-between items-center mb-3" style="padding-right: 12px;">
+                                    <h4 class="text-base font-semibold">Statements</h4>
+                                </div>
+                                <div id="training-statements-list" class="flex flex-col gap-3 mb-3">
+                                    <!-- Filled by parent-statements.js -->
+                                </div>
+                            </div>
+
                             <!-- Receipts -->
                             <div class="mb-6">
                                 <div class="flex justify-between items-center mb-3" style="padding-right: 12px;">
@@ -1549,6 +1559,7 @@
     <script src="season-header.js?v=1" defer></script>
     <!-- Non-critical scripts (async for independent loading) -->
     <script src="branded-modal.js" defer></script>
+    <script src="parent-statements.js?v=1" defer></script>
     <script src="documents-view.js" defer></script>
     <script src="document-tracker-integration.js" defer></script>
     <script src="tournament-schedule.js?v=20260331b" defer></script>
