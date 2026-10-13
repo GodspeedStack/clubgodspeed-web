@@ -199,7 +199,38 @@
             overflow: hidden;
             margin-bottom: 24px;
         }
-        .data-table thead { background: var(--gs-gray-50); }
+        /* Match the statement PDF: black header rows, blue hours hero, package blocks. */
+        .data-table thead { background: var(--gs-black); }
+        .data-table thead th { color: #fff; border-bottom: none; }
+        .hours-hero {
+            background: linear-gradient(90deg, #2563eb 0%, #2563eb 58%, #1d4ed8 58%, #1d4ed8 100%);
+            border-radius: 8px; padding: 20px 24px 18px; color: #fff; margin-bottom: 20px;
+        }
+        .hours-hero-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+        .hours-hero .hh-label { font-size: 12.5px; color: #dbe6ff; }
+        .hours-hero .hh-big { font-size: 52px; font-weight: 800; line-height: 1; margin-top: 6px; letter-spacing: -2px; }
+        .hours-hero .hh-sub { font-size: 13px; color: #dbe6ff; margin-top: 2px; }
+        .hours-hero .hh-side { text-align: right; }
+        .hours-hero .hh-label2 { font-size: 10.5px; color: #c7d8fb; }
+        .hours-hero .hh-val { font-size: 19px; font-weight: 800; margin: 2px 0 10px; }
+        .hours-hero .hh-side .hh-val:last-child { margin-bottom: 0; }
+        .hh-track { height: 7px; background: rgba(255,255,255,.28); border-radius: 4px; margin-top: 14px; overflow: hidden; }
+        .hh-fill { height: 7px; background: #4ade80; border-radius: 4px; }
+        /* hoursStats used to be a 3-column grid; the hero and package blocks are
+           full-width rows, and each package lays its own 3 cards inside. */
+        #hoursStats { display: block; }
+        .pkg-block { margin-bottom: 18px; }
+        .pkg-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+        .pkg-name { font-size: 14.5px; font-weight: 800; color: var(--gs-black); }
+        .pkg-badge { font-size: 11.5px; font-weight: 800; letter-spacing: .3px; }
+        .pkg-badge.done { color: var(--gs-green); }
+        .pkg-badge.prog { color: var(--gs-orange); }
+        @media (max-width: 640px) {
+            .hours-hero { background: #2563eb; }
+            .hours-hero-row { flex-direction: column; }
+            .hours-hero .hh-side { text-align: left; }
+            .hours-hero .hh-big { font-size: 44px; }
+        }
         .data-table th {
             font-size: 10px;
             font-weight: 600;
@@ -453,7 +484,7 @@
             <div class="report-card-header">
                 <div>
                     <h1 id="athleteName">--</h1>
-                    <div class="report-date" id="reportDate">Training Report</div>
+                    <div class="report-date" id="reportDate"></div>
                 </div>
                 <div style="text-align:right;">
                     <div style="font-size:10px;color:var(--gs-gray-400);text-transform:uppercase;letter-spacing:0.05em;">Training Report</div>
@@ -736,7 +767,7 @@ async function loadReport(athleteId) {
 
 // ── Render Report Preview ───────────────────────────────
 function renderReport(data) {
-    const { athlete, roster, attendance, totalTeamSessions, sessionsAttended, enrichedStats, evaluation, hoursData, hoursUsedCalc } = data;
+    const { athlete, roster, attendance, totalTeamSessions, sessionsAttended, enrichedStats, evaluation, hoursData, hoursRows, hoursUsedCalc } = data;
     const teamInfo = roster[0]?.teams || {};
     const role = roster[0]?.role || 'rotation';
     const now = new Date();
@@ -745,6 +776,8 @@ function renderReport(data) {
     // Header
     document.getElementById('athleteName').textContent = athlete.first_name + ' ' + athlete.last_name;
     document.getElementById('reportDateHeader').textContent = dateStr;
+    document.getElementById('reportDate').textContent =
+        [teamInfo.name || athlete.team_name, athlete.season || teamInfo.season].filter(Boolean).join('  |  ');
 
     // Athlete meta
     const meta = document.getElementById('athleteMeta');
@@ -765,16 +798,56 @@ function renderReport(data) {
     const hoursRemaining = hoursData && hoursData.hours_remaining != null
         ? parseFloat(hoursData.hours_remaining).toFixed(1) : 'N/A';
 
-    document.getElementById('hoursStats').innerHTML = [
-        statCard(hoursPurchased, 'Hours Purchased'),
-        statCard(hoursUsed, 'Hours Used'),
-        statCard(hoursRemaining, 'Hours Remaining'),
-    ].join('');
+    // Match the statement PDF: blue hero with the remaining number and a green
+    // progress bar, then one block per package with its status badge.
+    const purchasedNum = hoursData ? hoursData.hours_purchased : 0;
+    const usedNum = hoursData ? hoursData.hours_used : hoursUsedCalc;
+    const remainNum = hoursData ? hoursData.hours_remaining : 0;
+    const pct = purchasedNum > 0 ? Math.max(0, Math.min(100, (usedNum / purchasedNum) * 100)) : 0;
+
+    let hoursHtml = '' +
+      '<div class="hours-hero">' +
+        '<div class="hours-hero-row">' +
+          '<div>' +
+            '<div class="hh-label">Training Hours Remaining</div>' +
+            '<div class="hh-big">' + hoursRemaining + '</div>' +
+            '<div class="hh-sub">hours</div>' +
+          '</div>' +
+          '<div class="hh-side">' +
+            '<div class="hh-label2">Active Purchased</div><div class="hh-val">' + hoursPurchased + '</div>' +
+            '<div class="hh-label2">Active Used</div><div class="hh-val">' + hoursUsed + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="hh-track"><div class="hh-fill" style="width:' + pct.toFixed(1) + '%"></div></div>' +
+      '</div>';
+
+    (hoursRows || []).forEach(function (r) {
+        const pu = parseFloat(r.hours_purchased) || 0;
+        const us = parseFloat(r.hours_used) || 0;
+        const rm = parseFloat(r.hours_remaining) || 0;
+        const done = rm <= 0.0001;
+        const price = r.price != null ? '  --  $' + Math.round(parseFloat(r.price)) : '';
+        hoursHtml += '' +
+          '<div class="pkg-block">' +
+            '<div class="pkg-head"><span class="pkg-name">' + (r.package_label || 'Package') + price + '</span>' +
+              '<span class="pkg-badge ' + (done ? 'done' : 'prog') + '">' + (done ? 'COMPLETED' : 'IN PROGRESS') + '</span></div>' +
+            '<div class="stats-grid">' +
+              statCard(pu.toFixed(1), 'Hours Purchased') +
+              statCard(us.toFixed(1), 'Hours Used') +
+              statCard(rm.toFixed(1), 'Hours Remaining') +
+            '</div>' +
+          '</div>';
+    });
+
+    document.getElementById('hoursStats').innerHTML = hoursHtml;
 
     // Attendance stats
     const attendPct = totalTeamSessions > 0 ? Math.round((sessionsAttended / totalTeamSessions) * 100) : 0;
-    const avgEffort = attendance.length > 0
-        ? (attendance.reduce((s, a) => s + (a.effort_rating || 0), 0) / attendance.length).toFixed(1)
+    // Average the sessions that were actually rated. Dividing by every session
+    // dragged a real 4 out of 5 down to 0.5.
+    const ratedSessions = attendance.filter(a => a.effort_rating != null);
+    const avgEffort = ratedSessions.length > 0
+        ? (ratedSessions.reduce((s, a) => s + a.effort_rating, 0) / ratedSessions.length).toFixed(1)
         : '--';
     const avgFocus = computeAvgSkill(attendance, 'focus');
     const avgHustle = computeAvgSkill(attendance, 'hustle');
@@ -783,7 +856,7 @@ function renderReport(data) {
         statCard(sessionsAttended, 'Sessions Attended'),
         statCard(totalTeamSessions, 'Total Sessions'),
         statCard(attendPct + '%', 'Attendance Rate'),
-        statCard(avgEffort + '/5', 'Avg Effort'),
+        statCard(avgEffort === '--' ? 'Not rated' : avgEffort + '/5', 'Avg Effort'),
     ].join('');
 
     // Session log table

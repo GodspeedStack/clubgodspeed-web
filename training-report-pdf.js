@@ -94,7 +94,7 @@ window.GS_TrainingReport = (function () {
       client.from('player_game_stats').select('*').eq('athlete_id', athleteId),
       client.from('player_evaluations').select('*').eq('athlete_id', athleteId).order('evaluation_date', { ascending: false }).limit(1),
       // Training hours package (purchased vs used)
-      client.from('training_hours_summary').select('*').eq('athlete_id', athleteId).maybeSingle(),
+      client.from('training_hours_summary').select('*').eq('athlete_id', athleteId),
     ]);
 
     if (athleteRes.error) throw new Error('Failed to fetch athlete: ' + athleteRes.error.message);
@@ -106,7 +106,16 @@ window.GS_TrainingReport = (function () {
     const games = gamesRes.data || [];
     const myGameStats = statsRes.data || [];
     const evaluation = evalRes.data?.[0] || null;
-    const hoursData = hoursRes.data || null; // { hours_purchased, hours_used, hours_remaining }
+    // An athlete can hold several packages. maybeSingle() returned null for anyone
+    // past their first one, which is why repeat families saw N/A hours. Sum the
+    // packages so the totals describe the whole account.
+    const hoursRows = Array.isArray(hoursRes.data) ? hoursRes.data : (hoursRes.data ? [hoursRes.data] : []);
+    const hoursData = hoursRows.length ? hoursRows.reduce(function (acc, r) {
+      acc.hours_purchased += parseFloat(r.hours_purchased) || 0;
+      acc.hours_used      += parseFloat(r.hours_used) || 0;
+      acc.hours_remaining += parseFloat(r.hours_remaining) || 0;
+      return acc;
+    }, { hours_purchased: 0, hours_used: 0, hours_remaining: 0 }) : null;
 
     // Build game lookup
     const gameMap = {};
@@ -130,10 +139,12 @@ window.GS_TrainingReport = (function () {
     const attended = myAttendance.filter(a => a.status === 'present' || a.status === 'late');
 
     // Compute hours used from attendance durations when view is unavailable
+    // Fallback only, and individual workouts only. It used to include team
+    // practice, which inflated billable hours (28.8 instead of 26.8 for Anton).
     let hoursUsedCalc = 0;
     attended.forEach(a => {
       const s = a.training_sessions;
-      if (s && s.duration_minutes) {
+      if (s && s.duration_minutes && s.session_type === 'individual_workout') {
         hoursUsedCalc += s.duration_minutes / 60;
       }
     });
@@ -147,6 +158,7 @@ window.GS_TrainingReport = (function () {
       enrichedStats,
       evaluation,
       hoursData,
+      hoursRows,   // per-package detail, for the on-screen package blocks
       hoursUsedCalc,
     };
   }
