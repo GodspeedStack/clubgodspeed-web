@@ -1030,12 +1030,19 @@ async function sendReportToParent() {
 
     try {
         // Use the Supabase edge function for sending emails
-        const { data, error } = await _supabase.functions.invoke('send-document-notification', {
+        // send-document-notification only accepts agreement_ids or document_id;
+        // the custom_email branch this used to call was never implemented, so this
+        // always fell through to "Edge function unavailable". send-email routes
+        // through sendParentEmail, which logs the message and enforces the sender.
+        const { data, error } = await _supabase.functions.invoke('send-email', {
             body: {
-                custom_email: true,
-                to: email,
-                subject: 'Training Report Ready: ' + athleteName,
-                html: buildReportEmailHtml(athleteName, reportLink),
+                type: 'training_statement',
+                emailTo: email,
+                data: {
+                    playerName: athleteName,
+                    subject: 'Training Report Ready: ' + athleteName,
+                    html: buildReportEmailHtml(athleteName, reportLink),
+                },
             },
         });
 

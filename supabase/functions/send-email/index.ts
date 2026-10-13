@@ -214,6 +214,24 @@ function getEmailContent(type: string, data: any): { subject: string; text: stri
       }
     }
 
+    // Training statement, sent from the coach portal. The caller supplies the
+    // finished html (already branded), so it is passed through without the
+    // htmlWrap shell. sendParentEmail still logs it and enforces the sender.
+    case 'training_statement': {
+      const who = data.playerName || 'your athlete';
+      const remaining = data.hoursRemaining != null ? String(data.hoursRemaining) : null;
+      if (!data.html || typeof data.html !== 'string') {
+        throw new Error('training_statement requires html');
+      }
+      return {
+        subject: data.subject || `Godspeed Training Update: ${who}`,
+        text: data.text || `Training statement for ${who}.` +
+          (remaining ? ` ${remaining} training hours remaining.` : '') +
+          ' See your statement in the parent portal at https://www.clubgodspeed.com/parent-portal.html',
+        html: data.html
+      }
+    }
+
     default:
       return { subject: 'Godspeed Basketball', text: '', html: '' }
   }
@@ -236,6 +254,11 @@ Deno.serve(async (req) => {
 
   if (type === 'gear_order') {
     content = getEmailContent(type, orderObj)
+  } else if (type === 'training_statement') {
+    // Self-contained: the caller supplies the content, so there is no payment
+    // row to look up. Without this branch it fell into the payments lookup
+    // below and died with "Payment not found".
+    content = getEmailContent(type, body.data || {})
   } else if (type === 'new_registration') {
     content = getEmailContent(type, body)
   } else if (type === 'payment_admin_notify') {
