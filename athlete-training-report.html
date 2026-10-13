@@ -490,6 +490,8 @@
                 <!-- Action Bar -->
                 <div class="action-bar">
                     <button class="btn btn-primary" onclick="downloadPDF()">Download Report (PDF)</button>
+                    <button class="btn btn-blue" id="publishStatementBtn" onclick="publishStatement()">Publish Statement to Parent Portal</button>
+                    <button class="btn btn-outline" onclick="downloadStatement()">Download Statement (PDF)</button>
                     <button class="btn btn-outline" onclick="window.print()">Print</button>
                 </div>
             </div>
@@ -503,6 +505,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="training-report-pdf.js"></script>
+<script src="training-statement-pdf.js?v=2"></script>
 
 <!-- Auth + Supabase (loaded from your existing setup) -->
 <script src="env-injector.js"></script>
@@ -631,6 +634,57 @@ function showStatus(msg, type) {
     el.textContent = msg;
     if (type === 'success') {
         setTimeout(() => { el.style.display = 'none'; }, 5000);
+    }
+}
+
+// ── Training Statement (billing document) ───────────────
+// The statement is the money document: hours purchased, used and remaining.
+// Publishing uploads it to the private documents bucket and records a row in
+// athlete_statements, which is what makes it appear in the parent portal.
+// RLS does the gating; this runs as the signed-in coach or director.
+async function publishStatement() {
+    if (!_currentAthleteId) {
+        showStatus('Select an athlete and load their report first.', 'error');
+        return;
+    }
+    if (!window.GS_TrainingStatement) {
+        showStatus('Statement generator did not load. Refresh the page.', 'error');
+        return;
+    }
+    const btn = document.getElementById('publishStatementBtn');
+    const label = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Publishing...';
+    try {
+        const out = await GS_TrainingStatement.publish(_currentAthleteId);
+        const left = out.data && out.data.totals ? out.data.totals.remaining : null;
+        showStatus('Statement published to the parent portal' +
+            (left != null ? ' (' + left.toFixed(1) + ' hours remaining).' : '.'), 'success');
+        console.log('[Statement] published', out.path, out.row);
+    } catch (err) {
+        console.error('Statement publish failed:', err);
+        showStatus('Could not publish the statement: ' + err.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = label;
+    }
+}
+
+async function downloadStatement() {
+    if (!_currentAthleteId) {
+        showStatus('Select an athlete and load their report first.', 'error');
+        return;
+    }
+    if (!window.GS_TrainingStatement) {
+        showStatus('Statement generator did not load. Refresh the page.', 'error');
+        return;
+    }
+    try {
+        await GS_TrainingStatement.generate(_currentAthleteId);
+        showStatus('Statement downloaded.', 'success');
+    } catch (err) {
+        console.error('Statement download failed:', err);
+        showStatus('Statement failed: ' + err.message, 'error');
     }
 }
 
