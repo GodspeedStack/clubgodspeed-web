@@ -278,15 +278,18 @@ window.GS_TrainingReport = (function () {
     const attendPct = totalTeamSessions > 0
       ? Math.round((sessionsAttended / totalTeamSessions) * 100)
       : 0;
-    const avgEffort = attendance.length > 0
-      ? (attendance.reduce((s, a) => s + (a.effort_rating || 0), 0) / attendance.length).toFixed(1)
+    // Average only over sessions that were actually rated. Dividing by every
+    // session made an unrated history drag the number toward zero.
+    const ratedSessions = attendance.filter(a => a.effort_rating != null);
+    const avgEffort = ratedSessions.length > 0
+      ? (ratedSessions.reduce((s, a) => s + a.effort_rating, 0) / ratedSessions.length).toFixed(1)
       : 'N/A';
 
     const summaryItems = [
       { label: 'Sessions Attended', value: String(sessionsAttended) },
       { label: 'Total Team Sessions', value: String(totalTeamSessions) },
       { label: 'Attendance Rate', value: attendPct + '%' },
-      { label: 'Avg Effort Rating', value: avgEffort + ' / 5' },
+      { label: 'Avg Effort Rating', value: avgEffort === 'N/A' ? 'Not rated' : avgEffort + ' / 5' },
     ];
 
     const cardW = (CONTENT_W - 24) / 4;
