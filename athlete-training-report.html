@@ -620,11 +620,27 @@ function showAuthGate() {
     document.getElementById('authGate').style.display = 'flex';
 }
 
-function signIn() {
-    if (window.auth && typeof window.auth.loginWithGoogle === 'function') {
-        window.auth.loginWithGoogle();
-    } else {
-        showStatus('Auth module not loaded. Please refresh the page.', 'error');
+async function signIn() {
+    // auth-supabase.js exposes signInWithOAuth, not loginWithGoogle. The old call
+    // named a method that never existed, so this button always failed with
+    // "Auth module not loaded". Mirrors the working flow in parent-portal.js.
+    const btn = document.querySelector('#authGate button');
+    if (!window.auth || typeof window.auth.signInWithOAuth !== 'function') {
+        showStatus('Sign-in is unavailable right now. Refresh the page and try again.', 'error');
+        return;
+    }
+    if (btn) { btn.disabled = true; btn.textContent = 'Opening Google...'; }
+    try {
+        const { error } = await window.auth.signInWithOAuth({
+            provider: 'google',
+            options: { redirectTo: window.location.origin + '/athlete-training-report.html' }
+        });
+        if (error) throw new Error(error.message || 'oauth_failed');
+        // Success: the browser is navigating to Google. Leave the button disabled.
+    } catch (e) {
+        console.error('[auth] Google sign-in failed:', e);
+        if (btn) { btn.disabled = false; btn.textContent = 'Sign In with Google'; }
+        showStatus('Could not open Google sign-in: ' + (e.message || 'unknown error'), 'error');
     }
 }
 
