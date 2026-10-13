@@ -508,7 +508,9 @@
 <script src="training-statement-pdf.js?v=2"></script>
 
 <!-- Auth + Supabase (loaded from your existing setup) -->
-<script src="env-injector.js"></script>
+<!-- Supabase client library. Without this auth-supabase.js cannot initialize,
+     the page renders nothing, and even the sign-in gate never appears. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="auth-supabase.js" defer></script>
 
 <script>
