@@ -408,7 +408,7 @@
 <header class="header">
     <div class="logo">GODSPEED<span>BASKETBALL</span></div>
     <div class="header-actions">
-        <select id="athleteSelect" onchange="loadReport(this.value)" style="display:none;">
+        <select id="athleteSelect" onchange="if(this.value) loadReport(this.value)" style="display:none;">
             <option value="">Select Athlete...</option>
         </select>
         <button class="btn btn-blue" id="downloadBtn" onclick="downloadPDF()" style="display:none;">
@@ -564,6 +564,14 @@ async function init() {
     }
 
     const select = document.getElementById('athleteSelect');
+    // Placeholder first. Without it the select defaults to whoever sorts first and
+    // onchange never fires, so the page looks like the dropdown does nothing.
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Select an athlete...';
+    placeholder.disabled = true;
+    placeholder.selected = true;
+    select.appendChild(placeholder);
     athletes.forEach(a => {
         const opt = document.createElement('option');
         opt.value = a.id;
