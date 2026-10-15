@@ -129,14 +129,28 @@ window.GS_TrainingReport = (function () {
       return new Date(b.game.game_date) - new Date(a.game.game_date);
     });
 
-    // Compute attendance stats
-    // Count distinct team sessions from allSessions that match the athlete's team
-    const teamId = roster[0]?.team_id;
-    const teamSessions = teamId
-      ? allSessions.filter(s => s.team_id === teamId || !s.team_id)
-      : allSessions;
+    // Compute attendance stats.
+    //
+    // Attendance means TEAM PRACTICE only. An individual_workout belongs to one
+    // athlete, so counting those put one player's private sessions into every
+    // other player's denominator AND inflated his own numerator -- Anton read
+    // 70% off 2 of 6 practices, while players with no private training read 4%
+    // off 1 of 6. Scope both sides of the ratio to team_practice.
+    //
+    // Practices are currently logged without a team_id (22 of 23 sessions have
+    // none), so a null team_id is treated as applying to every team. Once
+    // practices carry a team_id this narrows on its own.
+    const myTeamIds = (roster || []).map(r => r.team_id).filter(Boolean);
+    const isPractice = (s) => !!s && s.session_type === 'team_practice';
+    const inMyScope = (s) => !s.team_id || myTeamIds.length === 0 || myTeamIds.indexOf(s.team_id) > -1;
 
+    const teamSessions = allSessions.filter(s => isPractice(s) && inMyScope(s));
+
+    // All attended sessions, any type -- the hours fallback below needs these.
     const attended = myAttendance.filter(a => a.status === 'present' || a.status === 'late');
+
+    // Practices attended: the numerator that pairs with teamSessions.
+    const practicesAttended = attended.filter(a => isPractice(a.training_sessions));
 
     // Compute hours used from attendance durations when view is unavailable
     // Fallback only, and individual workouts only. It used to include team
@@ -153,8 +167,10 @@ window.GS_TrainingReport = (function () {
       athlete,
       roster,
       attendance: myAttendance,
-      totalTeamSessions: Math.max(teamSessions.length, myAttendance.length),
-      sessionsAttended: attended.length,
+      // No Math.max() fallback here. It used to widen the denominator to the
+      // athlete's own session count, which is how private workouts leaked in.
+      totalPractices: teamSessions.length,
+      practicesAttended: practicesAttended.length,
       enrichedStats,
       evaluation,
       hoursData,
@@ -175,7 +191,7 @@ window.GS_TrainingReport = (function () {
 
     let curY = 0;
 
-    const { athlete, roster, attendance, totalTeamSessions, sessionsAttended, enrichedStats, evaluation, hoursData, hoursUsedCalc } = data;
+    const { athlete, roster, attendance, totalPractices, practicesAttended, enrichedStats, evaluation, hoursData, hoursUsedCalc } = data;
     const teamInfo = roster[0]?.teams || {};
     const role = roster[0]?.role || 'rotation';
     const reportDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -287,9 +303,6 @@ window.GS_TrainingReport = (function () {
     // ── Attendance Summary ─────────────────────────────────
     sectionHeader('Attendance Summary');
 
-    const attendPct = totalTeamSessions > 0
-      ? Math.round((sessionsAttended / totalTeamSessions) * 100)
-      : 0;
     // Average only over sessions that were actually rated. Dividing by every
     // session made an unrated history drag the number toward zero.
     const ratedSessions = attendance.filter(a => a.effort_rating != null);
@@ -297,14 +310,21 @@ window.GS_TrainingReport = (function () {
       ? (ratedSessions.reduce((s, a) => s + a.effort_rating, 0) / ratedSessions.length).toFixed(1)
       : 'N/A';
 
+    // A count, not a percentage. With the practice log this thin, a percentage
+    // reads as the player's problem when it is really a logging gap.
     const summaryItems = [
-      { label: 'Sessions Attended', value: String(sessionsAttended) },
-      { label: 'Total Team Sessions', value: String(totalTeamSessions) },
-      { label: 'Attendance Rate', value: attendPct + '%' },
+      { label: 'Practices Attended',
+        value: totalPractices > 0
+          ? practicesAttended + ' of ' + totalPractices
+          : String(practicesAttended) },
+      { label: 'Individual Workouts',
+        value: String(attendance.filter(a =>
+          a.training_sessions && a.training_sessions.session_type === 'individual_workout' &&
+          (a.status === 'present' || a.status === 'late')).length) },
       { label: 'Avg Effort Rating', value: avgEffort === 'N/A' ? 'Not rated' : avgEffort + ' / 5' },
     ];
 
-    const cardW = (CONTENT_W - 24) / 4;
+    const cardW = (CONTENT_W - 16) / 3;
     summaryItems.forEach((item, i) => {
       const x = MARGIN + i * (cardW + 8);
       doc.setFillColor(255, 255, 255);

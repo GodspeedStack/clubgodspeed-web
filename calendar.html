@@ -185,7 +185,7 @@
         return hh + ':' + String(m).padStart(2,'0') + ' ' + ap;
     }
 
-    var q = '/rest/v1/calendar_events?select=title,start_date,start_time,location,event_type,grade_level'
+    var q = '/rest/v1/calendar_events?select=title,start_date,start_time,location,event_type,grade_level,team_id'
           + '&published_at=not.is.null&visibility=eq.public&is_cancelled=eq.false'
           // Games, scrimmages and season blocks always show. A tournament only
           // shows when a Godspeed team is actually entered in it (team_id set),
@@ -194,9 +194,37 @@
               + 'and(event_type.eq.tournament,team_id.not.is.null))'
           + '&start_date=gte.' + today() + '&order=start_date.asc,start_time.asc';
 
-    fetch(URL_BASE + q, { headers: { apikey: ANON, Authorization: 'Bearer ' + ANON } })
-        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-        .then(function (rows) {
+    // Team labels come from public_team_labels, a two-column anon-readable view.
+    // public.teams itself has no anon RLS policy, so embedding teams(name) here
+    // returns null; and opening teams to anon would expose head_coach,
+    // assistant_coaches and max_roster, because RLS is row-level.
+    var teamLabelQ = '/rest/v1/public_team_labels?select=id,name';
+
+    // "Godspeed 5th Grade Black" -> "5th Black". The full name is too long for a
+    // pill and the "Godspeed" is redundant on Godspeed's own site.
+    function shortTeam(name) {
+        if (!name) return '';
+        return String(name)
+            .replace(/^Godspeed\s+/i, '')
+            .replace(/\s+Grade\b/i, '')
+            .trim();
+    }
+
+    var headers = { apikey: ANON, Authorization: 'Bearer ' + ANON };
+
+    Promise.all([
+        fetch(URL_BASE + q, { headers: headers })
+            .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }),
+        // A failure here must not take the schedule down with it -- the page is
+        // still useful without team pills.
+        fetch(URL_BASE + teamLabelQ, { headers: headers })
+            .then(function (r) { return r.ok ? r.json() : []; })
+            .catch(function () { return []; })
+    ])
+        .then(function (res) {
+            var rows = res[0];
+            var teamById = {};
+            (res[1] || []).forEach(function (t) { teamById[t.id] = shortTeam(t.name); });
             if (!rows.length) {
                 stateEl.textContent = 'No games are on the schedule yet. Check back, or see the calendar in the parent portal.';
                 return;
@@ -211,12 +239,25 @@
                 return '<div class="gs-sched__day">'
                      + '<h2 class="gs-sched__date">' + esc(dayLabel(d)) + '</h2>'
                      + byDay[d].map(function (e) {
-                         var grade = e.grade_level ? '<span class="gs-sched__tag">' + esc(e.grade_level) + ' grade</span>' : '';
+                         // Prefer the team. An event with no team_id (a whole-club
+                         // item) still falls back to the grade label.
+                         var teamName = e.team_id ? teamById[e.team_id] : '';
+                         var tag;
+                         if (teamName) {
+                             var variant = /black$/i.test(teamName) ? ' gs-sched__tag--black'
+                                         : /white$/i.test(teamName) ? ' gs-sched__tag--white'
+                                         : '';
+                             tag = '<span class="gs-sched__tag' + variant + '">' + esc(teamName) + '</span>';
+                         } else if (e.grade_level) {
+                             tag = '<span class="gs-sched__tag">' + esc(e.grade_level) + ' grade</span>';
+                         } else {
+                             tag = '';
+                         }
                          return '<div class="gs-sched__row">'
                               + '<div class="gs-sched__time">' + esc(timeLabel(e.start_time)) + '</div>'
                               + '<div class="gs-sched__main"><div class="gs-sched__t">' + esc(e.title) + '</div>'
                               + '<div class="gs-sched__m">' + esc(e.location || 'Location TBD') + '</div></div>'
-                              + grade + '</div>';
+                              + tag + '</div>';
                        }).join('')
                      + '</div>';
             }).join('');

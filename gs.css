@@ -610,6 +610,14 @@ details[open] > summary::after {
    #c0392b measures 5.44:1. */
 .gs-sched__tag--need { background: #c0392b; color: #fff; }
 
+/* Team tags on the public schedule. Black and White are separate teams with
+   separate schedules; before these existed both rendered as "5TH GRADE", which
+   made 5th grade look like it played twice as many games as either team does.
+   Filled, no borders, distinguished by fill only.
+   #fff on #1d1d1f measures 16.1:1. #1d1d1f on #f2f2f7 measures 15.1:1. */
+.gs-sched__tag--black { background: var(--gs-ink); color: #fff; }
+.gs-sched__tag--white { background: #f2f2f7; color: var(--gs-ink); }
+
 @media (min-width: 1024px) {
     .gs-sched__date { font-size: 17px; }
     .gs-sched__time { flex-basis: 110px; font-size: 15px; }

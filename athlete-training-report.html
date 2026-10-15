@@ -767,7 +767,7 @@ async function loadReport(athleteId) {
 
 // ── Render Report Preview ───────────────────────────────
 function renderReport(data) {
-    const { athlete, roster, attendance, totalTeamSessions, sessionsAttended, enrichedStats, evaluation, hoursData, hoursRows, hoursUsedCalc } = data;
+    const { athlete, roster, attendance, totalPractices, practicesAttended, enrichedStats, evaluation, hoursData, hoursRows, hoursUsedCalc } = data;
     const teamInfo = roster[0]?.teams || {};
     const role = roster[0]?.role || 'rotation';
     const now = new Date();
@@ -842,7 +842,6 @@ function renderReport(data) {
     document.getElementById('hoursStats').innerHTML = hoursHtml;
 
     // Attendance stats
-    const attendPct = totalTeamSessions > 0 ? Math.round((sessionsAttended / totalTeamSessions) * 100) : 0;
     // Average the sessions that were actually rated. Dividing by every session
     // dragged a real 4 out of 5 down to 0.5.
     const ratedSessions = attendance.filter(a => a.effort_rating != null);
@@ -853,9 +852,13 @@ function renderReport(data) {
     const avgHustle = computeAvgSkill(attendance, 'hustle');
 
     document.getElementById('attendanceStats').innerHTML = [
-        statCard(sessionsAttended, 'Sessions Attended'),
-        statCard(totalTeamSessions, 'Total Sessions'),
-        statCard(attendPct + '%', 'Attendance Rate'),
+        // A count, not a percentage -- see the note in training-report-pdf.js.
+        statCard(totalPractices > 0 ? practicesAttended + ' of ' + totalPractices : String(practicesAttended),
+                 'Practices Attended'),
+        statCard(String(attendance.filter(a => a.training_sessions
+                 && a.training_sessions.session_type === 'individual_workout'
+                 && (a.status === 'present' || a.status === 'late')).length),
+                 'Individual Workouts'),
         statCard(avgEffort === '--' ? 'Not rated' : avgEffort + '/5', 'Avg Effort'),
     ].join('');
 
