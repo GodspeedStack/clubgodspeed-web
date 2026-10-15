@@ -46,6 +46,8 @@
 .ra-field input,.ra-field select{font:inherit;font-size:15px;padding:10px 12px;border:1px solid rgba(60,60,67,.18);border-radius:10px;background:#fff;color:#1D1D1F;min-height:0;width:100%}\
 .ra-field input:focus,.ra-field select:focus{outline:none;border-color:#0071E3;box-shadow:0 0 0 3px rgba(0,113,227,.15)}\
 .ra-hint{font-size:12px;color:#A1A1A6}\
+.ra-check{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:400;margin-top:4px;cursor:pointer}\
+.ra-check input{width:auto;margin:0}\
 .ra-teams{display:grid;gap:6px}\
 .ra-teams label{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;color:#1D1D1F;padding:8px 10px;border:1px solid rgba(60,60,67,.1);border-radius:10px;cursor:pointer}\
 .ra-teams input{width:16px;height:16px;margin:0;accent-color:#0071E3}\
@@ -125,7 +127,8 @@
       '<div class="ra-field"><label>Jersey number</label><input name="jersey_number" type="number" min="0" max="99" inputmode="numeric" value="' + esc(a.jersey == null ? '' : a.jersey) + '"></div>' +
       '<div class="ra-field"><label>Grade</label>' + gradeSel + '</div>' +
       '<div class="ra-field"><label>Date of birth</label><input name="date_of_birth" type="date" value="' + esc(a.dob) + '"><span class="ra-hint" id="ra-age">' + (a.dob ? 'Age ' + ageFrom(a.dob) : 'Age shows once a date is set') + '</span></div>' +
-      '<div class="ra-field"><label>Status</label><select name="enrollment_status"><option value="active"' + (a.status === 'active' ? ' selected' : '') + '>Active</option><option value="inactive"' + (a.status === 'inactive' ? ' selected' : '') + '>Inactive</option><option value="pending"' + (a.status === 'pending' ? ' selected' : '') + '>Pending</option></select></div>' +
+      '<div class="ra-field"><label>Status</label><select name="enrollment_status"><option value="active"' + (a.status === 'active' ? ' selected' : '') + '>Active</option><option value="inactive"' + (a.status === 'inactive' ? ' selected' : '') + '>Inactive</option><option value="trial"' + (a.status === 'trial' ? ' selected' : '') + '>Trial (no dues posted)</option></select></div>' +
+      '<div class="ra-field"><label>Season dues</label><select name="dues_action"><option value="" selected>Leave as is</option><option value="hold">Do not post dues yet</option><option value="post">Post dues for the active season</option></select><span class="ra-hint">Only changes dues if you pick an action.</span></div>' +
       '<div class="ra-field full"><label>Teams</label><div class="ra-teams">' + teamBoxes + '</div></div>' +
       '</div><div class="ra-err" id="ra-err"></div>' +
       '<div class="ra-actions"><button type="button" class="ra-btn ghost" id="ra-cancel">Cancel</button><button type="submit" class="ra-btn primary" id="ra-save">Save</button></div></form>');
@@ -137,6 +140,9 @@
       if (state.busy) return;
       var f = e.target; var err = el('ra-err'); err.classList.remove('on');
       var patch = { first_name: f.first_name.value.trim(), last_name: f.last_name.value.trim(), jersey_number: f.jersey_number.value === '' ? null : f.jersey_number.value, grade: f.grade.value, date_of_birth: f.date_of_birth.value || null, enrollment_status: f.enrollment_status.value };
+      // only send dues_autoenroll when staff explicitly picked an action, so a routine save never moves dues
+      if (f.dues_action && f.dues_action.value === 'hold') { patch.dues_autoenroll = false; }
+      if (f.dues_action && f.dues_action.value === 'post') { patch.dues_autoenroll = true; }
       var wanted = Array.prototype.map.call(f.querySelectorAll('[name=team]:checked'), function (x) { return x.value; });
       var c = client(); if (!c) { err.textContent = 'Sign-in service not loaded.'; err.classList.add('on'); return; }
       state.busy = true; el('ra-save').disabled = true; el('ra-save').textContent = 'Saving';
@@ -210,7 +216,8 @@
       '<div class="ra-field"><label>Jersey number</label><input name="jersey_number" type="number" min="0" max="99" inputmode="numeric"></div>' +
       '<div class="ra-field"><label>Grade</label>' + gradeSel + '</div>' +
       '<div class="ra-field"><label>Date of birth</label><input name="date_of_birth" type="date"><span class="ra-hint" id="ra-age">Optional</span></div>' +
-      '<div class="ra-field"><label>Status</label><select name="enrollment_status"><option value="active" selected>Active</option><option value="pending">Pending</option><option value="inactive">Inactive</option></select></div>' +
+      '<div class="ra-field"><label>Status</label><select name="enrollment_status"><option value="active" selected>Active</option><option value="trial">Trial (no dues posted)</option><option value="inactive">Inactive</option></select></div>' +
+      '<div class="ra-field"><label>Season dues</label><label class="ra-check"><input type="checkbox" name="dues_autoenroll" checked> Post dues for the active season</label><span class="ra-hint">Clear this to roster the player now and post dues later.</span></div>' +
       '</div><div class="ra-err" id="ra-err"></div>' +
       '<div class="ra-actions"><button type="button" class="ra-btn ghost" id="ra-cancel">Cancel</button><button type="submit" class="ra-btn primary" id="ra-save">Create and add</button></div></form>');
     b.querySelector('#ra-cancel').onclick = close;
@@ -220,7 +227,7 @@
       e.preventDefault();
       if (state.busy) return;
       var f = e.target; var err = el('ra-err'); err.classList.remove('on');
-      var patch = { first_name: f.first_name.value.trim(), last_name: f.last_name.value.trim(), jersey_number: f.jersey_number.value === '' ? null : f.jersey_number.value, grade: f.grade.value, date_of_birth: f.date_of_birth.value || null, enrollment_status: f.enrollment_status.value };
+      var patch = { first_name: f.first_name.value.trim(), last_name: f.last_name.value.trim(), jersey_number: f.jersey_number.value === '' ? null : f.jersey_number.value, grade: f.grade.value, date_of_birth: f.date_of_birth.value || null, enrollment_status: f.enrollment_status.value, dues_autoenroll: !!(f.dues_autoenroll && f.dues_autoenroll.checked) };
       if (!patch.first_name) { err.textContent = 'First name is required.'; err.classList.add('on'); return; }
       var c = client(); if (!c) { err.textContent = 'Sign-in service not loaded.'; err.classList.add('on'); return; }
       state.busy = true; el('ra-save').disabled = true; el('ra-save').textContent = 'Creating';
