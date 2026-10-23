@@ -1593,7 +1593,7 @@
                 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ucW9raHFlbm51eGFsYW1udnBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MzcwMDYsImV4cCI6MjA4MjAxMzAwNn0.hH9XR_tgi4Xl8nS__iHwiSkwjHUvwF88491q4O27cis';
                 const today = new Date().toISOString().split('T')[0];
                 const scope = await getViewerScope();
-                const url = `${SUPA_URL}/rest/v1/calendar_events?select=id,title,event_type,start_date,end_date,start_time,location,visibility,published_at,team_id,grade_level&published_at=not.is.null&visibility=in.(public,team_only)&event_type=in.(tournament,season,game,camp)&is_cancelled=eq.false&start_date=gte.${calendarWindowStartISO()}&order=start_date.asc`;
+                const url = `${SUPA_URL}/rest/v1/calendar_events?select=id,title,event_type,start_date,end_date,start_time,location,visibility,published_at,team_id,grade_level&published_at=not.is.null&visibility=in.(public,team_only)&event_type=in.(tournament,season,game,camp,scrimmage)&is_cancelled=eq.false&start_date=gte.${calendarWindowStartISO()}&order=start_date.asc`;
                 const res = await fetch(url, {
                     headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + (scope.accessToken || SUPA_KEY) }
                 });

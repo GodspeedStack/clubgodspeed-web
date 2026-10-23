@@ -614,9 +614,11 @@ details[open] > summary::after {
    separate schedules; before these existed both rendered as "5TH GRADE", which
    made 5th grade look like it played twice as many games as either team does.
    Filled, no borders, distinguished by fill only.
-   #fff on #1d1d1f measures 16.1:1. #1d1d1f on #f2f2f7 measures 15.1:1. */
+   #fff on #1d1d1f measures 16.1:1. #1d1d1f on #d8d8de measures 11.6:1. The fill is deliberately DARKER
+   than the default tag (#e8e8ed) -- a lighter one read as less prominent than a
+   plain grade tag, so the pill shape vanished against the white page. */
 .gs-sched__tag--black { background: var(--gs-ink); color: #fff; }
-.gs-sched__tag--white { background: #f2f2f7; color: var(--gs-ink); }
+.gs-sched__tag--white { background: #d8d8de; color: var(--gs-ink); }
 
 @media (min-width: 1024px) {
     .gs-sched__date { font-size: 17px; }
