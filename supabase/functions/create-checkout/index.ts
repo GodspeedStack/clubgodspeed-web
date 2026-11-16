@@ -50,7 +50,7 @@ class PublicError extends Error {
 
 const round2 = (n: number) => Math.round(n * 100) / 100
 
-const ENROLLMENT_COLS = 'id,total_owed,total_paid,status,parent_email,athlete_id'
+const ENROLLMENT_COLS = 'id,total_owed,total_paid,status,parent_email,athlete_id,season_dues_config!inner(is_active)'
 
 /** Athlete ids this parent is linked to. The basis for every ownership check below. */
 async function linkedAthleteIds(admin: any, userId: string): Promise<string[]> {
@@ -92,6 +92,7 @@ async function resolveEnrollment(
       .from('parent_dues_enrollment')
       .select(ENROLLMENT_COLS)
       .eq('id', target.enrollmentId)
+      .eq('season_dues_config.is_active', true)   // a closed season's bill is never chargeable
       .limit(1)
     const row = data && data.length ? data[0] : null
     if (!row) {
@@ -113,7 +114,7 @@ async function resolveEnrollment(
       .from('parent_dues_enrollment')
       .select(ENROLLMENT_COLS)
       .eq('athlete_id', target.athleteId)
-      .order('total_paid', { ascending: false })
+      .eq('season_dues_config.is_active', true)
       .limit(1)
     if (!data || !data.length) {
       throw new PublicError(
@@ -133,7 +134,7 @@ async function resolveEnrollment(
       .from('parent_dues_enrollment')
       .select(ENROLLMENT_COLS)
       .eq('parent_email', candidate)
-      .order('total_paid', { ascending: false })
+      .eq('season_dues_config.is_active', true)
       .limit(1)
     if (data && data.length) return data[0]
   }
@@ -145,7 +146,7 @@ async function resolveEnrollment(
     .from('parent_dues_enrollment')
     .select(ENROLLMENT_COLS)
     .in('athlete_id', athleteIds)
-    .order('total_paid', { ascending: false })
+    .eq('season_dues_config.is_active', true)
     .limit(1)
   return data && data.length ? data[0] : null
 }
@@ -295,6 +296,22 @@ Deno.serve(async (req) => {
       const playerName = typeof payload.playerName === 'string' ? payload.playerName.slice(0, 80) : ''
       const label = typeof payload.label === 'string' ? payload.label.slice(0, 80) : ''
 
+      // Which installment rows this payment settles. Only ids that belong to THIS
+      // enrollment survive; anything else is dropped and the webhook falls back to
+      // marking the earliest unpaid installment.
+      let installmentIds = ''
+      if (typeof payload.installmentIds === 'string' && payload.installmentIds.trim()) {
+        const wanted = payload.installmentIds.split(',').map((x: string) => x.trim()).filter(Boolean).slice(0, 12)
+        if (wanted.length) {
+          const { data: owned } = await admin
+            .from('dues_installments')
+            .select('id')
+            .eq('enrollment_id', enrollment.id)
+            .in('id', wanted)
+          installmentIds = (owned || []).map((r: { id: string }) => r.id).join(',')
+        }
+      }
+
       sessionData = {
         payment_method_types: ['card'],
         mode: 'payment',
@@ -318,6 +335,7 @@ Deno.serve(async (req) => {
           enrollmentId: enrollment.id,
           parentEmail: userEmail,
           amount: amount.toString(),
+          installmentIds,
         },
         success_url: `${PORTAL_URL}?payment=success&type=dues`,
         cancel_url: `${PORTAL_URL}?payment=cancelled`,
