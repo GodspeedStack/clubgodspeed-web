@@ -52,8 +52,12 @@ Deno.serve(async (req) => {
     // v30_01 records which in payment_method. Fail closed: anything that is not
     // an explicit 'stripe' (including null) means the price already sits in
     // parent_dues_enrollment.total_owed and this order must never be charged.
-    if (order.payment_method !== 'stripe') {
+    if (order.payment_method === 'dues') {
       return json({ url: null, reason: 'covered_by_dues' })
+    }
+    if (order.payment_method !== 'stripe') {
+      // 'venmo' (the default for new orders): parent pays the kit separately.
+      return json({ url: null, reason: 'pay_separately' })
     }
 
     // No live Stripe key yet: order stays reserved, parent sees follow-up message.

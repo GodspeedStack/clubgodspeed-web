@@ -129,7 +129,7 @@
       </div>
       <button class="cta" id="submitBtn" disabled>Place order</button>
     </div>
-    <p class="note">You'll be taken to secure checkout to pay. Your number is reserved the moment you place the order.</p>
+    <p class="note">Your number is reserved the moment you place the order. The kit is billed separately from dues and is paid by Venmo to @Coachsco.</p>
   </div>
 </div>
 
@@ -291,13 +291,16 @@
 
       if(checkoutUrl){ window.location.href = checkoutUrl; return; }
 
-      // 'covered_by_dues' is not a failure. The kit price already sits in this
-      // family's season dues, so telling them to expect a bill would be wrong.
-      banner(
+      // Reason comes from create-uniform-checkout. 'covered_by_dues' is only for
+      // families whose kit price already sits inside their season dues. New players
+      // pay the kit separately by Venmo until Stripe is live.
+      const num = order.jersey_number;
+      const total = money(order.total_amount);
+      const msg =
         checkoutReason === 'covered_by_dues'
-          ? `Order ${order.order_number} placed. Number #${order.number} is reserved. The kit is included in your season dues, so there is nothing more to pay for it.`
-          : `Order ${order.order_number} placed. Number #${order.number} is reserved. We'll follow up with payment details.`,
-        'ok');
+          ? `Order ${order.order_number} placed. Number #${num} is reserved. The kit is included in your season dues, so there is nothing more to pay for it.`
+          : `Order ${order.order_number} placed. Number #${num} is reserved. The kit is ${total}, billed separately from dues. Pay by Venmo to @Coachsco with ${order.player_name}'s name in the note.`;
+      banner(msg, 'ok');
       btn.textContent='Order placed';
       window.scrollTo({top:0,behavior:'smooth'});
     }catch(e){
