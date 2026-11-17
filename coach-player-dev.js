@@ -615,6 +615,9 @@
 #devboard-view .db-block .nt{font-size:12.5px;color:var(--tf);margin-top:4px}\
 #devboard-view .db-fill{margin-top:8px;display:grid;gap:6px}\
 #devboard-view .db-block h5.db-open{cursor:pointer;display:inline-flex;align-items:center;gap:8px}#devboard-view .db-block h5.db-open:hover{color:var(--ac)}#devboard-view .db-open-ic{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;border:1.5px solid currentColor;font-size:10px;font-weight:700;font-style:italic;opacity:.6}\
+#devboard-view .db-block.db-tapcard{cursor:pointer;border-radius:10px;margin:0 -10px;padding-left:10px;padding-right:10px;transition:background .12s}\
+#devboard-view .db-block.db-tapcard:hover{background:var(--bgs)}\
+#devboard-view .db-block.db-tapcard .db-tapcue{display:block;font-size:11.5px;font-weight:600;color:var(--ac);margin-top:6px;opacity:.85}\
 #devboard-view .db-st{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;background:var(--bgs);border-radius:10px;padding:9px 12px;font-size:13px}\
 #devboard-view .db-st .k{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ac);padding-top:3px;white-space:nowrap}\
 #devboard-view .db-st b{display:block;font-weight:600;font-size:13.5px}\
@@ -803,6 +806,49 @@
     if (d.review) h += '<div class="box" style="background:#fff6ec;border-color:#fde3c8"><span class="k" style="color:#d9660a">Review</span><span style="font-weight:500">' + esc(d.review) + (d.source ? ' (' + esc(d.source) + ')' : '') + '</span></div>';
     h += '</div>';
     sheet(h, color);
+  }
+  // Practice block card: tap any block in the plan and get the coaching detail behind it.
+  function blockDetail(node) {
+    var tm = node.querySelector('.tm');
+    var start = tm && tm.childNodes[0] ? String(tm.childNodes[0].textContent).trim() : '';
+    var mins = ((node.querySelector('.tm small') || {}).textContent || '').trim();
+    var h5 = node.querySelector('h5');
+    var name = h5 ? h5.textContent.replace(/\s*i\s*$/, '').trim() : 'Practice block';
+    var what = ((node.querySelector('p') || {}).textContent || '').trim();
+    var notes = [].map.call(node.querySelectorAll('.nt'), function (n) { return n.textContent.trim(); }).filter(Boolean);
+    var stations = [].map.call(node.querySelectorAll('.db-st'), function (st) {
+      var inner = st.querySelector('div');
+      var spans = inner ? [].filter.call(inner.querySelectorAll('span'), function (x) { return x.className.indexOf('who') < 0; }) : [];
+      var dn = st.querySelector('[data-drill]');
+      return {
+        k: ((st.querySelector('.k') || {}).textContent || '').trim(),
+        name: ((st.querySelector('b') || {}).textContent || '').trim(),
+        cue: spans[0] ? spans[0].textContent.trim() : '',
+        who: ((st.querySelector('.who') || {}).textContent || '').trim(),
+        drill: dn ? (dn.getAttribute('data-drill') || '') : ''
+      };
+    });
+    return { start: start, mins: mins, name: name, what: what, notes: notes, stations: stations, drill: h5 ? (h5.getAttribute('data-drill') || '') : '' };
+  }
+  function openBlockCard(node) {
+    if (!node) return;
+    var b = blockDetail(node);
+    var rules = (state.shape && state.shape.rules) || [];
+    var head = [b.start, b.mins].filter(Boolean).join(' \u00b7 ');
+    var h = '<div class="hd"><button type="button" class="x" aria-label="Close">&times;</button><h3>' + esc(b.name) + '</h3><p>' + esc(head) + (b.what ? (head ? ' \u2014 ' : '') + esc(b.what) : '') + '</p></div><div class="bd">';
+    if (b.notes.length) h += '<div class="sec">On the floor</div><ul class="dots">' + b.notes.map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('') + '</ul>';
+    if (b.stations.length) h += '<div class="sec">Stations</div>' + b.stations.map(function (st) {
+      return '<div class="db-st"' + (st.drill ? ' data-drill="' + esc(st.drill) + '" style="cursor:pointer"' : '') + '><span class="k">' + esc(st.k || '\u2022') + '</span><div><b>' + esc(st.name) + '</b>'
+        + (st.cue ? '<span>' + esc(st.cue) + '</span>' : '')
+        + (st.who ? '<span>' + esc(st.who) + '</span>' : '')
+        + (st.drill ? '<span style="color:#0071e3;font-weight:600">Tap for the coaching card</span>' : '') + '</div></div>';
+    }).join('');
+    if (b.drill) h += '<div class="box"><span class="k">Drill</span><span><button type="button" class="db-link" data-drill="' + esc(b.drill) + '">Open the coaching card for ' + esc(b.drill) + '</button></span></div>';
+    if (rules.length) h += '<div class="sec">How we practice</div><ul class="dots">' + rules.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul>';
+    if (!b.notes.length && !b.stations.length && !rules.length && !b.what) h += '<div class="db-empty">No coaching detail is saved for this block yet.</div>';
+    h += '</div><div class="ft"><button type="button" class="db-btn" data-close>Close</button></div>';
+    var sh = sheet(h, '#0071e3');
+    sh.querySelectorAll('[data-drill]').forEach(function (n) { n.onclick = function () { var d = findDrill(n.getAttribute('data-drill')); if (d) openDrill(d, null); }; });
   }
   function openDrills(a) {
     var seen = {}; var list = [];
@@ -1007,7 +1053,7 @@
     var h = '<div class="db-lead"><div><h4>' + esc(p.title || 'Practice, ' + fmtPlanDate(row.plan_date)) + '</h4><p>' + (p.rule ? esc(p.rule) : 'Saved plan for ' + esc(fmtPlanDate(row.plan_date)) + '.') + '</p></div><div class="st"><div><b>' + blocks.length + '</b><small>Blocks</small></div><div><b>' + total + '</b><small>Minutes</small></div></div></div>';
     h += '<div class="db-panel" id="db-plan">';
     blocks.forEach(function (b, bi) {
-      h += '<div class="db-block"><span class="n">' + (bi + 1) + '</span><div class="tm">' + esc(b.start || '') + '<small>' + esc(b.minutes || '') + ' min</small></div><div>' + (function () { var bd = findDrill(b.name); return bd ? '<h5 class="db-open" data-drill="' + esc(bd.name) + '" title="Open the coaching card">' + esc(b.name) + '<span class="db-open-ic">i</span></h5>' : '<h5>' + esc(b.name) + '</h5>'; })() + '<p>' + esc(b.what || '') + '</p>';
+      h += '<div class="db-block db-tapcard"><span class="n">' + (bi + 1) + '</span><div class="tm">' + esc(b.start || '') + '<small>' + esc(b.minutes || '') + ' min</small></div><div>' + (function () { var bd = findDrill(b.name); return bd ? '<h5 class="db-open" data-drill="' + esc(bd.name) + '" title="Open the coaching card">' + esc(b.name) + '<span class="db-open-ic">i</span></h5>' : '<h5>' + esc(b.name) + '</h5>'; })() + '<p>' + esc(b.what || '') + '</p>';
       if ((b.stations || []).length) h += '<div class="db-fill">' + b.stations.map(function (st) { var d = findDrill(st.drill); return '<div class="db-st"><span class="k">' + esc(st.k || '') + '</span><div' + (d ? ' data-drill="' + esc(d.name) + '" style="cursor:pointer"' : '') + '><b>' + esc(st.drill) + '</b>' + (d && d.cue ? '<span>' + esc(d.cue) + '</span>' : '') + (st.who ? '<span class="who">' + esc(st.who) + '</span>' : '') + '</div></div>'; }).join('') + '</div>';
       (b.notes || []).forEach(function (n) { h += '<div class="nt">' + esc(n) + '</div>'; });
       h += '</div></div>';
@@ -1051,7 +1097,7 @@
     h += '<div class="db-panel" id="db-plan">';
     var coreAt = -1; state.shape.blocks.forEach(function (b, bi) { if (coreAt < 0 && /handl|warm|skill|fundamental/i.test(b.name + ' ' + (b.what || ''))) coreAt = bi; }); if (coreAt < 0) coreAt = 0;
     state.shape.blocks.forEach(function (b, bi) {
-      h += '<div class="db-block"><span class="n">' + (bi + 1) + '</span><div class="tm">' + esc(b.start) + '<small>' + esc(b.minutes) + ' min</small></div><div><h5>' + esc(b.name) + '</h5><p>' + esc(b.what) + '</p>' + (b.note ? '<div class="nt">' + esc(b.note) + '</div>' : '');
+      h += '<div class="db-block db-tapcard"><span class="n">' + (bi + 1) + '</span><div class="tm">' + esc(b.start) + '<small>' + esc(b.minutes) + ' min</small></div><div><h5>' + esc(b.name) + '</h5><p>' + esc(b.what) + '</p>' + (b.note ? '<div class="nt">' + esc(b.note) + '</div>' : '');
       if (bi === coreAt && coreDrills().length) h += '<div class="db-fill">' + coreDrills().map(function (d) { return stationHtml('Core ' + d.core, d, 'Every team, every practice. Off hand up and active.', 'core', d.core, []); }).join('') + '</div>';
       if (/power-ups/i.test(b.name)) {
         h += '<div class="db-fill">';
@@ -1221,6 +1267,10 @@
       card.querySelectorAll('.db-item[data-drill]').forEach(function (it) { it.onclick = function () { var d = findDrill(it.getAttribute('data-drill')); if (d) openDrill(d, a); }; });
     });
     v.querySelectorAll('.db-bk[data-drill], #db-plan [data-drill], .db-panel [data-drill]').forEach(function (n) { n.onclick = function () { var d = findDrill(n.getAttribute('data-drill')); if (d) openDrill(d, null); }; });
+    v.querySelectorAll('.db-block.db-tapcard').forEach(function (bk) {
+      if (!bk.querySelector('.db-tapcue')) { var cue = document.createElement('span'); cue.className = 'db-tapcue'; cue.textContent = 'Tap for coaching details'; (bk.lastElementChild || bk).appendChild(cue); }
+      bk.onclick = function (e) { if (e.target.closest('[data-drill],button,a,input,select,textarea,label')) return; openBlockCard(bk); };
+    });
     v.querySelectorAll('[data-priv]').forEach(function (b) { b.onclick = function () { togglePrivilege(b.getAttribute('data-priv'), b.getAttribute('data-on') !== '1'); }; });
     v.querySelectorAll('[data-swap]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); var k = b.getAttribute('data-swap').split('|'); var key = swapKey(k[0], +k[1]); state.swaps[key] = (state.swaps[key] || 0) + 1; paint(); }; });
     var pr = el('db-print'); if (pr) pr.onclick = function () { window.print(); };

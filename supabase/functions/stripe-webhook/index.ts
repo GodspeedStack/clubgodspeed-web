@@ -1,4 +1,4 @@
-import Stripe from 'https://esm.sh/stripe@14'
+import Stripe from 'https://esm.sh/stripe@14?target=deno'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!)
@@ -13,7 +13,9 @@ Deno.serve(async (req) => {
 
   let event: Stripe.Event
   try {
-    event = stripe.webhooks.constructEvent(
+    // Deno has no synchronous HMAC; the sync constructEvent throws on every call
+    // and would 400 every real payment. Async is the supported path.
+    event = await stripe.webhooks.constructEventAsync(
       body, sig, Deno.env.get('STRIPE_WEBHOOK_SECRET')!
     )
   } catch {

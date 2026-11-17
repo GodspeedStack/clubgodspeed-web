@@ -105,14 +105,22 @@ const ADDRESS_RE = /^[^\s<>@,"]+@[^\s<>@,"]+\.[^\s<>@,"]{2,}$/;
 const DISPLAY_RE = /^[^<>]{1,100}<\s*([^\s<>@,"]+@[^\s<>@,"]+\.[^\s<>@,"]{2,})\s*>$/;
 
 /**
- * Domains this platform must never send as, however it is configured.
+ * The only domain this platform may send as.
  *
- * Godspeed mail went out from a bagequity.com address once, because a send was
- * routed through a Gmail account whose default alias is on that domain. A parent
- * should only ever see a Godspeed sender, so the domain is refused here rather
- * than left to whoever edits the secret next.
+ * This was a blocklist of one ("bagequity.com"), added after Godspeed mail went
+ * out from a personal address because a send was routed through a Gmail account
+ * whose default alias sat on that domain. A blocklist only stops the addresses
+ * somebody already thought of, and Scott's instruction on 2026-10-08 was
+ * absolute: no Godspeed email ever goes out under a personal address, his own
+ * included. So it is an allowlist now. Anything that is not on the club domain
+ * is refused and falls back to the club sender, whatever the secret says and
+ * whoever edits it next.
+ *
+ * A personal login may still AUTHENTICATE a send: a director's session token is
+ * what authorises the edge function call. That is a credential, not a sender,
+ * and it never reaches the From header.
  */
-const BLOCKED_SENDER_DOMAINS = ["bagequity.com"];
+const ALLOWED_SENDER_DOMAIN = "clubgodspeed.com";
 
 function senderDomain(raw: string): string | null {
   const m = raw.match(DISPLAY_RE);
@@ -126,9 +134,10 @@ export function safeFrom(candidate: string | null | undefined): string {
   if (!raw) return DEFAULT_FROM;
 
   const domain = senderDomain(raw);
-  if (domain && BLOCKED_SENDER_DOMAINS.includes(domain)) {
+  if (domain !== ALLOWED_SENDER_DOMAIN) {
     console.warn(
-      `[parent-comms] refusing blocked sender domain ${domain}; using ${DEFAULT_FROM}`,
+      `[parent-comms] refusing sender outside ${ALLOWED_SENDER_DOMAIN} ` +
+      `(got ${domain ?? "unparseable"}); using ${DEFAULT_FROM}`,
     );
     return DEFAULT_FROM;
   }

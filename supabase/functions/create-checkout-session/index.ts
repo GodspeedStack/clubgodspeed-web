@@ -23,6 +23,14 @@ serve(async (req) => {
     }
 
     try {
+        // Store checkout is CLOSED until prices come from the database.
+        // This function charges whatever price the browser sends (item.price), which
+        // with a live Stripe key means anyone could buy merch for a penny. Re-open only
+        // after line items are priced server-side from a products table.
+        return new Response(JSON.stringify({ error: 'The Godspeed store is not open for online payment yet.' }), {
+            status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+
         // 4. Parse request
         const { items, success_url, cancel_url } = await req.json();
 

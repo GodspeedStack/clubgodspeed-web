@@ -15,6 +15,7 @@
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { safeFrom } from "../_shared/parent-comms.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -123,7 +124,10 @@ Deno.serve(async (req) => {
   if (!allOk) {
     try {
       const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-      const FROM_EMAIL = Deno.env.get('RESEND_FROM_EMAIL') || 'noreply@clubgodspeed.com'
+      // Hits Resend directly, so it must guard its own sender. Every other sender
+      // routes through safeFrom; this one read the secret raw, which meant a personal
+      // address in RESEND_FROM_EMAIL would have gone out from here unchecked.
+      const FROM_EMAIL = safeFrom(Deno.env.get('RESEND_FROM_EMAIL'))
       if (RESEND_API_KEY) {
         const failureList = failures.map(f => `- ${f.name}: ${f.detail}`).join('\n')
         await fetch('https://api.resend.com/emails', {

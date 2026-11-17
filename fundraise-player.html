@@ -248,9 +248,10 @@
             window.__gsFundraiseAdmitted = true;
             if (typeof window.startPlayer === 'function') window.startPlayer();
         }
-        sb.auth.getSession().then(function (res) {
-            if (res.data && res.data.session) admit();
-        });
+        // Admit everyone -- donors have no account. The RPC handles visibility
+        // (draft campaigns only return to staff). Session is still read so the
+        // ?preview=1 staff token is available inside fundraise.js.
+        sb.auth.getSession().then(function () { admit(); });
         sb.auth.onAuthStateChange(function (event) {
             if (event === 'SIGNED_IN') admit();
         });
