@@ -574,8 +574,10 @@ async function loadCostBreakdown(supabase, athlete) {
     if (!athlete) { wrap.style.display = 'none'; return; }
     var enr = await supabase
       .from('parent_dues_enrollment')
-      .select('dues_config_id, total_owed')
+      .select('dues_config_id, total_owed, season_dues_config!inner(is_active)')
       .eq('athlete_id', athlete.id)
+      .eq('season_dues_config.is_active', true)
+      .order('enrolled_at', { ascending: false })
       .limit(1);
     var enrollment = (enr.data && enr.data.length) ? enr.data[0] : null;
     if (!enrollment || !enrollment.dues_config_id) { wrap.style.display = 'none'; return; }
@@ -620,9 +622,8 @@ async function loadCostBreakdown(supabase, athlete) {
       if (isIncluded) {
         html += '    <div style="font-size:0.78rem;font-weight:600;color:#2563eb;background:#eff6ff;padding:3px 10px;border-radius:6px;">Included</div>';
       } else {
-        html += '    <div style="font-weight:800;font-size:0.95rem;color:#111;">$' + amt.toLocaleString() + '</div>';
-        // Show per-player share
-        html += '    <div style="font-size:0.7rem;color:#999;margin-top:2px;">program total</div>';
+        html += '    <div style="font-weight:800;font-size:0.95rem;color:#111;">$' + amt.toLocaleString(undefined, {minimumFractionDigits:0, maximumFractionDigits:0}) + '</div>';
+        html += '    <div style="font-size:0.7rem;color:#999;margin-top:2px;">per player</div>';
       }
       html += '  </div>';
       html += '</div>';
