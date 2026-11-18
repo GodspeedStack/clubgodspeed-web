@@ -94,59 +94,89 @@ function renderAthletePicker(athletes, selected, email) {
 }
 
 /**
- * The ACTIVE season's dues enrollment for one athlete.
- * Contract: one row per athlete per season_dues_config. Only the active season is
- * billable, so the page never looks at Fall/Summer rows again -- picking "the row
- * with the most paid" is what showed paid-in-full Fall families $0 for Winter.
- * Returns { id:null } when no dues are posted yet (dues on hold for a new player).
+ * Dues enrollment for one athlete: id, total_owed and total_paid.
+ * Falls back to $472.90 / $0 when the athlete has no enrollment row yet.
+ * The id matters -- Pay Now sends it so the server settles this exact athlete's
+ * bill instead of guessing from the parent's email.
  */
 async function resolveEnrollmentData(supabase, athlete) {
-  var result = { id: null, totalOwed: 0, totalPaid: 0, status: null, configId: null, seasonLabel: '' };
+  var result = { id: null, totalOwed: 472.90, totalPaid: 0, duesConfigId: null };
   if (!athlete) return result;
   try {
     var enr = await supabase
       .from('parent_dues_enrollment')
-      .select('id, total_owed, total_paid, status, plan_template_id, dues_config_id, season_dues_config!inner(id, is_active, display_label, season)')
+      .select('id, total_owed, total_paid, dues_config_id')
       .eq('athlete_id', athlete.id)
-      .eq('season_dues_config.is_active', true)
+      .order('total_paid', { ascending: false })
       .limit(1);
     var row = (enr.data && enr.data.length) ? enr.data[0] : null;
     if (row) {
       result.id = row.id;
-      result.totalOwed = parseFloat(row.total_owed) || 0;
+      result.totalOwed = parseFloat(row.total_owed) || 472.90;
       result.totalPaid = parseFloat(row.total_paid) || 0;
-      result.status = row.status;
-      result.configId = row.dues_config_id;
-      var cfg = row.season_dues_config || {};
-      result.seasonLabel = cfg.display_label || cfg.season || '';
+      result.duesConfigId = row.dues_config_id || null;
     }
   } catch (e) { console.warn('Enrollment lookup:', e); }
   return result;
 }
 
-/** Installment schedule for one enrollment (dues_installments is the ledger the admin tool uses too). */
-async function loadInstallments(supabase, enrollmentId) {
-  if (!enrollmentId) return [];
-  const { data, error } = await supabase
-    .from('dues_installments')
-    .select('id, installment_number, amount, due_date, status, paid_at')
-    .eq('enrollment_id', enrollmentId)
-    .order('installment_number', { ascending: true });
-  if (error) throw error;
-  return (data || []).map(r => ({ ...r, amount: parseFloat(r.amount) || 0 }));
+/**
+ * True when a query failed only because payment_plans.athlete_id is not there yet.
+ * Migrations on this project are applied by hand, so the frontend can genuinely go
+ * out before v10_01 does. Postgres 42703 = undefined_column.
+ */
+function isMissingAthleteColumn(error) {
+  if (!error) return false;
+  const code = String(error.code || '');
+  const msg = String(error.message || '').toLowerCase();
+  return code === '42703' || (msg.includes('athlete_id') && msg.includes('does not exist'));
 }
 
-/** The season's payment plans, as configured by Coach Scott (payment_plan_templates). */
-async function loadPlanTemplates(supabase, configId) {
-  if (!configId) return [];
-  const { data, error } = await supabase
-    .from('payment_plan_templates')
-    .select('id, plan_name, num_installments, installment_amount, convenience_fee, sort_order')
-    .eq('dues_config_id', configId)
-    .eq('is_active', true)
-    .order('sort_order', { ascending: true });
-  if (error) throw error;
-  return data || [];
+/**
+ * The payment plan billing this athlete, newest first.
+ * Plans created before the v10_01 migration have no athlete_id; one of those is
+ * only safe to adopt when the parent has a single athlete, because otherwise
+ * there is no way to tell whose bill it is.
+ */
+async function loadPlanForAthlete(supabase, userId, athlete, athleteCount) {
+  if (!athlete) return null;
+
+  const { data: scoped, error: scopedErr } = await supabase
+    .from('payment_plans')
+    .select('*')
+    .eq('parent_id', userId)
+    .eq('athlete_id', athlete.id)
+    .order('created_at', { ascending: false })
+    .limit(1);
+
+  // Frontend deployed ahead of the migration: fall back to the old parent-wide
+  // lookup so every family still sees their bill. They lose per-athlete scoping
+  // until v10_01 lands -- which is exactly where they were before this feature,
+  // and far better than showing everyone an empty "pick a plan" screen.
+  if (isMissingAthleteColumn(scopedErr)) {
+    console.warn('[billing] payment_plans.athlete_id missing — run migration v10_01. Falling back to parent-wide plan lookup.');
+    const { data: preMigration } = await supabase
+      .from('payment_plans')
+      .select('*')
+      .eq('parent_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1);
+    return (preMigration && preMigration.length) ? preMigration[0] : null;
+  }
+
+  if (scoped && scoped.length) return scoped[0];
+
+  if (athleteCount === 1) {
+    const { data: legacy } = await supabase
+      .from('payment_plans')
+      .select('*')
+      .eq('parent_id', userId)
+      .is('athlete_id', null)
+      .order('created_at', { ascending: false })
+      .limit(1);
+    if (legacy && legacy.length) return legacy[0];
+  }
+  return null;
 }
 
 /**
@@ -160,7 +190,6 @@ window.renderBilling = async function (email) {
 
     if (!container) return;
     container.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">Loading your billing details...</div>';
-    loadBillingTrainingSchedule();
 
     try {
         if (!window.auth || !window.auth.isSupabaseAvailable()) {
@@ -205,64 +234,71 @@ window.renderBilling = async function (email) {
             localStorage.setItem('gba_selected_athlete_name', athlete.name);
         }
 
-        // 0. The active season's bill for this athlete.
+        // 0. Resolve actual dues from enrollment table (replaces hardcoded $472.90)
         const enrollment = await resolveEnrollmentData(supabase, athlete);
         const baseDues = enrollment.totalOwed;
         const paidSoFar = enrollment.totalPaid;
-        const remaining = Math.max(baseDues - paidSoFar, 0);
+
+        // 0c. Load cost breakdown (what dues cover) — non-blocking
+        loadCostBreakdown(supabase, athlete);
+
+        // 1. Fetch the payment plan for THIS athlete
+        const currentPlan = await loadPlanForAthlete(supabase, user.id, athlete, athletes.length);
+
+        // Helper: update the section header label above billing-invoices-list
         const sectionHeaderEl = document.querySelector('#view-aau-billing h3');
 
-        // No dues posted for this season yet (new player whose dues are on hold).
-        if (!enrollment.id) {
-            statusTextEl.textContent = 'No dues posted';
-            statusTextEl.style.color = '#6b7280';
-            statusCard.style.borderLeftColor = '#e5e7eb';
-            if (sectionHeaderEl) sectionHeaderEl.textContent = 'Season Dues';
-            if (totalDueEl) totalDueEl.textContent = '$0.00';
-            container.innerHTML = '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:20px;">'
-              + '<div style="font-weight:700;color:#111;">Nothing due right now</div>'
-              + '<div style="font-size:0.9rem;color:#6b7280;margin-top:6px;">'
-              + (athlete ? escapeHTML(athlete.name) + '’s ' : 'Your ')
-              + 'season dues have not been posted yet. They will appear here, with payment plans, once Coach Scott posts them.</div>'
-              + '</div>';
-            return;
-        }
-
-        // 1. Schedule. None yet means the family has not picked a plan.
-        const installments = await loadInstallments(supabase, enrollment.id);
-
-        if (!installments.length && remaining > 0) {
-            statusTextEl.textContent = 'Choose a plan';
+        if (!currentPlan) {
+            // No plan for this athlete yet — show plan selection UI
+            statusTextEl.textContent = 'Action Required';
             statusTextEl.style.color = '#ef4444';
             statusCard.style.borderLeftColor = '#ef4444';
             if (sectionHeaderEl) sectionHeaderEl.textContent = 'Payment Plan';
-            if (totalDueEl) totalDueEl.textContent = '$' + remaining.toFixed(2);
-            await renderPlanSelectionUI(container, supabase, email, enrollment, athlete);
+            await renderPlanSelectionUI(container, user.id, supabase, email, baseDues, paidSoFar, athlete, enrollment.duesConfigId);
+            if (totalDueEl) totalDueEl.textContent = '$' + Math.max(baseDues - paidSoFar, 0).toFixed(2);
             loadFundraisingCredit(supabase, baseDues, paidSoFar, athlete);
             return;
         }
 
-        if (sectionHeaderEl) sectionHeaderEl.textContent = 'Payment Schedule';
-        renderPaymentsTimeline(container, installments, supabase, enrollment, athlete);
+        // 2. Fetch Payments for the Plan
+        const { data: payments, error: paymentsError } = await supabase
+            .from('payments')
+            .select('*')
+            .eq('plan_id', currentPlan.id)
+            .order('installment_number', { ascending: true });
 
-        // 2. Status card from the real balance, not from the schedule.
+        if (paymentsError) throw paymentsError;
+
+        // Section header: "Payment Plan" before April 1, "Outstanding Invoices" on/after
+        const aprilFirst = new Date('2026-04-01T00:00:00');
         const now = new Date();
-        const pending = installments.filter(i => i.status !== 'paid');
-        if (remaining <= 0 || enrollment.status === 'paid_in_full') {
+        if (sectionHeaderEl) {
+            sectionHeaderEl.textContent = now < aprilFirst ? 'Payment Plan' : 'Outstanding Invoices';
+        }
+
+        // Always render the payments timeline — parents can pay early at any time
+        renderPaymentsTimeline(container, payments, currentPlan, supabase, enrollment, athlete);
+
+        // Update status card
+        const pendingPayments = payments.filter(p => p.status !== 'confirmed');
+        let displayTotal = 0;
+        if (pendingPayments.length > 0) {
+            const nextPayment = pendingPayments[0];
+            const isOverdue = new Date(nextPayment.due_date + 'T00:00:00') < now;
+            displayTotal = pendingPayments.reduce((s, p) => s + parseFloat(p.amount), 0);
+            statusTextEl.textContent = isOverdue ? 'Payment Overdue' : 'Payment Due ' + (now < aprilFirst ? 'Apr 1' : 'Soon');
+            statusTextEl.style.color = isOverdue ? '#ef4444' : '#f59e0b';
+            statusCard.style.borderLeftColor = isOverdue ? '#ef4444' : '#f59e0b';
+            if (totalDueEl) totalDueEl.textContent = '$' + Math.max(baseDues - paidSoFar, 0).toFixed(2);
+        } else {
             statusTextEl.textContent = 'Paid in Full';
             statusTextEl.style.color = '#10b981';
             statusCard.style.borderLeftColor = '#10b981';
             if (totalDueEl) totalDueEl.textContent = '$0.00';
-        } else {
-            const next = pending[0];
-            const isOverdue = next && new Date(next.due_date + 'T00:00:00') < now;
-            statusTextEl.textContent = isOverdue ? 'Payment Overdue'
-                : (next ? 'Next payment ' + fmtDue(new Date(next.due_date + 'T00:00:00')) : 'Balance Due');
-            statusTextEl.style.color = isOverdue ? '#ef4444' : '#f59e0b';
-            statusCard.style.borderLeftColor = isOverdue ? '#ef4444' : '#f59e0b';
-            if (totalDueEl) totalDueEl.textContent = '$' + remaining.toFixed(2);
         }
 
+        // Load fundraising credit — pass real base dues and payments so the
+        // breakdown and header reflect the actual remaining balance.
         loadFundraisingCredit(supabase, baseDues, paidSoFar, athlete);
 
     } catch (e) {
@@ -277,7 +313,7 @@ function handleDemoBilling(container, totalDueEl, statusTextEl, statusCard) {
             Demo Mode: Please sign in securely to view your open invoices and payment plans.
         </div>
     `;
-    if (totalDueEl) totalDueEl.textContent = '$745';
+    if (totalDueEl) totalDueEl.textContent = '$472.90';
     if (statusTextEl && statusCard) {
         statusTextEl.textContent = 'Action Required';
         statusTextEl.style.color = '#ef4444';
@@ -288,11 +324,6 @@ function handleDemoBilling(container, totalDueEl, statusTextEl, statusCard) {
 // ─── FUNDRAISING CREDIT (parent billing view) ──────────────
 async function loadFundraisingCredit(supabase, totalDue, totalPaid, athlete) {
   const card = document.getElementById('billing-fundraising-card');
-  // fundraising_totals holds 2025-26 results. It is not a credit against the current
-  // season and must never lower the Winter balance in the header (Khaliq showed $47.90
-  // against a real $507.90). Off until a per-season credit table exists.
-  if (card) card.style.display = 'none';
-  return;
   if (!card) return;
   // Hide first: this card is per-athlete, so a stale one left over from the
   // previously selected kid would credit the wrong child's fundraising.
@@ -328,7 +359,7 @@ async function loadFundraisingCredit(supabase, totalDue, totalPaid, athlete) {
     const raised = parseFloat(frRows[0].total_raised);
     if (raised <= 0) return;
 
-    const originalDues = totalDue || 745;
+    const originalDues = totalDue || 472.90;
     const paid = totalPaid || 0;
     // afterFundraising: for the fundraising card breakdown (excludes payments)
     const afterFundraising = Math.max(originalDues - raised, 0);
@@ -507,7 +538,7 @@ async function loadBillingTrainingSchedule() {
     let rows = [];
     if (window.auth && window.auth.isSupabaseAvailable()) {
       const sb = window.auth.getSupabaseClient();
-      const { data, error } = await sb.rpc('get_training_schedule', { p_season: 'Spring/Summer 2026' });
+      const { data, error } = await sb.rpc('get_training_schedule', { p_season: 'Fall 2026' });
       if (!error && data) rows = data;
     }
     if (!rows.length) { rowsEl.innerHTML = '<div style="text-align:center;padding:16px;color:#888;font-size:0.85rem">No schedule data available.</div>'; return; }
@@ -528,153 +559,367 @@ async function loadBillingTrainingSchedule() {
   } catch (e) { console.error('Training schedule load:', e); }
 }
 
-/** The next few 15ths, starting with the one at least a week out. */
-/**
- * Mirrors choose_dues_plan() in the database: first payment on the 15th of the
- * season's first month, or the next 15th at least a week out, then monthly.
- * Display only -- the server computes the real dates when the plan is chosen.
- */
-function planDueDates(count, seasonStart) {
-    var today = new Date(); today.setHours(0,0,0,0);
-    var first = seasonStart ? new Date(seasonStart.getFullYear(), seasonStart.getMonth(), 15) : null;
-    var weekOut = first ? new Date(first.getTime() - 7 * 86400000) : null;
-    if (!first || today >= weekOut) {
-        first = today.getDate() < 8
-            ? new Date(today.getFullYear(), today.getMonth(), 15)
-            : new Date(today.getFullYear(), today.getMonth() + 1, 15);
+// ─── COST BREAKDOWN (what your dues cover) ───────────────
+async function loadCostBreakdown(supabase, athlete) {
+  var wrap = document.getElementById('billing-cost-breakdown');
+  var itemsEl = document.getElementById('cb-line-items');
+  var footerEl = document.getElementById('cb-footer');
+  var totalEl = document.getElementById('cb-total');
+  var seasonLabel = document.getElementById('cb-season-label');
+  if (!wrap || !itemsEl) return;
+
+  try {
+    // Find the enrollment row to get dues_config_id
+    if (!athlete) { wrap.style.display = 'none'; return; }
+    var enr = await supabase
+      .from('parent_dues_enrollment')
+      .select('dues_config_id, total_owed')
+      .eq('athlete_id', athlete.id)
+      .limit(1);
+    var enrollment = (enr.data && enr.data.length) ? enr.data[0] : null;
+    if (!enrollment || !enrollment.dues_config_id) { wrap.style.display = 'none'; return; }
+
+    // Fetch the season config for the label
+    var cfg = await supabase
+      .from('season_dues_config')
+      .select('season, program, total_amount, description')
+      .eq('id', enrollment.dues_config_id)
+      .single();
+    var config = cfg.data;
+
+    // Fetch line items
+    var li = await supabase
+      .from('dues_line_items')
+      .select('label, amount, description')
+      .eq('dues_config_id', enrollment.dues_config_id)
+      .order('sort_order', { ascending: true });
+    var items = (li.data && li.data.length) ? li.data : [];
+    if (!items.length) { wrap.style.display = 'none'; return; }
+
+    // Update season label
+    if (seasonLabel && config) {
+      seasonLabel.textContent = 'What Your Dues Cover  //  ' + (config.season || 'Winter 2026-27');
     }
-    var out = [];
-    for (var i = 0; i < count; i++) out.push(new Date(first.getFullYear(), first.getMonth() + i, 15));
-    return out;
+
+    // Build the line items HTML
+    var duesAmount = config ? parseFloat(config.total_amount) : parseFloat(enrollment.total_owed);
+    var html = '';
+    items.forEach(function(item, i) {
+      var amt = parseFloat(item.amount);
+      var isIncluded = amt === 0;
+      var border = i < items.length - 1 ? 'border-bottom:1px solid #f0f0f0;' : '';
+      html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:14px 0;' + border + '">';
+      html += '  <div style="flex:1;min-width:0;">';
+      html += '    <div style="font-weight:700;font-size:0.9rem;color:#111;">' + item.label + '</div>';
+      if (item.description) {
+        html += '    <div style="font-size:0.78rem;color:#666;margin-top:3px;line-height:1.45;">' + item.description + '</div>';
+      }
+      html += '  </div>';
+      html += '  <div style="text-align:right;margin-left:16px;flex-shrink:0;">';
+      if (isIncluded) {
+        html += '    <div style="font-size:0.78rem;font-weight:600;color:#2563eb;background:#eff6ff;padding:3px 10px;border-radius:6px;">Included</div>';
+      } else {
+        html += '    <div style="font-weight:800;font-size:0.95rem;color:#111;">$' + amt.toLocaleString() + '</div>';
+        // Show per-player share
+        html += '    <div style="font-size:0.7rem;color:#999;margin-top:2px;">program total</div>';
+      }
+      html += '  </div>';
+      html += '</div>';
+    });
+
+    itemsEl.innerHTML = html;
+
+    // Footer with total dues
+    if (footerEl && totalEl) {
+      totalEl.textContent = '$' + duesAmount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+      footerEl.style.display = 'block';
+    }
+
+    // Show the section
+    wrap.style.display = 'block';
+  } catch (e) {
+    console.error('Cost breakdown load:', e);
+    wrap.style.display = 'none';
+  }
 }
 
-function fmtDue(d) {
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
-
-async function renderPlanSelectionUI(container, supabase, email, enrollment, athlete) {
-    const BASE_DUES = Number(enrollment.totalOwed);
+async function renderPlanSelectionUI(container, parentId, supabase, email, enrolledOwed, enrolledPaid, athlete, duesConfigId) {
+    // Resolve fundraising credit to calculate adjusted total
+    const BASE_DUES = enrolledOwed || 472.90;
+    let fundraisingCredit = 0;
     const athleteName = athlete ? athlete.name : '';
-
-    if (!isFinite(BASE_DUES) || BASE_DUES <= 0) {
-        container.innerHTML = '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:20px;">'
-          + '<div style="font-weight:700;color:#111;">We could not load your balance</div>'
-          + '<div style="font-size:0.9rem;color:#6b7280;margin-top:6px;">Please refresh. If it keeps happening, reply to any Godspeed email and we will sort it out.</div>'
-          + '</div>';
-        return;
-    }
-
-    let templates = [];
-    try { templates = await loadPlanTemplates(supabase, enrollment.configId); }
-    catch (e) { console.warn('[billing] templates:', e); }
-    if (!templates.length) {
-        container.innerHTML = '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:20px;">'
-          + '<div style="font-weight:700;color:#111;">Payment plans are not open yet</div>'
-          + '<div style="font-size:0.9rem;color:#6b7280;margin-top:6px;">Your balance is $' + BASE_DUES.toFixed(2) + '. Plans will appear here shortly.</div>'
-          + '</div>';
-        return;
-    }
-
-    // Season start for the first due date preview (season_dues_config.starts_on is public for the active season).
-    let seasonStart = null;
     try {
-        const { data: cfg } = await supabase.from('season_dues_config').select('starts_on').eq('id', enrollment.configId).maybeSingle();
-        if (cfg && cfg.starts_on) seasonStart = new Date(cfg.starts_on + 'T00:00:00');
-    } catch (e) { /* preview only */ }
+        if (athlete && athlete.firstName) {
+            const { data: ft } = await supabase
+                .from('fundraising_totals')
+                .select('total_raised')
+                .ilike('athlete_name', athlete.firstName + '%')
+                .limit(1);
+            if (ft && ft.length) fundraisingCredit = parseFloat(ft[0].total_raised) || 0;
+        }
+    } catch (e) { console.warn('Fundraising lookup in plan selection:', e); }
 
-    const seasonName = (enrollment.seasonLabel || '').replace(/\s*Season\s+Dues\s*$/i, '').replace(/\s*Dues\s*$/i, '').trim();
-    const seasonBit = seasonName ? escapeHTML(seasonName) + ' ' : '';
-    const planHeading = athleteName
-        ? `Select ${escapeHTML(athleteName)}'s ${seasonBit}Payment Plan`
-        : `Select your ${seasonBit}Payment Plan`;
+    const adjustedTotal = Math.max(BASE_DUES - fundraisingCredit, 0);
+    const creditNote = fundraisingCredit > 0
+        ? '<div style="background:#d1fae5;border:1px solid #a7f3d0;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:0.85rem;color:#065f46;font-weight:500;">Fundraising credit of $' + fundraisingCredit.toFixed(2) + ' applied -- your adjusted total is $' + adjustedTotal.toFixed(2) + '</div>'
+        : '';
 
-    const cards = templates.map(t => {
-        const n = Number(t.num_installments) || 1;
-        const per = Number(t.installment_amount) || BASE_DUES;
-        const dates = planDueDates(n, seasonStart);
-        const sub = n === 1
-            ? `One payment of $${BASE_DUES.toFixed(2)} (${fmtDue(dates[0])})`
-            : `${n} payments of $${per.toFixed(2)} (${fmtDue(dates[0])} to ${fmtDue(dates[n-1])})`;
-        return `
-            <div class="plan-option" data-template-id="${escapeHTML(t.id)}" style="border: 2px solid #e5e7eb; border-radius: 12px; padding: 16px; cursor: pointer; transition: all 0.2s;" onclick="selectPaymentPlan(this)">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <div style="font-weight: 800; font-size: 1.05rem; color: #111;">${escapeHTML(t.plan_name || (n + ' Installments'))}</div>
-                        <div style="font-size: 0.85rem; color: #666; margin-top: 4px;">${sub}</div>
-                    </div>
-                    <div style="font-size: 1.25rem; font-weight: 800; color: #0071e3;">$${(n === 1 ? BASE_DUES : per).toFixed(0)}</div>
-                </div>
-            </div>`;
-    }).join('');
+    // Store adjusted total on window for selectPaymentPlan to use
+    window._gsAdjustedDues = adjustedTotal;
+    window._gsAthleteName = athleteName;
+    window._gsAthleteId = athlete ? athlete.id : null;
 
-    container.innerHTML = `
-        <div style="background: white; border-radius: 12px; padding: 20px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-            <h4 style="margin: 0 0 16px 0; font-size: 1.1rem; color: #111;">${planHeading}</h4>
-            <p style="font-size: 0.9rem; color: #666; margin-bottom: 24px;">Season dues are $${BASE_DUES.toFixed(2)}. Pick the schedule that works for your family. You can pay any installment early.</p>
-            <div style="display: grid; gap: 16px;">${cards}</div>
-            <div style="margin-top: 24px;">
-                <div style="display: flex; justify-content: flex-end;">
-                    <button id="confirm-plan-btn" class="btn-primary" disabled style="opacity: 0.5; padding: 12px 28px; display: flex; align-items: center; gap: 8px; font-weight: 700; transition: opacity 0.2s;">
-                        Enroll &amp; Continue
-                    </button>
-                </div>
-                <div id="enroll-error-msg" style="display: none; margin-top: 12px; padding: 10px 14px; background: #fef2f2; border-radius: 8px; border: 1px solid #fecaca; color: #dc2626; font-size: 0.85rem; font-weight: 500;"></div>
-            </div>
-        </div>
-    `;
-
-    if (!document.getElementById('gs-spinner-style')) {
-        const st = document.createElement('style');
-        st.id = 'gs-spinner-style';
-        st.textContent = '@keyframes gs-spin { to { transform: rotate(360deg); } } .gs-spinner { animation: gs-spin 0.7s linear infinite; }';
-        document.head.appendChild(st);
+    // Fetch plan templates from the database for this athlete's config
+    var planTemplates = [];
+    if (duesConfigId) {
+        try {
+            var ptRes = await supabase
+                .from('payment_plan_templates')
+                .select('id, plan_name, num_installments, installment_amount, deposit_amount, frequency_days, convenience_fee')
+                .eq('dues_config_id', duesConfigId)
+                .eq('is_active', true)
+                .order('sort_order', { ascending: true });
+            if (ptRes.data && ptRes.data.length) planTemplates = ptRes.data;
+        } catch (e) { console.warn('Plan templates lookup:', e); }
     }
-    const SPINNER_SVG = `<svg class="gs-spinner" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#d1d5db" stroke-width="2"/><path d="M8 2a6 6 0 0 1 6 6" stroke="#2563eb" stroke-width="2" stroke-linecap="round"/></svg>`;
-    const CHECK_SVG  = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" fill="#d1fae5"/><path d="M5 8l2.5 2.5L11 5.5" stroke="#059669" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
-    window.selectPaymentPlan = function(element) {
-        document.querySelectorAll('.plan-option').forEach(el => { el.style.borderColor = '#e5e7eb'; el.style.background = 'white'; });
+    // Fallback: if no templates found, build basic options from adjusted total
+    if (!planTemplates.length) {
+        planTemplates = [
+            { id: 'fallback-full', plan_name: 'Pay in Full', num_installments: 1, installment_amount: adjustedTotal, deposit_amount: null },
+            { id: 'fallback-2', plan_name: '2-Payment Plan', num_installments: 2, installment_amount: Math.round(adjustedTotal / 2 * 100) / 100, deposit_amount: null },
+            { id: 'fallback-3', plan_name: '3-Payment Plan', num_installments: 3, installment_amount: Math.round(adjustedTotal / 3 * 100) / 100, deposit_amount: null }
+        ];
+    }
+
+    // Build plan cards HTML dynamically
+    var planCardsHtml = '';
+    planTemplates.forEach(function(tpl, idx) {
+        var n = tpl.num_installments;
+        var deposit = tpl.deposit_amount ? parseFloat(tpl.deposit_amount) : 0;
+        var instAmt = parseFloat(tpl.installment_amount);
+        var fee = tpl.convenience_fee ? parseFloat(tpl.convenience_fee) : 0;
+
+        // Recalculate amounts from adjusted total (applies fundraising credit)
+        var adjDeposit = deposit;
+        var adjInst = instAmt;
+        var totalFromConfig = deposit > 0 ? deposit + instAmt * (n - 1) : instAmt * n;
+        if (adjustedTotal !== totalFromConfig && totalFromConfig > 0) {
+            var ratio = adjustedTotal / totalFromConfig;
+            adjDeposit = deposit > 0 ? Math.round(deposit * ratio * 100) / 100 : 0;
+            adjInst = n > 1 ? Math.round((adjustedTotal - adjDeposit) / (deposit > 0 ? n - 1 : n) * 100) / 100 : adjustedTotal;
+        }
+
+        // Description line
+        var desc = '';
+        var displayAmt = '';
+        if (n === 1) {
+            desc = 'One-time payment of $' + adjustedTotal.toFixed(2);
+            displayAmt = '$' + adjustedTotal.toFixed(0);
+        } else if (deposit > 0) {
+            desc = '$' + adjDeposit.toFixed(2) + ' deposit, then ' + (n - 1) + ' payments of $' + adjInst.toFixed(2) + '/mo';
+            displayAmt = '$' + adjDeposit.toFixed(0) + ' + ' + (n - 1) + 'x';
+        } else {
+            desc = n + ' payments of $' + adjInst.toFixed(2) + '/mo';
+            displayAmt = '$' + adjInst.toFixed(0) + '/mo';
+        }
+
+        // Deposit badge
+        var depositBadge = '';
+        if (deposit > 0) {
+            depositBadge = '<div style="display:inline-block;background:#fef3c7;color:#92400e;font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:4px;margin-top:6px;text-transform:uppercase;letter-spacing:0.03em;">Includes non-refundable deposit</div>';
+        }
+
+        planCardsHtml += '<div class="plan-option" data-plan-idx="' + idx + '" style="border:2px solid #e5e7eb;border-radius:12px;padding:16px;cursor:pointer;transition:all 0.2s;" onclick="selectPaymentPlan(this, ' + idx + ', \'' + parentId + '\', \'' + email + '\')">';
+        planCardsHtml += '  <div style="display:flex;justify-content:space-between;align-items:center;">';
+        planCardsHtml += '    <div>';
+        planCardsHtml += '      <div style="font-weight:800;font-size:1.05rem;color:#111;">' + escapeHTML(tpl.plan_name) + '</div>';
+        planCardsHtml += '      <div style="font-size:0.85rem;color:#666;margin-top:4px;">' + desc + '</div>';
+        planCardsHtml += depositBadge;
+        planCardsHtml += '    </div>';
+        planCardsHtml += '    <div style="font-size:1.25rem;font-weight:800;color:#0071e3;white-space:nowrap;margin-left:12px;">' + displayAmt + '</div>';
+        planCardsHtml += '  </div>';
+        planCardsHtml += '</div>';
+    });
+
+    // Name the athlete in the heading
+    var planHeading = athleteName
+        ? 'Select ' + escapeHTML(athleteName) + '\'s Winter 2026-27 Payment Plan'
+        : 'Select your Winter 2026-27 Payment Plan';
+
+    container.innerHTML = '<div style="background:white;border-radius:12px;padding:20px;border:1px solid #e5e7eb;box-shadow:0 4px 6px rgba(0,0,0,0.05);">'
+        + '<h4 style="margin:0 0 16px 0;font-size:1.1rem;color:#111;">' + planHeading + '</h4>'
+        + '<p style="font-size:0.9rem;color:#666;margin-bottom:24px;">Godspeed Basketball offers multiple ways to handle your player\'s season dues. Select the plan that works best for your family.</p>'
+        + creditNote
+        + '<div style="display:grid;gap:16px;">' + planCardsHtml + '</div>'
+        + '<div style="margin-top:24px;">'
+        + '  <div style="display:flex;justify-content:flex-end;">'
+        + '    <button id="confirm-plan-btn" class="btn-primary" disabled style="opacity:0.5;padding:12px 28px;display:flex;align-items:center;gap:8px;font-weight:700;transition:opacity 0.2s;">Enroll &amp; Continue</button>'
+        + '  </div>'
+        + '  <div id="enroll-step-tracker" style="display:none;margin-top:16px;padding:14px 16px;background:#f9fafb;border-radius:10px;border:1px solid #e5e7eb;">'
+        + '    <div id="enroll-step-1" style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><span class="step-icon" style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"></span><span style="font-size:0.85rem;color:#6b7280;font-weight:500;">Creating payment plan</span></div>'
+        + '    <div id="enroll-step-2" style="display:flex;align-items:center;gap:10px;margin-bottom:8px;opacity:0.35;"><span class="step-icon" style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"></span><span style="font-size:0.85rem;color:#6b7280;font-weight:500;">Saving installments</span></div>'
+        + '    <div id="enroll-step-3" style="display:flex;align-items:center;gap:10px;opacity:0.35;"><span class="step-icon" style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"></span><span style="font-size:0.85rem;color:#6b7280;font-weight:500;">Confirming enrollment</span></div>'
+        + '  </div>'
+        + '  <div id="enroll-error-msg" style="display:none;margin-top:12px;padding:10px 14px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca;color:#dc2626;font-size:0.85rem;font-weight:500;"></div>'
+        + '</div></div>';
+
+    // Inject spinner keyframes once
+    if (!document.getElementById('gs-spinner-style')) {
+        var s = document.createElement('style');
+        s.id = 'gs-spinner-style';
+        s.textContent = '@keyframes gs-spin { to { transform: rotate(360deg); } } .gs-spinner { animation: gs-spin 0.7s linear infinite; }';
+        document.head.appendChild(s);
+    }
+
+    var SPINNER_SVG = '<svg class="gs-spinner" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#d1d5db" stroke-width="2"/><path d="M8 2a6 6 0 0 1 6 6" stroke="#2563eb" stroke-width="2" stroke-linecap="round"/></svg>';
+    var CHECK_SVG  = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" fill="#d1fae5"/><path d="M5 8l2.5 2.5L11 5.5" stroke="#059669" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    var DOT_SVG    = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" fill="#d1d5db"/></svg>';
+
+    function setStep(n, state) {
+        var el = document.getElementById('enroll-step-' + n);
+        if (!el) return;
+        el.querySelector('.step-icon').innerHTML =
+            state === 'active' ? SPINNER_SVG :
+            state === 'done'   ? CHECK_SVG   : DOT_SVG;
+        el.style.opacity = state === 'idle' ? '0.35' : '1';
+        el.querySelector('span:last-child').style.color =
+            state === 'done' ? '#059669' : state === 'active' ? '#111' : '#6b7280';
+    }
+
+    // Store plan templates on window so the click handler can reference them
+    window._gsPlanTemplates = planTemplates;
+
+    window.selectPaymentPlan = function(element, planIdx, parentId, email) {
+        document.querySelectorAll('.plan-option').forEach(function(el) {
+            el.style.borderColor = '#e5e7eb';
+            el.style.background = 'white';
+        });
         element.style.borderColor = '#0071e3';
         element.style.background = '#f0f9ff';
-        const templateId = element.getAttribute('data-template-id');
 
-        const btn = document.getElementById('confirm-plan-btn');
+        var btn = document.getElementById('confirm-plan-btn');
         btn.disabled = false;
         btn.style.opacity = '1';
-        btn.onclick = async () => {
-            btn.innerHTML = `${SPINNER_SVG} <span>Enrolling…</span>`;
+        btn.onclick = async function() {
+            btn.innerHTML = SPINNER_SVG + ' <span>Enrolling...</span>';
             btn.disabled = true;
-            const errMsg = document.getElementById('enroll-error-msg');
-            errMsg.style.display = 'none';
+            btn.style.opacity = '0.85';
+
+            var tracker = document.getElementById('enroll-step-tracker');
+            var errMsg  = document.getElementById('enroll-error-msg');
+            tracker.style.display = 'block';
+            errMsg.style.display  = 'none';
+            setStep(1, 'active');
+            setStep(2, 'idle');
+            setStep(3, 'idle');
+
             try {
-                // The server owns the money math: it checks this parent is linked to
-                // the athlete, that the plan belongs to this season, and writes the
-                // installments itself. Nothing typed in the browser becomes a balance.
-                const { error } = await supabase.rpc('choose_dues_plan', {
-                    p_enrollment_id: enrollment.id,
-                    p_template_id: templateId
+                var adjustedTotal = window._gsAdjustedDues || 472.90;
+                var athleteName = window._gsAthleteName || 'Your Athlete';
+                var tpl = window._gsPlanTemplates[planIdx];
+                var n = tpl.num_installments;
+                var deposit = tpl.deposit_amount ? parseFloat(tpl.deposit_amount) : 0;
+                var instAmt = parseFloat(tpl.installment_amount);
+
+                // Recalculate from adjusted total (fundraising credit)
+                var totalFromConfig = deposit > 0 ? deposit + instAmt * (n - 1) : instAmt * n;
+                var adjDeposit = deposit;
+                var adjInst = instAmt;
+                if (adjustedTotal !== totalFromConfig && totalFromConfig > 0) {
+                    var ratio = adjustedTotal / totalFromConfig;
+                    adjDeposit = deposit > 0 ? Math.round(deposit * ratio * 100) / 100 : 0;
+                    adjInst = n > 1 ? Math.round((adjustedTotal - adjDeposit) / (deposit > 0 ? n - 1 : n) * 100) / 100 : adjustedTotal;
+                }
+
+                // Build installments array with due dates (monthly from today)
+                var installmentsArray = [];
+                var startDate = new Date();
+                for (var i = 0; i < n; i++) {
+                    var dueDate = new Date(startDate);
+                    dueDate.setMonth(dueDate.getMonth() + i);
+                    var dueDateStr = dueDate.getFullYear() + '-' + String(dueDate.getMonth() + 1).padStart(2, '0') + '-' + String(dueDate.getDate()).padStart(2, '0');
+
+                    var amt;
+                    if (i === 0 && deposit > 0) {
+                        amt = adjDeposit; // first payment = deposit
+                    } else if (i === n - 1) {
+                        // last payment picks up rounding remainder
+                        var priorSum = installmentsArray.reduce(function(s, x) { return s + x.amount; }, 0);
+                        amt = Math.round((adjustedTotal - priorSum) * 100) / 100;
+                    } else {
+                        amt = adjInst;
+                    }
+                    installmentsArray.push({ number: i + 1, amount: amt, dueDate: dueDateStr });
+                }
+
+                var totalAmount = installmentsArray.reduce(function(s, x) { return s + x.amount; }, 0);
+
+                // Determine plan_type string for the payment_plans table
+                var planType = n === 1 ? 'full' : n + '-installment';
+
+                // Step 1: create plan record
+                var planRow = {
+                    parent_id: parentId,
+                    athlete_id: window._gsAthleteId || null,
+                    player_name: athleteName,
+                    plan_type: planType,
+                    total_amount: totalAmount
+                };
+                var result = await supabase.from('payment_plans').insert(planRow).select().single();
+                var insertedPlan = result.data;
+                var planError = result.error;
+
+                if (isMissingAthleteColumn(planError)) {
+                    console.warn('[billing] payment_plans.athlete_id missing. Enrolling without it.');
+                    delete planRow.athlete_id;
+                    result = await supabase.from('payment_plans').insert(planRow).select().single();
+                    insertedPlan = result.data;
+                    planError = result.error;
+                }
+                if (planError) throw planError;
+                setStep(1, 'done');
+
+                // Step 2: write installments
+                setStep(2, 'active');
+                var dbInstallments = installmentsArray.map(function(inst) {
+                    return {
+                        plan_id: insertedPlan.id,
+                        parent_id: parentId,
+                        installment_number: inst.number,
+                        amount: inst.amount,
+                        due_date: inst.dueDate,
+                        status: 'pending'
+                    };
                 });
-                if (error) throw error;
+                var paymentsResult = await supabase.from('payments').insert(dbInstallments);
+                if (paymentsResult.error) throw paymentsResult.error;
+                setStep(2, 'done');
+
+                // Step 3: confirm
+                setStep(3, 'active');
                 btn.innerHTML = CHECK_SVG + ' <span>Enrolled</span>';
-                await new Promise(r => setTimeout(r, 500));
+                await new Promise(function(r) { setTimeout(r, 600); });
+                setStep(3, 'done');
+
+                await new Promise(function(r) { setTimeout(r, 400); });
                 renderBilling(email);
+
             } catch (error) {
                 console.error('Plan creation error:', error);
                 btn.innerHTML = 'Enroll &amp; Continue';
                 btn.disabled = false;
-                const code = String((error && error.message) || '');
-                errMsg.textContent = code.includes('PLAN_ALREADY_SET')
-                    ? 'A plan is already set for this athlete. Refreshing.'
-                    : 'Something went wrong setting up your plan. Please try again or contact Coach Scott.';
+                btn.style.opacity = '1';
+                tracker.style.display = 'none';
+                errMsg.textContent = 'Something went wrong setting up your plan. Please try again or contact support.';
                 errMsg.style.display = 'block';
-                if (code.includes('PLAN_ALREADY_SET')) setTimeout(() => renderBilling(email), 1200);
             }
         };
     };
 }
 
-function renderPaymentsTimeline(container, payments, supabase, enrollment, athlete) {
-    const isFullPay = payments.length === 1;
+function renderPaymentsTimeline(container, payments, plan, supabase, enrollment, athlete) {
+    const isFullPay = plan && plan.plan_type === 'full';
 
     // Ride along on every Pay button so checkout settles THIS athlete's bill rather
     // than resolving one from the parent's email — which, for a two-athlete family,
@@ -692,7 +937,7 @@ function renderPaymentsTimeline(container, payments, supabase, enrollment, athle
     }
 
     // Compute remaining balance for "Pay in Full" option
-    const unpaidPayments = payments.filter(p => p.status !== 'paid');
+    const unpaidPayments = payments.filter(p => p.status !== 'confirmed');
     const remainingBalance = unpaidPayments.reduce((s, p) => s + parseFloat(p.amount), 0);
     const unpaidIds = unpaidPayments.map(p => p.id);
 
@@ -714,7 +959,7 @@ function renderPaymentsTimeline(container, payments, supabase, enrollment, athle
     }
 
     payments.forEach(payment => {
-        const isPaid    = payment.status === 'paid';
+        const isPaid    = payment.status === 'confirmed';
         const dueDate   = new Date(payment.due_date + 'T00:00:00');
         const isOverdue = !isPaid && dueDate < new Date();
         const rowLabel  = isFullPay ? 'Full Payment' : `Installment ${payment.installment_number}`;
@@ -740,7 +985,7 @@ function renderPaymentsTimeline(container, payments, supabase, enrollment, athle
         }
 
         // Block later installments until prior ones are paid
-        const previousUnpaid = payments.some(p => p.installment_number < payment.installment_number && p.status !== 'paid');
+        const previousUnpaid = payments.some(p => p.installment_number < payment.installment_number && p.status !== 'confirmed');
         if (previousUnpaid && !isPaid) {
             actionBtn = `<span style="font-size:0.75rem;color:#aaa;">Pay prior first</span>`;
         }
@@ -772,7 +1017,7 @@ function renderPaymentsTimeline(container, payments, supabase, enrollment, athle
 // and "Pay Now" routes to Stripe Checkout, which auto-reconciles via stripe-webhook.
 // See STRIPE_GOLIVE_DECISIONS.md.
 // ---------------------------------------------------------------------------
-if (typeof window.STRIPE_LIVE === 'undefined') window.STRIPE_LIVE = true;
+if (typeof window.STRIPE_LIVE === 'undefined') window.STRIPE_LIVE = false;
 
 // ---------------------------------------------------------------------------
 // Direct Checkout — Stripe card checkout when live, Venmo modal otherwise.
@@ -788,7 +1033,7 @@ window._directCheckout = function(btn) {
     const athleteId    = btn.dataset.athleteId || '';
 
     if (window.STRIPE_LIVE) {
-        return window._startStripeDuesCheckout(btn, { amount, label, enrollmentId, athleteId, installmentIds: paymentIds || '' });
+        return window._startStripeDuesCheckout(btn, { amount, label, enrollmentId, athleteId });
     }
 
     openPaymentModal({
@@ -848,14 +1093,12 @@ window._startStripeDuesCheckout = async function(btn, opts) {
                 paymentType: 'aau_dues',
                 amount: opts.amount,
                 playerName,
-                label: opts.label || window.__seasonLabel || 'Season Dues',
+                label: opts.label || 'AAU Season Dues',
                 // Which athlete's bill to settle. The function still verifies this
                 // parent is linked to it before charging anything, so naming a
                 // sibling -- or another family's row -- gets rejected, not honoured.
                 enrollmentId: opts.enrollmentId || undefined,
-                athleteId: opts.athleteId || undefined,
-                // Which installment(s) this payment settles; the function checks they belong to the enrollment.
-                installmentIds: opts.installmentIds || undefined
+                athleteId: opts.athleteId || undefined
                 // No parentEmail: identity comes from the signed-in session.
             }
         });

@@ -6,11 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Parent Portal | Godspeed Basketball</title>
 
-    <!-- Application page. Not for the public index: robots.txt is deliberately
-         left permissive so crawlers can read this tag; a Disallow would hide it
-         and the URL could still be indexed from an inbound link. -->
-    <meta name="robots" content="noindex,nofollow">
-    <!-- Resource Hints -->
+    <!-- Resource Hints --
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
@@ -29,8 +25,6 @@
     </noscript>
 
     <!-- Critical CSS loaded first -->
-    <!-- Design tokens. Must load before any other stylesheet. -->
-    <link rel="stylesheet" href="tokens.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="responsive-nav.css">
 
@@ -47,9 +41,8 @@
     <!-- Portal Specific Styles -->
     <!-- Tailwind CSS (Added to support existing utility classes) -->
     <script src="https://cdn.tailwindcss.com" defer></script>
-    <link rel="stylesheet" href="parent-portal.css?v=20260917">
-    <link rel="stylesheet" href="nav-unified.css?v=20261007">
-    <link rel="stylesheet" href="wall-teaser.css?v=20261007">
+    <link rel="stylesheet" href="parent-portal.css">
+    <link rel="stylesheet" href="nav-unified.css">
         <style>/* GS Portal Fix v1 */
             @keyframes gs-portal-reveal{to{opacity:1}}
             .portal-container{animation:gs-portal-reveal 0s 400ms forwards}
@@ -180,54 +173,42 @@
             <div class="login-card">
                 <div class="login-header">
                     <h2>Parent <span id="login-greeting" style="color: #0071e3;">Login</span></h2>
-                    <p>Sign your documents and see your athlete's schedule and progress.</p>
+                    <p>Access your athlete's schedule, evaluations, and progress.</p>
                 </div>
                 <form id="parent-login-form" class="login-form">
                     <div class="login-error" role="alert" aria-live="assertive" style="display: none;">
                     </div>
                     <div class="form-group">
                         <label for="email">Email Address</label>
-                        <input type="email" id="email" placeholder="name@example.com" autocomplete="email" required>
+                        <input type="email" id="email" placeholder="name@example.com" required>
                     </div>
-
-                    <button type="button" id="magic-link-btn" class="btn-primary full-width"
-                        onclick="handleMagicLink()">
-                        Email me a sign-in link
-                    </button>
-                    <p class="login-hint">No password needed. We email you a link. Tap it and you are in.</p>
-
-                    <a href="#" id="use-password-link" class="use-password-link"
-                        onclick="showPasswordLogin(); return false;">I would rather type my password</a>
-
-                    <div id="password-section" hidden>
-                        <div class="form-group">
-                            <label for="password">Password</label>
-                            <div style="position: relative;">
-                                <input type="password" id="password" placeholder="••••••••" autocomplete="current-password"
-                                    style="padding-right: 45px;">
-                                <button type="button" id="toggle-password"
-                                    style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 4px; color: #666; display: flex; align-items: center; justify-content: center;"
-                                    aria-label="Toggle password visibility">
-                                    <svg id="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                        <circle cx="12" cy="12" r="3"></circle>
-                                    </svg>
-                                    <svg id="eye-off-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" style="display: none;">
-                                        <path
-                                            d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
-                                        </path>
-                                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                                    </svg>
-                                </button>
-                            </div>
-                            <a href="#" class="forgot-link" onclick="showPasswordResetForm(); return false;">Forgot password</a>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <div style="position: relative;">
+                            <input type="password" id="password" placeholder="••••••••" required
+                                style="padding-right: 45px;">
+                            <button type="button" id="toggle-password"
+                                style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 4px; color: #666; display: flex; align-items: center; justify-content: center;"
+                                aria-label="Toggle password visibility">
+                                <svg id="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg id="eye-off-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" style="display: none;">
+                                    <path
+                                        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                                    </path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </button>
                         </div>
-                        <button type="submit" class="btn-secondary full-width">Enter Portal</button>
+                        <a href="#" class="forgot-link" onclick="showPasswordResetForm(); return false;">Forgot password</a>
                     </div>
+                    <button type="submit" class="btn-primary full-width">Enter Portal</button>
 
                     <div class="auth-divider" aria-hidden="true">
                         <span></span><em>or</em><span></span>
@@ -242,6 +223,11 @@
                             <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
                         </svg>
                         Continue with Google
+                    </button>
+
+                    <button type="button" id="magic-link-btn" class="btn-magic-link full-width"
+                        onclick="handleMagicLink()">
+                        Email me a sign-in link
                     </button>
 
                     <p class="login-footer">Don't have an account? <a href="#"
@@ -272,44 +258,13 @@
                         <label for="signup-password">Password</label>
                         <input type="password" id="signup-password" placeholder="Create a strong password (min 8 characters)" minlength="8" required>
                     </div>
-                    <div class="form-row two">
-                        <div class="form-group">
-                            <label for="signup-player-first">Player's First Name</label>
-                            <input type="text" id="signup-player-first" placeholder="First name" autocomplete="off" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="signup-player-last">Player's Last Name</label>
-                            <input type="text" id="signup-player-last" placeholder="Last name" autocomplete="off" required>
-                        </div>
-                    </div>
-                    <div class="form-row two">
-                        <div class="form-group">
-                            <label for="signup-player-grade">Player's Grade</label>
-                            <select id="signup-player-grade" required>
-                                <option value="">Choose</option>
-                                <option>3rd</option><option>4th</option><option>5th</option><option>6th</option><option>7th</option><option>8th</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="signup-player-team">Team</label>
-                            <select id="signup-player-team" class="gs-team-select" required>
-                                <option value="">Choose</option>
-                                <option value="Godspeed 5th Grade Black">5th Grade Black</option>
-                                <option value="Godspeed 5th Grade White">5th Grade White</option>
-                                <option value="Godspeed 6th Grade">6th Grade</option>
-                                <option value="Not sure">Not sure yet</option>
-                            </select>
-                        </div>
+                    <div class="form-group">
+                        <label for="signup-player-name">Player's Full Name</label>
+                        <input type="text" id="signup-player-name" placeholder="LeBron James Jr." required>
                     </div>
                     <div class="form-group">
-                        <label for="signup-relationship">You are the player's</label>
-                        <select id="signup-relationship" required>
-                            <option value="mother">Mother</option>
-                            <option value="father">Father</option>
-                            <option value="guardian" selected>Guardian</option>
-                            <option value="stepparent">Stepparent</option>
-                            <option value="other">Other family</option>
-                        </select>
+                        <label for="signup-player-age">Player's Age</label>
+                        <input type="number" id="signup-player-age" placeholder="11" min="5" max="19" required>
                     </div>
                     <div class="form-group">
                         <label for="signup-phone">Phone Number</label>
@@ -381,71 +336,6 @@
                     <button type="submit" id="update-password-btn" class="btn-primary full-width">Save New Password</button>
                     <p class="login-footer">Remember your password? <a href="#" onclick="showLoginForm(); return false;">Sign In</a></p>
                 </form>
-            </div>
-        </div>
-
-        <!-- CONNECT YOUR PLAYER (Hidden initially; shown to a signed-in parent with no player linked) -->
-        <div id="portal-connect" class="portal-login-view" style="display: none;">
-            <div class="login-card">
-                <div id="connect-form-wrap">
-                    <div class="login-header">
-                        <h2>Connect Your <span style="color: #0071e3;">Player</span></h2>
-                        <p>Tell us which player is yours. Coach Scott confirms it, then your documents and schedule appear here.</p>
-                    </div>
-                    <form class="login-form" id="connect-form" onsubmit="event.preventDefault(); handleConnectSubmit();">
-                        <div class="login-error" role="alert" aria-live="assertive" style="display: none;"></div>
-                        <div class="form-row two">
-                            <div class="form-group">
-                                <label for="connect-first">Player's First Name</label>
-                                <input type="text" id="connect-first" placeholder="First name" autocomplete="off" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="connect-last">Player's Last Name</label>
-                                <input type="text" id="connect-last" placeholder="Last name" autocomplete="off" required>
-                            </div>
-                        </div>
-                        <div class="form-row two">
-                            <div class="form-group">
-                                <label for="connect-grade">Player's Grade</label>
-                                <select id="connect-grade" required>
-                                    <option value="">Choose</option>
-                                    <option>3rd</option><option>4th</option><option>5th</option><option>6th</option><option>7th</option><option>8th</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="connect-team">Team</label>
-                                <select id="connect-team" class="gs-team-select" required>
-                                    <option value="">Choose</option>
-                                    <option value="Godspeed 5th Grade Black">5th Grade Black</option>
-                                    <option value="Godspeed 5th Grade White">5th Grade White</option>
-                                    <option value="Godspeed 6th Grade">6th Grade</option>
-                                    <option value="Not sure">Not sure yet</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="connect-relationship">You are the player's</label>
-                            <select id="connect-relationship" required>
-                                <option value="mother">Mother</option>
-                                <option value="father">Father</option>
-                                <option value="guardian" selected>Guardian</option>
-                                <option value="stepparent">Stepparent</option>
-                                <option value="other">Other family</option>
-                            </select>
-                        </div>
-                        <button type="submit" id="connect-submit" class="btn-primary full-width">Send to Coach Scott</button>
-                        <p class="login-hint">Only Coach Scott sees this. Other parents never see your name, email, or phone.</p>
-                    </form>
-                </div>
-                <div id="connect-waiting-wrap" style="display: none; text-align: center;">
-                    <div class="login-header">
-                        <h2>Waiting on <span style="color: #0071e3;">Coach Scott</span></h2>
-                        <p id="connect-waiting-copy">We sent your request. Coach Scott usually confirms the same day. Your documents and schedule appear here the moment he does.</p>
-                    </div>
-                    <button type="button" class="btn-secondary full-width" onclick="showConnectForm()">Fix the player's name</button>
-                    <button type="button" class="btn-magic-link full-width" onclick="checkConnection(true)">Check again</button>
-                </div>
-                <p class="login-footer"><a href="#" onclick="handleLogout(); return false;">Sign out</a></p>
             </div>
         </div>
 
@@ -526,7 +416,7 @@
                                 <line x1="1" y1="10" x2="23" y2="10"></line>
                             </svg>
                         </span>
-                        <span class="label js-season-label" data-season-format="short">AAU Season Dues</span>
+                        <span class="label">AAU Season Dues</span>
                     </a>
                     <a href="#" id="nav-calendar" class="nav-item" onclick="switchPortalView('calendar', this)">
                         <span class="icon">
@@ -540,18 +430,6 @@
                         </span>
                         <span class="label">Schedule</span>
                         <span id="cal-update-badge" style="display:none;width:8px;height:8px;border-radius:50%;background:#ef4444;margin-left:auto;flex-shrink:0;"></span>
-                    </a>
-                    <a href="community-wall.html" id="nav-wall" class="nav-item" aria-label="The Wall">
-                        <span class="icon">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                                <polyline points="21 15 16 10 5 21"></polyline>
-                            </svg>
-                        </span>
-                        <span class="label">The Wall</span>
-                        <span id="nav-wall-dot" aria-hidden="true" style="display:none;width:8px;height:8px;border-radius:50%;background:#ef4444;margin-left:auto;flex-shrink:0;"></span>
                     </a>
                     
                     <a href="#" class="nav-item" onclick="switchPortalView('performance', this)">
@@ -774,16 +652,12 @@
 
                     <!-- VIEW: DOCUMENTS -->
                     <div id="view-documents" class="portal-view active">
-                        <!-- JERSEY NUMBER PICKER (onboarding) -->
-                        <div id="jersey-picker-card" style="display:none;background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:0 1px 3px rgba(15,23,42,.05);">
-                            <div id="jersey-picker-root"></div>
-                        </div>
                         <div id="dashboard-welcome" class="welcome-banner">
                             <h1 style="display: flex; align-items: center; flex-wrap: wrap;">
                                 Welcome back, <span id="dashboard-user-name" style="margin-left: 6px;">James</span>
                                 <span id="committed-badge-mini" style="display: none; align-items: center; justify-content: center; width: 84px; height: 24px; background: #10b981; color: white; font-size: 9px; font-weight: 700; border-radius: 12px; letter-spacing: 0.05em; text-transform: uppercase; margin-left: 12px; box-shadow: 0 2px 8px rgba(16,185,129,0.3); opacity: 0; transform: scale(0.8); transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);">✓ COMMITTED</span>
                             </h1>
-                            <p id="dashboard-welcome-msg" style="margin-top: 8px; opacity: 0.9; font-weight: 500;">Spring/Summer Season 2026 is underway. Stay updated on your athlete's progress.</p>
+                            <p id="dashboard-welcome-msg" style="margin-top: 8px; opacity: 0.9; font-weight: 500;">Fall 2026 season is here. Stay updated on your athlete's progress.</p>
                             
                             <!-- AAU DUES CTA (Premium Urgent Standard) -->
                             <div id="aau-dues-cta" style="display: none; flex-direction: column; margin-top: 2rem; background: #1A0505; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(255,59,48,0.15); border: 1px solid rgba(255,59,48,0.3); position: relative;">
@@ -795,7 +669,7 @@
                                         <div style="font-family: 'DM Sans', sans-serif; font-size: 0.85rem; color: #FF3B30; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
                                             <span style="display: inline-block; width: 8px; height: 8px; background: #FF3B30; border-radius: 50%; box-shadow: 0 0 8px #FF3B30;"></span> Action Required
                                         </div>
-                                        <h3 id="aau-dues-cta-title" class="js-season-label" style="margin: 0; font-family: 'Bebas Neue', sans-serif; font-size: 2.25rem; color: #FFFFFF; letter-spacing: 0.05em; line-height: 1.1;">AAU Season Dues</h3>
+                                        <h3 style="margin: 0; font-family: 'Bebas Neue', sans-serif; font-size: 2.25rem; color: #FFFFFF; letter-spacing: 0.05em; line-height: 1.1;">2026 AAU Fall Dues</h3>
                                         <p style="margin: 8px 0 0 0; font-family: 'Inter', sans-serif; font-size: 1rem; color: rgba(255,255,255,0.85); font-weight: 500;">Please select and lock in your season payment plan.</p>
                                     </div>
                                     <button onclick="switchPortalView('aau-billing', document.getElementById('nav-aau-billing'))" style="margin-top: 8px; background: #FF3B30; color: #FFFFFF; font-family: 'Inter', sans-serif; font-weight: 800; padding: 14px 32px; border-radius: 99px; border: none; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 15px rgba(255,59,48,0.4); text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255,59,48,0.6)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(255,59,48,0.4)'">Access Billing</button>
@@ -1048,16 +922,6 @@
                         <div class="bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition-shadow duration-200">
                             <h3 class="text-xl font-semibold mb-5">Training Documents</h3>
 
-                            <!-- Training Statements (PDF, guardian-gated via RLS) -->
-                            <div class="mb-6">
-                                <div class="flex justify-between items-center mb-3" style="padding-right: 12px;">
-                                    <h4 class="text-base font-semibold">Statements</h4>
-                                </div>
-                                <div id="training-statements-list" class="flex flex-col gap-3 mb-3">
-                                    <!-- Filled by parent-statements.js -->
-                                </div>
-                            </div>
-
                             <!-- Receipts -->
                             <div class="mb-6">
                                 <div class="flex justify-between items-center mb-3" style="padding-right: 12px;">
@@ -1136,17 +1000,163 @@
                             <h2 style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 1.35rem; color: #111; letter-spacing: -0.02em; text-transform: uppercase; margin: 0;">Team Gear & Uniforms</h2>
                         </div>
 
-                        <!-- Gear price sheet.
-                             Every figure is rendered by gear-price-sheet.js from
-                             public.uniform_config -- the same row order-uniform.html
-                             charges from. Do not type a price into this file: the card
-                             that used to live here hardcoded one and drifted away from
-                             what families were actually billed. The size selects,
-                             quantity boxes and "Confirm Order Request" button that were
-                             also here collected nothing (submitGearOrder() only ever
-                             redirected to the real checkout), so they are gone. -->
-                        <div id="gear-price-sheet">
-                            <div style="background:#fff;border-radius:12px;padding:28px 24px;box-shadow:0 2px 10px rgba(0,0,0,0.05);color:#86868b;font-size:0.9rem;">Loading your gear list...</div>
+                        <!-- Real uniform ordering: live number availability + checkout -->
+                        <a href="order-uniform.html" style="display:flex;align-items:center;justify-content:space-between;gap:16px;text-decoration:none;background:linear-gradient(135deg,#1A3A8F,#14306f);border-radius:14px;padding:22px 24px;margin-bottom:24px;box-shadow:0 4px 16px rgba(26,58,143,.18);">
+                            <div>
+                                <div style="color:#fff;font-family:'Inter',sans-serif;font-weight:800;font-size:1.05rem;letter-spacing:-0.01em;">Order your player's uniform</div>
+                                <div style="color:#c7d3f2;font-size:0.85rem;margin-top:3px;">New players: your uniform set is $102.90 (1 jersey $52.93 + 2 shorts $49.97). Pick an available number and sizes, then check out. Returning players keep their current uniform.</div>
+                            </div>
+                            <span style="flex-shrink:0;background:#FF5722;color:#fff;font-family:'Inter',sans-serif;font-weight:800;font-size:0.82rem;text-transform:uppercase;letter-spacing:0.06em;padding:12px 22px;border-radius:10px;">Start order</span>
+                        </a>
+
+                        <div style="width: 100%;">
+                            <div
+                                style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 24px;">
+                                <h3 style="margin-bottom: 16px; font-size: 18px;">Required Uniform Package</h3>
+                                <p style="color: #666; font-size: 0.9rem; margin-bottom: 24px;">Please select sizes for
+                                    your athlete. All orders will be processed by the team admin.</p>
+
+                                <!-- Jersey (Black) -->
+                                <div class="gear-item"
+                                    style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid #eee; margin-bottom: 16px;">
+                                    <div>
+                                        <div style="font-weight: 600;">Game Jersey (Black) <span style="font-size: 0.7rem; background: #666; padding: 2px 6px; border-radius: 4px; color: #fff; font-weight: 700; letter-spacing: 0.04em; margin-left: 6px;">REQUIRED</span></div>
+                                        <div style="font-size: 0.8rem; color: #888;">Away Mesh</div>
+                                        <div style="font-size: 0.9rem; font-weight: 700; color: #1A3A8F; margin-top: 4px;">$52.93</div>
+                                    </div>
+                                    <div style="display: flex; gap: 12px; align-items: center;">
+                                        <select class="gear-size-select"
+                                            style="padding: 8px; border-radius: 8px; border: 1px solid #ddd; background: #f9f9f9;">
+                                            <option value="YS">Youth S</option>
+                                            <option value="YM">Youth M</option>
+                                            <option value="YL">Youth L</option>
+                                            <option value="YXL">Youth XL</option>
+                                            <option value="AS">Adult S</option>
+                                            <option value="AM">Adult M</option>
+                                            <option value="AL">Adult L</option>
+                                        </select>
+                                        <input type="number" value="1" min="1"
+                                            style="width: 50px; padding: 8px; border-radius: 8px; border: 1px solid #ddd; text-align: center;">
+                                    </div>
+                                </div>
+
+                                <!-- Jersey (White) -->
+                                <div class="gear-item"
+                                    style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid #eee; margin-bottom: 16px;">
+                                    <div>
+                                        <div style="font-weight: 600;">Game Jersey (White) <span style="font-size: 0.7rem; background: #666; padding: 2px 6px; border-radius: 4px; color: #fff; font-weight: 700; letter-spacing: 0.04em; margin-left: 6px;">REQUIRED</span></div>
+                                        <div style="font-size: 0.8rem; color: #888;">Home Mesh</div>
+                                        <div style="font-size: 0.9rem; font-weight: 700; color: #1A3A8F; margin-top: 4px;">$52.93</div>
+                                    </div>
+                                    <div style="display: flex; gap: 12px; align-items: center;">
+                                        <select class="gear-size-select"
+                                            style="padding: 8px; border-radius: 8px; border: 1px solid #ddd; background: #f9f9f9;">
+                                            <option value="YS">Youth S</option>
+                                            <option value="YM">Youth M</option>
+                                            <option value="YL">Youth L</option>
+                                            <option value="YXL">Youth XL</option>
+                                            <option value="AS">Adult S</option>
+                                            <option value="AM">Adult M</option>
+                                            <option value="AL">Adult L</option>
+                                        </select>
+                                        <input type="number" value="1" min="1"
+                                            style="width: 50px; padding: 8px; border-radius: 8px; border: 1px solid #ddd; text-align: center;">
+                                    </div>
+                                </div>
+
+                                <!-- Shorts (Orange) -->
+                                <div class="gear-item"
+                                    style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid #eee; margin-bottom: 16px;">
+                                    <div>
+                                        <div style="font-weight: 600;">Game Shorts (Orange) <span style="font-size: 0.7rem; background: #eee; padding: 2px 6px; border-radius: 4px; color: #666; margin-left: 6px;">OPTIONAL</span></div>
+                                        <div style="font-size: 0.8rem; color: #888;">Performance Knit</div>
+                                        <div style="font-size: 0.9rem; font-weight: 700; color: #1A3A8F; margin-top: 4px;">$49.97</div>
+                                    </div>
+                                    <div style="display: flex; gap: 12px; align-items: center;">
+                                        <select class="gear-size-select"
+                                            style="padding: 8px; border-radius: 8px; border: 1px solid #ddd; background: #f9f9f9;">
+                                            <option value="YS">Youth S</option>
+                                            <option value="YM">Youth M</option>
+                                            <option value="YL">Youth L</option>
+                                            <option value="YXL">Youth XL</option>
+                                            <option value="AS">Adult S</option>
+                                            <option value="AM">Adult M</option>
+                                            <option value="AL">Adult L</option>
+                                        </select>
+                                        <input type="number" value="1" min="1"
+                                            style="width: 50px; padding: 8px; border-radius: 8px; border: 1px solid #ddd; text-align: center;">
+                                    </div>
+                                </div>
+
+                                <!-- Shorts (Blue) -->
+                                <div class="gear-item"
+                                    style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid #eee; margin-bottom: 16px;">
+                                    <div>
+                                        <div style="font-weight: 600;">Game Shorts (Blue) <span style="font-size: 0.7rem; background: #666; padding: 2px 6px; border-radius: 4px; color: #fff; font-weight: 700; letter-spacing: 0.04em; margin-left: 6px;">REQUIRED</span></div>
+                                        <div style="font-size: 0.8rem; color: #888;">Performance Knit</div>
+                                        <div style="font-size: 0.9rem; font-weight: 700; color: #1A3A8F; margin-top: 4px;">$49.97</div>
+                                    </div>
+                                    <div style="display: flex; gap: 12px; align-items: center;">
+                                        <select class="gear-size-select"
+                                            style="padding: 8px; border-radius: 8px; border: 1px solid #ddd; background: #f9f9f9;">
+                                            <option value="YS">Youth S</option>
+                                            <option value="YM">Youth M</option>
+                                            <option value="YL">Youth L</option>
+                                            <option value="YXL">Youth XL</option>
+                                            <option value="AS">Adult S</option>
+                                            <option value="AM">Adult M</option>
+                                            <option value="AL">Adult L</option>
+                                        </select>
+                                        <input type="number" value="1" min="1"
+                                            style="width: 50px; padding: 8px; border-radius: 8px; border: 1px solid #ddd; text-align: center;">
+                                    </div>
+                                </div>
+
+                                <!-- Shooting Shirt -->
+                                <div class="gear-item"
+                                    style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid #eee; margin-bottom: 16px;">
+                                    <div>
+                                        <div style="font-weight: 600;">Warmup Shooting Shirt</div>
+                                        <div style="font-size: 0.8rem; color: #888;">Long Sleeve Dry-Fit</div>
+                                    </div>
+                                    <div style="display: flex; gap: 12px; align-items: center;">
+                                        <select class="gear-size-select"
+                                            style="padding: 8px; border-radius: 8px; border: 1px solid #ddd; background: #f9f9f9;">
+                                            <option value="YS">Youth S</option>
+                                            <option value="YM">Youth M</option>
+                                            <option value="YL">Youth L</option>
+                                            <option value="YXL">Youth XL</option>
+                                            <option value="AS">Adult S</option>
+                                            <option value="AM">Adult M</option>
+                                        </select>
+                                        <input type="number" value="1" min="1"
+                                            style="width: 50px; padding: 8px; border-radius: 8px; border: 1px solid #ddd; text-align: center;">
+                                    </div>
+                                </div>
+
+                                <!-- Backpack (Optional) -->
+                                <div class="gear-item"
+                                    style="display: flex; align-items: center; justify-content: space-between;">
+                                    <div>
+                                        <div style="font-weight: 600;">Team Backpack <span
+                                                style="font-size: 0.7rem; background: #eee; padding: 2px 6px; border-radius: 4px; color: #666; margin-left: 6px;">OPTIONAL</span>
+                                        </div>
+                                        <div style="font-size: 0.8rem; color: #888;">Embroidered Name</div>
+                                    </div>
+                                    <div style="display: flex; gap: 12px; align-items: center;">
+                                        <input type="text" placeholder="Name on Bag"
+                                            style="padding: 8px; border-radius: 8px; border: 1px solid #ddd; font-size: 0.9rem;">
+                                        <input type="checkbox" style="width: 20px; height: 20px;">
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div style="text-align: right;">
+                                <button onclick="submitGearOrder()" class="btn-primary"
+                                    style="background: #0071e3; padding: 12px 32px; border-radius: 20px; font-weight: 600;">Confirm
+                                    Order Request</button>
+                            </div>
                         </div>
                     </div>
 
@@ -1154,7 +1164,7 @@
                     <div id="view-aau-billing" class="portal-view"
                         style="display: none; background-color: #F2F2F7; min-height: 100%; padding: 20px;">
                         <div class="section-header" style="margin-bottom: 20px;">
-                            <h2 class="js-season-label" style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 1.35rem; color: #111; letter-spacing: -0.02em; text-transform: uppercase; margin: 0;">AAU Season Dues</h2>
+                            <h2 style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 1.35rem; color: #111; letter-spacing: -0.02em; text-transform: uppercase; margin: 0;">AAU Season Dues</h2>
                         </div>
 
                         <div
@@ -1173,7 +1183,7 @@
                                 </div>
                                 <div style="text-align: right;">
                                     <div style="font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #999;">Total Due</div>
-                                    <div id="billing-total-due" style="font-size: 1.4rem; font-weight: 800; color: #111;">$745</div>
+                                    <div id="billing-total-due" style="font-size: 1.4rem; font-weight: 800; color: #111;">$472.90</div>
                                 </div>
                             </div>
 
@@ -1200,20 +1210,21 @@
                             };
                             </script>
 
-                            <!-- Training Cost Breakdown (hidden per coach request - alarming parents) -->
-                            <div id="billing-training-schedule" style="display:none;background:white;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,0.05);overflow:hidden;">
-                              <div style="padding:16px 20px;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center">
-                                <div>
-                                  <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#999;margin-bottom:2px">Training Schedule</div>
-                                  <div style="font-weight:800;font-size:0.95rem;color:#111">Spring/Summer 2026</div>
-                                </div>
-                                <div id="billing-training-total" style="text-align:right">
-                                  <div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:#999">Total</div>
-                                  <div style="font-size:1.1rem;font-weight:800;color:#111">--</div>
-                                </div>
+                            <!-- Cost Breakdown — what your dues cover -->
+                            <div id="billing-cost-breakdown" style="display:none;background:white;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,0.05);overflow:hidden;">
+                              <div style="padding:20px 20px 0;">
+                                <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#2563eb;margin-bottom:4px;">Full Transparency</div>
+                                <div style="font-weight:800;font-size:1.1rem;color:#111;letter-spacing:-0.01em;" id="cb-season-label">What Your Dues Cover</div>
+                                <div style="font-size:0.8rem;color:#555;margin-top:4px;line-height:1.5;" id="cb-subtitle">Every dollar is accounted for. Here is exactly where your season dues go.</div>
                               </div>
-                              <div id="billing-training-rows" style="padding:0 20px 16px">
-                                <div style="text-align:center;padding:16px;color:#888;font-size:0.85rem">Schedule will appear when your payment plan is active.</div>
+                              <div id="cb-line-items" style="padding:16px 20px;">
+                                <div style="text-align:center;padding:16px;color:#888;font-size:0.85rem;">Loading cost breakdown...</div>
+                              </div>
+                              <div id="cb-footer" style="display:none;padding:0 20px 20px;">
+                                <div style="background:#f8fafc;border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border:1px solid #e2e8f0;">
+                                  <span style="font-weight:700;font-size:0.85rem;color:#333;">Your Season Dues</span>
+                                  <span id="cb-total" style="font-weight:900;font-size:1.15rem;color:#111;"></span>
+                                </div>
                               </div>
                             </div>
 
@@ -1440,15 +1451,15 @@
         <div style="background:#111;padding:24px 28px;display:flex;align-items:center;justify-content:space-between;">
           <div>
             <div style="font-size:0.7rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:4px;">Club Godspeed</div>
-            <div class="js-season-label" style="font-size:1.2rem;font-weight:900;color:#fff;letter-spacing:-0.02em;">AAU Season Dues</div>
+            <div style="font-size:1.2rem;font-weight:900;color:#fff;letter-spacing:-0.02em;">AAU Season Dues</div>
           </div>
           <button onclick="closeTuitionPaymentModal()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">&#10005;</button>
         </div>
         <div style="padding:28px;">
           <div style="background:#f9f9f9;border-radius:12px;padding:16px 20px;margin-bottom:24px;border:1px solid #f0f0f0;">
             <div style="font-size:0.75rem;font-weight:700;color:#86868b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Balance Due</div>
-            <div id="tuition-modal-balance" style="font-size:2rem;font-weight:900;color:#111;letter-spacing:-0.03em;">$745.00</div>
-            <div style="font-size:0.8rem;color:#86868b;margin-top:2px;">Spring / Summer 2026 Season</div>
+            <div id="tuition-modal-balance" style="font-size:2rem;font-weight:900;color:#111;letter-spacing:-0.03em;">$472.90</div>
+            <div style="font-size:0.8rem;color:#86868b;margin-top:2px;">Fall 2026 Season</div>
           </div>
           <div id="tuition-pay-error" style="display:none;background:#fff0f0;color:#cc0000;border-radius:8px;padding:10px 14px;font-size:0.85rem;font-weight:600;margin-bottom:16px;"></div>
           <!-- Venmo instructions kept intentionally minimal -->
@@ -1472,9 +1483,9 @@
             </div>
           </div>
           <div style="display:flex;gap:8px;margin-bottom:16px;">
-            <button id="tuition-quick-full" onclick="document.getElementById('tuition-pay-amount').value='745'" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e5e5ea;background:#f9f9f9;font-size:0.8rem;font-weight:700;cursor:pointer;color:#111;">$745 Full</button>
-            <button id="tuition-quick-half" onclick="document.getElementById('tuition-pay-amount').value='375'" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e5e5ea;background:#f9f9f9;font-size:0.8rem;font-weight:700;cursor:pointer;color:#111;">$375 Half</button>
-            <button id="tuition-quick-custom" onclick="document.getElementById('tuition-pay-amount').value='250'" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e5e5ea;background:#f9f9f9;font-size:0.8rem;font-weight:700;cursor:pointer;color:#111;">$250</button>
+            <button id="tuition-quick-full" onclick="document.getElementById('tuition-pay-amount').value='472.90'" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e5e5ea;background:#f9f9f9;font-size:0.8rem;font-weight:700;cursor:pointer;color:#111;">$472.90 Full</button>
+            <button id="tuition-quick-half" onclick="document.getElementById('tuition-pay-amount').value='236.45'" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e5e5ea;background:#f9f9f9;font-size:0.8rem;font-weight:700;cursor:pointer;color:#111;">$236.45 Half</button>
+            <button id="tuition-quick-custom" onclick="document.getElementById('tuition-pay-amount').value='200'" style="flex:1;padding:8px;border-radius:8px;border:1px solid #e5e5ea;background:#f9f9f9;font-size:0.8rem;font-weight:700;cursor:pointer;color:#111;">$200</button>
           </div>
           <div style="margin-bottom:16px;">
             <label style="display:block;font-size:0.75rem;font-weight:700;color:#86868b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Note (optional)</label>
@@ -1501,72 +1512,17 @@
     <script src="receipt-view.js" defer></script>
     <script src="account-visibility.js?v=20260630a" defer></script>
     <script src="billing-view.js?v=20260405d" defer></script>
-    <script src="parent-portal.js?v=20261007" defer></script>
+    <script src="parent-portal.js?v=20260405d" defer></script>
     <script src="performance-renderer.js?v=5" defer></script>
     <script src="player-cards-renderer.js?v=1" defer></script>
-    <script>
-    // Jersey picker boot. Shows the card only when this account actually has a
-    // linked athlete; stays hidden otherwise rather than rendering a dead control.
-    (function () {
-        var tries = 0;
-        function getClient() {
-            try {
-                if (window.auth && typeof window.auth.getSupabaseClient === 'function') {
-                    return window.auth.getSupabaseClient();
-                }
-            } catch (e) { /* fall through */ }
-            return window.supabaseClient || null;
-        }
-        function boot() {
-            try {
-                var sb = getClient();
-                // Auth may still be initialising on a cold load. Retry briefly.
-                if ((!sb || !window.JerseyPicker) && tries++ < 10) {
-                    return setTimeout(boot, 500);
-                }
-                if (!sb || !window.JerseyPicker) return;
-                sb.rpc('get_my_booking_athletes').then(function (r) {
-                    var list = (r && r.data && r.data.ok) ? r.data.athletes : [];
-                    if (!list || !list.length) return;
-                    document.getElementById('jersey-picker-card').style.display = 'block';
-                    // Follow the athlete the parent picked elsewhere in the portal
-                    // instead of always taking list[0]. A family with two kids could
-                    // otherwise only ever set a number for the first one.
-                    var saved = null;
-                    try { saved = localStorage.getItem('gba_selected_athlete_id'); } catch (e) { saved = null; }
-                    var chosen = null;
-                    for (var i = 0; i < list.length; i++) {
-                        if (list[i] && list[i].athlete_id === saved) { chosen = list[i]; break; }
-                    }
-                    if (!chosen) chosen = list[0];
-                    window.JerseyPicker.mount('jersey-picker-root', {
-                        client: sb,
-                        athleteId: chosen.athlete_id
-                    });
-                }).catch(function () { /* card stays hidden */ });
-            } catch (e) { /* card stays hidden */ }
-        }
-        if (document.readyState === 'complete') setTimeout(boot, 400);
-        else window.addEventListener('load', function () { setTimeout(boot, 400); });
-    })();
-    </script>
-    <script src="parent-development.js?v=1" defer></script>
-    <script src="parent-dev-notice.js?v=1" defer></script>
-    <script src="parent-training.js?v=2" defer></script>
-    <script src="parent-workout.js?v=1" defer></script>
-    <script src="jersey-picker.js?v=1" defer></script>
-    <script src="gear-price-sheet.js?v=1" defer></script>
-    <script src="season-header.js?v=1" defer></script>
     <!-- Non-critical scripts (async for independent loading) -->
     <script src="branded-modal.js" defer></script>
-    <script src="parent-statements.js?v=1" defer></script>
     <script src="documents-view.js" defer></script>
     <script src="document-tracker-integration.js" defer></script>
     <script src="tournament-schedule.js?v=20260331b" defer></script>
     <script src="schedule-view.js?v=20260401a" defer></script>
     <script src="scripts/verify-setup.js" defer></script>
     <script src="src/components/MobileBottomNav.js" defer></script>
-    <script src="wall-teaser.js?v=20261007" defer></script>
     <script src="nav-security.js" defer></script>
     <script src="training-cart.js" defer></script>
 
@@ -1631,32 +1587,6 @@
             setTimeout(initScheduleView, 500);
         }
     });
-    </script>
-    <script>
-    // Scope the calendar to the signed-in family's team(s): fetch their team ids and
-    // send them to the calendar embed, which filters games to those teams.
-    (function () {
-        function sendTeams() {
-            var client = (window.auth && window.auth.getSupabaseClient) ? window.auth.getSupabaseClient() : null;
-            var iframe = document.getElementById('training-calendar-iframe');
-            if (!client || !iframe) { setTimeout(sendTeams, 500); return; }
-            client.rpc('get_my_team_ids').then(function (res) {
-                if (res.error || !res.data) return;
-                var teamIds = res.data
-                    .map(function (r) { return (typeof r === 'string') ? r : (r.get_my_team_ids || Object.values(r)[0]); })
-                    .filter(Boolean);
-                function post() {
-                    if (iframe.contentWindow) {
-                        iframe.contentWindow.postMessage({ type: 'setTeams', teamIds: teamIds }, window.location.origin);
-                    }
-                }
-                post();
-                iframe.addEventListener('load', post);
-            }).catch(function () {});
-        }
-        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sendTeams);
-        else sendTeams();
-    })();
     </script>
 </body>
 
