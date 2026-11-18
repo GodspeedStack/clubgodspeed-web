@@ -100,12 +100,12 @@ function renderAthletePicker(athletes, selected, email) {
  * bill instead of guessing from the parent's email.
  */
 async function resolveEnrollmentData(supabase, athlete) {
-  var result = { id: null, totalOwed: 472.90, totalPaid: 0, duesConfigId: null };
+  var result = { id: null, totalOwed: 472.90, totalPaid: 0, duesConfigId: null, season: null };
   if (!athlete) return result;
   try {
     var enr = await supabase
       .from('parent_dues_enrollment')
-      .select('id, total_owed, total_paid, dues_config_id, season_dues_config!inner(is_active)')
+      .select('id, total_owed, total_paid, dues_config_id, season_dues_config!inner(is_active, season)')
       .eq('athlete_id', athlete.id)
       .eq('season_dues_config.is_active', true)
       .order('enrolled_at', { ascending: false })
@@ -116,6 +116,7 @@ async function resolveEnrollmentData(supabase, athlete) {
       result.totalOwed = parseFloat(row.total_owed) || 472.90;
       result.totalPaid = parseFloat(row.total_paid) || 0;
       result.duesConfigId = row.dues_config_id || null;
+      result.season = (row.season_dues_config && row.season_dues_config.season) || null;
     }
   } catch (e) { console.warn('Enrollment lookup:', e); }
   return result;
@@ -139,14 +140,19 @@ function isMissingAthleteColumn(error) {
  * only safe to adopt when the parent has a single athlete, because otherwise
  * there is no way to tell whose bill it is.
  */
-async function loadPlanForAthlete(supabase, userId, athlete, athleteCount) {
+async function loadPlanForAthlete(supabase, userId, athlete, athleteCount, season) {
   if (!athlete) return null;
+  // A plan only counts if it was made for the season being billed. Without this,
+  // a parent's old Spring plan and its stale installments render under the
+  // current season's dues.
+  if (!season) return null;
 
   const { data: scoped, error: scopedErr } = await supabase
     .from('payment_plans')
     .select('*')
     .eq('parent_id', userId)
     .eq('athlete_id', athlete.id)
+    .eq('season', season)
     .order('created_at', { ascending: false })
     .limit(1);
 
@@ -160,6 +166,7 @@ async function loadPlanForAthlete(supabase, userId, athlete, athleteCount) {
       .from('payment_plans')
       .select('*')
       .eq('parent_id', userId)
+      .eq('season', season)
       .order('created_at', { ascending: false })
       .limit(1);
     return (preMigration && preMigration.length) ? preMigration[0] : null;
@@ -173,6 +180,7 @@ async function loadPlanForAthlete(supabase, userId, athlete, athleteCount) {
       .select('*')
       .eq('parent_id', userId)
       .is('athlete_id', null)
+      .eq('season', season)
       .order('created_at', { ascending: false })
       .limit(1);
     if (legacy && legacy.length) return legacy[0];
@@ -240,11 +248,28 @@ window.renderBilling = async function (email) {
         const baseDues = enrollment.totalOwed;
         const paidSoFar = enrollment.totalPaid;
 
+        window._gsSeason = enrollment.season || null;
+
         // 0c. Load cost breakdown (what dues cover) — non-blocking
         loadCostBreakdown(supabase, athlete);
 
+        // 0d. No enrollment in the active season: nothing is owed yet. Never fall
+        // back to an old season's plan or a hardcoded amount.
+        if (!enrollment.id) {
+            const hdr = document.querySelector('#view-aau-billing h3');
+            if (hdr) hdr.textContent = 'Season Dues';
+            statusTextEl.textContent = 'No Dues Posted';
+            statusTextEl.style.color = '#333';
+            statusCard.style.borderLeftColor = '#d1d5db';
+            if (totalDueEl) totalDueEl.textContent = '$0.00';
+            const fc = document.getElementById('billing-fundraising-card');
+            if (fc) fc.style.display = 'none';
+            container.innerHTML = '<div style="text-align:center;padding:24px;color:#333;background:#f9fafb;border-radius:12px;font-size:0.92rem;line-height:1.5;">Dues for the current season have not been posted to this account yet. If you expected to see a balance here, please reach out to Coach Scott.</div>';
+            return;
+        }
+
         // 1. Fetch the payment plan for THIS athlete
-        const currentPlan = await loadPlanForAthlete(supabase, user.id, athlete, athletes.length);
+        const currentPlan = await loadPlanForAthlete(supabase, user.id, athlete, athletes.length, enrollment.season);
 
         // Helper: update the section header label above billing-invoices-list
         const sectionHeaderEl = document.querySelector('#view-aau-billing h3');
@@ -872,6 +897,9 @@ async function renderPlanSelectionUI(container, parentId, supabase, email, enrol
                     plan_type: planType,
                     total_amount: totalAmount
                 };
+                // Tag the plan with the season being billed so next season's
+                // portal does not pick it up as the current plan.
+                if (window._gsSeason) planRow.season = window._gsSeason;
                 var result = await supabase.from('payment_plans').insert(planRow).select().single();
                 var insertedPlan = result.data;
                 var planError = result.error;
