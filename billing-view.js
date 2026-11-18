@@ -268,6 +268,26 @@ window.renderBilling = async function (email) {
             return;
         }
 
+        // 0e. Dues already paid in full for the active season: say so. Without this
+        // a family that paid without picking a plan is told "Action Required".
+        if (baseDues > 0 && paidSoFar >= baseDues) {
+            const hdr = document.querySelector('#view-aau-billing h3');
+            if (hdr) hdr.textContent = 'Season Dues';
+            statusTextEl.textContent = 'Paid in Full';
+            statusTextEl.style.color = '#10b981';
+            statusCard.style.borderLeftColor = '#10b981';
+            if (totalDueEl) totalDueEl.textContent = '$0.00';
+            const fc = document.getElementById('billing-fundraising-card');
+            if (fc) fc.style.display = 'none';
+            container.innerHTML =
+                '<div style="padding:24px;color:#1a1a1a;background:#ecfdf5;border-radius:12px;font-size:0.92rem;line-height:1.55;">' +
+                '<div style="font-weight:800;font-size:1rem;margin-bottom:6px;">Season dues are paid in full. Thank you.</div>' +
+                '<div style="color:#333;">We received $' + paidSoFar.toFixed(2) + ' toward $' + baseDues.toFixed(2) + ' in season dues. ' +
+                'Gold Crown Winter League registration is separate from your Godspeed dues and is paid by each family directly to Gold Crown. The amount is listed in the breakdown on this page.</div>' +
+                '</div>';
+            return;
+        }
+
         // 1. Fetch the payment plan for THIS athlete
         const currentPlan = await loadPlanForAthlete(supabase, user.id, athlete, athletes.length, enrollment.season);
 
