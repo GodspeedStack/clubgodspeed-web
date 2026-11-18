@@ -610,6 +610,7 @@ async function loadCostBreakdown(supabase, athlete) {
     items.forEach(function(item, i) {
       var amt = parseFloat(item.amount);
       var isIncluded = amt === 0;
+      var isSeparate = amt < 0;
       var border = i < items.length - 1 ? 'border-bottom:1px solid #f0f0f0;' : '';
       html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:14px 0;' + border + '">';
       html += '  <div style="flex:1;min-width:0;">';
@@ -619,7 +620,10 @@ async function loadCostBreakdown(supabase, athlete) {
       }
       html += '  </div>';
       html += '  <div style="text-align:right;margin-left:16px;flex-shrink:0;">';
-      if (isIncluded) {
+      if (isSeparate) {
+        html += '    <div style="font-size:0.78rem;font-weight:600;color:#c2410c;background:#fff7ed;padding:3px 10px;border-radius:6px;">Required</div>';
+        html += '    <div style="font-size:0.68rem;color:#9a3412;margin-top:2px;">paid separately</div>';
+      } else if (isIncluded) {
         html += '    <div style="font-size:0.78rem;font-weight:600;color:#2563eb;background:#eff6ff;padding:3px 10px;border-radius:6px;">Included</div>';
       } else {
         html += '    <div style="font-weight:800;font-size:0.95rem;color:#111;">$' + amt.toLocaleString(undefined, {minimumFractionDigits:0, maximumFractionDigits:0}) + '</div>';
