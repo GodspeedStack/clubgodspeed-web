@@ -105,9 +105,10 @@ async function resolveEnrollmentData(supabase, athlete) {
   try {
     var enr = await supabase
       .from('parent_dues_enrollment')
-      .select('id, total_owed, total_paid, dues_config_id')
+      .select('id, total_owed, total_paid, dues_config_id, season_dues_config!inner(is_active)')
       .eq('athlete_id', athlete.id)
-      .order('total_paid', { ascending: false })
+      .eq('season_dues_config.is_active', true)
+      .order('enrolled_at', { ascending: false })
       .limit(1);
     var row = (enr.data && enr.data.length) ? enr.data[0] : null;
     if (row) {
